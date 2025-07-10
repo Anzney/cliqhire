@@ -30,7 +30,7 @@ export function HistoryContent({ clientId }: HistoryContentProps) {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`https://aems-backend.onrender.com/api/history/clients/${clientId}`);
+        const res = await fetch(`https://aems-backend-main.onrender.com/api/history/clients/${clientId}`);
         if (!res.ok) throw new Error("Client history not found");
         const data = await res.json();
         // Map the API response array to the expected UI structure

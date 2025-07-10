@@ -104,7 +104,7 @@ interface ApiResponse<T> {
 }
 
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://aems-backend.onrender.com/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://aems-backend-main.onrender.com/api";
 
 /**
  * Deep clones an object and removes circular references

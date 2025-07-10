@@ -19,7 +19,7 @@ interface AttachmentsContentProps {
   clientId: string;
 }
 
-const API_BASE_URL = "https://aems-backend.onrender.com/api/attachments";
+const API_BASE_URL = "https://aems-backend-main.onrender.com/api/attachments";
 
 export function AttachmentsContent({ clientId }: AttachmentsContentProps) {
   const [showUploadBox, setShowUploadBox] = useState(false);

@@ -96,7 +96,7 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
     async (field: string, value: any) => {
       try {
         setStatus({ loading: true, error: "" });
-        const response = await fetch(`https://aems-backend.onrender.com/api/clients/${clientId}`, {
+        const response = await fetch(`https://aems-backend-main.onrender.com/api/clients/${clientId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -125,7 +125,7 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
     if (!clientId) return;
     setStatus({ loading: true, error: "" });
     try {
-      const response = await fetch(`https://aems-backend.onrender.com/api/clients/${clientId}`);
+      const response = await fetch(`https://aems-backend-main.onrender.com/api/clients/${clientId}`);
       if (!response.ok) throw new Error("Failed to fetch client data");
       const { data: client } = await response.json();
 
@@ -307,7 +307,7 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
         formData.append("field", "agreement");
         formData.append("clientName", contractDetails.clientName);
         const response = await fetch(
-          `https://aems-backend.onrender.com/api/clients/${clientId}/upload`,
+          `https://aems-backend-main.onrender.com/api/clients/${clientId}/upload`,
           {
             method: "POST",
             body: formData,
@@ -549,7 +549,7 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
     async (fields: Record<string, any>) => {
       try {
         setStatus({ loading: true, error: "" });
-        const response = await fetch(`https://aems-backend.onrender.com/api/clients/${clientId}`, {
+        const response = await fetch(`https://aems-backend-main.onrender.com/api/clients/${clientId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

@@ -71,7 +71,7 @@ export function JobsTable({ jobs, clientId, clientName }: JobsTableProps) {
       try {
         setIsLoading(true);
   
-        const response = await fetch(`https://aems-backend.onrender.com/api/jobs/${jobId}`, {
+        const response = await fetch(`https://aems-backend-main.onrender.com/api/jobs/${jobId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ stage: newStage }),

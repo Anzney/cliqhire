@@ -83,7 +83,7 @@ export interface JobCountByClient {
   clientName?: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://aems-backend.onrender.com/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://aems-backend-main.onrender.com/api";
 
 // Utility function to handle API errors consistently
 const handleApiError = (error: any, context: string) => {

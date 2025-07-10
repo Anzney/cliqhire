@@ -7,7 +7,7 @@ import {
   UpdateRecruiterData 
 } from '@/types/recruiter';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://aems-backend.onrender.com/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://aems-backend-main.onrender.com/api";
 
 // ========================================
 // DUMMY DATA - REMOVE WHEN API IS WORKING

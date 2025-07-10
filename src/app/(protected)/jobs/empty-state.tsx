@@ -1,9 +1,10 @@
 "use client"
-import { CreateJobModal } from "@/components/jobs/create-job-modal"
+// import { CreateJobModal } from "@/components/jobs/create-job-modal"
 import { Button } from "@/components/ui/button"
 import { Laptop, Plus } from 'lucide-react'
 import Link from "next/link"
 import { useState } from "react"
+import { CreateJobRequirementForm } from "@/components/new-jobs/create-jobs-form";
 
 
 export function JobsEmptyState() {
@@ -47,13 +48,14 @@ export function JobsEmptyState() {
           </Link>
         </div>
       </div>
-      <CreateJobModal 
+      {/* <CreateJobModal 
         open={open} 
         onOpenChange={() => setOpen(false)}
         clientId={"your-client-id"} 
         clientName={"Your Client Name"}
         onJobCreated={(open)=>console.log("job created")}
-      />
+      /> */}
+      <CreateJobRequirementForm open={open} onOpenChange={setOpen} />
     </>
   )
 }

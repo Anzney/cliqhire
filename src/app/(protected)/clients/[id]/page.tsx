@@ -56,7 +56,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { CreateJobModal } from "@/components/jobs/create-job-modal";
+// import { CreateJobModal } from "@/components/jobs/create-job-modal";
+import { CreateJobRequirementForm } from "@/components/new-jobs/create-jobs-form";
 
 interface PageProps {
   params: { id: string };
@@ -146,7 +147,7 @@ export default function ClientPage({ params }: PageProps) {
     const fetchClientData = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`https://aems-backend.onrender.com/api/clients/${id}`);
+        const response = await fetch(`https://aems-backend-main.onrender.com/api/clients/${id}`);
         if (!response.ok) {
           if (response.status === 404) notFound();
           throw new Error("Failed to fetch client data");
@@ -170,7 +171,7 @@ export default function ClientPage({ params }: PageProps) {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const response = await fetch("https://aems-backend.onrender.com/api/jobs");
+        const response = await fetch("https://aems-backend-main.onrender.com/api/jobs");
         if (!response.ok) throw new Error("Failed to fetch jobs");
         const responseData = await response.json();
         const jobs = responseData.data;
@@ -187,8 +188,8 @@ export default function ClientPage({ params }: PageProps) {
     setIsLoading(true);
     try {
       // Refetch client data and jobs
-      const clientResponse = await fetch(`https://aems-backend.onrender.com/api/clients/${id}`);
-      const jobsResponse = await fetch("https://aems-backend.onrender.com/api/jobs");
+      const clientResponse = await fetch(`https://aems-backend-main.onrender.com/api/clients/${id}`);
+      const jobsResponse = await fetch("https://aems-backend-main.onrender.com/api/jobs");
 
       if (clientResponse.ok) {
         const clientData = await clientResponse.json();
@@ -226,7 +227,7 @@ export default function ClientPage({ params }: PageProps) {
       );
 
       // Make API call to update the stage
-      const response = await fetch(`https://aems-backend.onrender.com/api/jobs/${jobId}`, {
+      const response = await fetch(`https://aems-backend-main.onrender.com/api/jobs/${jobId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ stage: newStage }),
@@ -562,20 +563,21 @@ export default function ClientPage({ params }: PageProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Create Job Modal */}
+      {/* Create Job Modal
       <CreateJobModal
         open={isCreateJobOpen}
         onOpenChange={setIsCreateJobOpen}
         clientId={id}
         clientName={client.name}
         onJobCreated={handleRefresh}
-      />
+      /> */}
 
       <ConfirmStageChangeDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         onConfirm={confirmStageChange}
       />
+      <CreateJobRequirementForm open={isCreateJobOpen} onOpenChange={setIsCreateJobOpen} />
     </div>
   );
 }

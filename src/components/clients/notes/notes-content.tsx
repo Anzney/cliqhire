@@ -59,7 +59,7 @@ export function NotesContent({ clientId }: { clientId: string }) {
   const [editNote, setEditNote] = useState<Note | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-const API_BASE  = "https://aems-backend.onrender.com/api/notes";
+const API_BASE  = "https://aems-backend-main.onrender.com/api/notes";
 
 
 useEffect(() => {

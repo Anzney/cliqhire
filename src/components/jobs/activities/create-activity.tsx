@@ -62,7 +62,7 @@ export function CreateActivityModal() {
     event.preventDefault();
     
     // try {
-    //   const response = await axios.post('https://aems-backend.onrender.com/api/activities', formData);
+    //   const response = await axios.post('https://aems-backend-main.onrender.com/api/activities', formData);
     // } catch (error: any) {
     //   console.error('Error creating activity:', error.response.data);
     // }

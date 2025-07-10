@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Plus, LayoutGrid, List, SlidersHorizontal, RefreshCcw, MoreVertical } from 'lucide-react'
 import { JobsEmptyState } from "./empty-state"
 import { useState, useEffect } from "react"
-import { CreateJobModal } from "@/components/jobs/create-job-modal"
+// import { CreateJobModal } from "@/components/jobs/create-job-modal"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useRouter } from "next/navigation"
 import { JobStageBadge } from "@/components/jobs/job-stage-badge"
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import Dashboardheader from "@/components/dashboard-header"
 import Tableheader from "@/components/table-header"
+import { CreateJobRequirementForm } from "@/components/new-jobs/create-jobs-form";
 
 const columsArr =[
   "Position Name",
@@ -101,7 +102,7 @@ export default function JobsPage() {
   useEffect(() => {
     const loadJobs = async () => {
       try {
-        const response = await fetch("https://aems-backend.onrender.com/api/jobs");
+        const response = await fetch("https://aems-backend-main.onrender.com/api/jobs");
         if (!response.ok) {
           throw new Error("Failed to fetch jobs");
         }
@@ -133,7 +134,7 @@ export default function JobsPage() {
 
     const loadClients = async () => {
       try {
-        const response = await fetch("https://aems-backend.onrender.com/api/clients/names");
+        const response = await fetch("https://aems-backend-main.onrender.com/api/clients/names");
         if (!response.ok) {
           throw new Error("Failed to fetch clients");
         }
@@ -170,7 +171,7 @@ export default function JobsPage() {
       ));
 
       // Make API call to update the stage
-      const response = await fetch(`https://aems-backend.onrender.com/api/jobs/${jobId}`, {
+      const response = await fetch(`https://aems-backend-main.onrender.com/api/jobs/${jobId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stage: newStage }),
@@ -194,7 +195,7 @@ export default function JobsPage() {
   const refreshJobs = async () => {
     setLoading(true);
     try {
-      const response = await fetch("https://aems-backend.onrender.com/api/jobs");
+      const response = await fetch("https://aems-backend-main.onrender.com/api/jobs");
       if (!response.ok) {
         throw new Error("Failed to fetch jobs");
       }
@@ -338,20 +339,21 @@ export default function JobsPage() {
         )}
       </div>
       
-      <CreateJobModal 
+      {/* <CreateJobModal 
         open={open} 
         onOpenChange={setOpen}
         clientId={clientList[0]?._id || ""}
         clientName={clientList[0]?.name || ""}
         refreshJobs={refreshJobs}
         onJobCreated = {()=>console.log("")}
-      />
+      /> */}
       
       <ConfirmStageChangeDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         onConfirm={confirmStageChange}
       />
+      <CreateJobRequirementForm open={open} onOpenChange={setOpen} />
     </>
   )
 }

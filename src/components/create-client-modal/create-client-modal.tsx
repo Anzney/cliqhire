@@ -140,7 +140,7 @@ export function CreateClientModal({
     }
 
     if (typeof file === "string") {
-      const fileUrl = file.startsWith("http") ? file : `https://aems-backend.onrender.com/${file}`;
+      const fileUrl = file.startsWith("http") ? file : `https://aems-backend-main.onrender.com/${file}`;
       window.open(fileUrl, "_blank");
     } else if (file instanceof File) {
       const fileUrl = URL.createObjectURL(file);
