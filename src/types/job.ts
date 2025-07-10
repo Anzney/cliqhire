@@ -10,8 +10,6 @@ export type JobStage = 'New' | 'Sourcing' | 'Screening' | 'Interviewing' | 'Shor
 
 export interface Job {
   salaryRange: any
-  // jobOwner: ReactNode;
-  // id:string,
   _id: string;
   positionName: string;
   client: string;
