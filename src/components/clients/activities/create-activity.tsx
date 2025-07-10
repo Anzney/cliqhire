@@ -61,8 +61,10 @@ export function CreateActivityModal() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://aems-backend-main.onrender.com/api";
+    
     try {
-      const response = await axios.post('https://aems-backend-main.onrender.com/api/activities', formData);
+      const response = await axios.post(`${API_URL}/activities`, formData);
     } catch (error: any) {
       console.error('Error creating activity:', error.response.data);
     }

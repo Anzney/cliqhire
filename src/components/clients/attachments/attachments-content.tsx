@@ -19,7 +19,8 @@ interface AttachmentsContentProps {
   clientId: string;
 }
 
-const API_BASE_URL = "https://aems-backend-main.onrender.com/api/attachments";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://aems-backend-main.onrender.com/api";
+const API_ATTACHMENTS_URL = `${API_BASE_URL}/attachments`;
 
 export function AttachmentsContent({ clientId }: AttachmentsContentProps) {
   const [showUploadBox, setShowUploadBox] = useState(false);
@@ -32,7 +33,7 @@ export function AttachmentsContent({ clientId }: AttachmentsContentProps) {
 
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}?client_id=${clientId}`);
+      const response = await axios.get(`${API_ATTACHMENTS_URL}?client_id=${clientId}`);
       setAttachments(response.data.data || []);
     } catch (error) {
       console.error("Error fetching attachments:", error);
@@ -46,7 +47,7 @@ export function AttachmentsContent({ clientId }: AttachmentsContentProps) {
   const handleBulkDelete = async (ids: string[]) => {
     try {
       await Promise.all(
-        ids.map(id => axios.delete(`${API_BASE_URL}/${id}`))
+        ids.map(id => axios.delete(`${API_ATTACHMENTS_URL}/${id}`))
       );
       fetchAttachments();
     } catch (error) {
@@ -62,7 +63,7 @@ export function AttachmentsContent({ clientId }: AttachmentsContentProps) {
       formData.append("file", file);
       formData.append("client_id", clientId);
 
-      await axios.post(API_BASE_URL, formData);
+      await axios.post(API_ATTACHMENTS_URL, formData);
       // Always refresh list after upload to ensure new file appears
       await fetchAttachments();
     } catch (error) {
@@ -73,7 +74,7 @@ export function AttachmentsContent({ clientId }: AttachmentsContentProps) {
   // Delete a file
   const handleDelete = async (attachmentId: string) => {
     try {
-      await axios.delete(`${API_BASE_URL}/${attachmentId}`);
+      await axios.delete(`${API_ATTACHMENTS_URL}/${attachmentId}`);
       setAttachments((prev) =>
         prev.filter((item) => item._id !== attachmentId)
       );

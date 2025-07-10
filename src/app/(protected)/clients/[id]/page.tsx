@@ -143,11 +143,13 @@ export default function ClientPage({ params }: PageProps) {
     newStage: JobStage;
   } | null>(null);
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://aems-backend-main.onrender.com/api";
+
   useEffect(() => {
     const fetchClientData = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`https://aems-backend-main.onrender.com/api/clients/${id}`);
+        const response = await fetch(`${API_URL}/clients/${id}`);
         if (!response.ok) {
           if (response.status === 404) notFound();
           throw new Error("Failed to fetch client data");
@@ -171,7 +173,7 @@ export default function ClientPage({ params }: PageProps) {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const response = await fetch("https://aems-backend-main.onrender.com/api/jobs");
+        const response = await fetch(`${API_URL}/jobs`);
         if (!response.ok) throw new Error("Failed to fetch jobs");
         const responseData = await response.json();
         const jobs = responseData.data;
@@ -188,8 +190,8 @@ export default function ClientPage({ params }: PageProps) {
     setIsLoading(true);
     try {
       // Refetch client data and jobs
-      const clientResponse = await fetch(`https://aems-backend-main.onrender.com/api/clients/${id}`);
-      const jobsResponse = await fetch("https://aems-backend-main.onrender.com/api/jobs");
+      const clientResponse = await fetch(`${API_URL}/clients/${id}`);
+      const jobsResponse = await fetch(`${API_URL}/jobs`);
 
       if (clientResponse.ok) {
         const clientData = await clientResponse.json();
@@ -227,7 +229,7 @@ export default function ClientPage({ params }: PageProps) {
       );
 
       // Make API call to update the stage
-      const response = await fetch(`https://aems-backend-main.onrender.com/api/jobs/${jobId}`, {
+      const response = await fetch(`${API_URL}/jobs/${jobId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ stage: newStage }),

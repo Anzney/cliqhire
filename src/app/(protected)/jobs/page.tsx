@@ -99,10 +99,12 @@ export default function JobsPage() {
 
   const router = useRouter();
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://aems-backend-main.onrender.com/api";
+
   useEffect(() => {
     const loadJobs = async () => {
       try {
-        const response = await fetch("https://aems-backend-main.onrender.com/api/jobs");
+        const response = await fetch(`${API_URL}/jobs`);
         if (!response.ok) {
           throw new Error("Failed to fetch jobs");
         }
@@ -134,7 +136,7 @@ export default function JobsPage() {
 
     const loadClients = async () => {
       try {
-        const response = await fetch("https://aems-backend-main.onrender.com/api/clients/names");
+        const response = await fetch(`${API_URL}/clients/names`);
         if (!response.ok) {
           throw new Error("Failed to fetch clients");
         }
@@ -171,7 +173,7 @@ export default function JobsPage() {
       ));
 
       // Make API call to update the stage
-      const response = await fetch(`https://aems-backend-main.onrender.com/api/jobs/${jobId}`, {
+      const response = await fetch(`${API_URL}/jobs/${jobId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stage: newStage }),
@@ -195,7 +197,7 @@ export default function JobsPage() {
   const refreshJobs = async () => {
     setLoading(true);
     try {
-      const response = await fetch("https://aems-backend-main.onrender.com/api/jobs");
+      const response = await fetch(`${API_URL}/jobs`);
       if (!response.ok) {
         throw new Error("Failed to fetch jobs");
       }

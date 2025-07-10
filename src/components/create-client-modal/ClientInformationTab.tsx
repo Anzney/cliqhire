@@ -144,9 +144,9 @@ export function ClientInformationTab({
           <SelectContent>
             <SelectGroup>
               <SelectLabel>Segment</SelectLabel>
-              <SelectItem value="A">A</SelectItem>
-              <SelectItem value="B">B</SelectItem>
-              <SelectItem value="C">C</SelectItem>
+              <SelectItem value="A Class Client">A Class Client </SelectItem>
+              <SelectItem value="B Class Client">B Class Client</SelectItem>
+              <SelectItem value="C Class Client">C Class Client </SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
