@@ -261,9 +261,10 @@ export function CreateClientModal({
         formData.append("businessContractDetailsHMS", JSON.stringify(rest));
         formData.append("contractDocumentHMS", contractDocument ?? "");
       } else if (key === "IT & Technology") {
-        const { contractDocument, ...rest } = value as any;
-        formData.append("businessContractIT", JSON.stringify(rest));
-        formData.append("contractDocumentIT", contractDocument ?? "");
+        const { technicalProposalDocument, financialProposalDocument, ...rest } = value as any;
+        formData.append("consultingContractIT", JSON.stringify(rest));
+        formData.append("techProposalDocIT", technicalProposalDocument ?? "");
+        formData.append("finProposalDocIT", financialProposalDocument ?? "");
       } else if (key === "Outsourcing") {
         const { contractDocument, ...rest } = value as any;
         formData.append("outsourcingContract", JSON.stringify(rest));

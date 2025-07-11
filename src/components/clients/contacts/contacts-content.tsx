@@ -22,6 +22,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 interface ContactsContentProps {
   clientId: string;
@@ -40,7 +41,8 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
   const [clientWebsite, setClientWebsite] = useState<string>("");
   const [clientEmails, setClientEmails] = useState<string[]>([]);
   const [clientLinkedIn, setClientLinkedIn] = useState<string>("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // changed default to false
+  const [initialLoading, setInitialLoading] = useState(true); // new state for initial load
   const [error, setError] = useState("");
   const [isContactEditOpen, setIsContactEditOpen] = useState(false);
   const [deleteContactIndex, setDeleteContactIndex] = useState<number | null>(null);
@@ -49,7 +51,7 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
   useEffect(() => {
     const fetchClientData = async () => {
       try {
-        setLoading(true);
+        setInitialLoading(true); // set initial loading
         setError("");
 
         const response: any = await getClientById(clientId);
@@ -91,11 +93,11 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
         setClientWebsite(clientData.website || "");
         setClientEmails(clientData.emails || []);
         setClientLinkedIn(clientData.linkedInProfile || "");
-        setLoading(false);
+        setInitialLoading(false); // only set initial loading to false
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Failed to load client data";
         setError(`${errorMessage}. Please try again.`);
-        setLoading(false);
+        setInitialLoading(false); // only set initial loading to false
       }
     };
 
@@ -103,7 +105,7 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
       fetchClientData();
     } else {
       setError("No client ID provided");
-      setLoading(false);
+      setInitialLoading(false);
     }
   }, [clientId]);
 
@@ -143,7 +145,7 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
       });
       console.log("Updated client response:", updatedClient);
       setClientPhoneNumber(
-        updatedClient && updatedClient.phoneNumber ? updatedClient.phoneNumber : newPhoneNumber,
+        updatedClient?.phoneNumber || newPhoneNumber || "",
       );
       setIsContactEditOpen(false);
     } catch (err) {
@@ -164,7 +166,7 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
         ...updatePayload,
         website: newWebsite,
       });
-      setClientWebsite(updatedClient && updatedClient.website ? updatedClient.website : newWebsite);
+      setClientWebsite(updatedClient?.website || newWebsite || "");
       setIsContactEditOpen(false);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to update website";
@@ -188,7 +190,7 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
         ...updatePayload,
         emails: emailsArray,
       });
-      setClientEmails(updatedClient && updatedClient.emails ? updatedClient.emails : emailsArray);
+      setClientEmails(updatedClient?.emails || emailsArray || []);
       setIsContactEditOpen(false);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to update emails";
@@ -209,9 +211,7 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
         linkedInProfile: newLinkedIn,
       });
       setClientLinkedIn(
-        updatedClient && updatedClient.linkedInProfile
-          ? updatedClient.linkedInProfile
-          : newLinkedIn,
+        updatedClient?.linkedInProfile || newLinkedIn || "",
       );
       setIsContactEditOpen(false);
     } catch (err) {
@@ -223,12 +223,37 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
   };
 
   // Handler for deleting a primary contact
-  const handleDeleteContact = (index: number) => {
-    setPrimaryContacts((prev) => prev.filter((_, i) => i !== index));
-    setDeleteContactIndex(null);
+  const handleDeleteContact = async (index: number) => {
+    setLoading(true);
+    setError("");
+    try {
+      // Get current client data
+      const clientData: ClientResponse = await getClientById(clientId);
+      const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
+
+      // Remove the contact at the specified index
+      const updatedPrimaryContacts = (clientData.primaryContacts || []).filter((_, i) => i !== index);
+
+      // Update the client with the updated primary contacts
+      const updatedClient = await updateClient(clientId, {
+        ...updatePayload,
+        primaryContacts: updatedPrimaryContacts,
+      });
+
+      // Update local state with the response from backend
+      setPrimaryContacts(updatedClient?.primaryContacts || updatedPrimaryContacts || []);
+      setDeleteContactIndex(null);
+      toast.success("Contact deleted successfully!");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete contact";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (loading) {
+  if (initialLoading) {
     return <div className="p-8 text-center">Loading contacts...</div>;
   }
 
@@ -261,14 +286,26 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
                   </span>
                   {clientPhoneNumber ? (
                     (() => {
-                      const parsed = parsePhoneNumberFromString("+" + clientPhoneNumber);
-                      if (parsed && parsed.isValid()) {
+                      try {
+                        // Only parse if clientPhoneNumber is a valid string
+                        if (clientPhoneNumber && typeof clientPhoneNumber === 'string' && clientPhoneNumber.trim()) {
+                          const parsed = parsePhoneNumberFromString("+" + clientPhoneNumber);
+                          if (parsed && parsed.isValid()) {
+                            return (
+                              <span className="text-sm text-muted-foreground mr-1">
+                                {parsed.formatInternational()}
+                              </span>
+                            );
+                          }
+                        }
+                        // Fallback to showing the raw phone number
                         return (
                           <span className="text-sm text-muted-foreground mr-1">
-                            {parsed.formatInternational()}
+                            {clientPhoneNumber}
                           </span>
                         );
-                      } else {
+                      } catch (error) {
+                        // If parsing fails, show the raw phone number
                         return (
                           <span className="text-sm text-muted-foreground mr-1">
                             {clientPhoneNumber}
@@ -378,15 +415,19 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
                     emails: values.emails,
                     linkedInProfile: values.linkedInProfile,
                   });
-                  setClientPhoneNumber(updatedClient.phoneNumber || "");
-                  setClientWebsite(updatedClient.website || "");
-                  setClientEmails(updatedClient.emails || []);
-                  setClientLinkedIn(updatedClient.linkedInProfile || "");
+                  
+                  // Update state with the response data, ensuring proper fallbacks
+                  setClientPhoneNumber(updatedClient?.phoneNumber || values.phoneNumber || "");
+                  setClientWebsite(updatedClient?.website || values.website || "");
+                  setClientEmails(updatedClient?.emails || values.emails || []);
+                  setClientLinkedIn(updatedClient?.linkedInProfile || values.linkedInProfile || "");
                   setIsContactEditOpen(false);
+                  toast.success("Contact details updated successfully!");
                 } catch (err) {
                   const errorMessage =
                     err instanceof Error ? err.message : "Failed to update contact details";
                   setError(errorMessage);
+                  toast.error(errorMessage);
                 } finally {
                   setLoading(false);
                 }
@@ -493,21 +534,47 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
         <AddContactModal
           open={isDialogOpen}
           onOpenChange={setIsDialogOpen}
-          onAdd={(contact) =>
-            setPrimaryContacts((prev) => [
-              {
-                ...contact,
-                ...(typeof contact.firstName === "string" && contact.firstName
-                  ? { name: contact.firstName }
-                  : {
-                      name:
-                        `${contact.firstName || ""} ${contact.lastName || ""}`.trim() ||
-                        "Unnamed Contact",
-                    }),
-              },
-              ...prev,
-            ])
-          }
+          onAdd={async (contact) => {
+            setLoading(true);
+            setError("");
+            try {
+              // Prepare the contact data for backend - map to PrimaryContact interface
+              const contactData = {
+                name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim() || "Unnamed Contact",
+                email: contact.email,
+                phone: contact.phone,
+                countryCode: contact.countryCode,
+                position: contact.position,
+                linkedin: contact.linkedin,
+              };
+
+              // Get current client data
+              const clientData: ClientResponse = await getClientById(clientId);
+              const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
+
+              // Add the new contact to the existing primary contacts
+              const updatedPrimaryContacts = [
+                contactData,
+                ...(clientData.primaryContacts || []),
+              ];
+
+              // Update the client with the new primary contacts
+              const updatedClient = await updateClient(clientId, {
+                ...updatePayload,
+                primaryContacts: updatedPrimaryContacts,
+              });
+
+              // Update local state with the response from backend
+              setPrimaryContacts(updatedClient?.primaryContacts || updatedPrimaryContacts || []);
+              toast.success("Contact added successfully!");
+            } catch (err) {
+              const errorMessage = err instanceof Error ? err.message : "Failed to add contact";
+              setError(errorMessage);
+              toast.error(errorMessage);
+            } finally {
+              setLoading(false);
+            }
+          }}
           countryCodes={countryCodes}
           positionOptions={positionOptions}
         />
@@ -540,32 +607,33 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
               setLoading(true);
               setError("");
               try {
+                // Prepare the contact data for backend - map to PrimaryContact interface
+                const contactData = {
+                  name: `${updatedContact.firstName || ""} ${updatedContact.lastName || ""}`.trim() || "Unnamed Contact",
+                  email: updatedContact.email,
+                  phone: updatedContact.phone,
+                  countryCode: updatedContact.countryCode,
+                  position: updatedContact.position,
+                  linkedin: updatedContact.linkedin,
+                };
+
                 const clientData: ClientResponse = await getClientById(clientId);
                 const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
                 const updatedPrimaryContacts = (primaryContacts || []).map((c, i) =>
-                  i === editPrimaryContactIndex
-                    ? {
-                        ...updatedContact,
-                        ...(typeof updatedContact.name === "string" && updatedContact.name
-                          ? { name: updatedContact.name }
-                          : {
-                              name:
-                                `${updatedContact.firstName || ""} ${updatedContact.lastName || ""}`.trim() ||
-                                "Unnamed Contact",
-                            }),
-                      }
-                    : c,
+                  i === editPrimaryContactIndex ? contactData : c,
                 );
                 const updatedClient = await updateClient(clientId, {
                   ...updatePayload,
                   primaryContacts: updatedPrimaryContacts,
                 });
-                setPrimaryContacts(updatedClient.primaryContacts || updatedPrimaryContacts || []);
+                setPrimaryContacts(updatedClient?.primaryContacts || updatedPrimaryContacts || []);
                 setEditPrimaryContactIndex(null);
+                toast.success("Contact updated successfully!");
               } catch (err) {
                 const errorMessage =
                   err instanceof Error ? err.message : "Failed to update primary contact";
                 setError(errorMessage);
+                toast.error(errorMessage);
               } finally {
                 setLoading(false);
               }
@@ -602,21 +670,47 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
       <AddContactModal
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        onAdd={(contact) =>
-          setPrimaryContacts((prev) => [
-            {
-              ...contact,
-              ...(typeof contact.firstName === "string" && contact.firstName
-                ? { name: contact.firstName }
-                : {
-                    name:
-                      `${contact.firstName || ""} ${contact.lastName || ""}`.trim() ||
-                      "Unnamed Contact",
-                  }),
-            },
-            ...prev,
-          ])
-        }
+        onAdd={async (contact) => {
+          setLoading(true);
+          setError("");
+          try {
+            // Prepare the contact data for backend - map to PrimaryContact interface
+            const contactData = {
+              name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim() || "Unnamed Contact",
+              email: contact.email,
+              phone: contact.phone,
+              countryCode: contact.countryCode,
+              position: contact.position,
+              linkedin: contact.linkedin,
+            };
+
+            // Get current client data
+            const clientData: ClientResponse = await getClientById(clientId);
+            const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
+
+            // Add the new contact to the existing primary contacts
+            const updatedPrimaryContacts = [
+              contactData,
+              ...(clientData.primaryContacts || []),
+            ];
+
+            // Update the client with the new primary contacts
+            const updatedClient = await updateClient(clientId, {
+              ...updatePayload,
+              primaryContacts: updatedPrimaryContacts,
+            });
+
+            // Update local state with the response from backend
+            setPrimaryContacts(updatedClient?.primaryContacts || updatedPrimaryContacts || []);
+            toast.success("Contact added successfully!");
+          } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to add contact";
+            setError(errorMessage);
+            toast.error(errorMessage);
+          } finally {
+            setLoading(false);
+          }
+        }}
         countryCodes={countryCodes}
         positionOptions={positionOptions}
       />
