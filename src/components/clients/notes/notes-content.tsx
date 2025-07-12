@@ -59,14 +59,12 @@ export function NotesContent({ clientId }: { clientId: string }) {
   const [editNote, setEditNote] = useState<Note | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://aems-backend-main.onrender.com/api";
-const API_BASE_URL = `${API_BASE}/notes`;
-
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ;
 
 useEffect(() => {
     if (!clientId) return;
     axios
-      .get(`${API_BASE_URL}/client/${clientId}`)
+      .get(`${API_BASE}/api/notes/client/${clientId}`)
       .then((res) => setNotes(res.data.data.map(mapNote)))
       .catch((err) => console.error("Failed to fetch notes:", err));
   }, [clientId]);
@@ -82,7 +80,7 @@ useEffect(() => {
       // relatedTo: ... // Add if needed
     };
     try {
-      const res = await axios.post(API_BASE_URL, newNote);
+      const res = await axios.post(`${API_BASE}/api/notes`, newNote);
       setNotes([mapNote(res.data.data), ...notes]);
     } catch (error) {
       console.error("Failed to add note:", error);
@@ -93,7 +91,7 @@ useEffect(() => {
     if (!editNote) return;
 
     try {
-      const res = await axios.patch(`${API_BASE_URL}/${editNote.id}`, {
+      const res = await axios.patch(`${API_BASE}/api/notes/${editNote.id}`, {
         content: updated.content,
         // relatedTo: ... // Add if needed
       });
@@ -111,7 +109,7 @@ useEffect(() => {
 
  const handleDeleteNote = async (noteToDelete: Note) => {
     try {
-      await axios.delete(`${API_BASE_URL}/${noteToDelete.id}`);
+      await axios.delete(`${API_BASE}/api/notes/${noteToDelete.id}`);
       setNotes(notes.filter((n) => n.id !== noteToDelete.id)); // This is fine if you keep mapping _id -> id
     } catch (error) {
       console.error("Failed to delete note:", error);

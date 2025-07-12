@@ -1,11 +1,11 @@
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://aems-backend-main.onrender.com/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const createClient = async (data: FormData) => {
   try {
     const response = await axios.post(
-      `${API_URL}/clients`,
+      `${API_URL}/api/clients`,
       // "http://localhost:5000/api/clients"
       data,
       {

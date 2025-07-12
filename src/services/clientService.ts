@@ -104,7 +104,7 @@ interface ApiResponse<T> {
 }
 
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://aems-backend-main.onrender.com/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ;
 
 /**
  * Deep clones an object and removes circular references
@@ -442,7 +442,7 @@ const createClient = async (rawData: FormData | Omit<ClientResponse, "_id" | "cr
       // When sending FormData, do not set Content-Type header
       // The browser will automatically set it with the correct boundary
       const response = await axios.post<ApiResponse<ClientResponse>>(
-        `${API_URL}/clients`,
+        `${API_URL}/api/clients`,
         rawData,
         {
           timeout: 30000
@@ -450,7 +450,7 @@ const createClient = async (rawData: FormData | Omit<ClientResponse, "_id" | "cr
       );
       return response.data.data;
     } else {
-      const response = await sendClientRequest(`${API_URL}/clients`, 'post', rawData);
+      const response = await sendClientRequest(`${API_URL}/api/clients`, 'post', rawData);
       return response.data.data;
     }
   } catch (error: any) {
@@ -469,7 +469,7 @@ const getClients = async (queryParams: {
   clientTeam?: "Enterprise" | "SMB" | "Mid-Market";
 } = {}): Promise<{ clients: ClientResponse[]; total: number; page: number; pages: number }> => {
   try {
-    const response = await axios.get(`${API_URL}/clients`, { 
+    const response = await axios.get(`${API_URL}/api/clients`, { 
       params: queryParams,
       timeout: 15000
     });
@@ -514,7 +514,7 @@ const getClients = async (queryParams: {
 const getClientNames = async (search?: string): Promise<string[]> => {
   try {
     const response = await axios.get<ApiResponse<string[]>>(
-      `${API_URL}/clients/names`,
+      `${API_URL}/api/clients/names`,
       { 
         params: { search },
         timeout: 10000
@@ -530,7 +530,7 @@ const getClientNames = async (search?: string): Promise<string[]> => {
 const getClientById = async (id: string): Promise<ClientResponse> => {
   try {
     const response = await axios.get<ApiResponse<ClientResponse>>(
-      `${API_URL}/clients/${id}`,
+      `${API_URL}/api/clients/${id}`,
       { timeout: 15000 }
     );
     return response.data.data;
@@ -560,7 +560,7 @@ const updateClient = async (
 ): Promise<ClientResponse> => {
   try {
     const response = await sendClientRequest(
-      `${API_URL}/clients/${id}`,
+      `${API_URL}/api/clients/${id}`,
       'put',
       rawData
     );
@@ -643,7 +643,7 @@ const updateClientStageStatus = async (
 // Delete client
 const deleteClient = async (id: string): Promise<void> => {
   try {
-    await axios.delete<ApiResponse<null>>(`${API_URL}/clients/${id}`, {
+    await axios.delete<ApiResponse<null>>(`${API_URL}/api/clients/${id}`, {
       timeout: 10000
     });
   } catch (error: any) {
@@ -667,7 +667,7 @@ const uploadClientFile = async (
     formData.append("field", field);
 
     const response = await axios.post<ApiResponse<{ filePath: string }>>(
-      `${API_URL}/clients/${clientId}/upload`,
+      `${API_URL}/api/clients/${clientId}/upload`,
       formData,
       { 
         // When sending FormData, do not set Content-Type header
@@ -691,7 +691,7 @@ const addPrimaryContact = async (
     const validatedContact = validateAndSanitizeClientData(contactData);
     
     const response = await axios.post<ApiResponse<ClientResponse>>(
-      `${API_URL}/clients/${clientId}/primary-contacts`,
+      `${API_URL}/api/clients/${clientId}/primary-contacts`,
       validatedContact,
       { 
         headers: { "Content-Type": "application/json" },

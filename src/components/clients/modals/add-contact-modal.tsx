@@ -18,9 +18,8 @@ interface AddContactModalProps {
   positionOptions: { value: string; label: string }[];
 }
 
-export function AddContactModal({ open, onOpenChange, onAdd, countryCodes, positionOptions }: AddContactModalProps) {
-  const [formData, setFormData] = useState({
-    firstName: "",
+const initialForm ={
+  firstName: "",
     lastName: "",
     gender: "",
     email: "",
@@ -28,7 +27,10 @@ export function AddContactModal({ open, onOpenChange, onAdd, countryCodes, posit
     countryCode: "+966",
     position: "",
     linkedin: "",
-  });
+}
+
+export function AddContactModal({ open, onOpenChange, onAdd, countryCodes, positionOptions }: AddContactModalProps) {
+  const [formData, setFormData] = useState(initialForm);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,16 +49,7 @@ export function AddContactModal({ open, onOpenChange, onAdd, countryCodes, posit
       linkedin: formData.linkedin.trim(),
     });
     onOpenChange(false);
-    setFormData({
-      firstName: "",
-      lastName: "",
-      gender: "",
-      email: "",
-      phone: "",
-      countryCode: "+966",
-      position: "",
-      linkedin: "",
-    });
+    setFormData(initialForm);
   };
 
   return (

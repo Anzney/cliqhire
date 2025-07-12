@@ -130,93 +130,52 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
     return country ? country.label : code;
   };
 
-  const handlePhoneNumberUpdate = async (newPhoneNumber: string) => {
+  // Reusable function for adding a contact
+  const handleAddContact = async (contact: {
+    firstName?: string;
+    lastName?: string;
+    email: string;
+    phone: string;
+    countryCode: string;
+    position: string;
+    linkedin: string;
+  }) => {
     setLoading(true);
     setError("");
     try {
-      // Fetch the latest client data to avoid overwriting other fields
-      const clientData: ClientResponse = await getClientById(clientId);
-      // Prepare the update payload (omit _id, createdAt, updatedAt)
-      const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
-      // Update only the phoneNumber field
-      const updatedClient = await updateClient(clientId, {
-        ...updatePayload,
-        phoneNumber: newPhoneNumber,
-      });
-      console.log("Updated client response:", updatedClient);
-      setClientPhoneNumber(
-        updatedClient?.phoneNumber || newPhoneNumber || "",
-      );
-      setIsContactEditOpen(false);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to update phone number";
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
+      // Prepare the contact data for backend - map to PrimaryContact interface
+      const contactData = {
+        name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim() || "Unnamed Contact",
+        email: contact.email,
+        phone: contact.phone,
+        countryCode: contact.countryCode,
+        position: contact.position,
+        linkedin: contact.linkedin,
+      };
 
-  const handleWebsiteUpdate = async (newWebsite: string) => {
-    setLoading(true);
-    setError("");
-    try {
+      // Get current client data
       const clientData: ClientResponse = await getClientById(clientId);
       const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
-      const updatedClient = await updateClient(clientId, {
-        ...updatePayload,
-        website: newWebsite,
-      });
-      setClientWebsite(updatedClient?.website || newWebsite || "");
-      setIsContactEditOpen(false);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to update website";
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleEmailsUpdate = async (newEmails: string) => {
-    setLoading(true);
-    setError("");
-    const emailsArray = newEmails
-      .split(",")
-      .map((e) => e.trim())
-      .filter(Boolean);
-    try {
-      const clientData: ClientResponse = await getClientById(clientId);
-      const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
-      const updatedClient = await updateClient(clientId, {
-        ...updatePayload,
-        emails: emailsArray,
-      });
-      setClientEmails(updatedClient?.emails || emailsArray || []);
-      setIsContactEditOpen(false);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to update emails";
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
+      // Add the new contact to the existing primary contacts
+      const updatedPrimaryContacts = [
+        contactData,
+        ...(clientData.primaryContacts || []),
+      ];
 
-  const handleLinkedInUpdate = async (newLinkedIn: string) => {
-    setLoading(true);
-    setError("");
-    try {
-      const clientData: ClientResponse = await getClientById(clientId);
-      const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
+      // Update the client with the new primary contacts
       const updatedClient = await updateClient(clientId, {
         ...updatePayload,
-        linkedInProfile: newLinkedIn,
+        primaryContacts: updatedPrimaryContacts,
       });
-      setClientLinkedIn(
-        updatedClient?.linkedInProfile || newLinkedIn || "",
-      );
-      setIsContactEditOpen(false);
+
+      // Update local state with the response from backend
+      setPrimaryContacts(updatedClient?.primaryContacts || updatedPrimaryContacts || []);
+      toast.success("Contact added successfully!");
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to update LinkedIn profile";
+      const errorMessage = err instanceof Error ? err.message : "Failed to add contact";
       setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -534,47 +493,7 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
         <AddContactModal
           open={isDialogOpen}
           onOpenChange={setIsDialogOpen}
-          onAdd={async (contact) => {
-            setLoading(true);
-            setError("");
-            try {
-              // Prepare the contact data for backend - map to PrimaryContact interface
-              const contactData = {
-                name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim() || "Unnamed Contact",
-                email: contact.email,
-                phone: contact.phone,
-                countryCode: contact.countryCode,
-                position: contact.position,
-                linkedin: contact.linkedin,
-              };
-
-              // Get current client data
-              const clientData: ClientResponse = await getClientById(clientId);
-              const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
-
-              // Add the new contact to the existing primary contacts
-              const updatedPrimaryContacts = [
-                contactData,
-                ...(clientData.primaryContacts || []),
-              ];
-
-              // Update the client with the new primary contacts
-              const updatedClient = await updateClient(clientId, {
-                ...updatePayload,
-                primaryContacts: updatedPrimaryContacts,
-              });
-
-              // Update local state with the response from backend
-              setPrimaryContacts(updatedClient?.primaryContacts || updatedPrimaryContacts || []);
-              toast.success("Contact added successfully!");
-            } catch (err) {
-              const errorMessage = err instanceof Error ? err.message : "Failed to add contact";
-              setError(errorMessage);
-              toast.error(errorMessage);
-            } finally {
-              setLoading(false);
-            }
-          }}
+          onAdd={handleAddContact}
           countryCodes={countryCodes}
           positionOptions={positionOptions}
         />
@@ -670,47 +589,7 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
       <AddContactModal
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        onAdd={async (contact) => {
-          setLoading(true);
-          setError("");
-          try {
-            // Prepare the contact data for backend - map to PrimaryContact interface
-            const contactData = {
-              name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim() || "Unnamed Contact",
-              email: contact.email,
-              phone: contact.phone,
-              countryCode: contact.countryCode,
-              position: contact.position,
-              linkedin: contact.linkedin,
-            };
-
-            // Get current client data
-            const clientData: ClientResponse = await getClientById(clientId);
-            const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
-
-            // Add the new contact to the existing primary contacts
-            const updatedPrimaryContacts = [
-              contactData,
-              ...(clientData.primaryContacts || []),
-            ];
-
-            // Update the client with the new primary contacts
-            const updatedClient = await updateClient(clientId, {
-              ...updatePayload,
-              primaryContacts: updatedPrimaryContacts,
-            });
-
-            // Update local state with the response from backend
-            setPrimaryContacts(updatedClient?.primaryContacts || updatedPrimaryContacts || []);
-            toast.success("Contact added successfully!");
-          } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : "Failed to add contact";
-            setError(errorMessage);
-            toast.error(errorMessage);
-          } finally {
-            setLoading(false);
-          }
-        }}
+        onAdd={handleAddContact}
         countryCodes={countryCodes}
         positionOptions={positionOptions}
       />

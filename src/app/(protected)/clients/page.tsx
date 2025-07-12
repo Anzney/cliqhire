@@ -61,7 +61,7 @@ const columsArr = [
   "Job Count",
 ];
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://aems-backend-main.onrender.com/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface Client {
   id: string;
@@ -174,7 +174,7 @@ export default function ClientsPage() {
       }
 
       // Fallback: Direct API call
-      const directResponse = await axios.get(`${API_URL}/clients`, {
+      const directResponse = await axios.get(`${API_URL}/api/clients`, {
         params: {
           // Don't pass page/limit to get all clients
           ...(filters.name && { search: filters.name }),

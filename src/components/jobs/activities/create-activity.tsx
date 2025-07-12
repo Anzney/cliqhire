@@ -60,12 +60,6 @@ export function CreateActivityModal() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    
-    // try {
-    //   const response = await axios.post('https://aems-backend-main.onrender.com/api/activities', formData);
-    // } catch (error: any) {
-    //   console.error('Error creating activity:', error.response.data);
-    // }
   };
 
   const handleInputChange = (key: string) => (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

@@ -206,11 +206,11 @@ export function SummaryContent({ clientId }: SummaryContentProps) {
   }, [clientId]);
 
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://aems-backend-main.onrender.com/api";
+  const API_URL = process.env.NEXT_PUBLIC_API_URL ;
 
   const updateClientDetails = async (fieldName: string, value: string | string[]) => {
     try {
-      const response = await fetch(`${API_URL}/clients/${clientId}`, {
+      const response = await fetch(`${API_URL}/api/clients/${clientId}`, {
         method: "PATCH",
         body: JSON.stringify({ [fieldName]: value }),
         headers: {
@@ -243,7 +243,7 @@ export function SummaryContent({ clientId }: SummaryContentProps) {
         formData.append("field", field);    // The field name (e.g., "vatCopy" or "crCopy")
 
         const response = await fetch(
-          `${API_URL}/clients/${clientId}/upload`,
+          `${API_URL}/api/clients/${clientId}/upload`,
           {
             method: "POST",
             body: formData,
@@ -307,8 +307,7 @@ export function SummaryContent({ clientId }: SummaryContentProps) {
 
   const handlePreviewFile = (fileName: string) => {
     if (fileName) {
-      const baseUrl = API_URL.replace('/api', '');
-      const fileUrl = fileName.startsWith("https") ? fileName : `${baseUrl}/${fileName}`;
+      const fileUrl = fileName.startsWith("https") ? fileName : `${API_URL}/${fileName}`;
       window.open(fileUrl, "_blank");
     } else {
       console.error("No file to preview");
@@ -317,8 +316,7 @@ export function SummaryContent({ clientId }: SummaryContentProps) {
 
   const handleDownloadFile = async (fileName: string) => {
     if (fileName) {
-      const baseUrl = API_URL.replace('/api', '');
-      const fileUrl = fileName.startsWith("https") ? fileName : `${baseUrl}/${fileName}`;
+      const fileUrl = fileName.startsWith("https") ? fileName : `${API_URL}/${fileName}`;
       try {
         const response = await fetch(fileUrl);
         if (!response.ok) throw new Error('Network response was not ok.');

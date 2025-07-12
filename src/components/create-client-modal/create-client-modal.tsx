@@ -140,9 +140,8 @@ export function CreateClientModal({
     }
 
     if (typeof file === "string") {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://aems-backend-main.onrender.com/api";
-      const baseUrl = API_URL.replace('/api', '');
-      const fileUrl = file.startsWith("http") ? file : `${baseUrl}/${file}`;
+      const API_URL = process.env.NEXT_PUBLIC_API_URL ;
+      const fileUrl = file.startsWith("http") ? file : `${API_URL}/${file}`;
       window.open(fileUrl, "_blank");
     } else if (file instanceof File) {
       const fileUrl = URL.createObjectURL(file);
