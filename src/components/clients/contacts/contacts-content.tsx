@@ -158,6 +158,39 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
     } 
   };
 
+  // Reusable function for saving contact details
+  const handleSaveContactDetails = async (values: {
+    phoneNumber: string;
+    website: string;
+    emails: string[];
+    linkedInProfile: string;
+  }, closeModal: () => void) => {
+    setError("");
+    try {
+      // const clientData: ClientResponse = await getClientById(clientId);
+      const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
+      const updatedClient = await updateClient(clientId, {
+        ...updatePayload,
+        phoneNumber: values.phoneNumber,
+        website: values.website,
+        emails: values.emails,
+        linkedInProfile: values.linkedInProfile,
+      });
+      // Update state with the response data, ensuring proper fallbacks
+      setClientPhoneNumber(updatedClient?.phoneNumber || values.phoneNumber || "");
+      setClientWebsite(updatedClient?.website || values.website || "");
+      setClientEmails(updatedClient?.emails || values.emails || []);
+      setClientLinkedIn(updatedClient?.linkedInProfile || values.linkedInProfile || "");
+      closeModal();
+      toast.success("Contact details updated successfully!");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to update contact details";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    }
+  };
+
   // Handler for deleting a primary contact
   const handleDeleteContact = async (index: number) => {
     setError("");
@@ -181,6 +214,43 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
       toast.success("Contact deleted successfully!");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to delete contact";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    }
+  };
+
+  // Reusable function for editing a primary contact
+  const handleEditPrimaryContact = async (
+    updatedContact: any,
+    index: number,
+    closeModal: () => void
+  ) => {
+    setError("");
+    try {
+      // Prepare the contact data for backend - map to PrimaryContact interface
+      const contactData = {
+        name: `${updatedContact.firstName || ""} ${updatedContact.lastName || ""}`.trim() || "Unnamed Contact",
+        email: updatedContact.email,
+        phone: updatedContact.phone,
+        countryCode: updatedContact.countryCode,
+        position: updatedContact.position,
+        linkedin: updatedContact.linkedin,
+      };
+      
+      const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
+      const updatedPrimaryContacts = (primaryContacts || []).map((c, i) =>
+        i === index ? contactData : c,
+      );
+      const updatedClient = await updateClient(clientId, {
+        ...updatePayload,
+        primaryContacts: updatedPrimaryContacts,
+      });
+      setPrimaryContacts(updatedClient?.primaryContacts || updatedPrimaryContacts || []);
+      closeModal();
+      toast.success("Contact updated successfully!");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to update primary contact";
       setError(errorMessage);
       toast.error(errorMessage);
     }
@@ -330,38 +400,8 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
                 emails: clientEmails,
                 linkedInProfile: clientLinkedIn,
               }}
-              onSave={async (values: {
-                phoneNumber: string;
-                website: string;
-                emails: string[];
-                linkedInProfile: string;
-              }) => {
-                
-                setError("");
-                try {
-                  // const clientData: ClientResponse = await getClientById(clientId);
-                  const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
-                  const updatedClient = await updateClient(clientId, {
-                    ...updatePayload,
-                    phoneNumber: values.phoneNumber,
-                    website: values.website,
-                    emails: values.emails,
-                    linkedInProfile: values.linkedInProfile,
-                  });
-                  
-                  // Update state with the response data, ensuring proper fallbacks
-                  setClientPhoneNumber(updatedClient?.phoneNumber || values.phoneNumber || "");
-                  setClientWebsite(updatedClient?.website || values.website || "");
-                  setClientEmails(updatedClient?.emails || values.emails || []);
-                  setClientLinkedIn(updatedClient?.linkedInProfile || values.linkedInProfile || "");
-                  setIsContactEditOpen(false);
-                  toast.success("Contact details updated successfully!");
-                } catch (err) {
-                  const errorMessage =
-                    err instanceof Error ? err.message : "Failed to update contact details";
-                  setError(errorMessage);
-                  toast.error(errorMessage);
-                }
+              onSave={async (values) => {
+                await handleSaveContactDetails(values, () => setIsContactEditOpen(false));
               }}
             />
           </div>
@@ -495,36 +535,7 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
             onOpenChange={() => setEditPrimaryContactIndex(null)}
             contact={primaryContacts[editPrimaryContactIndex]}
             onSave={async (updatedContact) => {
-              setError("");
-              try {
-                // Prepare the contact data for backend - map to PrimaryContact interface
-                const contactData = {
-                  name: `${updatedContact.firstName || ""} ${updatedContact.lastName || ""}`.trim() || "Unnamed Contact",
-                  email: updatedContact.email,
-                  phone: updatedContact.phone,
-                  countryCode: updatedContact.countryCode,
-                  position: updatedContact.position,
-                  linkedin: updatedContact.linkedin,
-                };
-
-                const clientData: ClientResponse = await getClientById(clientId);
-                const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
-                const updatedPrimaryContacts = (primaryContacts || []).map((c, i) =>
-                  i === editPrimaryContactIndex ? contactData : c,
-                );
-                const updatedClient = await updateClient(clientId, {
-                  ...updatePayload,
-                  primaryContacts: updatedPrimaryContacts,
-                });
-                setPrimaryContacts(updatedClient?.primaryContacts || updatedPrimaryContacts || []);
-                setEditPrimaryContactIndex(null);
-                toast.success("Contact updated successfully!");
-              } catch (err) {
-                const errorMessage =
-                  err instanceof Error ? err.message : "Failed to update primary contact";
-                setError(errorMessage);
-                toast.error(errorMessage);
-              } 
+              await handleEditPrimaryContact(updatedContact, editPrimaryContactIndex, () => setEditPrimaryContactIndex(null));
             }}
           />
         )}
