@@ -233,8 +233,6 @@ export function CreateJobRequirementForm({
               )}
             </Button>
 
-            {/* Remove the conditional footer here */}
-
             {showAdditional && (
               <div className="space-y-4">
                 <div>
