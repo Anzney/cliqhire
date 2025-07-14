@@ -140,7 +140,7 @@ export function JobsContent({ clientId, clientName }: JobsContentProps) {
           <Checkbox id="selectAll" className="mr-4 border-gray-400" />
           <div className="grid grid-cols-7 w-full text-sm font-medium text-gray-500">
             <div>Position Name</div>
-            <div>Client</div>
+            <div>Job Type</div>
             <div>Location</div>
             <div>Headcount</div>
             <div>Stage</div>
@@ -157,7 +157,7 @@ export function JobsContent({ clientId, clientName }: JobsContentProps) {
                 <Checkbox id={`job-${job._id}`} className="mr-4 border-gray-400" />
                 <div className="grid grid-cols-7 w-full">
                   <div className="font-medium">{job.jobTitle}</div>
-                  <div>{clientName}</div>
+                  <div>{job.jobType || "N/A"}</div>
                   <div>{job.location}</div>
                   <div>{job.headcount}</div>
                   <div>

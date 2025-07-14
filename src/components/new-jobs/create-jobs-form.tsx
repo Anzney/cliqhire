@@ -24,16 +24,22 @@ import { fetchClients } from "./clientApi";
 import { createJob } from "@/services/jobService";
 import { currencies } from "country-data-list";
 import CurrencyFlag from "react-currency-flags";
+import { Combobox } from "@/components/ui/combobox";
 
 export function CreateJobRequirementForm({
   open,
   onOpenChange,
+  lockedClientId,
+  lockedClientName,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  lockedClientId?: string;
+  lockedClientName?: string;
 }) {
   const [form, setForm] = useState({
-    clientName: "",
+    clientName: lockedClientName || "",
+    clientId: lockedClientId || "",
     positionName: "",
     headcount: "",
     contractType: "",
@@ -45,12 +51,40 @@ export function CreateJobRequirementForm({
   });
   const [clientOptions, setClientOptions] = useState<{ _id: string; name: string }[]>([]);
   const [clientSearch, setClientSearch] = useState("");
-  const [showClientDropdown, setShowClientDropdown] = useState(false);
   const [showAdditional, setShowAdditional] = useState(false);
   const [errors, setErrors] = useState<{ clientName?: string; positionName?: string }>({});
 
-  // Add ref for click outside detection
-  const clientDropdownRef = useRef<HTMLDivElement>(null);
+  // Ensure form state is updated when dialog opens with locked client
+  useEffect(() => {
+    if (open) {
+      setForm({
+        clientName: lockedClientName || "",
+        clientId: lockedClientId || "",
+        positionName: "",
+        headcount: "",
+        contractType: "",
+        location: "",
+        minSalary: "",
+        maxSalary: "",
+        currency: "SAR",
+        jobDescription: "",
+      });
+    }
+  }, [open, lockedClientId, lockedClientName]);
+
+  // Helper to find client by id
+  const getClientById = (id: string) => clientOptions.find((c) => c._id === id);
+
+  // If lockedClientId is provided, only show that client in the dropdown
+  useEffect(() => {
+    if (lockedClientId && lockedClientName) {
+      setClientOptions([{ _id: lockedClientId, name: lockedClientName }]);
+    } else {
+      fetchClients(clientSearch).then((clients) => {
+        setClientOptions(clients);
+      });
+    }
+  }, [clientSearch, lockedClientId, lockedClientName]);
 
   // Form options grouped for readability and reusability
   const formOptions = {
@@ -77,42 +111,17 @@ export function CreateJobRequirementForm({
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  useEffect(() => {
-    if (showClientDropdown || clientSearch.length > 0) {
-      fetchClients(clientSearch).then((clients) => {
-        setClientOptions(clients);
-      });
-    }
-  }, [clientSearch, showClientDropdown]);
-
-  // Handle click outside to close dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (clientDropdownRef.current && !clientDropdownRef.current.contains(event.target as Node)) {
-        setShowClientDropdown(false);
-      }
-    };
-
-    if (showClientDropdown) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showClientDropdown]);
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     let newErrors: typeof errors = {};
-    if (!form.clientName.trim()) newErrors.clientName = "Client Name is required.";
+    if (!lockedClientId && !form.clientName.trim()) newErrors.clientName = "Client Name is required.";
     if (!form.positionName.trim()) newErrors.positionName = "Position Name is required.";
     setErrors(newErrors);
     if (Object.keys(newErrors).length === 0) {
       // Prepare job data for API call - matching JobData interface
       const jobData = {
         jobTitle: form.positionName,
-        client: form.clientName, // This will be the client name, the service will handle the conversion
+        client: form.clientId, // use clientId here
         jobType: form.contractType || "full time",
         experience: "entry level", // Default value as required by interface
         headcount: form.headcount ? parseInt(form.headcount) : undefined,
@@ -134,7 +143,9 @@ export function CreateJobRequirementForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-2xl p-0 flex flex-col h-[85vh] max-h-[500px]">
+      <DialogContent
+        className={`w-full max-w-2xl p-0 flex flex-col ${showAdditional ? 'h-[85vh] max-h-[500px]' : 'h-auto max-h-[400px]'} transition-all duration-300`}
+      >
         {/* Fixed Header */}
         <div className="sticky top-0 z-20 bg-white pb-2 flex-shrink-0 rounded-t-xl">
           <div className="p-6 pb-4">
@@ -149,47 +160,41 @@ export function CreateJobRequirementForm({
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-20">
+        <div
+          className={
+            showAdditional
+              ? "flex-1 min-h-0 overflow-y-auto px-6 pb-20"
+              : "px-6 pb-20"
+          }
+        >
           <form id="job-form" onSubmit={handleSubmit} className="space-y-4">
             <div className="relative">
               <Label className="block text-sm font-medium mb-1">
                 Client Name <span className="text-red-500">*</span>
               </Label>
-              <Input
-                name="clientName"
-                value={clientSearch || form.clientName}
-                onChange={(e) => {
-                  setClientSearch(e.target.value);
-                  handleChange(e);
-                }}
-                onFocus={() => setShowClientDropdown(true)}
-                onClick={() => setShowClientDropdown(true)}
-                placeholder="Enter client name"
-                className={errors.clientName ? "border-red-500" : ""}
-                autoComplete="off"
-              />
-              {showClientDropdown && clientOptions.length > 0 && (
-                <div
-                  ref={clientDropdownRef}
-                  className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto"
-                >
-                  {clientOptions.map((client) => (
-                    <div
-                      key={client._id}
-                      className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${form.clientName === client.name ? "bg-blue-100" : ""}`}
-                      onMouseDown={() => {
-                        setForm((prev) => ({ ...prev, clientName: client.name }));
-                        setClientSearch("");
-                        setShowClientDropdown(false);
-                      }}
-                    >
-                      {client.name}
-                    </div>
-                  ))}
+              {lockedClientId ? (
+                <div className="py-2 px-3 border rounded bg-gray-100 text-gray-700">
+                  {lockedClientName}
                 </div>
+              ) : (
+                <Combobox
+                  options={clientOptions.map((c) => ({ value: c._id, label: c.name }))}
+                  value={form.clientId}
+                  onValueChange={(val) => {
+                    const client = clientOptions.find((c) => c._id === val);
+                    setForm((prev) => ({
+                      ...prev,
+                      clientId: val,
+                      clientName: client ? client.name : "",
+                    }));
+                  }}
+                  placeholder="Select client"
+                  inputPlaceholder="Search client name"
+                  className={errors.clientName ? "border-red-500" : ""}
+                />
               )}
               {errors.clientName && (
-                <div className="text-xs text-red-500 mt-1">{errors.clientName}</div>
+                !lockedClientId && <div className="text-xs text-red-500 mt-1">{errors.clientName}</div>
               )}
             </div>
 
@@ -209,7 +214,27 @@ export function CreateJobRequirementForm({
               )}
             </div>
 
-            {/* Only the additional details section is conditionally rendered here */}
+            <Button
+              type="button"
+              className="flex items-center gap-2 mt-2 text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-0 active:text-blue-800 bg-transparent border-none shadow-none !bg-transparent !border-none !shadow-none"
+              onClick={() => setShowAdditional((v) => !v)}
+              aria-expanded={showAdditional}
+            >
+              {showAdditional ? (
+                <span className="flex items-center gap-2">
+                  Hide More Additional Detail
+                  <ChevronUpIcon className="w-4 h-4 ml-1" />
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  Show More Additional Detail
+                  <ChevronDownIcon className="w-4 h-4 ml-1" />
+                </span>
+              )}
+            </Button>
+
+            {/* Remove the conditional footer here */}
+
             {showAdditional && (
               <div className="space-y-4">
                 <div>
@@ -306,28 +331,10 @@ export function CreateJobRequirementForm({
                 </div>
               </div>
             )}
-
-            <div>
-              <Button
-                type="button"
-                variant="outline"
-                className="flex items-center gap-2 mt-2"
-                onClick={() => setShowAdditional((v) => !v)}
-                aria-expanded={showAdditional}
-              >
-                <PlusIcon className="w-4 h-4" />
-                Add Additional Detail
-                {showAdditional ? (
-                  <ChevronUpIcon className="w-4 h-4 ml-1" />
-                ) : (
-                  <ChevronDownIcon className="w-4 h-4 ml-1" />
-                )}
-              </Button>
-            </div>
           </form>
         </div>
 
-        {/* Fixed Footer */}
+        {/* Always render the fixed footer at the bottom, outside the scrollable area */}
         <div className="absolute bottom-0 left-0 right-0 bg-white z-50 border-t p-4 rounded-b-xl shadow-lg">
           <DialogFooter className="p-0 flex-row gap-1 justify-end">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

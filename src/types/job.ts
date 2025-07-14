@@ -25,6 +25,7 @@ export interface Job {
   minimumSalary?: number;
   maximumSalary?: number;
   department: string;
+  jobType?:string;
 }
 
 // Add the Updated InterFace

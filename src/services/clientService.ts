@@ -9,6 +9,7 @@ export interface PrimaryContact {
   position?: string;
   linkedin?: string;
   error?: string;
+  gender?: string;
 }
 
 export const clientStageStatuses = [
@@ -197,7 +198,8 @@ const validateAndSanitizeClientData = (data: any) => {
             phone: contact.phone || '',
             countryCode: contact.countryCode || '',
             position: contact.position || '',
-            linkedin: contact.linkedin || ''
+            linkedin: contact.linkedin || '',
+            gender: contact.gender || ''
           };
         }
         return contact;

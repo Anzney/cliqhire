@@ -46,7 +46,8 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
   const [error, setError] = useState("");
   const [isContactEditOpen, setIsContactEditOpen] = useState(false);
   const [deleteContactIndex, setDeleteContactIndex] = useState<number | null>(null);
-  const [editPrimaryContactIndex, setEditPrimaryContactIndex] = useState<number | null>(null);
+  const [editContactIndex, setEditContactIndex] = useState<number | null>(null);
+  const [addEditModalOpen, setAddEditModalOpen] = useState(false);
   
 
   useEffect(() => {
@@ -200,7 +201,7 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
       const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
 
       // Remove the contact at the specified index
-      const updatedPrimaryContacts = (clientData.primaryContacts || []).filter((_, i) => i !== index);
+      const updatedPrimaryContacts = (clientData.primaryContacts || []).filter((_: any, i: number) => i !== index);
 
       // Update the client with the updated primary contacts
       const updatedClient = await updateClient(clientId, {
@@ -219,42 +220,58 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
     }
   };
 
-  // Reusable function for editing a primary contact
-  const handleEditPrimaryContact = async (
-    updatedContact: any,
-    index: number,
-    closeModal: () => void
-  ) => {
+  // Unified add/edit handler
+  const handleAddOrEditContact = async (contact: any) => {
     setError("");
     try {
-      // Prepare the contact data for backend - map to PrimaryContact interface
       const contactData = {
-        name: `${updatedContact.firstName || ""} ${updatedContact.lastName || ""}`.trim() || "Unnamed Contact",
-        email: updatedContact.email,
-        phone: updatedContact.phone,
-        countryCode: updatedContact.countryCode,
-        position: updatedContact.position,
-        linkedin: updatedContact.linkedin,
+        name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim() || "Unnamed Contact",
+        email: contact.email,
+        phone: contact.phone,
+        countryCode: contact.countryCode,
+        position: contact.position,
+        linkedin: contact.linkedin,
+        gender: contact.gender, // ensure gender is included
       };
-      
       const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
-      const updatedPrimaryContacts = (primaryContacts || []).map((c, i) =>
-        i === index ? contactData : c,
-      );
+      let updatedPrimaryContacts;
+      if (editContactIndex !== null) {
+        // Edit mode
+        updatedPrimaryContacts = (clientData.primaryContacts || []).map((c: any, i: number) =>
+          i === editContactIndex ? contactData : c
+        );
+      } else {
+        // Add mode
+        updatedPrimaryContacts = [contactData, ...(clientData.primaryContacts || [])];
+      }
       const updatedClient = await updateClient(clientId, {
         ...updatePayload,
         primaryContacts: updatedPrimaryContacts,
       });
       setPrimaryContacts(updatedClient?.primaryContacts || updatedPrimaryContacts || []);
-      closeModal();
-      toast.success("Contact updated successfully!");
+      setAddEditModalOpen(false);
+      setEditContactIndex(null);
+      toast.success(editContactIndex !== null ? "Contact updated successfully!" : "Contact added successfully!");
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to update primary contact";
+      const errorMessage = err instanceof Error ? err.message : "Failed to add/edit contact";
       setError(errorMessage);
       toast.error(errorMessage);
     }
   };
+
+  // Prepare initial values for modal
+  const initialContactValues = editContactIndex !== null
+    ? primaryContacts[editContactIndex]
+    : {
+        firstName: "",
+        lastName: "",
+        gender: "",
+        email: "",
+        phone: "",
+        countryCode: "+966",
+        position: "",
+        linkedin: "",
+      };
 
   if (initialLoading) {
     return <div className="p-8 text-center">Loading contacts...</div>;
@@ -410,7 +427,7 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
             <div className="bg-white rounded-lg border shadow-sm p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-semibold">Primary Contacts</span>
-                <Button variant="outline" size="sm" onClick={() => setIsDialogOpen(true)}>
+                <Button variant="outline" size="sm" onClick={() => { setEditContactIndex(null); setAddEditModalOpen(true); }}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add
                 </Button>
@@ -432,6 +449,13 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
                               contact.name ||
                               "Unnamed Contact"}
                           </span>
+                          {/* Gender */}
+                          {contact.gender && (
+                            <p className="text-sm text-muted-foreground">
+                              <span className="text-xs font-semibold text-gray-500 mr-1">Gender:</span>
+                              {contact.gender}
+                            </p>
+                          )}
                           {/* Position */}
                           {contact.position && (
                             <p className="text-sm text-muted-foreground">
@@ -482,7 +506,7 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
                           <Button
                             variant="outline"
                             size="icon"
-                            onClick={() => setEditPrimaryContactIndex(index)}
+                            onClick={() => { setEditContactIndex(index); setAddEditModalOpen(true); }}
                           >
                             <Pencil className="size-4" />
                           </Button>
@@ -503,11 +527,16 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
           </div>
         </div>
         <AddContactModal
-          open={isDialogOpen}
-          onOpenChange={setIsDialogOpen}
-          onAdd={handleAddContact}
+          open={addEditModalOpen}
+          onOpenChange={(open) => {
+            setAddEditModalOpen(open);
+            if (!open) setEditContactIndex(null);
+          }}
+          onAdd={handleAddOrEditContact}
           countryCodes={countryCodes}
           positionOptions={positionOptions}
+          initialValues={initialContactValues}
+          isEdit={editContactIndex !== null}
         />
         {/* Delete confirmation (now using Shadcn Dialog) */}
         <Dialog open={deleteContactIndex !== null} onOpenChange={() => setDeleteContactIndex(null)}>
@@ -529,16 +558,6 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        {editPrimaryContactIndex !== null && (
-          <EditPrimaryContactDialog
-            open={editPrimaryContactIndex !== null}
-            onOpenChange={() => setEditPrimaryContactIndex(null)}
-            contact={primaryContacts[editPrimaryContactIndex]}
-            onSave={async (updatedContact) => {
-              await handleEditPrimaryContact(updatedContact, editPrimaryContactIndex, () => setEditPrimaryContactIndex(null));
-            }}
-          />
-        )}
       </div>
     );
   }

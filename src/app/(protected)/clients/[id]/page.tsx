@@ -27,7 +27,7 @@ import { ContactsContent } from "@/components/clients/contacts/contacts-content"
 import { HistoryContent } from "@/components/clients/history/history-content";
 import { JobsContent } from "@/components/clients/jobs/jobs-content";
 
-import { CreateJobModal } from "@/components/jobs/create-job-modal";
+import { CreateJobRequirementForm } from "@/components/new-jobs/create-jobs-form";
 
 interface PageProps {
   params: { id: string };
@@ -240,12 +240,11 @@ export default function ClientPage({ params }: PageProps) {
       </Tabs>
 
       {/* Create Job Modal */}
-      <CreateJobModal
+      <CreateJobRequirementForm
         open={isCreateJobOpen}
         onOpenChange={setIsCreateJobOpen}
-        clientId={id}
-        clientName={client.name}
-        onJobCreated={handleRefresh}
+        lockedClientId={id}
+        lockedClientName={client.name}
       />
     </div>
   );
