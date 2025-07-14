@@ -25,7 +25,8 @@ import {
 import { toast } from "sonner";
 
 interface ContactsContentProps {
-  clientId: string;
+  clientId: string ;
+  clientData : any;
 }
 
 interface ExtendedPrimaryContact extends PrimaryContact {
@@ -34,47 +35,26 @@ interface ExtendedPrimaryContact extends PrimaryContact {
   gender?: string;
 }
 
-export function ContactsContent({ clientId }: ContactsContentProps) {
+export function ContactsContent({ clientId , clientData }: ContactsContentProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [primaryContacts, setPrimaryContacts] = useState<ExtendedPrimaryContact[]>([]);
   const [clientPhoneNumber, setClientPhoneNumber] = useState<string>("");
   const [clientWebsite, setClientWebsite] = useState<string>("");
   const [clientEmails, setClientEmails] = useState<string[]>([]);
   const [clientLinkedIn, setClientLinkedIn] = useState<string>("");
-  const [loading, setLoading] = useState(false); // changed default to false
   const [initialLoading, setInitialLoading] = useState(true); // new state for initial load
   const [error, setError] = useState("");
   const [isContactEditOpen, setIsContactEditOpen] = useState(false);
   const [deleteContactIndex, setDeleteContactIndex] = useState<number | null>(null);
   const [editPrimaryContactIndex, setEditPrimaryContactIndex] = useState<number | null>(null);
+  
 
   useEffect(() => {
-    const fetchClientData = async () => {
+    if (clientData) {
+      setInitialLoading(true);
+      setError("");
+
       try {
-        setInitialLoading(true); // set initial loading
-        setError("");
-
-        const response: any = await getClientById(clientId);
-
-        // Handle different possible response structures
-        let clientData: any;
-
-        if (response && typeof response === "object") {
-          if ("data" in response && response.data) {
-            clientData = response.data;
-          } else if ("name" in response) {
-            clientData = response;
-          } else if (response.client) {
-            clientData = response.client;
-          } else if (response.result) {
-            clientData = response.result;
-          } else {
-            throw new Error("Invalid response structure from API");
-          }
-        } else {
-          throw new Error("No valid response received from API");
-        }
-
         // Map primary contacts to include gender and split name into firstName/lastName
         const mappedContacts = (clientData.primaryContacts || []).map((c: any) => ({
           name: c.name || "",
@@ -93,21 +73,20 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
         setClientWebsite(clientData.website || "");
         setClientEmails(clientData.emails || []);
         setClientLinkedIn(clientData.linkedInProfile || "");
-        setInitialLoading(false); // only set initial loading to false
+        setInitialLoading(false);
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Failed to load client data";
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to process client data";
         setError(`${errorMessage}. Please try again.`);
-        setInitialLoading(false); // only set initial loading to false
+        setInitialLoading(false);
       }
-    };
-
-    if (clientId) {
-      fetchClientData();
     } else {
       setError("No client ID provided");
       setInitialLoading(false);
     }
-  }, [clientId]);
+  }, [clientId, clientData]);
+
+  console.log(primaryContacts);
 
   const countryCodes = [
     { code: "+966", label: "+966 (Saudi Arabia)" },
@@ -140,7 +119,6 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
     position: string;
     linkedin: string;
   }) => {
-    setLoading(true);
     setError("");
     try {
       // Prepare the contact data for backend - map to PrimaryContact interface
@@ -154,7 +132,8 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
       };
 
       // Get current client data
-      const clientData: ClientResponse = await getClientById(clientId);
+      // const clientData: ClientResponse = await getClientById(clientId);
+
       const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
 
       // Add the new contact to the existing primary contacts
@@ -176,18 +155,15 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
       const errorMessage = err instanceof Error ? err.message : "Failed to add contact";
       setError(errorMessage);
       toast.error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
+    } 
   };
 
   // Handler for deleting a primary contact
   const handleDeleteContact = async (index: number) => {
-    setLoading(true);
     setError("");
     try {
       // Get current client data
-      const clientData: ClientResponse = await getClientById(clientId);
+      // const clientData: ClientResponse = await getClientById(clientId);
       const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
 
       // Remove the contact at the specified index
@@ -207,8 +183,6 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
       const errorMessage = err instanceof Error ? err.message : "Failed to delete contact";
       setError(errorMessage);
       toast.error(errorMessage);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -362,10 +336,10 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
                 emails: string[];
                 linkedInProfile: string;
               }) => {
-                setLoading(true);
+                
                 setError("");
                 try {
-                  const clientData: ClientResponse = await getClientById(clientId);
+                  // const clientData: ClientResponse = await getClientById(clientId);
                   const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
                   const updatedClient = await updateClient(clientId, {
                     ...updatePayload,
@@ -387,8 +361,6 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
                     err instanceof Error ? err.message : "Failed to update contact details";
                   setError(errorMessage);
                   toast.error(errorMessage);
-                } finally {
-                  setLoading(false);
                 }
               }}
             />
@@ -523,7 +495,6 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
             onOpenChange={() => setEditPrimaryContactIndex(null)}
             contact={primaryContacts[editPrimaryContactIndex]}
             onSave={async (updatedContact) => {
-              setLoading(true);
               setError("");
               try {
                 // Prepare the contact data for backend - map to PrimaryContact interface
@@ -553,9 +524,7 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
                   err instanceof Error ? err.message : "Failed to update primary contact";
                 setError(errorMessage);
                 toast.error(errorMessage);
-              } finally {
-                setLoading(false);
-              }
+              } 
             }}
           />
         )}
