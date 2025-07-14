@@ -30,7 +30,7 @@ interface AddContactModalProps {
 }
 
 const initialForm ={
-  firstName: "",
+    firstName: "",
     lastName: "",
     gender: "",
     email: "",
@@ -41,17 +41,17 @@ const initialForm ={
 }
 
 export function AddContactModal({ open, onOpenChange, onAdd, countryCodes, positionOptions, initialValues, isEdit }: AddContactModalProps) {
-  const [formData, setFormData] = useState(initialForm);
+  const [formData, setFormData] = useState({
+    firstName: initialValues?.firstName ?? "",
+    lastName:initialValues?.lastName ?? "",
+    gender:initialValues?.gender ?? "",
+    email: initialValues?.email ?? "",
+    phone: initialValues?.phone ?? "",
+    countryCode: initialValues?.countryCode ?? "+966",
+    position: initialValues?.position ?? "",
+    linkedin: initialValues?.linkedin ?? "",
+});
 
-  // Reset formData when modal opens, using initialValues if provided
-  useEffect(() => {
-    if (open) {
-      setFormData({
-        ...initialForm,
-        ...initialValues,
-      });
-    }
-  }, [open, initialValues]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

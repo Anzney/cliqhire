@@ -54,25 +54,7 @@ export function CreateJobRequirementForm({
   const [showAdditional, setShowAdditional] = useState(false);
   const [errors, setErrors] = useState<{ clientName?: string; positionName?: string }>({});
 
-  // Ensure form state is updated when dialog opens with locked client
-  useEffect(() => {
-    if (open) {
-      setForm({
-        clientName: lockedClientName || "",
-        clientId: lockedClientId || "",
-        positionName: "",
-        headcount: "",
-        contractType: "",
-        location: "",
-        minSalary: "",
-        maxSalary: "",
-        currency: "SAR",
-        jobDescription: "",
-      });
-    }
-  }, [open, lockedClientId, lockedClientName]);
-
-  // Helper to find client by id
+ // Helper to find client by id
   const getClientById = (id: string) => clientOptions.find((c) => c._id === id);
 
   // If lockedClientId is provided, only show that client in the dropdown
@@ -133,6 +115,18 @@ export function CreateJobRequirementForm({
       };
       try {
         await createJob(jobData);
+         setForm({
+        clientName: lockedClientName || "",
+        clientId: lockedClientId || "",
+        positionName: "",
+        headcount: "",
+        contractType: "",
+        location: "",
+        minSalary: "",
+        maxSalary: "",
+        currency: "SAR",
+        jobDescription: "",
+      });
         onOpenChange(false);
       } catch (error) {
         // Optionally handle error (e.g., show a message)
