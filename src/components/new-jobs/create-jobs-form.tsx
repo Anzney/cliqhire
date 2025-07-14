@@ -26,6 +26,8 @@ import { currencies } from "country-data-list";
 import CurrencyFlag from "react-currency-flags";
 import { Combobox } from "@/components/ui/combobox";
 
+// 
+
 export function CreateJobRequirementForm({
   open,
   onOpenChange,
