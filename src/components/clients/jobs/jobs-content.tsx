@@ -81,11 +81,11 @@ export function JobsContent({ clientId, clientName }: JobsContentProps) {
 
   const fetchJobs = async () => {
     try {
-      const response = await fetch("https://aems-backend.onrender.com/api/jobs");
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${API_URL}/api/jobs/client/${clientId}`);
       if (!response.ok) throw new Error("Failed to fetch jobs");
       const responseData = await response.json();
-      const jobs = responseData.data;
-      setClientJobs(jobs.filter((job: any) => job.client === clientId));
+      setClientJobs(responseData.data);
     } catch (error) {
       console.error("Error fetching jobs:", error);
     }
@@ -137,7 +137,7 @@ export function JobsContent({ clientId, clientName }: JobsContentProps) {
     <>
       <div className="border-b py-2 px-4">
         <div className="flex items-center">
-          <Checkbox id="selectAll" className="mr-4 border-gray-400" />
+          {/* <Checkbox id="selectAll" className="mr-4 border-gray-400" /> */}
           <div className="grid grid-cols-7 w-full text-sm font-medium text-gray-500">
             <div>Position Name</div>
             <div>Job Type</div>
@@ -154,7 +154,7 @@ export function JobsContent({ clientId, clientName }: JobsContentProps) {
           clientJobs.map((job) => (
             <div key={job._id} className="border-b hover:bg-gray-50 py-3 px-4">
               <div className="flex items-center">
-                <Checkbox id={`job-${job._id}`} className="mr-4 border-gray-400" />
+                {/* <Checkbox id={`job-${job._id}`} className="mr-4 border-gray-400" /> */}
                 <div className="grid grid-cols-7 w-full">
                   <div className="font-medium">{job.jobTitle}</div>
                   <div>{job.jobType || "N/A"}</div>

@@ -25,6 +25,8 @@ import { createJob } from "@/services/jobService";
 import { currencies } from "country-data-list";
 import CurrencyFlag from "react-currency-flags";
 import { Combobox } from "@/components/ui/combobox";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 // 
 
@@ -55,6 +57,7 @@ export function CreateJobRequirementForm({
   const [clientSearch, setClientSearch] = useState("");
   const [showAdditional, setShowAdditional] = useState(false);
   const [errors, setErrors] = useState<{ clientName?: string; positionName?: string }>({});
+  const router = useRouter();
 
  // Helper to find client by id
   const getClientById = (id: string) => clientOptions.find((c) => c._id === id);
@@ -106,7 +109,7 @@ export function CreateJobRequirementForm({
       const jobData = {
         jobTitle: form.positionName,
         client: form.clientId, // use clientId here
-        jobType: form.jobType || "full time",
+        jobType: (form.jobType || "full time").toLowerCase(),
         experience: "entry level", // Default value as required by interface
         headcount: form.headcount ? parseInt(form.headcount) : undefined,
         location: form.location ? [form.location] : undefined,
@@ -117,19 +120,21 @@ export function CreateJobRequirementForm({
       };
       try {
         await createJob(jobData);
-         setForm({
-        clientName: lockedClientName || "",
-        clientId: lockedClientId || "",
-        positionName: "",
-        headcount: "",
-        jobType: "",
-        location: "",
-        minSalary: "",
-        maxSalary: "",
-        currency: "SAR",
-        jobDescription: "",
-      });
+        toast("Job created successfully");
+        setForm({
+          clientName: lockedClientName || "",
+          clientId: lockedClientId || "",
+          positionName: "",
+          headcount: "",
+          jobType: "",
+          location: "",
+          minSalary: "",
+          maxSalary: "",
+          currency: "SAR",
+          jobDescription: "",
+        });
         onOpenChange(false);
+        router.refresh();
       } catch (error) {
         // Optionally handle error (e.g., show a message)
         console.error("Failed to create job:", error);
@@ -218,10 +223,9 @@ export function CreateJobRequirementForm({
                 onClick={() => setShowAdditional((v) => !v)}
                 aria-expanded={showAdditional}
               >
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-2 border-b-2 border-transparent hover:border-blue-600">
                   <PlusIcon className="w-4 h-4" />
                   Additional Details
-                  <ChevronDownIcon className="w-4 h-4 ml-1" />
                 </span>
               </Button>
             )}
@@ -328,10 +332,9 @@ export function CreateJobRequirementForm({
                   onClick={() => setShowAdditional((v) => !v)}
                   aria-expanded={showAdditional}
                 >
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-2 border-b-2 border-transparent hover:border-blue-600">
                     <MinusIcon className="w-4 h-4" />
                     Additional Details
-                    <ChevronUpIcon className="w-4 h-4 ml-1" />
                   </span>
                 </Button>
               </div>

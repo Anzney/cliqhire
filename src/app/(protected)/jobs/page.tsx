@@ -66,26 +66,6 @@ type Client = {
   name: string 
 }
 
-type ApiJob = {
-  _id: string
-  jobTitle: string
-  department: string
-  client: string
-  jobPosition?: string
-  location: string
-  headcount: number
-  stage: JobStage
-  minimumSalary: number
-  maximumSalary: number
-  jobType?: string
-  experience?: string
-  salaryRange?: {
-    min: number
-    max: number
-  }
-  jobOwner?: string
-}
-
 export default function JobsPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
@@ -114,25 +94,13 @@ export default function JobsPage() {
           throw new Error("Failed to fetch jobs");
         }
         const data = await response.json();
+        console.log("API jobs data:", data.data);
         
         if (data.success && Array.isArray(data.data)) {
-          const convertedJobs = data.data.map((job: ApiJob) => ({
-            id: job._id,
-            positionName: job.jobTitle,
-            department: job.department,
-            client: job.client,
-            location: job.location,
-            headcount: job.headcount.toString(),
-            stage: job.stage,
-            minSalary: job.minimumSalary ?? job.salaryRange?.min ?? 0,
-          maxSalary: job.maximumSalary ?? job.salaryRange?.max ?? 0,
-            jobType: job.jobType || 'Full Time',
-            experience: job.experience || 'Not specified',
-            jobOwner: job.jobOwner || 'Unassigned'
-          }));
-          setJobs(convertedJobs);
-          setTotalJobs(convertedJobs.length);
-          setTotalPages(Math.ceil(convertedJobs.length / pageSize) || 1);
+         
+          setJobs(data.data);
+          setTotalJobs(data.length);
+          setTotalPages(Math.ceil(data.length / pageSize) || 1);
         }
       } catch (error) {
         console.error("Error fetching jobs:", error);
@@ -175,6 +143,7 @@ export default function JobsPage() {
   // Paginate jobs
   const paginatedJobs = jobs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
+  console.log(jobs);
   const getClientName = (clientId: string) => {
     const client = clientList.find((client) => client._id === clientId);
     return client ? client.name : 'Unknown';
@@ -218,40 +187,41 @@ export default function JobsPage() {
     }
   };
 
-  const refreshJobs = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(`${API_URL}/api/jobs`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch jobs");
-      }
-      const data = await response.json();
+  console.log(paginatedJobs);
+  // const refreshJobs = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const response = await fetch(`${API_URL}/api/jobs`);
+  //     if (!response.ok) {
+  //       throw new Error("Failed to fetch jobs");
+  //     }
+  //     const data = await response.json();
       
-      if (data.success && Array.isArray(data.data)) {
-        const convertedJobs = data.data.map((job: ApiJob) => ({
-          id: job._id,
-          positionName: job.jobTitle,
-          department: job.department,
-          client: job.client,
-          location: job.location,
-          headcount: job.headcount.toString(),
-          stage: job.stage,
-          minSalary: job.minimumSalary,
-          maxSalary: job.maximumSalary,
-          jobType: job.jobType || 'Full Time',
-          experience: job.experience || 'Not specified',
-          jobOwner: job.jobOwner || 'Unassigned'
-        }));
-        setJobs(convertedJobs);
-        setTotalJobs(convertedJobs.length);
-        setTotalPages(Math.ceil(convertedJobs.length / pageSize) || 1);
-      }
-    } catch (error) {
-      console.error("Error refreshing jobs:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     if (data.success && Array.isArray(data.data)) {
+  //       const convertedJobs = data.data.map((job: ApiJob) => ({
+  //         id: job._id,
+  //         positionName: job.jobTitle,
+  //         department: job.department,
+  //         client: job.client,
+  //         location: job.location,
+  //         headcount: job.headcount.toString(),
+  //         stage: job.stage,
+  //         minSalary: job.minimumSalary,
+  //         maxSalary: job.maximumSalary,
+  //         jobType: job.jobType || 'Full Time',
+  //         experience: job.experience || 'Not specified',
+  //         jobOwner: job.jobOwner || 'Unassigned'
+  //       }));
+  //       setJobs(convertedJobs);
+  //       setTotalJobs(convertedJobs.length);
+  //       setTotalPages(Math.ceil(convertedJobs.length / pageSize) || 1);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error refreshing jobs:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   if (loading) {
     return (
@@ -332,25 +302,20 @@ export default function JobsPage() {
               </TableHeader>
               <TableBody>
                 {paginatedJobs.length > 0 ? (
-                  paginatedJobs.map((job: Job) => (
+                  paginatedJobs.map((job) => (
                     <TableRow
                       key={job._id}
                       className="hover:bg-muted/50 cursor-pointer"
                       onClick={() => router.push(`/jobs/${job._id}`)}
                     >
-                      <TableCell className="text-sm font-medium">{job.positionName}</TableCell>
+                      <TableCell className="text-sm font-medium">{job.jobTitle}</TableCell>
                       <TableCell className="text-sm">{job.jobType}</TableCell>
                       <TableCell className="text-sm">{job.location}</TableCell>
                       <TableCell className="text-sm">{job.headcount}</TableCell>
-                      <TableCell className="text-sm">
-                        <JobStageBadge
-                          stage={job.stage}
-                          onStageChange={(newStage) => handleStageChange(job._id, newStage)}
-                        />
-                      </TableCell>
-                      <TableCell className="text-sm">{job.minSalary}</TableCell>
-                      <TableCell className="text-sm">{job.maxSalary}</TableCell>
-                      <TableCell className="text-sm">{getClientName(job.client)}</TableCell>
+                      <TableCell className="text-sm">{job.stage}</TableCell>
+                      <TableCell className="text-sm">{job.minimumSalary}</TableCell>
+                      <TableCell className="text-sm">{job.maximumSalary}</TableCell>
+                      <TableCell className="text-sm">{job.client}</TableCell>
                     </TableRow>
                   ))
                 ) : (
