@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { PlusIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import { PlusIcon, MinusIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { fetchClients } from "./clientApi";
 import { createJob } from "@/services/jobService";
 import { currencies } from "country-data-list";
@@ -210,24 +210,21 @@ export function CreateJobRequirementForm({
               )}
             </div>
 
-            <Button
-              type="button"
-              className="flex items-center gap-2 mt-2 text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-0 active:text-blue-800 bg-transparent border-none shadow-none !bg-transparent !border-none !shadow-none"
-              onClick={() => setShowAdditional((v) => !v)}
-              aria-expanded={showAdditional}
-            >
-              {showAdditional ? (
+            {/* Toggle Button: Show when additional details are hidden */}
+            {!showAdditional && (
+              <Button
+                type="button"
+                className="flex items-center gap-2 mt-2 text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-0 active:text-blue-800 bg-transparent border-none shadow-none !bg-transparent !border-none !shadow-none"
+                onClick={() => setShowAdditional((v) => !v)}
+                aria-expanded={showAdditional}
+              >
                 <span className="flex items-center gap-2">
-                  Hide More Additional Detail
-                  <ChevronUpIcon className="w-4 h-4 ml-1" />
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  Show More Additional Detail
+                  <PlusIcon className="w-4 h-4" />
+                  Additional Details
                   <ChevronDownIcon className="w-4 h-4 ml-1" />
                 </span>
-              )}
-            </Button>
+              </Button>
+            )}
 
             {showAdditional && (
               <div className="space-y-4">
@@ -323,6 +320,20 @@ export function CreateJobRequirementForm({
                     placeholder="Enter detailed job description..."
                   />
                 </div>
+
+                {/* Toggle Button: Show when additional details are visible, below Job Description */}
+                <Button
+                  type="button"
+                  className="flex items-center gap-2 mt-2 text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-0 active:text-blue-800 bg-transparent border-none shadow-none !bg-transparent !border-none !shadow-none"
+                  onClick={() => setShowAdditional((v) => !v)}
+                  aria-expanded={showAdditional}
+                >
+                  <span className="flex items-center gap-2">
+                    <MinusIcon className="w-4 h-4" />
+                    Additional Details
+                    <ChevronUpIcon className="w-4 h-4 ml-1" />
+                  </span>
+                </Button>
               </div>
             )}
           </form>
