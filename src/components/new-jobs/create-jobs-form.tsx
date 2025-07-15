@@ -44,7 +44,7 @@ export function CreateJobRequirementForm({
     clientId: lockedClientId || "",
     positionName: "",
     headcount: "",
-    contractType: "",
+    jobType: "",
     location: "",
     minSalary: "",
     maxSalary: "",
@@ -72,7 +72,7 @@ export function CreateJobRequirementForm({
 
   // Form options grouped for readability and reusability
   const formOptions = {
-    contractOptions: [
+    jobTypeOptions: [
       "Full Time",
       "Part Time",
       "Internship",
@@ -106,7 +106,7 @@ export function CreateJobRequirementForm({
       const jobData = {
         jobTitle: form.positionName,
         client: form.clientId, // use clientId here
-        jobType: form.contractType || "full time",
+        jobType: form.jobType || "full time",
         experience: "entry level", // Default value as required by interface
         headcount: form.headcount ? parseInt(form.headcount) : undefined,
         location: form.location ? [form.location] : undefined,
@@ -122,7 +122,7 @@ export function CreateJobRequirementForm({
         clientId: lockedClientId || "",
         positionName: "",
         headcount: "",
-        contractType: "",
+        jobType: "",
         location: "",
         minSalary: "",
         maxSalary: "",
@@ -241,13 +241,13 @@ export function CreateJobRequirementForm({
                 </div>
 
                 <div>
-                  <Label className="block text-sm font-medium mb-1">Contract Details</Label>
-                  <Select value={form.contractType} onValueChange={(val) => setForm((prev) => ({ ...prev, contractType: val }))}>
+                  <Label className="block text-sm font-medium mb-1">Job Types</Label>
+                  <Select value={form.jobType} onValueChange={(val) => setForm((prev) => ({ ...prev, jobType: val }))}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select contract type" />
                     </SelectTrigger>
                     <SelectContent>
-                      {formOptions.contractOptions.map((option) => (
+                      {formOptions.jobTypeOptions.map((option) => (
                         <SelectItem key={option} value={option}>
                           {option}
                         </SelectItem>
