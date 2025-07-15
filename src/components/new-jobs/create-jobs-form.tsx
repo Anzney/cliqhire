@@ -140,7 +140,7 @@ export function CreateJobRequirementForm({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className={`w-full max-w-2xl p-0 flex flex-col ${showAdditional ? 'h-[85vh] max-h-[500px]' : 'h-auto max-h-[400px]'} transition-all duration-300`}
+        className={`w-full max-w-2xl p-0 flex flex-col ${showAdditional ? 'h-[85vh] max-h-[550px]' : 'h-auto max-h-[410px]'} transition-all duration-300`}
       >
         {/* Fixed Header */}
         <div className="sticky top-0 z-20 bg-white pb-2 flex-shrink-0 rounded-t-xl">
@@ -214,7 +214,7 @@ export function CreateJobRequirementForm({
             {!showAdditional && (
               <Button
                 type="button"
-                className="flex items-center gap-2 mt-2 text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-0 active:text-blue-800 bg-transparent border-none shadow-none !bg-transparent !border-none !shadow-none"
+                className="flex items-center gap-2 mt-2 text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-0 active:text-blue-800 !bg-transparent !border-none !shadow-none"
                 onClick={() => setShowAdditional((v) => !v)}
                 aria-expanded={showAdditional}
               >
@@ -324,7 +324,7 @@ export function CreateJobRequirementForm({
                 {/* Toggle Button: Show when additional details are visible, below Job Description */}
                 <Button
                   type="button"
-                  className="flex items-center gap-2 mt-2 text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-0 active:text-blue-800 bg-transparent border-none shadow-none !bg-transparent !border-none !shadow-none"
+                  className="flex items-center gap-2 mt-2 text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-0 active:text-blue-800 !bg-transparent !border-none !shadow-none"
                   onClick={() => setShowAdditional((v) => !v)}
                   aria-expanded={showAdditional}
                 >
