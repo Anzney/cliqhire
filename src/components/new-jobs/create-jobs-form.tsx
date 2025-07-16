@@ -223,9 +223,11 @@ export function CreateJobRequirementForm({
                 onClick={() => setShowAdditional((v) => !v)}
                 aria-expanded={showAdditional}
               >
-                <span className="flex items-center gap-2 border-b-2 border-transparent hover:border-blue-600">
+                <span className="flex items-center gap-2">
                   <PlusIcon className="w-4 h-4" />
-                  Additional Details
+                  <span className="border-b-2 border-transparent hover:border-blue-600 leading-none pb-0">
+                    Additional Details
+                  </span>
                 </span>
               </Button>
             )}
@@ -332,9 +334,11 @@ export function CreateJobRequirementForm({
                   onClick={() => setShowAdditional((v) => !v)}
                   aria-expanded={showAdditional}
                 >
-                  <span className="flex items-center gap-2 border-b-2 border-transparent hover:border-blue-600">
+                  <span className="flex items-center gap-2">
                     <MinusIcon className="w-4 h-4" />
-                    Additional Details
+                    <span className="border-b-2 border-transparent hover:border-blue-600 leading-none pb-0">
+                      Additional Details
+                    </span>
                   </span>
                 </Button>
               </div>
