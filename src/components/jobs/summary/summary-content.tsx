@@ -6,7 +6,7 @@ import { TeamMember } from "@/components/clients/summary/team-member";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { FileUploadRow } from "@/components/clients/summary/file-upload-row";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, RefreshCcw } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { CollapsibleSection } from "@/components/clients/summary/collapsible-section";
 import { EditFieldDialog } from "./edit-field-dialog";
@@ -111,7 +111,12 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <RefreshCcw className="h-8 w-8 mb-2 animate-spin text-gray-500" />
+      <div className="text-lg text-gray-600">Loading...</div>
+    </div>
+  );
   if (error) return <div className="text-red-600">{error}</div>;
   if (!jobDetails) return <div>No job details found</div>;
 
