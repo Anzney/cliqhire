@@ -140,7 +140,8 @@ export function CreateClientModal({
     }
 
     if (typeof file === "string") {
-      const fileUrl = file.startsWith("http") ? file : `https://aems-backend.onrender.com/${file}`;
+      const API_URL = process.env.NEXT_PUBLIC_API_URL ;
+      const fileUrl = file.startsWith("http") ? file : `${API_URL}/${file}`;
       window.open(fileUrl, "_blank");
     } else if (file instanceof File) {
       const fileUrl = URL.createObjectURL(file);
@@ -259,9 +260,10 @@ export function CreateClientModal({
         formData.append("businessContractDetailsHMS", JSON.stringify(rest));
         formData.append("contractDocumentHMS", contractDocument ?? "");
       } else if (key === "IT & Technology") {
-        const { contractDocument, ...rest } = value as any;
-        formData.append("businessContractIT", JSON.stringify(rest));
-        formData.append("contractDocumentIT", contractDocument ?? "");
+        const { technicalProposalDocument, financialProposalDocument, ...rest } = value as any;
+        formData.append("consultingContractIT", JSON.stringify(rest));
+        formData.append("techProposalDocIT", technicalProposalDocument ?? "");
+        formData.append("finProposalDocIT", financialProposalDocument ?? "");
       } else if (key === "Outsourcing") {
         const { contractDocument, ...rest } = value as any;
         formData.append("outsourcingContract", JSON.stringify(rest));

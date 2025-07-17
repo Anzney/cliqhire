@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import '@/styles/phone-input-override.css';
@@ -16,10 +16,20 @@ interface AddContactModalProps {
   onAdd: (contact: { firstName: string; lastName: string; gender: string; email: string; phone: string; countryCode: string; position: string; linkedin: string }) => void;
   countryCodes?: { code: string; label: string }[];
   positionOptions: { value: string; label: string }[];
+  initialValues?: {
+    firstName?: string;
+    lastName?: string;
+    gender?: string;
+    email?: string;
+    phone?: string;
+    countryCode?: string;
+    position?: string;
+    linkedin?: string;
+  };
+  isEdit?: boolean;
 }
 
-export function AddContactModal({ open, onOpenChange, onAdd, countryCodes, positionOptions }: AddContactModalProps) {
-  const [formData, setFormData] = useState({
+const initialForm ={
     firstName: "",
     lastName: "",
     gender: "",
@@ -28,7 +38,20 @@ export function AddContactModal({ open, onOpenChange, onAdd, countryCodes, posit
     countryCode: "+966",
     position: "",
     linkedin: "",
-  });
+}
+
+export function AddContactModal({ open, onOpenChange, onAdd, countryCodes, positionOptions, initialValues, isEdit }: AddContactModalProps) {
+  const [formData, setFormData] = useState({
+    firstName: initialValues?.firstName ?? "",
+    lastName:initialValues?.lastName ?? "",
+    gender:initialValues?.gender ?? "",
+    email: initialValues?.email ?? "",
+    phone: initialValues?.phone ?? "",
+    countryCode: initialValues?.countryCode ?? "+966",
+    position: initialValues?.position ?? "",
+    linkedin: initialValues?.linkedin ?? "",
+});
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,23 +70,14 @@ export function AddContactModal({ open, onOpenChange, onAdd, countryCodes, posit
       linkedin: formData.linkedin.trim(),
     });
     onOpenChange(false);
-    setFormData({
-      firstName: "",
-      lastName: "",
-      gender: "",
-      email: "",
-      phone: "",
-      countryCode: "+966",
-      position: "",
-      linkedin: "",
-    });
+    setFormData(initialForm);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Contact</DialogTitle>
+          <DialogTitle>{isEdit ? "Edit Contact" : "Add Contact"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
@@ -157,7 +171,7 @@ export function AddContactModal({ open, onOpenChange, onAdd, countryCodes, posit
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit">Add Contact</Button>
+            <Button type="submit">{isEdit ? "Save Changes" : "Add Contact"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

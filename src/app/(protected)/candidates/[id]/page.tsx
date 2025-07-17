@@ -7,6 +7,7 @@ import { SlidersHorizontal, RefreshCcw, Plus, FileText, Mail, Users, Briefcase, 
 import { useParams } from 'next/navigation';
 // If TAB_ICONS is available, import it, otherwise use placeholders
 // import { TAB_ICONS } from "@/components/candidates/summary/tab-icons";
+import { CreateJobRequirementForm } from "@/components/new-jobs/create-jobs-form";
 
 const TABS = [
   { label: "Jobs", icon: <Briefcase className="w-4 h-4" /> },
@@ -24,6 +25,7 @@ export default function CandidatePage() {
   // Find candidate by email from shared data
   const candidate = mockCandidates.find((c: Candidate) => c.email === email);
   const [activeTab, setActiveTab] = useState("Jobs");
+  const [openJobModal, setOpenJobModal] = useState(false);
 
   if (!candidate) {
     return (
@@ -61,6 +63,7 @@ export default function CandidatePage() {
           <Button
             size="sm"
             className="bg-black text-white hover:bg-gray-900 font-semibold px-4 py-1 h-9 rounded-md flex items-center gap-2 text-sm"
+            onClick={() => setOpenJobModal(true)}
           >
             <Plus className="w-4 h-4" /> Create Job Requirement
           </Button>
@@ -112,6 +115,7 @@ export default function CandidatePage() {
           <div className="text-gray-400">{activeTab} content coming soon...</div>
         )}
       </div>
+      <CreateJobRequirementForm open={openJobModal} onOpenChange={setOpenJobModal} />
     </div>
   );
 }

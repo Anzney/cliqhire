@@ -48,11 +48,11 @@ export function ContractInformationTab({
   const handleSaveContract = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (modalBusiness === "Recruitment" || modalBusiness === "HR Managed Services" || modalBusiness === "IT & Technology") {
+    if (modalBusiness === "Recruitment" || modalBusiness === "HR Managed Services") {
       const clonedFormData = structuredClone(formData);
       clonedFormData.contractForms[modalBusiness!] = standardContractFormData;
       setFormData(clonedFormData);
-    } else if (modalBusiness === "HR Consulting" || modalBusiness === "Mgt Consulting") {
+    } else if (modalBusiness === "HR Consulting" || modalBusiness === "Mgt Consulting" || modalBusiness === "IT & Technology") {
       const clonedFormData = structuredClone(formData);
       clonedFormData.contractForms[modalBusiness!] = consultingContractFormData;
       setFormData(clonedFormData);
@@ -172,13 +172,13 @@ export function ContractInformationTab({
           <div className="flex-1 min-h-0">
             <div className="overflow-y-auto overflow-x-hidden h-full pr-1 flex flex-col gap-1">
               {modalBusiness &&
-                ["Recruitment", "HR Managed Services", "IT & Technology"].includes(modalBusiness) &&
+                ["Recruitment", "HR Managed Services"].includes(modalBusiness) &&
                 <StandardContractForm 
                   formData={standardContractFormData}
                   setFormData={setStandardContractFormData}
                 />}
               {modalBusiness &&
-                ["HR Consulting", "Mgt Consulting"].includes(modalBusiness) &&
+                ["HR Consulting", "Mgt Consulting", "IT & Technology"].includes(modalBusiness) &&
                 <ConsultingContractForm 
                   formData={consultingContractFormData}
                   setFormData={setConsultingContractFormData}
