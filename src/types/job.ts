@@ -46,6 +46,7 @@ export interface Job {
 
 export interface JobResponse {
    success: boolean;
+   data?: any; // Add this line to match jobService.ts and API response
   // data?: Job | Job[];
   message?: string;
   count?: number;

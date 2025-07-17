@@ -706,6 +706,27 @@ const addPrimaryContact = async (
   }
 };
 
+// Update a single primary contact using PATCH API
+const updatePrimaryContact = async (
+  clientId: string,
+  contactId: string,
+  contactData: Partial<PrimaryContact>
+): Promise<PrimaryContact> => {
+  try {
+    const response = await axios.patch<ApiResponse<PrimaryContact>>(
+      `${API_URL}/api/clients/${clientId}/primaryContacts/${contactId}`,
+      contactData,
+      {
+        headers: { "Content-Type": "application/json" },
+        timeout: 15000
+      }
+    );
+    return response.data.data;
+  } catch (error: any) {
+    throw handleError(error);
+  }
+};
+
 export {
   createClient,
   getClients,
@@ -717,4 +738,5 @@ export {
   deleteClient,
   uploadClientFile,
   addPrimaryContact,
+  updatePrimaryContact,
 };

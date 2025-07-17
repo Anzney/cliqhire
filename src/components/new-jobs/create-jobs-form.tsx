@@ -119,20 +119,27 @@ export function CreateJobRequirementForm({
         jobDescription: form.jobDescription || undefined,
       };
       try {
-        await createJob(jobData);
-        toast("Job created successfully");
-        setForm({
-          clientName: lockedClientName || "",
-          clientId: lockedClientId || "",
-          positionName: "",
-          headcount: "",
-          jobType: "",
-          location: "",
-          minSalary: "",
-          maxSalary: "",
-          currency: "SAR",
-          jobDescription: "",
-        });
+        const result = await createJob(jobData);
+        if (result && result.success && result.data && (result.data as any)._id) {
+          toast("Job created successfully");
+          setForm({
+            clientName: lockedClientName || "",
+            clientId: lockedClientId || "",
+            positionName: "",
+            headcount: "",
+            jobType: "",
+            location: "",
+            minSalary: "",
+            maxSalary: "",
+            currency: "SAR",
+            jobDescription: "",
+          });
+          onOpenChange(false);
+          router.push(`/jobs/${(result.data as any)._id}`);
+          return;
+        }
+        // fallback if no id returned
+        toast("Job created, but could not redirect (missing job ID)");
         onOpenChange(false);
         router.refresh();
       } catch (error) {

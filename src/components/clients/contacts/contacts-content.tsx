@@ -9,6 +9,8 @@ import {
   PrimaryContact,
   ClientResponse,
   updateClient,
+  updatePrimaryContact, // <-- add this import
+  addPrimaryContact, // <-- add this import
 } from "@/services/clientService";
 import { EditFieldModal } from "../summary/edit-field-modal";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
@@ -56,18 +58,16 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
       setError("");
 
       try {
-        // Map primary contacts to include gender and split name into firstName/lastName
-        const mappedContacts = (clientData.primaryContacts || []).map((c: any) => ({
-          name: c.name || "",
-          email: c.email || "",
-          phone: c.phone || "",
-          countryCode: c.countryCode || "",
-          position: c.position || "",
-          linkedin: c.linkedin || "",
-          firstName: c.firstName || (c.name ? c.name.split(" ")[0] : ""),
-          lastName: c.lastName || (c.name ? c.name.split(" ").slice(1).join(" ") : ""),
-          gender: c.gender || "",
-        }));
+        // Map primary contacts to always split name into firstName/lastName
+        const mappedContacts = (clientData.primaryContacts || []).map((c: any) => {
+          const name = c.name || "";
+          const nameParts = name.trim().split(" ");
+          return {
+            ...c,
+            firstName: nameParts[0] || "",
+            lastName: nameParts.slice(1).join(" ") || "",
+          };
+        });
 
         setPrimaryContacts(mappedContacts || []);
         setClientPhoneNumber(clientData.phoneNumber || "");
@@ -131,32 +131,17 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
         position: contact.position,
         linkedin: contact.linkedin,
       };
-
-      // Get current client data
-      // const clientData: ClientResponse = await getClientById(clientId);
-
-      const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
-
-      // Add the new contact to the existing primary contacts
-      const updatedPrimaryContacts = [
-        contactData,
-        ...(clientData.primaryContacts || []),
-      ];
-
-      // Update the client with the new primary contacts
-      const updatedClient = await updateClient(clientId, {
-        ...updatePayload,
-        primaryContacts: updatedPrimaryContacts,
-      });
-
-      // Update local state with the response from backend
-      setPrimaryContacts(updatedClient?.primaryContacts || updatedPrimaryContacts || []);
+      // Use the POST API to add a new primary contact
+      await addPrimaryContact(clientId, contactData);
+      // Fetch updated client data
+      const updatedClient = await getClientById(clientId);
+      setPrimaryContacts(updatedClient.primaryContacts || []);
       toast.success("Contact added successfully!");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to add contact";
       setError(errorMessage);
       toast.error(errorMessage);
-    } 
+    }
   };
 
   // Reusable function for saving contact details
@@ -237,18 +222,45 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
       let updatedPrimaryContacts;
       if (editContactIndex !== null) {
         // Edit mode
-        updatedPrimaryContacts = (clientData.primaryContacts || []).map((c: any, i: number) =>
-          i === editContactIndex ? contactData : c
-        );
+        const contactList = clientData.primaryContacts || [];
+        const contactToEdit = contactList[editContactIndex];
+        if (contactToEdit && contactToEdit._id) {
+          // Only send changed fields for PATCH
+          const patchData: any = {};
+          if (contactData.name && contactData.name !== contactToEdit.name) patchData.name = contactData.name;
+          if (contactData.email && contactData.email !== contactToEdit.email) patchData.email = contactData.email;
+          if (contactData.phone && contactData.phone !== contactToEdit.phone) patchData.phone = contactData.phone;
+          if (contactData.countryCode && contactData.countryCode !== contactToEdit.countryCode) patchData.countryCode = contactData.countryCode;
+          if (contactData.position && contactData.position !== contactToEdit.position) patchData.position = contactData.position;
+          if (contactData.linkedin && contactData.linkedin !== contactToEdit.linkedin) patchData.linkedin = contactData.linkedin;
+          if (contactData.gender && contactData.gender !== contactToEdit.gender) patchData.gender = contactData.gender;
+
+          // Only send if at least one field is changed
+          if (Object.keys(patchData).length > 0) {
+            await updatePrimaryContact(clientId, contactToEdit._id, patchData);
+          }
+          const updatedClient = await getClientById(clientId);
+          setPrimaryContacts(updatedClient.primaryContacts || []);
+        } else {
+          // Fallback: update the whole client (legacy logic)
+          updatedPrimaryContacts = contactList.map((c: any, i: number) =>
+            i === editContactIndex ? contactData : c
+          );
+          const updatedClient = await updateClient(clientId, {
+            ...updatePayload,
+            primaryContacts: updatedPrimaryContacts,
+          });
+          setPrimaryContacts(updatedClient?.primaryContacts || updatedPrimaryContacts || []);
+        }
       } else {
         // Add mode
         updatedPrimaryContacts = [contactData, ...(clientData.primaryContacts || [])];
+        const updatedClient = await updateClient(clientId, {
+          ...updatePayload,
+          primaryContacts: updatedPrimaryContacts,
+        });
+        setPrimaryContacts(updatedClient?.primaryContacts || updatedPrimaryContacts || []);
       }
-      const updatedClient = await updateClient(clientId, {
-        ...updatePayload,
-        primaryContacts: updatedPrimaryContacts,
-      });
-      setPrimaryContacts(updatedClient?.primaryContacts || updatedPrimaryContacts || []);
       setAddEditModalOpen(false);
       setEditContactIndex(null);
       toast.success(editContactIndex !== null ? "Contact updated successfully!" : "Contact added successfully!");
@@ -260,18 +272,28 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
   };
 
   // Prepare initial values for modal
-  const initialContactValues = editContactIndex !== null
-    ? primaryContacts[editContactIndex]
-    : {
-        firstName: "",
-        lastName: "",
-        gender: "",
-        email: "",
-        phone: "",
-        countryCode: "+966",
-        position: "",
-        linkedin: "",
-      };
+  const initialContactValues =
+    editContactIndex !== null && primaryContacts[editContactIndex]
+      ? {
+          firstName: primaryContacts[editContactIndex].firstName || "",
+          lastName: primaryContacts[editContactIndex].lastName || "",
+          gender: primaryContacts[editContactIndex].gender || "",
+          email: primaryContacts[editContactIndex].email || "",
+          phone: primaryContacts[editContactIndex].phone || "",
+          countryCode: primaryContacts[editContactIndex].countryCode || "+966",
+          position: primaryContacts[editContactIndex].position || "",
+          linkedin: primaryContacts[editContactIndex].linkedin || "",
+        }
+      : {
+          firstName: "",
+          lastName: "",
+          gender: "",
+          email: "",
+          phone: "",
+          countryCode: "+966",
+          position: "",
+          linkedin: "",
+        };
 
   if (initialLoading) {
     return <div className="p-8 text-center">Loading contacts...</div>;

@@ -14,6 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useRouter } from "next/navigation";
 
 interface JobsContentProps {
   clientId: string;
@@ -78,6 +79,7 @@ export function JobsContent({ clientId, clientName }: JobsContentProps) {
     jobId: string;
     newStage: JobStage;
   } | null>(null);
+  const router = useRouter();
 
   const fetchJobs = async () => {
     try {
@@ -152,7 +154,11 @@ export function JobsContent({ clientId, clientName }: JobsContentProps) {
       <div className="overflow-auto">
         {clientJobs.length > 0 ? (
           clientJobs.map((job) => (
-            <div key={job._id} className="border-b hover:bg-gray-50 py-3 px-4">
+            <div
+              key={job._id}
+              className="border-b hover:bg-gray-50 py-3 px-4 cursor-pointer"
+              onClick={() => router.push(`/jobs/${job._id}`)}
+            >
               <div className="flex items-center">
                 {/* <Checkbox id={`job-${job._id}`} className="mr-4 border-gray-400" /> */}
                 <div className="grid grid-cols-7 w-full">

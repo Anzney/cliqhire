@@ -7,6 +7,10 @@ import { getJobById, updateJobById } from "@/services/jobService";
 import { EditFieldDialog } from "@/components/jobs/summary/edit-field-dialog";
 import { EditSalaryDialog } from "@/components/jobs/summary/edit-salary-dialog";
 import type { JobResponse } from "@/types/job";
+import { RecruitmentManagerSection } from "./RecruitmentManagerSection";
+import { TeamLeadSection } from "./TeamLeadSection";
+import { RecruiterSection } from "./RecruiterSection";
+import { JobDiscriptionI } from "./jobDiscriptionI";
 
 interface SummaryContentProps {
   jobId: string;
@@ -60,42 +64,44 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
   const [error, setError] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<EditingField | null>(null);
   const [isSalaryDialogOpen, setIsSalaryDialogOpen] = useState(false);
+  const [internalDescription, setInternalDescription] = useState("");
 
   useEffect(() => {
     const fetchJobDetails = async () => {
       try {
         const response: JobResponse = await getJobById(jobId);
+        const job = Array.isArray(response.data) ? response.data[0] : response.data; // handle both array and object
 
         const mappedDetails: JobDetails = {
-          jobTitle: response.jobTitle ?? '',
-          department: response.department ?? '',
-          client: response.client?.name ?? 'N/A',
-          location: Array.isArray(response.location) ? response.location : (response.location ? [response.location] : []), // Handle both string and string[] cases
-          headcount: response.headcount ?? 0,
-          minimumSalary: response.minimumSalary ?? response.salaryRange?.min ?? 0,
-          maximumSalary: response.maximumSalary ?? response.salaryRange?.max ?? 0,
-          salaryCurrency: response.salaryCurrency ?? 'USD',
-          jobType: response.jobType ?? '',
-          experience: response.experience ?? '',
-          jobDescription: response.jobDescription ?? 'No description available',
-          nationalities: response.nationalities ?? [],
-          gender: response.gender ?? '',
-          deadline: response.deadline ?? '',
-          relationshipManager: response.relationshipManager ?? '',
-          reportingTo: response.reportingTo ?? '',
-          teamSize: response.teamSize ?? 0,
-          link: response.link ?? '',
-          keySkills: response.keySkills ?? '',
-          jobPosition: Array.isArray(response.jobPosition) ? response.jobPosition : (response.jobPosition ? [response.jobPosition] : []), // Handle both string and string[] cases
-          stage: response.stage ?? '',
+          jobTitle: job?.jobTitle ?? '',
+          department: job?.department ?? '',
+          client: job?.client?.name ?? 'N/A',
+          location: Array.isArray(job?.location) ? job.location : (job?.location ? [job.location] : []), // Handle both string and string[] cases
+          headcount: job?.headcount ?? 0,
+          minimumSalary: job?.minimumSalary ?? job?.salaryRange?.min ?? 0,
+          maximumSalary: job?.maximumSalary ?? job?.salaryRange?.max ?? 0,
+          salaryCurrency: job?.salaryCurrency ?? 'USD',
+          jobType: job?.jobType ?? '',
+          experience: job?.experience ?? '',
+          jobDescription: job?.jobDescription ?? 'No description available',
+          nationalities: job?.nationalities ?? [],
+          gender: job?.gender ?? '',
+          deadline: job?.deadline ?? '',
+          relationshipManager: job?.relationshipManager ?? '',
+          reportingTo: job?.reportingTo ?? '',
+          teamSize: job?.teamSize ?? 0,
+          link: job?.link ?? '',
+          keySkills: job?.keySkills ?? '',
+          jobPosition: Array.isArray(job?.jobPosition) ? job.jobPosition : (job?.jobPosition ? [job.jobPosition] : []), // Handle both string and string[] cases
+          stage: job?.stage ?? '',
           salaryRange: {
-            min: response.salaryRange?.min ?? 0,
-            max: response.salaryRange?.max ?? 0,
-            currency: response.salaryCurrency ?? 'USD'
+            min: job?.salaryRange?.min ?? 0,
+            max: job?.salaryRange?.max ?? 0,
+            currency: job?.salaryCurrency ?? 'USD'
           },
           dateRange: {
-            start: response.dateRange?.start ?? '',
-            end: response.dateRange?.end ?? ''
+            start: job?.dateRange?.start ?? '',
+            end: job?.dateRange?.end ?? ''
           }
         };
 
@@ -256,6 +262,13 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
               {jobDetails.jobDescription}
             </div>
           </div>
+          {/* Internal Job Description Section */}
+          <div className="mt-4">
+            <JobDiscriptionI
+              value={internalDescription}
+              onSave={setInternalDescription}
+            />
+          </div>
 
           {/* Salary Range Section */}
           <div className="mt-6">
@@ -268,6 +281,18 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
               />
             </div>
           </div>
+          <RecruitmentManagerSection
+            name={jobDetails.relationshipManager}
+            onEdit={() => handleFieldEdit('relationshipManager', jobDetails.relationshipManager)}
+          />
+          <TeamLeadSection
+            name={jobDetails.reportingTo}
+            onEdit={() => handleFieldEdit('reportingTo', jobDetails.reportingTo)}
+          />
+          <RecruiterSection
+            name={jobDetails.keySkills}
+            onEdit={() => handleFieldEdit('keySkills', jobDetails.keySkills)}
+          />
         </div>
       </div>
 
