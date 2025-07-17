@@ -50,6 +50,7 @@ export interface JobData {
   link?: string;
   keySkills?: string;
   numberOfPositions?: number;
+  jobDescriptionInternal?: string; // <-- Added for internal job description
 }
 
 export interface Job extends JobData {
@@ -58,6 +59,7 @@ export interface Job extends JobData {
   createdAt: string;
   updatedAt: string;
   isActive?: boolean;
+  jobDescriptionInternal?: string; // <-- Added for internal job description
 }
 
 export interface JobResponse {
