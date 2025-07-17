@@ -17,7 +17,7 @@ export interface Job {
   headcount: string;
   stage: JobStage;
   status: JobStatus;
-  jobStatus?: JobStatus; // Optional legacy field for backward compatibility
+  jobStatus?: JobStatus;
   minSalary?: number;
   maxSalary?: number;
   minimumSalary?: number;
@@ -45,9 +45,8 @@ export interface Job {
 // types/job.ts
 
 export interface JobResponse {
-   success: boolean;
-   data?: any; // Add this line to match jobService.ts and API response
-  // data?: Job | Job[];
+  success: boolean;
+  data?: any; // Add this line to match jobService.ts and API respons
   message?: string;
   count?: number;
   total?: number;
