@@ -309,7 +309,7 @@ export default function JobsPage() {
                       onClick={() => router.push(`/jobs/${job._id}`)}
                     >
                       <TableCell className="text-sm font-medium">{job.jobTitle}</TableCell>
-                      <TableCell className="text-sm">{job.jobType}</TableCell>
+                      <TableCell className="text-sm capitalize">{job.jobType}</TableCell>
                       <TableCell className="text-sm">{job.location}</TableCell>
                       <TableCell className="text-sm">{job.headcount}</TableCell>
                       <TableCell className="text-sm">{job.stage}</TableCell>

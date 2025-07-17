@@ -191,7 +191,7 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
     <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Left Column */}
       <div>
-        <div className="bg-gray-50 rounded-lg p-4">
+        <div className="rounded-lg p-4">
           <h2 className="text-lg font-semibold mb-4">Job Details</h2>
           <div className="bg-white rounded border p-4 space-y-4">
             {Object.entries(jobDetails).map(([key, value]) => {
@@ -243,7 +243,7 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
 
       {/* Right Column */}
       <div>
-        <div className="bg-gray-50 rounded-lg p-4">
+        <div className="rounded-lg p-4">
           <h2 className="text-lg font-semibold mb-4">Job Description</h2>
           <div className="bg-white rounded border p-4">
             <div className="flex items-center justify-between mb-2">
