@@ -188,7 +188,8 @@ const getJobById = async (id: string): Promise<JobResponse> => {
 const updateJobById = async (id: string, jobData: Partial<JobData>): Promise<JobResponse> => {
   try {
     const processedData = processJobData(jobData);
-    const response = await axios.put<JobResponse>(`${API_URL}/api/jobs/${id}`, processedData);
+    // PATCH instead of PUT
+    const response = await axios.patch<JobResponse>(`${API_URL}/api/jobs/${id}`, processedData);
     return response.data;
   } catch (error) {
     handleApiError(error, 'job update');
@@ -252,11 +253,22 @@ export async function deleteJobNote(id: string) {
   return res.data.data;
 }
 
+const updateJobStage = async (id: string, stage: string): Promise<JobResponse> => {
+  try {
+    const response = await axios.patch<JobResponse>(`${API_URL}/api/jobs/${id}/stage`, { stage });
+    return response.data;
+  } catch (error) {
+    handleApiError(error, 'job stage update');
+    throw error;
+  }
+};
+
 export {
   createJob,
   getJobs,
   getJobById,
   updateJobById,
   deleteJobById,
-  getJobCountsByClient
+  getJobCountsByClient,
+  updateJobStage
 };

@@ -11,10 +11,11 @@ import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { EditFieldDialog } from "./edit-field-dialog";
 import { EditSalaryDialog } from "./edit-salary-dialog";
-import { getJobById, updateJobById } from "@/services/jobService";
+import { getJobById, updateJobById, updateJobStage } from "@/services/jobService";
 import { JobDiscriptionI } from "./jobDiscriptionI";
 import { JobInfoSection } from "./JobInfoSection";
 import { toast } from "sonner";
+import { JobStageBadge } from "@/components/jobs/job-stage-badge";
 
 interface SummaryContentProps {
   jobId: string;
@@ -61,6 +62,8 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
   }, [jobId]);
 
   const handleFieldEdit = (field: string, value: any, options?: any) => {
+    // Prevent reopening the dialog for 'stage' if already editing or just closed
+    if (editingField && editingField.name === field && editingField.value === value) return;
     setEditingField({ name: field, value, ...options });
   };
 
@@ -77,7 +80,9 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
       };
       await updateJobById(jobId, { [editingField.name]: processedValue });
       setJobDetails(updatedDetails);
+      // Ensure dialog closes and does not reopen for Stage
       setEditingField(null);
+      if (editingField.name === "stage") return;
       toast.success(
         editingField.name === "jobDescription"
           ? "Job description updated successfully"
@@ -114,6 +119,8 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
       toast.success("Salary updated successfully");
     } catch (err) {
       toast.error("Failed to update salary");
+    } finally {
+      setIsSalaryDialogOpen(false); // Always close dialog after save
     }
   };
 
@@ -159,7 +166,22 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
               <DetailRow label="Client" value={jobDetails.client?.name || jobDetails.client} onUpdate={() => {}} />
               <DetailRow label="Location" value={Array.isArray(jobDetails.location) ? jobDetails.location.join(", ") : jobDetails.location} onUpdate={() => handleFieldEdit("location", jobDetails.location)} />
               <DetailRow label="Headcount" value={jobDetails.headcount} onUpdate={() => handleFieldEdit("headcount", jobDetails.headcount)} />
-              <DetailRow label="Stage" value={jobDetails.stage} onUpdate={() => handleFieldEdit("stage", jobDetails.stage)} />
+              {/* Inline Stage dropdown */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground w-1/3">Stage</span>
+                <JobStageBadge
+                  stage={jobDetails.stage}
+                  onStageChange={async (newStage) => {
+                    try {
+                      await updateJobStage(jobId, newStage);
+                      setJobDetails({ ...jobDetails, stage: newStage });
+                      toast.success("Stage updated successfully");
+                    } catch (err) {
+                      toast.error("Failed to update stage");
+                    }
+                  }}
+                />
+              </div>
             </div>
           </div>
           <CollapsibleContent className="px-4 pb-4">
@@ -203,7 +225,10 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
             <div className="bg-white rounded-lg border shadow-sm p-4">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-sm font-semibold">Description</h2>
-                <Button variant="outline" size="sm" onClick={() => setIsDescriptionModalOpen(true)}>
+                <Button variant="outline" size="sm" onClick={() => {
+                  setEditingField({ name: "jobDescription", value: jobDetails.jobDescription || "", isTextArea: true });
+                  setIsDescriptionModalOpen(true);
+                }}>
                   {jobDetails.jobDescription ? (
                     <>
                       <Pencil className="h-4 w-4 mr-2" />
@@ -248,7 +273,7 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
         <JobInfoSection jobDetails={jobDetails} handleFieldEdit={handleFieldEdit} />
       </div>
       {/* Edit Dialogs */}
-      {editingField && (
+      {editingField && editingField.name !== "stage" && (
         <EditFieldDialog
           open={true}
           onClose={() => setEditingField(null)}
@@ -260,6 +285,16 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
           isSelect={editingField.isSelect}
         />
       )}
+      {/* Render Stage dialog only if editingField is set and name is 'stage' */}
+      {editingField && editingField.name === "stage" && (
+        <EditFieldDialog
+          open={true}
+          onClose={() => setEditingField(null)}
+          fieldName={editingField.name}
+          currentValue={editingField.value}
+          onSave={handleFieldSave}
+        />
+      )}
       <EditSalaryDialog
         open={isSalaryDialogOpen}
         onClose={() => setIsSalaryDialogOpen(false)}
@@ -268,10 +303,7 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
           maxSalary: jobDetails.maximumSalary || jobDetails.maxSalary || 0,
           currency: jobDetails.salaryCurrency || "SAR",
         }}
-        onSave={async (values) => {
-          await handleSalarySave(values);
-          setIsSalaryDialogOpen(false); // Ensure dialog closes after save
-        }}
+        onSave={handleSalarySave}
       />
       {/* Description Modal (reuse EditFieldDialog for description) */}
       {isDescriptionModalOpen && (
