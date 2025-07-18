@@ -2,13 +2,12 @@
 
 import { Button } from "@/components/ui/button"
 import { Plus, SlidersHorizontal, RefreshCcw } from "lucide-react"
-import { getSampleJobs } from "../../clients/data/sample-jobs";
-import { JobStageBadge } from "@/components/jobs/job-stage-badge"
+import { getJobById } from "@/services/jobService"
 import { notFound } from "next/navigation"
 import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { JobTabs } from "@/components/jobs/job-tabs"
-import { Job } from "@/types/job";
+import { JobStageBadge } from "@/components/jobs/job-stage-badge"
 
 interface PageProps {
   params: { id: string }
@@ -23,19 +22,13 @@ export default function JobPage({ params }: PageProps) {
   useEffect(() => {
     const fetchJob = async () => {
       if (!id) return;
-      
       try {
-        const jobs = await getSampleJobs()
-        if (!Array.isArray(jobs)) {
-          throw new Error('Invalid jobs data received')
-        }
-
-        const job = jobs.filter(j => j._id === id.toString())
+        const response = await getJobById(id)
+        const job = Array.isArray(response.data) ? response.data[0] : response.data
         if (!job) {
           notFound()
           return
         }
-        
         setJobData(job)
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Failed to fetch job'))
@@ -44,7 +37,6 @@ export default function JobPage({ params }: PageProps) {
         setIsLoading(false)
       }
     }
-    
     fetchJob()
   }, [id])
 
@@ -63,7 +55,10 @@ export default function JobPage({ params }: PageProps) {
   const handleRefresh = async () => {
     setIsLoading(true)
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Re-fetch job data
+      const response = await getJobById(id)
+      const job = Array.isArray(response.data) ? response.data[0] : response.data
+      setJobData(job)
     } catch (error) {
       console.error('Error refreshing data:', error)
     } finally {
@@ -71,78 +66,48 @@ export default function JobPage({ params }: PageProps) {
     }
   }
 
+  // Header values from summary
+  const jobTitle = jobData.jobTitle || "Untitled Job"
+  const location = Array.isArray(jobData.location) ? jobData.location.join(", ") : (jobData.location || "No location")
+  const stage = jobData.stage || "No stage"
+
+  // Copy the stageColors mapping from JobStageBadge
+  const stageColors: Record<string, string> = {
+    'New': "bg-blue-100 text-blue-800",
+    'Sourcing': "bg-purple-100 text-purple-800",
+    'Screening': "bg-yellow-100 text-yellow-800",
+    'Interviewing': "bg-orange-100 text-orange-800",
+    'Shortlisted': "bg-indigo-100 text-indigo-800",
+    'Offer': "bg-pink-100 text-pink-800",
+    'Hired': "bg-green-100 text-green-800",
+    'On Hold': "bg-gray-100 text-gray-800",
+    'Cancelled': "bg-red-100 text-red-800",
+  }
+
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="border-b">
-        <div className="flex flex-col px-4 py-3">
-          {/* Top row */}
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-100 rounded-lg w-12 h-12 flex items-center justify-center text-xl font-semibold text-blue-600">
-                {jobData.positionName?.[0] || 'J'}
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-semibold">{jobData.positionName}</h1>
-                  <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-none">
-                    NOT PUBLISHED
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor">
-                      <path d="M3 21h18M3 7v1a3 3 0 003 3h12a3 3 0 003-3V7M6 21V10M18 21V10" strokeWidth="2"/>
-                    </svg>
-                    {jobData.department || 'TECH'}
-                  </div>
-                  <span>•</span>
-                  <div className="flex items-center gap-1">
-                    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor">
-                      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" strokeWidth="2"/>
-                    </svg>
-                    {jobData.minSalary && jobData.maxSalary 
-                      ? `${jobData.minSalary} - ${jobData.maxSalary}`
-                      : 'Negotiable - Negotiable'}
-                  </div>
-                </div>
-              </div>
+      {/* Header Section */}
+      <div className="border-b bg-white py-4 px-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">{jobTitle}</h1>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+              <span>{location}</span>
+              <span>•</span>
+              {/* Use the same color logic as JobStageBadge, but display-only */}
+              <Badge
+                variant="secondary"
+                className={`${stageColors[stage] || 'bg-gray-100 text-gray-800'} border-none`}
+              >
+                {stage}
+              </Badge>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1">
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  Hired
-                  <span className="ml-1 text-xs">0</span>
-                </Badge>
-                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                  In pipeline
-                  <span className="ml-1 text-xs">0</span>
-                </Badge>
-                <Badge variant="secondary" className="bg-red-100 text-red-800">
-                  Dropped
-                  <span className="ml-1 text-xs">0</span>
-                </Badge>
-              </div>
-            </div>
-          </div>
-          {/* Bottom row */}
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="text-blue-600 border-blue-200 hover:bg-blue-50"
-            >
-              + Tags
-            </Button>
-            <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-              Active
-            </Badge>
           </div>
         </div>
       </div>
 
-      {/* Toolbar */}
-      <div className="flex items-center justify-between p-4">
+      {/* Button Bar */}
+      <div className="flex items-center justify-between p-4 border-b">
         <Button size="sm">
           <Plus className="h-4 w-4 mr-2" />
           Add Candidate

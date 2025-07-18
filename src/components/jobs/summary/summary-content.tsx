@@ -1,4 +1,4 @@
-"use client";
+  "use client";
 
 import { SectionHeader } from "@/components/clients/summary/section-header";
 import { DetailRow } from "@/components/clients/summary/detail-row";
@@ -13,6 +13,7 @@ import { EditFieldDialog } from "./edit-field-dialog";
 import { EditSalaryDialog } from "./edit-salary-dialog";
 import { getJobById, updateJobById } from "@/services/jobService";
 import { JobDiscriptionI } from "./jobDiscriptionI";
+import { JobInfoSection } from "./JobInfoSection";
 
 interface SummaryContentProps {
   jobId: string;
@@ -23,6 +24,12 @@ interface TeamMemberType {
   role: string;
   email: string;
   isActive?: boolean;
+}
+
+// Utility function to capitalize first letter
+function capitalize(str: string) {
+  if (!str || typeof str !== "string") return str;
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 export function SummaryContent({ jobId }: SummaryContentProps) {
@@ -162,17 +169,17 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
             />
             <DetailRow
               label="Job Type"
-              value={jobDetails.jobType}
+              value={capitalize(jobDetails.jobType)}
               onUpdate={(val: string) => handleFieldEdit("jobType", jobDetails.jobType)}
             />
             <DetailRow
               label="Experience"
-              value={jobDetails.experience}
+              value={capitalize(jobDetails.experience)}
               onUpdate={(val: string) => handleFieldEdit("experience", jobDetails.experience)}
             />
             <DetailRow
               label="Gender"
-              value={jobDetails.gender}
+              value={capitalize(jobDetails.gender)}
               onUpdate={(val: string) => handleFieldEdit("gender", jobDetails.gender)}
             />
             <DetailRow
@@ -244,6 +251,7 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
             />
           </div>
         </CollapsibleSection>
+        <JobInfoSection jobDetails={jobDetails} handleFieldEdit={handleFieldEdit} />
         {/* Team section removed as Job does not have teamMembers */}
       </div>
       {/* Edit Dialogs */}

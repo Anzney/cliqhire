@@ -163,7 +163,7 @@ export function JobsContent({ clientId, clientName }: JobsContentProps) {
                 {/* <Checkbox id={`job-${job._id}`} className="mr-4 border-gray-400" /> */}
                 <div className="grid grid-cols-7 w-full">
                   <div className="font-medium">{job.jobTitle}</div>
-                  <div>{job.jobType || "N/A"}</div>
+                  <div className="capitalize">{job.jobType || "N/A"}</div>
                   <div>{job.location}</div>
                   <div>{job.headcount}</div>
                   <div>

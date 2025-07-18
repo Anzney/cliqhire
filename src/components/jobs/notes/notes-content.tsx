@@ -1,133 +1,163 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Plus } from "lucide-react"
-import Link from "next/link"
-import { AddNoteDialog } from "@/components/clients/notes/add-note-dialog"
-import React from "react"
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { AddNoteDialog } from "@/components/clients/notes/add-note-dialog";
+import { NotesList } from "@/components/clients/notes/notes-list";
+import axios from "axios";
+import { toast } from "sonner";
 
-interface NotesContentProps {
-  jobId: string;
+export interface Note {
+  id: string;
+  content: string;
+  author: {
+    name: string;
+    avatar: string;
+  };
+  createdAt: string;
+  isPrivate: boolean;
 }
 
-export function NotesContent({ jobId }: NotesContentProps) {
-  const [open, setOpen] = React.useState(false);
+// Utility to map backend note to frontend note
+function mapNote(noteFromApi: any): Note {
+  return {
+    id: noteFromApi._id || noteFromApi.id,
+    content: noteFromApi.content,
+    author: noteFromApi.createdBy || { name: "Unknown", avatar: "?" },
+    createdAt: noteFromApi.createdAt,
+    isPrivate: false, // Adjust if you add this to backend
+  };
+}
+
+export function NotesContent({ jobId }: { jobId: string }) {
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editNote, setEditNote] = useState<Note | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+
+  useEffect(() => {
+    if (!jobId) return;
+    axios
+      .get(`${API_BASE}/api/notes/job/${jobId}`)
+      .then((res) => setNotes(res.data.data.map(mapNote)))
+      .catch((err) => console.error("Failed to fetch notes:", err));
+  }, [jobId]);
+
+  const handleAddNote = async (note: { content: string }) => {
+    if (!jobId) {
+      alert("Job ID not found in URL. Cannot create note.");
+      return;
+    }
+    const newNote = {
+      content: note.content,
+      createdBy: jobId,
+      // relatedTo: ... // Add if needed
+    };
+    try {
+      const res = await axios.post(`${API_BASE}/api/notes`, newNote);
+      setNotes([mapNote(res.data.data), ...notes]);
+      toast.success("Notes Add Successfully");
+    } catch (error) {
+      console.error("Failed to add note:", error);
+      toast.error("Failed to add note");
+    }
+  };
+
+  const handleUpdateNote = async (updated: { content: string }) => {
+    if (!editNote) return;
+    try {
+      const res = await axios.patch(`${API_BASE}/api/notes/${editNote.id}`, {
+        content: updated.content,
+        // relatedTo: ... // Add if needed
+      });
+      const updatedNote = mapNote(res.data.data);
+      const updatedNotes = notes.map((n) =>
+        n.id === updatedNote.id ? updatedNote : n
+      );
+      setNotes(updatedNotes);
+      setEditNote(null);
+      setIsEditDialogOpen(false);
+    } catch (error) {
+      console.error("Failed to update note:", error);
+    }
+  };
+
+  const handleDeleteNote = async (noteToDelete: Note) => {
+    try {
+      await axios.delete(`${API_BASE}/api/notes/${noteToDelete.id}`);
+      setNotes(notes.filter((n) => n.id !== noteToDelete.id));
+      toast.success("Note deleted successfully");
+    } catch (error) {
+      console.error("Failed to delete note:", error);
+      toast.error("Failed to delete note");
+    }
+  };
 
   return (
-    <div className="flex h-[calc(100vh-240px)]">
-      {/* Left Sidebar */}
-      <div className="w-80 border-r p-4 flex flex-col gap-4">
-        <Input 
-          placeholder="Search for contacts or guests" 
-          className="w-full"
-        />
-        <Button 
-          variant="default" 
-          className="w-full justify-start bg-blue-600 hover:bg-blue-700"
-        >
-          General
+    <div className="flex-1 p-6">
+      <div className="mb-6 flex justify-end">
+        <Button onClick={() => setIsAddDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" /> Add Note
         </Button>
       </div>
 
-      {/* Main Content - Empty State */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4">
-        {/* Note-taking illustration */}
-        <div className="w-48 h-48 mb-6">
-          <svg
-            viewBox="0 0 200 200"
-            className="w-full h-full text-blue-500"
-          >
-            {/* Person */}
-            <path 
-              d="M100 120 L100 160" 
-              stroke="currentColor" 
-              strokeWidth="4"
-              strokeLinecap="round"
-            />
-            <circle 
-              cx="100" 
-              cy="100" 
-              r="20" 
-              fill="currentColor"
-            />
-            {/* Floating notes */}
-            <rect 
-              x="130" 
-              y="60" 
-              width="40" 
-              height="30" 
-              rx="4" 
-              fill="currentColor" 
-              fillOpacity="0.2"
-            />
-            <rect 
-              x="140" 
-              y="70" 
-              width="20" 
-              height="2" 
-              fill="currentColor"
-            />
-            <rect 
-              x="140" 
-              y="75" 
-              width="15" 
-              height="2" 
-              fill="currentColor"
-            />
-            <rect 
-              x="60" 
-              y="80" 
-              width="40" 
-              height="30" 
-              rx="4" 
-              fill="currentColor" 
-              fillOpacity="0.2"
-            />
-            <rect 
-              x="70" 
-              y="90" 
-              width="20" 
-              height="2" 
-              fill="currentColor"
-            />
-            <rect 
-              x="70" 
-              y="95" 
-              width="15" 
-              height="2" 
-              fill="currentColor"
-            />
-          </svg>
+      {notes.length > 0 ? (
+        <NotesList
+          notes={notes}
+          onEdit={(note) => {
+            setEditNote(note);
+            setTimeout(() => {
+              setIsEditDialogOpen(true);
+            }, 0);
+          }}
+          onDelete={handleDeleteNote}
+        />
+      ) : (
+        <div className="flex flex-col items-center justify-center text-center py-12">
+          <div className="w-48 h-48 mb-6">
+            <svg viewBox="0 0 200 200" className="w-full h-full text-blue-500">
+              <rect
+                x="60"
+                y="40"
+                width="80"
+                height="120"
+                rx="8"
+                fill="currentColor"
+                fillOpacity="0.1"
+              />
+              <rect x="70" y="60" width="60" height="4" rx="2" fill="currentColor" />
+              <rect x="70" y="80" width="40" height="4" rx="2" fill="currentColor" />
+              <rect x="70" y="100" width="50" height="4" rx="2" fill="currentColor" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold mb-2">No notes yet</h3>
+          <p className="text-muted-foreground text-center mb-8">
+            Add your first note to keep track of important information.
+          </p>
         </div>
+      )}
 
-        {/* Text content */}
-        <h3 className="text-xl font-semibold mb-2">You have not created any notes yet</h3>
-        <p className="text-muted-foreground text-center mb-8">
-          All notes will be displayed on this page once the first note has been noted.
-        </p>
+      <AddNoteDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onSubmit={handleAddNote}
+      />
 
-        {/* Add Note Button */}
-        <Button className="gap-2" onClick={() => setOpen(true)}>
-          <Plus className="h-4 w-4" />
-          Add Note
-        </Button>
-
-        {/* Add Note Dialog */}
-        <AddNoteDialog 
-          open={open} 
-          onOpenChange={setOpen} 
-          onSubmit={(note) => console.log("Note submitted:", note)}
+      {editNote && (
+        <AddNoteDialog
+          open={isEditDialogOpen}
+          onOpenChange={(open) => {
+            setIsEditDialogOpen(open);
+            if (!open) setEditNote(null);
+          }}
+          onSubmit={handleUpdateNote}
+          initialContent={editNote.content}
+          isEdit
         />
-
-        {/* Learn more link */}
-        <Link 
-          href="#" 
-          className="mt-4 text-blue-500 hover:underline text-sm"
-        >
-          Learn more about notes
-        </Link>
-      </div>
+      )}
     </div>
-  )
+  );
 }

@@ -312,7 +312,12 @@ export default function JobsPage() {
                       <TableCell className="text-sm capitalize">{job.jobType}</TableCell>
                       <TableCell className="text-sm">{job.location}</TableCell>
                       <TableCell className="text-sm">{job.headcount}</TableCell>
-                      <TableCell className="text-sm">{job.stage}</TableCell>
+                      <TableCell className="text-sm">
+                        <JobStageBadge 
+                          stage={job.stage} 
+                          onStageChange={(newStage) => handleStageChange(job._id, newStage)} 
+                        />
+                      </TableCell>
                       <TableCell className="text-sm">{job.minimumSalary}</TableCell>
                       <TableCell className="text-sm">{job.maximumSalary}</TableCell>
                       <TableCell className="text-sm">{job.client}</TableCell>
