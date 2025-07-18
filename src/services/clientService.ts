@@ -693,7 +693,7 @@ const addPrimaryContact = async (
     const validatedContact = validateAndSanitizeClientData(contactData);
     
     const response = await axios.post<ApiResponse<ClientResponse>>(
-      `${API_URL}/api/clients/${clientId}/primary-contacts`,
+      `${API_URL}/api/clients/${clientId}/primary-contact`,
       validatedContact,
       { 
         headers: { "Content-Type": "application/json" },
@@ -714,12 +714,9 @@ const updatePrimaryContact = async (
 ): Promise<PrimaryContact> => {
   try {
     const response = await axios.patch<ApiResponse<PrimaryContact>>(
-      `${API_URL}/api/clients/${clientId}/primaryContacts/${contactId}`,
+      `${API_URL}/api/clients/${clientId}/primary-contact/${contactId}`,
       contactData,
-      {
-        headers: { "Content-Type": "application/json" },
-        timeout: 15000
-      }
+      { headers: { "Content-Type": "application/json" }, timeout: 15000 }
     );
     return response.data.data;
   } catch (error: any) {

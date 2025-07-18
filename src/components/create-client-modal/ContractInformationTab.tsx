@@ -13,11 +13,7 @@ import StandardContractForm from "./standard-contract-form";
 import ConsultingContractForm from "./consulting-contract-form";
 import OutsourcingContractForm from "./outsourcing-contract-form";
 
-import { 
-  businessInitialState,
-  outsourcingInitialState,
-  consultingInitialState,
-} from "./constants";
+import { businessInitialState, outsourcingInitialState, consultingInitialState } from "./constants";
 import { ClientContractInfo } from "./type";
 import { Pencil } from "lucide-react";
 
@@ -26,33 +22,33 @@ interface ContractInformationTabProps {
   setFormData: React.Dispatch<React.SetStateAction<ClientContractInfo>>;
 }
 
-export function ContractInformationTab({
-  formData,
-  setFormData,
-}: ContractInformationTabProps) {
-
+export function ContractInformationTab({ formData, setFormData }: ContractInformationTabProps) {
   // Business tabs
   const [activeBusinessTab, setActiveBusinessTab] = useState<string | null>(null);
- 
+  const [previewBusinessTab, setPreviewBusinessTab] = useState<string | null>(null);
 
   const [standardContractFormData, setStandardContractFormData] = useState(businessInitialState);
-  const [consultingContractFormData, setConsultingContractFormData] = useState(consultingInitialState);
-  const [outsourcingContractFormData, setOutsourcingContractFormData] = useState(outsourcingInitialState);
+  const [consultingContractFormData, setConsultingContractFormData] =
+    useState(consultingInitialState);
+  const [outsourcingContractFormData, setOutsourcingContractFormData] =
+    useState(outsourcingInitialState);
 
   // Modal
   const [modalOpen, setModalOpen] = useState(false);
   const [modalBusiness, setModalBusiness] = useState<string | null>(null);
- 
-
 
   const handleSaveContract = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (modalBusiness === "Recruitment" || modalBusiness === "HR Managed Services") {
+    if (
+      modalBusiness === "Recruitment" ||
+      modalBusiness === "HR Managed Services" ||
+      modalBusiness === "IT & Technology"
+    ) {
       const clonedFormData = structuredClone(formData);
       clonedFormData.contractForms[modalBusiness!] = standardContractFormData;
       setFormData(clonedFormData);
-    } else if (modalBusiness === "HR Consulting" || modalBusiness === "Mgt Consulting" || modalBusiness === "IT & Technology") {
+    } else if (modalBusiness === "HR Consulting" || modalBusiness === "Mgt Consulting") {
       const clonedFormData = structuredClone(formData);
       clonedFormData.contractForms[modalBusiness!] = consultingContractFormData;
       setFormData(clonedFormData);
@@ -64,7 +60,7 @@ export function ContractInformationTab({
     setStandardContractFormData(businessInitialState);
     setConsultingContractFormData(consultingInitialState);
     setOutsourcingContractFormData(outsourcingInitialState);
-  
+
     setModalOpen(false);
   };
 
@@ -80,7 +76,7 @@ export function ContractInformationTab({
   ];
 
   return (
-    <div className="space-y-6 pt-4 pb-2">
+    <div className="space-y-6 pb-2">
       <div className="space-y-1">
         <Label htmlFor="lineOfBusiness">
           Line of Business<span className="text-red-700">*</span>
@@ -107,6 +103,7 @@ export function ContractInformationTab({
                   });
                   if (!formData.lineOfBusiness?.includes(option) && activeBusinessTab === option) {
                     setActiveBusinessTab(null);
+                    setPreviewBusinessTab(null);
                   }
                 }}
               />
@@ -148,6 +145,7 @@ export function ContractInformationTab({
                     variant="outline"
                     onClick={() => {
                       setActiveBusinessTab(business);
+                      setPreviewBusinessTab(null);
                       setModalBusiness(business);
                       setModalOpen(true);
                     }}
@@ -155,6 +153,18 @@ export function ContractInformationTab({
                     <Pencil className="size-4" />
                     Fill Form
                   </Button>
+                  {formData.contractForms[business] && (
+                    <Button
+                      size="sm"
+                      type="button"
+                      className="w-24"
+                      onClick={() => {
+                        setPreviewBusinessTab(business);
+                      }}
+                    >
+                      Preview
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}
@@ -172,19 +182,22 @@ export function ContractInformationTab({
           <div className="flex-1 min-h-0">
             <div className="overflow-y-auto overflow-x-hidden h-full pr-1 flex flex-col gap-1">
               {modalBusiness &&
-                ["Recruitment", "HR Managed Services"].includes(modalBusiness) &&
-                <StandardContractForm 
-                  formData={standardContractFormData}
-                  setFormData={setStandardContractFormData}
-                />}
-              {modalBusiness &&
-                ["HR Consulting", "Mgt Consulting", "IT & Technology"].includes(modalBusiness) &&
-                <ConsultingContractForm 
+                ["Recruitment", "HR Managed Services", "IT & Technology"].includes(
+                  modalBusiness,
+                ) && (
+                  <StandardContractForm
+                    formData={standardContractFormData}
+                    setFormData={setStandardContractFormData}
+                  />
+                )}
+              {modalBusiness && ["HR Consulting", "Mgt Consulting"].includes(modalBusiness) && (
+                <ConsultingContractForm
                   formData={consultingContractFormData}
                   setFormData={setConsultingContractFormData}
-                />}
+                />
+              )}
               {modalBusiness === "Outsourcing" && (
-                <OutsourcingContractForm 
+                <OutsourcingContractForm
                   formData={outsourcingContractFormData}
                   setFormData={setOutsourcingContractFormData}
                 />
@@ -192,11 +205,7 @@ export function ContractInformationTab({
             </div>
           </div>
           <DialogFooter>
-            <Button
-              type="button"
-              className="ml-auto "
-              onClick={(e) => handleSaveContract(e)}
-            >
+            <Button type="button" className="ml-auto " onClick={(e) => handleSaveContract(e)}>
               Save
             </Button>
           </DialogFooter>

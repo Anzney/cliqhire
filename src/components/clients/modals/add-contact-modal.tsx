@@ -50,7 +50,23 @@ export function AddContactModal({ open, onOpenChange, onAdd, countryCodes, posit
     countryCode: initialValues?.countryCode ?? "+966",
     position: initialValues?.position ?? "",
     linkedin: initialValues?.linkedin ?? "",
-});
+  });
+
+  // Sync formData with initialValues when modal opens or initialValues change
+  useEffect(() => {
+    if (open) {
+      setFormData({
+        firstName: initialValues?.firstName ?? "",
+        lastName: initialValues?.lastName ?? "",
+        gender: initialValues?.gender ?? "",
+        email: initialValues?.email ?? "",
+        phone: initialValues?.phone ?? "",
+        countryCode: initialValues?.countryCode ?? "+966",
+        position: initialValues?.position ?? "",
+        linkedin: initialValues?.linkedin ?? "",
+      });
+    }
+  }, [open, initialValues]);
 
 
   const handleSubmit = (e: React.FormEvent) => {

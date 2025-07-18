@@ -1,134 +1,146 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Plus, Upload } from "lucide-react"
-import { useRef, useState } from "react"
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { Button } from "@/components/ui/button";
+import { Plus , RefreshCcw, Loader } from "lucide-react";
+import { toast } from "sonner";
+import {
+  createJobAttachment,
+  getJobAttachmentsByJobId,
+  deleteJobAttachment
+} from "@/services/attachmentService";
+
+// Reuse the UploadAttachment and AttachmentList components from the client attachments folder
+import { UploadAttachment } from "@/components/clients/attachments/uploadAttachment";
+import { AttachmentList } from "@/components/clients/attachments/attachmentList";
+
+export interface BackendAttachment {
+  _id: string;
+  fileName: string;
+  uploadedAt: string;
+  url: string;
+}
 
 interface AttachmentsContentProps {
   jobId: string;
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export function AttachmentsContent({ jobId }: AttachmentsContentProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [isDragging, setIsDragging] = useState(false)
+  const [showUploadBox, setShowUploadBox] = useState(false);
+  const [attachments, setAttachments] = useState<BackendAttachment[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const handleUploadClick = () => {
-    fileInputRef.current?.click()
-  }
+  // Fetch attachments from backend for this job
+  const fetchAttachments = async () => {
+    if (!jobId) return;
+    setLoading(true);
+    try {
+      const data = await getJobAttachmentsByJobId(jobId);
+      setAttachments(data || []);
+    } catch (error) {
+      console.error("Error fetching attachments:", error);
+      setAttachments([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }
+  // Bulk delete selected attachments
+  const handleBulkDelete = async (ids: string[]) => {
+    try {
+      await Promise.all(ids.map(id => deleteJobAttachment(id)));
+      fetchAttachments();
+      toast.success("Files deleted successfully");
+    } catch (error) {
+      console.error("Error deleting attachments:", error);
+      toast.error("Failed to delete files");
+    }
+  };
 
-  const handleDragLeave = () => {
-    setIsDragging(false)
-  }
+  // Upload a file for this job
+  const handleUpload = async (file: File) => {
+    if (!jobId) return;
+    try {
+      await createJobAttachment(file, jobId);
+      // Always refresh list after upload to ensure new file appears
+      await fetchAttachments();
+      toast.success("File uploaded successfully");
+    } catch (error) {
+      console.error("Upload failed:", error);
+      toast.error("Failed to upload file");
+    }
+  };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-    const files = Array.from(e.dataTransfer.files)
-    // Handle file upload logic here
-  }
+  // Delete a file
+  const handleDelete = async (attachmentId: string) => {
+    try {
+      await deleteJobAttachment(attachmentId);
+      setAttachments((prev) =>
+        prev.filter((item) => item._id !== attachmentId)
+      );
+      toast.success("File deleted successfully");
+    } catch (error) {
+      console.error("Delete failed:", error);
+      toast.error("Failed to delete file");
+    }
+  };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    // Handle file upload logic here
-  }
+  useEffect(() => {
+    fetchAttachments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jobId]);
 
   return (
-    <div className="p-4">
-      {/* Upload Section */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Upload Files</h2>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="gap-2"
-            onClick={handleUploadClick}
-          >
-            <Plus className="h-4 w-4" />
-            Upload Files
-          </Button>
-        </div>
-
-        {/* Drag and Drop Area */}
-        <div 
-          className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-            isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'
-          }`}
-          onClick={handleUploadClick}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
+    <div className="p-6">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-gray-800">Upload File</h3>
+        <Button
+          onClick={() => setShowUploadBox(true)}
+          disabled={showUploadBox}
+          className="flex items-center gap-2 bg-black text-white hover:bg-gray-800"
         >
-          <input 
-            type="file" 
-            ref={fileInputRef}
-            className="hidden"
-            multiple
-            onChange={handleFileChange}
-          />
-          <div className="mb-4">
-            <Upload className="h-10 w-10 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">
-              Drag and drop files here, or click to select files
-            </p>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Maximum file size: 10MB
-          </p>
-        </div>
-      </div>
-
-      {/* Empty State */}
-      <div className="text-center py-12">
-        <div className="w-48 h-48 mx-auto mb-6">
-          <svg
-            viewBox="0 0 200 200"
-            className="w-full h-full text-blue-500"
-          >
-            {/* Folder background */}
-            <path 
-              d="M40 60 L80 60 L90 50 L160 50 L160 150 L40 150 Z" 
-              fill="currentColor" 
-              fillOpacity="0.1"
-            />
-            {/* Folder front */}
-            <path 
-              d="M35 70 L165 70 L155 155 L45 155 Z" 
-              fill="currentColor" 
-              fillOpacity="0.2"
-            />
-            {/* Upload arrow */}
-            <path 
-              d="M90 100 L110 100 L110 130 L90 130 Z" 
-              fill="currentColor"
-            />
-            <path 
-              d="M85 115 L100 100 L115 115" 
-              stroke="currentColor" 
-              strokeWidth="4" 
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
-        <h3 className="text-xl font-semibold mb-2">No attachments uploaded yet</h3>
-        <p className="text-muted-foreground mb-6">
-          Upload files by dragging & dropping them or clicking the upload button above.
-        </p>
-        <Button 
-          variant="link" 
-          className="text-blue-500"
-        >
-          Learn more about attachments
+          <Plus className="w-4 h-4" />
+          Upload File
         </Button>
       </div>
+
+      <UploadAttachment
+        show={showUploadBox}
+        setShow={setShowUploadBox}
+        onUpload={handleUpload}
+        attachments={attachments}
+      />
+
+      {loading ? (
+        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+          <Loader className="size-6 animate-spin" />
+          <div className="text-lg text-gray-600 mt-2">Loading Attachments Details ......</div>
+        </div>
+      ) : attachments.length === 0 ? (
+        <div className="flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-48 h-48 mb-6">
+            <svg viewBox="0 0 200 200" className="w-full h-full text-blue-500">
+              <rect x="50" y="80" width="100" height="60" rx="10" fill="currentColor" opacity="0.1" />
+              <rect x="70" y="100" width="60" height="20" rx="4" fill="currentColor" opacity="0.2" />
+              <circle cx="100" cy="120" r="8" fill="currentColor" opacity="0.2" />
+              <rect x="120" y="90" width="20" height="8" rx="2" fill="currentColor" opacity="0.3" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold mb-2">No attachments yet</h2>
+          <p className="text-gray-500 mb-4">
+            Add your first attachment to share files with your team.
+          </p>
+        </div>
+      ) : (
+        <AttachmentList
+          attachments={attachments}
+          onDelete={handleDelete}
+          onDeleteSelected={handleBulkDelete}
+        />
+      )}
     </div>
-  )
+  );
 }

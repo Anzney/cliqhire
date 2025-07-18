@@ -1,163 +1,94 @@
 "use client";
 
+import { SectionHeader } from "@/components/clients/summary/section-header";
+import { DetailRow } from "@/components/clients/summary/detail-row";
+import { TeamMember } from "@/components/clients/summary/team-member";
 import { Button } from "@/components/ui/button";
-import { Pencil, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
+import { FileUploadRow } from "@/components/clients/summary/file-upload-row";
+import { Plus, Pencil, ChevronsUpDown, RefreshCcw, Loader } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { EditFieldDialog } from "./edit-field-dialog";
+import { EditSalaryDialog } from "./edit-salary-dialog";
 import { getJobById, updateJobById } from "@/services/jobService";
-import { EditFieldDialog } from "@/components/jobs/summary/edit-field-dialog";
-import { EditSalaryDialog } from "@/components/jobs/summary/edit-salary-dialog";
-import type { JobResponse } from "@/types/job";
-import { RecruitmentManagerSection } from "./RecruitmentManagerSection";
-import { TeamLeadSection } from "./TeamLeadSection";
-import { RecruiterSection } from "./RecruiterSection";
 import { JobDiscriptionI } from "./jobDiscriptionI";
+import { JobInfoSection } from "./JobInfoSection";
+import { toast } from "sonner";
 
 interface SummaryContentProps {
   jobId: string;
 }
 
-interface JobDetails {
-  jobTitle: string;
-  department: string;
-  client: string;
-  location: string[]; // Changed from string to string[]
-  headcount: number;
-  minimumSalary: number;
-  maximumSalary: number;
-  salaryCurrency: string;
-  jobType: string;
-  experience: string;
-  jobDescription: string;
-  nationalities: string[];
-  gender: string;
-  deadline: string;
-  relationshipManager: string;
-  reportingTo: string;
-  teamSize: number;
-  link: string;
-  keySkills: string;
-  jobPosition: string[]; // Changed from string to string[]
-  stage: string;
-  salaryRange: {
-    min: number;
-    max: number;
-    currency: string;
-  };
-  dateRange: {
-    start: string;
-    end: string;
-  };
+interface TeamMemberType {
+  name: string;
+  role: string;
+  email: string;
+  isActive?: boolean;
 }
 
-interface EditingField {
-  name: keyof JobDetails;
-  value: string;
-  isDate?: boolean;
-  isTextArea?: boolean;
-  isSelect?: boolean;
-  options?: { value: string; label: string }[];
+function capitalize(str: string) {
+  if (!str || typeof str !== "string") return str;
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 export function SummaryContent({ jobId }: SummaryContentProps) {
-  const [jobDetails, setJobDetails] = useState<JobDetails | null>(null);
+  const [jobDetails, setJobDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [editingField, setEditingField] = useState<EditingField | null>(null);
+  const [editingField, setEditingField] = useState<any>(null);
   const [isSalaryDialogOpen, setIsSalaryDialogOpen] = useState(false);
+  const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
+  const [teamMembers, setTeamMembers] = useState<TeamMemberType[]>([
+    { name: "John Doe", role: "Hiring Manager", email: "john@example.com", isActive: true },
+  ]);
   const [internalDescription, setInternalDescription] = useState("");
 
   useEffect(() => {
     const fetchJobDetails = async () => {
+      setLoading(true);
       try {
-        const response: JobResponse = await getJobById(jobId);
-        const job = Array.isArray(response.data) ? response.data[0] : response.data; // handle both array and object
-
-        const mappedDetails: JobDetails = {
-          jobTitle: job?.jobTitle ?? '',
-          department: job?.department ?? '',
-          client: job?.client?.name ?? 'N/A',
-          location: Array.isArray(job?.location) ? job.location : (job?.location ? [job.location] : []), // Handle both string and string[] cases
-          headcount: job?.headcount ?? 0,
-          minimumSalary: job?.minimumSalary ?? job?.salaryRange?.min ?? 0,
-          maximumSalary: job?.maximumSalary ?? job?.salaryRange?.max ?? 0,
-          salaryCurrency: job?.salaryCurrency ?? 'USD',
-          jobType: job?.jobType ?? '',
-          experience: job?.experience ?? '',
-          jobDescription: job?.jobDescription ?? 'No description available',
-          nationalities: job?.nationalities ?? [],
-          gender: job?.gender ?? '',
-          deadline: job?.deadline ?? '',
-          relationshipManager: job?.relationshipManager ?? '',
-          reportingTo: job?.reportingTo ?? '',
-          teamSize: job?.teamSize ?? 0,
-          link: job?.link ?? '',
-          keySkills: job?.keySkills ?? '',
-          jobPosition: Array.isArray(job?.jobPosition) ? job.jobPosition : (job?.jobPosition ? [job.jobPosition] : []), // Handle both string and string[] cases
-          stage: job?.stage ?? '',
-          salaryRange: {
-            min: job?.salaryRange?.min ?? 0,
-            max: job?.salaryRange?.max ?? 0,
-            currency: job?.salaryCurrency ?? 'USD'
-          },
-          dateRange: {
-            start: job?.dateRange?.start ?? '',
-            end: job?.dateRange?.end ?? ''
-          }
-        };
-
-        setJobDetails(mappedDetails);
-      } catch (error) {
-        console.error("Error fetching job details:", error);
-        setError("Failed to load job details");
+        const response = await getJobById(jobId);
+        const job = Array.isArray(response.data) ? response.data[0] : response.data;
+        setJobDetails(job);
+        setInternalDescription(job?.jobDescriptionInternal || "");
+      } catch (err) {
+        toast.error("Failed to load job details");
       } finally {
         setLoading(false);
       }
     };
-
     fetchJobDetails();
   }, [jobId]);
 
-  const handleFieldEdit = (
-    field: keyof JobDetails,
-    value: string,
-    options?: {
-      isDate?: boolean;
-      isTextArea?: boolean;
-      isSelect?: boolean;
-      selectOptions?: { value: string; label: string }[];
-    }
-  ) => {
-    setEditingField({
-      name: field,
-      value: value,
-      ...options
-    });
+  const handleFieldEdit = (field: string, value: any, options?: any) => {
+    setEditingField({ name: field, value, ...options });
   };
 
   const handleFieldSave = async (newValue: string) => {
     if (!editingField || !jobDetails) return;
-
     try {
       let processedValue: any = newValue;
-      
-      // Handle different field types
       if (editingField.isDate) {
         processedValue = new Date(newValue).toISOString();
-      } else if (editingField.name === 'jobPosition' || editingField.name === 'location') {
-        // Handle jobPosition and location as arrays - split by comma if it's a comma-separated string
-        processedValue = newValue.split(',').map(item => item.trim()).filter(item => item.length > 0);
       }
-
       const updatedDetails = {
         ...jobDetails,
-        [editingField.name]: processedValue
+        [editingField.name]: processedValue,
       };
-
-      await updateJobById(jobId, updatedDetails);
+      await updateJobById(jobId, { [editingField.name]: processedValue });
       setJobDetails(updatedDetails);
       setEditingField(null);
-    } catch (error) {
-      console.error("Error updating field:", error);
+      toast.success(
+        editingField.name === "jobDescription"
+          ? "Job description updated successfully"
+          : "Field updated successfully"
+      );
+    } catch (err) {
+      toast.error(
+        editingField.name === "jobDescription"
+          ? "Failed to update job description"
+          : "Failed to update field"
+      );
     }
   };
 
@@ -167,135 +98,154 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
     currency: string;
   }) => {
     if (!jobDetails) return;
-
     try {
       const updatedDetails = {
         ...jobDetails,
         minimumSalary: values.minSalary,
         maximumSalary: values.maxSalary,
-        salaryCurrency: values.currency
+        salaryCurrency: values.currency,
       };
-
-      await updateJobById(jobId, updatedDetails);
+      await updateJobById(jobId, {
+        minimumSalary: values.minSalary,
+        maximumSalary: values.maxSalary,
+        salaryCurrency: values.currency,
+      });
       setJobDetails(updatedDetails);
-    } catch (error) {
-      console.error("Error updating salary details:", error);
+      toast.success("Salary updated successfully");
+    } catch (err) {
+      toast.error("Failed to update salary");
     }
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div className="text-red-600">{error}</div>;
+  const handleInternalDescriptionSave = async (val: string) => {
+    if (!jobDetails) return;
+    try {
+      await updateJobById(jobId, { jobDescriptionInternal: val });
+      setInternalDescription(val);
+      setJobDetails({ ...jobDetails, jobDescriptionInternal: val });
+      toast.success("Internal job description updated successfully");
+    } catch (err) {
+      toast.error("Failed to update internal job description");
+    }
+  };
+
+  if (loading)
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader className="size-6 animate-spin" />
+        <div className="text-lg text-gray-600 mt-2">Loading Summary Details ......</div>
+      </div>
+    );
   if (!jobDetails) return <div>No job details found</div>;
 
   return (
-    <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Left Column */}
-      <div>
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h2 className="text-lg font-semibold mb-4">Job Details</h2>
-          <div className="bg-white rounded border p-4 space-y-4">
-            {Object.entries(jobDetails).map(([key, value]) => {
-              if (
-                key === 'dateRange' ||
-                key === 'salaryCurrency' ||
-                key === 'minimumSalary' ||
-                key === 'maximumSalary' ||
-                key === 'salaryRange' ||
-                key === 'jobDescription'
-              ) return null;
-
-              const isDateField = ['deadline'].includes(key);
-              
-              // Handle display value for different types
-              let displayValue: string;
-              if ((key === 'jobPosition' || key === 'location') && Array.isArray(value)) {
-                displayValue = value.join(', ');
-              } else if (isDateField && value) {
-                displayValue = new Date(value as string).toLocaleDateString();
-              } else {
-                displayValue = value?.toString() || '';
-              }
-
-              // Handle edit value for different types
-              let editValue: string;
-              if ((key === 'jobPosition' || key === 'location') && Array.isArray(value)) {
-                editValue = value.join(', ');
-              } else {
-                editValue = value?.toString() || '';
-              }
-
-              return (
-                <DetailRow
-                  key={key}
-                  label={key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                  value={displayValue}
-                  onEdit={() => handleFieldEdit(
-                    key as keyof JobDetails,
-                    editValue,
-                    { isDate: isDateField }
-                  )}
-                />
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Right Column */}
-      <div>
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h2 className="text-lg font-semibold mb-4">Job Description</h2>
-          <div className="bg-white rounded border p-4">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm text-muted-foreground">Job Description</h3>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-black"
-                onClick={() => handleFieldEdit('jobDescription', jobDetails.jobDescription, { isTextArea: true })}
-              >
-                <Pencil className="h-4 w-4 mr-1" />
-                Edit
+    <div className="grid grid-cols-2 gap-6 p-4">
+      {/* Left Column: Details (Collapsible) */}
+      <div className="space-y-6">
+        <Collapsible className="rounded-lg border shadow-sm">
+          <div className="flex items-center justify-between p-4">
+            <h4 className="text-sm font-semibold">Job Details</h4>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-xs p-1">
+                Show Complete Details
+                <ChevronsUpDown />
               </Button>
-            </div>
-            <div className="text-sm whitespace-pre-wrap">
-              {jobDetails.jobDescription}
-            </div>
+            </CollapsibleTrigger>
           </div>
-          {/* Internal Job Description Section */}
-          <div className="mt-4">
-            <JobDiscriptionI
-              value={internalDescription}
-              onSave={setInternalDescription}
-            />
-          </div>
-
-          {/* Salary Range Section */}
-          <div className="mt-6">
-            <h2 className="text-lg font-semibold mb-4">Package Details</h2>
-            <div className="bg-white rounded border p-4">
-              <DetailRow
-                label="Salary Range"
-                value={`${jobDetails.salaryCurrency} ${jobDetails.minimumSalary.toLocaleString()} - ${jobDetails.maximumSalary.toLocaleString()} per annum`}
-                onEdit={() => setIsSalaryDialogOpen(true)}
-              />
+          <div className="px-4 pb-4">
+            <div className="space-y-3">
+              <DetailRow label="Job Title" value={jobDetails.jobTitle} onUpdate={() => handleFieldEdit("jobTitle", jobDetails.jobTitle)} />
+              <DetailRow label="Department" value={jobDetails.department} onUpdate={() => handleFieldEdit("department", jobDetails.department)} />
+              <DetailRow label="Client" value={jobDetails.client?.name || jobDetails.client} onUpdate={() => {}} />
+              <DetailRow label="Location" value={Array.isArray(jobDetails.location) ? jobDetails.location.join(", ") : jobDetails.location} onUpdate={() => handleFieldEdit("location", jobDetails.location)} />
+              <DetailRow label="Headcount" value={jobDetails.headcount} onUpdate={() => handleFieldEdit("headcount", jobDetails.headcount)} />
+              <DetailRow label="Stage" value={jobDetails.stage} onUpdate={() => handleFieldEdit("stage", jobDetails.stage)} />
             </div>
           </div>
-          <RecruitmentManagerSection
-            name={jobDetails.relationshipManager}
-            onEdit={() => handleFieldEdit('relationshipManager', jobDetails.relationshipManager)}
-          />
-          <TeamLeadSection
-            name={jobDetails.reportingTo}
-            onEdit={() => handleFieldEdit('reportingTo', jobDetails.reportingTo)}
-          />
-          <RecruiterSection
-            name={jobDetails.keySkills}
-            onEdit={() => handleFieldEdit('keySkills', jobDetails.keySkills)}
+          <CollapsibleContent className="px-4 pb-4">
+            <div className="space-y-3">
+              <DetailRow label="Status" value={jobDetails.status} onUpdate={() => handleFieldEdit("status", jobDetails.status)} />
+              <DetailRow label="Job Type" value={capitalize(jobDetails.jobType)} onUpdate={() => handleFieldEdit("jobType", jobDetails.jobType)} />
+              <DetailRow label="Experience" value={capitalize(jobDetails.experience)} onUpdate={() => handleFieldEdit("experience", jobDetails.experience)} />
+              <DetailRow label="Gender" value={capitalize(jobDetails.gender)} onUpdate={() => handleFieldEdit("gender", jobDetails.gender)} />
+              <DetailRow label="Deadline" value={jobDetails.deadline} onUpdate={() => handleFieldEdit("deadline", jobDetails.deadline)} />
+              <DetailRow label="Reporting To" value={jobDetails.reportingTo} onUpdate={() => handleFieldEdit("reportingTo", jobDetails.reportingTo)} />
+              <DetailRow label="Team Size" value={jobDetails.teamSize} onUpdate={() => handleFieldEdit("teamSize", jobDetails.teamSize)} />
+              <DetailRow label="Key Skills" value={jobDetails.keySkills} onUpdate={() => handleFieldEdit("keySkills", jobDetails.keySkills)} />
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+      {/* Right Column: Other Sections (Collapsible) */}
+      <div className="space-y-6">
+        {/* Package Details */}
+        <div className="rounded-lg border shadow-sm px-4 pb-4 pt-4">
+          <h4 className="text-sm font-semibold mb-4">Package Details</h4>
+          <DetailRow
+            label="Salary Range"
+            value={`${jobDetails.salaryCurrency || "SAR"} ${jobDetails.minimumSalary || jobDetails.minSalary || 0} - ${jobDetails.maximumSalary || jobDetails.maxSalary || 0}`}
+            onUpdate={() => setIsSalaryDialogOpen(true)}
           />
         </div>
+        {/* Job Description */}
+        <Collapsible className="rounded-lg border shadow-sm">
+          <div className="flex items-center justify-between p-4">
+            <h4 className="text-sm font-semibold">Job Description</h4>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-xs p-1">
+                Show Complete Details
+                <ChevronsUpDown />
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="px-4 pb-4">
+            <div className="bg-white rounded-lg border shadow-sm p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-semibold">Description</h2>
+                <Button variant="outline" size="sm" onClick={() => setIsDescriptionModalOpen(true)}>
+                  {jobDetails.jobDescription ? (
+                    <>
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Edit
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add
+                    </>
+                  )}
+                </Button>
+              </div>
+              <div className="space-y-3">
+                {jobDetails.jobDescription ? (
+                  <p className="text-sm whitespace-pre-wrap">{jobDetails.jobDescription}</p>
+                ) : (
+                  <div className="text-sm text-muted-foreground text-center py-4">
+                    No description added yet
+                  </div>
+                )}
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+        {/* Job Description By Internal Team */}
+        <Collapsible className="rounded-lg border shadow-sm">
+          <div className="flex items-center justify-between p-4">
+            <h4 className="text-sm font-semibold">Job Description By Internal Team</h4>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-xs p-1">
+                Show Complete Details
+                <ChevronsUpDown />
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="px-4 pb-4">
+            <JobDiscriptionI value={internalDescription} onSave={handleInternalDescriptionSave} disabled={loading} />
+          </CollapsibleContent>
+        </Collapsible>
+        {/* Job Info Section */}
+        <JobInfoSection jobDetails={jobDetails} handleFieldEdit={handleFieldEdit} />
       </div>
-
       {/* Edit Dialogs */}
       {editingField && (
         <EditFieldDialog
@@ -309,55 +259,30 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
           isSelect={editingField.isSelect}
         />
       )}
-
       <EditSalaryDialog
         open={isSalaryDialogOpen}
         onClose={() => setIsSalaryDialogOpen(false)}
         currentValues={{
-          minSalary: jobDetails.minimumSalary,
-          maxSalary: jobDetails.maximumSalary,
-          currency: jobDetails.salaryCurrency
+          minSalary: jobDetails.minimumSalary || jobDetails.minSalary || 0,
+          maxSalary: jobDetails.maximumSalary || jobDetails.maxSalary || 0,
+          currency: jobDetails.salaryCurrency || "SAR",
         }}
         onSave={handleSalarySave}
       />
-    </div>
-  );
-}
-
-interface DetailRowProps {
-  label: string;
-  value?: string;
-  onEdit?: () => void;
-}
-
-function DetailRow({ label, value, onEdit }: DetailRowProps) {
-  const hasValue = value && value !== "undefined" && value !== "null";
-
-  return (
-    <div className="flex items-center py-2 border-b last:border-b-0">
-      <span className="text-sm text-muted-foreground w-1/3">{label}</span>
-      <div className="flex items-center justify-between flex-1">
-        <span className="text-sm">{hasValue ? value : "No Details"}</span>
-        <Button
-          variant="outline"
-          size="sm"
-          
-          className="h-8 text-black"
-          onClick={onEdit}
-        >
-          {hasValue ? (
-            <>
-              <Pencil className="h-3 w-3 mr-1" />
-              Edit
-            </>
-          ) : (
-            <>
-              <Plus className="h-3 w-3 mr-1" />
-              Add
-            </>
-          )}
-        </Button>
-      </div>
+      {/* Description Modal (reuse EditFieldDialog for description) */}
+      {isDescriptionModalOpen && (
+        <EditFieldDialog
+          open={true}
+          onClose={() => setIsDescriptionModalOpen(false)}
+          fieldName="jobDescription"
+          currentValue={jobDetails.jobDescription || ""}
+          onSave={async (val: string) => {
+            await handleFieldSave(val);
+            setIsDescriptionModalOpen(false);
+          }}
+          isTextArea={true}
+        />
+      )}
     </div>
   );
 }

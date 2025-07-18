@@ -33,13 +33,13 @@ export const optionsForClient = [
       {
         value: "Contract Negotiation",
         label: "Contract Negotiation",
-      }
-    ]
+      },
+    ],
   },
   {
     value: "Signed",
     label: "Signed",
-  }
+  },
 ];
 
 export const countryCodes = [
@@ -58,31 +58,37 @@ export const positionOptions = [
   { value: "Executive", label: "Executive" },
 ];
 
-export const levelFieldMap: Record<string, { percentage: keyof ClientForm; notes: keyof ClientForm; money: keyof ClientForm; currency: keyof ClientForm; }> = {
-  "Senior Level": { percentage: "seniorLevelPercentage", notes: "seniorLevelNotes", money: "seniorLevelMoney", currency: "seniorLevelCurrency" },
-  "Executives": { percentage: "executivesPercentage", notes: "executivesNotes", money: "executivesMoney", currency: "executivesCurrency" },
-  "Non-Executives": { percentage: "nonExecutivesPercentage", notes: "nonExecutivesNotes", money: "nonExecutivesMoney", currency: "nonExecutivesCurrency" },
-  "Other": { percentage: "otherPercentage", notes: "otherNotes", money: "otherMoney", currency: "otherCurrency" },
-};
+// export const levelFieldMap: Record<string, { percentage: keyof ClientForm; notes: keyof ClientForm; money: keyof ClientForm; currency: keyof ClientForm; }> = {
+//   "Senior Level": { percentage: "seniorLevelPercentage", notes: "seniorLevelNotes", money: "seniorLevelMoney", currency: "seniorLevelCurrency" },
+//   "Executives": { percentage: "executivesPercentage", notes: "executivesNotes", money: "executivesMoney", currency: "executivesCurrency" },
+//   "Non-Executives": { percentage: "nonExecutivesPercentage", notes: "nonExecutivesNotes", money: "nonExecutivesMoney", currency: "nonExecutivesCurrency" },
+//   "Other": { percentage: "otherPercentage", notes: "otherNotes", money: "otherMoney", currency: "otherCurrency" },
+// };
 
-
-export const clientSubStages = [ "Calls", "Profile Sent", "Contract Sent", "Attended a meeting", "Replied to a message", "Contract Negotiation" ];
+export const clientSubStages = [
+  "Calls",
+  "Profile Sent",
+  "Contract Sent",
+  "Attended a meeting",
+  "Replied to a message",
+  "Contract Negotiation",
+];
 
 export const levelValue = {
   percentage: 0,
-  notes: ""
-}
+  notes: "",
+};
 
 export const levelValueAdvance = {
   percentage: 0,
   notes: "",
   amount: 0,
-  currency: "SAR"
-}
+  currency: "SAR",
+};
 
 export const businessInitialState = {
   contractStartDate: null,
-  contractEndDate: null, 
+  contractEndDate: null,
   contractType: "",
   //fixed with advance
   fixedPercentage: 0,
@@ -99,7 +105,7 @@ export const businessInitialState = {
     seniorLevel: { ...levelValue },
     executives: { ...levelValue },
     nonExecutives: { ...levelValue },
-    other: { ...levelValue }
+    other: { ...levelValue },
   },
 
   levelBasedAdvanceHiring: {
@@ -107,11 +113,11 @@ export const businessInitialState = {
     seniorLevel: { ...levelValueAdvance },
     executives: { ...levelValueAdvance },
     nonExecutives: { ...levelValueAdvance },
-    other: { ...levelValueAdvance }
+    other: { ...levelValueAdvance },
   },
-  
+
   contractDocument: null,
-}
+};
 
 export const consultingInitialState = {
   contractStartDate: null,
@@ -120,7 +126,7 @@ export const consultingInitialState = {
   financialProposalDocument: null,
   technicalProposalNotes: "",
   financialProposalNotes: "",
-}
+};
 
 export const primaryContactInitialState = {
   firstName: "",
@@ -132,7 +138,7 @@ export const primaryContactInitialState = {
   designation: "",
   linkedin: "",
   isPrimary: true,
-}
+};
 
 export const outsourcingInitialState = {
   contractStartDate: null,
@@ -143,8 +149,8 @@ export const outsourcingInitialState = {
   durationPerResource: 0,
   slaTerms: "",
   totalCost: 0,
-  contractDocument: null
-}
+  contractDocument: null,
+};
 
 export const clientGeneralInfoInitialState = {
   clientStage: undefined,
@@ -155,7 +161,7 @@ export const clientGeneralInfoInitialState = {
   clientSource: undefined,
   industry: undefined,
   clientSubStage: undefined,
-}
+};
 
 export const clientContactInfoInitialstate = {
   name: "",
@@ -168,5 +174,43 @@ export const clientContactInfoInitialstate = {
   googleMapsLink: "",
   countryOfBusiness: "",
   primaryContacts: [],
-}
+};
 
+export const CONTRACT_TYPES = [
+  "Fix with Advance",
+  "Fix without Advance",
+  "Level Based (Hiring)",
+  "Level Based With Advance",
+];
+
+export const CURRENCIES = ["USD", "EUR", "GBP", "SAR", "AED", "INR"];
+export const LEVELS = ["Senior Level", "Executives", "Non-Executives", "Other"];
+export const levelFieldMap: Record<
+  string,
+  { percentage: string; currency: string; money: string; notes: string }
+> = {
+  "Senior Level": {
+    percentage: "seniorLevelPercentage",
+    currency: "seniorLevelCurrency",
+    money: "seniorLevelMoney",
+    notes: "seniorLevelNotes",
+  },
+  Executives: {
+    percentage: "executivesPercentage",
+    currency: "executivesCurrency",
+    money: "executivesMoney",
+    notes: "executivesNotes",
+  },
+  "Non-Executives": {
+    percentage: "nonExecutivesPercentage",
+    currency: "nonExecutivesCurrency",
+    money: "nonExecutivesMoney",
+    notes: "nonExecutivesNotes",
+  },
+  Other: {
+    percentage: "otherPercentage",
+    currency: "otherCurrency",
+    money: "otherMoney",
+    notes: "otherNotes",
+  },
+};

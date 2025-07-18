@@ -40,7 +40,7 @@ interface JobStageBadgeProps {
 
 export function JobStageBadge({ stage, onStageChange }: JobStageBadgeProps) {
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button 
           variant="ghost" 
