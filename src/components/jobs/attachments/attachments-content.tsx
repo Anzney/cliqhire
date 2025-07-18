@@ -5,6 +5,11 @@ import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Plus , RefreshCcw, Loader } from "lucide-react";
 import { toast } from "sonner";
+import {
+  createJobAttachment,
+  getJobAttachmentsByJobId,
+  deleteJobAttachment
+} from "@/services/attachmentService";
 
 // Reuse the UploadAttachment and AttachmentList components from the client attachments folder
 import { UploadAttachment } from "@/components/clients/attachments/uploadAttachment";
@@ -33,8 +38,8 @@ export function AttachmentsContent({ jobId }: AttachmentsContentProps) {
     if (!jobId) return;
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/attachments?job_id=${jobId}`);
-      setAttachments(response.data.data || []);
+      const data = await getJobAttachmentsByJobId(jobId);
+      setAttachments(data || []);
     } catch (error) {
       console.error("Error fetching attachments:", error);
       setAttachments([]);
@@ -46,9 +51,7 @@ export function AttachmentsContent({ jobId }: AttachmentsContentProps) {
   // Bulk delete selected attachments
   const handleBulkDelete = async (ids: string[]) => {
     try {
-      await Promise.all(
-        ids.map(id => axios.delete(`${API_BASE_URL}/api/attachments/${id}`))
-      );
+      await Promise.all(ids.map(id => deleteJobAttachment(id)));
       fetchAttachments();
       toast.success("Files deleted successfully");
     } catch (error) {
@@ -61,10 +64,7 @@ export function AttachmentsContent({ jobId }: AttachmentsContentProps) {
   const handleUpload = async (file: File) => {
     if (!jobId) return;
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("job_id", jobId);
-      await axios.post(`${API_BASE_URL}/api/attachments`, formData);
+      await createJobAttachment(file, jobId);
       // Always refresh list after upload to ensure new file appears
       await fetchAttachments();
       toast.success("File uploaded successfully");
@@ -77,7 +77,7 @@ export function AttachmentsContent({ jobId }: AttachmentsContentProps) {
   // Delete a file
   const handleDelete = async (attachmentId: string) => {
     try {
-      await axios.delete(`${API_BASE_URL}/api/${attachmentId}`);
+      await deleteJobAttachment(attachmentId);
       setAttachments((prev) =>
         prev.filter((item) => item._id !== attachmentId)
       );
