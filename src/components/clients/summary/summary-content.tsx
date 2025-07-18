@@ -9,13 +9,15 @@ import { FileUploadRow } from "./file-upload-row";
 import { AddTeamMemberModal } from "../modals/add-team-member-modal";
 import { AddContactModal } from "../modals/add-contact-modal";
 import { EditDescriptionModal } from "../modals/edit-description-modal";
-import { Plus, Pencil } from "lucide-react";
-import { ContractSection } from "./contract-section";
+import { Plus, Pencil, ChevronsUpDown } from "lucide-react";
+import { ContractSection } from "../contract/contract-section";
 import { Label } from "@/components/ui/label";
 import { SalesInfo } from "./sales/salesInfo";
 import { CollapsibleSection } from "./collapsible-section";
 import { toast } from "sonner";
 
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import ContractOverview from "./contract-overview";
 interface ClientDetails {
   clientPriority: string;
   clientSegment: string;
@@ -35,11 +37,20 @@ interface ClientDetails {
   linkedInProfile?: string;
   clientLinkedInPage?: string;
   linkedInPage?: string;
-  gstTinDocument?: string;
   clientProfileImage?: string;
   profileImage?: string;
-  crCopy?: string;
-  vatCopy?: string;
+  crCopy?: {
+    url: string;
+    fileName: string;
+  };
+  vatCopy?: {
+    url: string;
+    fileName: string;
+  };
+  gstTinDocument?: {
+    url: string;
+    fileName: string;
+  };
   phoneNumber?: string;
   googleMapsLink?: string;
   position?: string;
@@ -86,7 +97,15 @@ interface ContactType {
   position: string;
 }
 
-export function SummaryContent({ clientId, clientData }: { clientId: string; clientData: any }) {
+export function SummaryContent({
+  clientId,
+  clientData,
+  onTabSwitch,
+}: {
+  clientId: string;
+  clientData: any;
+  onTabSwitch?: (tabValue: string) => void;
+}) {
   const [clientDetails, setClientDetails] = useState<ClientDetails>(() => {
     // Initialize with clientData and map primary contacts
     const mappedContacts = (clientData?.primaryContacts || []).map((c: any) => ({
@@ -106,10 +125,11 @@ export function SummaryContent({ clientId, clientData }: { clientId: string; cli
     };
   });
 
+  console.log(clientData);
+
   const [teamMembers, setTeamMembers] = useState<TeamMemberType[]>([
     { name: "Shaswat singh", role: "Admin", email: "shaswat@example.com", isActive: true },
   ]);
-  const [contacts, setContacts] = useState<ContactType[]>([]);
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
@@ -131,7 +151,6 @@ export function SummaryContent({ clientId, clientData }: { clientId: string; cli
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Update failed:", response.status, errorText);
-        throw new Error(`Failed to update client details: ${response.status}`);
         toast.error("Failed to update client details");
       }
 
@@ -141,8 +160,6 @@ export function SummaryContent({ clientId, clientData }: { clientId: string; cli
       }));
       toast.success("Client details updated successfully");
     } catch (error) {
-      console.error("Error updating client details:", error);
-      setError("Failed to update client details. Please try again.");
       toast.error("Failed to update client details");
     }
   };
@@ -166,7 +183,6 @@ export function SummaryContent({ clientId, clientData }: { clientId: string; cli
           );
 
           if (!response.ok) {
-            throw new Error(`Failed to upload ${field}: ${response.status}`);
             toast.error("Failed to upload file");
           }
 
@@ -279,216 +295,175 @@ export function SummaryContent({ clientId, clientData }: { clientId: string; cli
   return (
     <div className="grid grid-cols-2 gap-6 p-4">
       <div className="space-y-6">
-        <CollapsibleSection title="Details">
-          <div className="space-y-3">
-            <DetailRow
-              label="Sales Lead (Internal)"
-              value={clientDetails.salesLead}
-              onUpdate={handleUpdateField("salesLead")}
-            />
-            <DetailRow
-              label="Referred By (External)"
-              value={clientDetails.referredBy}
-              onUpdate={handleUpdateField("referredBy")}
-            />
-
-            <DetailRow
-              label="Client Priority"
-              value={clientDetails.clientPriority}
-              onUpdate={handleUpdateField("clientPriority")}
-              options={[
-                { value: "1", label: "1" },
-                { value: "2", label: "2" },
-                { value: "3", label: "3" },
-                { value: "4", label: "4" },
-                { value: "5", label: "5" },
-              ]}
-            />
-            <DetailRow
-              label="Client Segment"
-              value={clientDetails.clientSegment}
-              onUpdate={handleUpdateField("clientSegment")}
-              options={[
-                { value: "A", label: "A" },
-                { value: "B", label: "B" },
-                { value: "C", label: "C" },
-                { value: "D", label: "D" },
-                { value: "E", label: "E" },
-              ]}
-            />
-            <DetailRow
-              label="Client Name"
-              value={clientDetails.name}
-              onUpdate={handleUpdateField("name")}
-            />
-            <DetailRow
-              label="Client Phone Number"
-              value={clientDetails.phoneNumber}
-              onUpdate={handleUpdateField("phoneNumber")}
-            />
-            <DetailRow
-              label="Client Email(s)"
-              value={clientDetails.emails?.join(", ") || ""}
-              onUpdate={handleUpdateEmails}
-              alwaysShowEdit={true}
-            />
-            <div className="bg-white rounded-lg border shadow-sm p-2">
-              <div className="flex items-center justify-between mb-1">
-                <Label>Primary Contacts</Label>
-                <Button variant="outline" size="sm" onClick={() => setIsContactModalOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add
-                </Button>
-              </div>
-              {clientDetails.primaryContacts?.length === 0 ? (
-                <div className="text-sm text-muted-foreground text-center py-4"></div>
-              ) : (
-                <div className="space-y-3">
-                  {clientDetails.primaryContacts?.map((contact, index) => (
-                    <div key={index} className="p-3 bg-muted/30 rounded-lg">
-                      <div key={index} className="p-3 rounded-md border space-y-1">
-                        <div className="text-sm text-muted-foreground">
-                          <span className="text-xs font-semibold text-gray-500 mr-1">Name:</span>
-                          {`${contact.firstName} ${contact.lastName}`.trim() || "Unnamed Contact"}
-                        </div>
-                        {contact.gender && (
-                          <div className="text-sm text-muted-foreground">
-                            <span className="text-xs font-semibold text-gray-500 mr-1">
-                              Gender:
-                            </span>
-                            {contact.gender}
-                          </div>
-                        )}
-                        {contact.position && (
-                          <div className="text-sm text-muted-foreground">
-                            <span className="text-xs font-semibold text-gray-500 mr-1">
-                              Position:
-                            </span>
-                            {contact.position}
-                          </div>
-                        )}
-                        {contact.email && (
-                          <div className="text-sm text-muted-foreground">
-                            <span className="text-xs font-semibold text-gray-500 mr-1">Email:</span>
-                            {contact.email}
-                          </div>
-                        )}
-                        {(contact.countryCode || contact.phone) && (
-                          <div className="text-sm text-muted-foreground">
-                            <span className="text-xs font-semibold text-gray-500 mr-1">
-                              Phone Number:
-                            </span>
-                            {contact.countryCode ? `${contact.countryCode} ` : ""}
-                            {contact.phone || "No phone"}
-                          </div>
-                        )}
-                        <div className="text-sm text-muted-foreground">
-                          <span className="text-xs font-semibold text-gray-500 mr-1">
-                            LinkedIn:
-                          </span>
-                          {contact.linkedin ? (
-                            <a
-                              href={contact.linkedin}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline"
-                            >
-                              {contact.linkedin}
-                            </a>
-                          ) : (
-                            "No LinkedIn"
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            <DetailRow
-              label="Client Industry"
-              value={clientDetails.industry}
-              onUpdate={handleUpdateField("industry")}
-            />
-            <DetailRow
-              label="Client Website"
-              value={clientDetails.website}
-              onUpdate={handleUpdateField("website")}
-            />
-            <DetailRow
-              label="Google Maps Link"
-              value={clientDetails.googleMapsLink}
-              onUpdate={handleUpdateField("googleMapsLink")}
-            />
-            <DetailRow
-              label="Client Location"
-              value={clientDetails.location}
-              onUpdate={handleUpdateField("location")}
-            />
-            <DetailRow
-              label="Client Address"
-              value={clientDetails.address}
-              onUpdate={handleUpdateField("address")}
-            />
-            {/* <DetailRow
-              label="Registration Number"
-              value={clientDetails.registrationNumber}
-              onUpdate={handleUpdateField("registrationNumber")}
-            /> */}
-            <DetailRow
-              label="Country of Business"
-              value={clientDetails.countryOfBusiness}
-              onUpdate={handleUpdateField("countryOfBusiness")}
-            />
-            <DetailRow
-              label="LinkedIn Profile"
-              value={clientDetails.linkedInProfile}
-              onUpdate={handleUpdateField("linkedInProfile")}
-              optional
-            />
-            {/* <DetailRow
-              label="Client LinkedIn Page"
-              value={clientDetails.clientLinkedInPage || clientDetails.linkedInPage}
-              onUpdate={handleUpdateField(clientDetails.linkedInPage ? "linkedInPage" : "clientLinkedInPage")}
-            /> */}
-            <FileUploadRow
-              id="vat-copy-upload"
-              label="VAT Copy"
-              className="border-b"
-              onFileSelect={handleFileUpload("vatCopy")}
-              docUrl={clientDetails.vatCopy}
-              currentFileName={
-                typeof clientDetails.vatCopy === "string"
-                  ? clientDetails.vatCopy.split("/").pop() || ""
-                  : ""
-              }
-              onPreview={() => handlePreviewFile(clientDetails.vatCopy || "")}
-              onDownload={() => handleDownloadFile(clientDetails.vatCopy || "")}
-            />
-            <FileUploadRow
-              id="cr-copy-upload"
-              label="CR Copy"
-              onFileSelect={handleFileUpload("crCopy")}
-              docUrl={clientDetails.crCopy}
-              currentFileName={
-                typeof clientDetails.crCopy === "string"
-                  ? clientDetails.crCopy.split("/").pop() || ""
-                  : ""
-              }
-              onPreview={() => handlePreviewFile(clientDetails.crCopy || "")}
-              onDownload={() => handleDownloadFile(clientDetails.crCopy || "")}
-            />
+        <Collapsible className="rounded-lg border shadow-sm">
+          <div className="flex items-center justify-between p-4">
+            <h4 className="text-sm font-semibold">Details</h4>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-xs p-1">
+                Show Complete Details
+                <ChevronsUpDown />
+              </Button>
+            </CollapsibleTrigger>
           </div>
-        </CollapsibleSection>
+          <div className="px-4 pb-4">
+            <div className="space-y-3">
+              <DetailRow
+                label="Sales Lead (Internal)"
+                value={clientDetails.salesLead}
+                onUpdate={handleUpdateField("salesLead")}
+              />
+              <DetailRow
+                label="Referred By (External)"
+                value={clientDetails.referredBy}
+                onUpdate={handleUpdateField("referredBy")}
+              />
+
+              <DetailRow
+                label="Client Priority"
+                value={clientDetails.clientPriority}
+                onUpdate={handleUpdateField("clientPriority")}
+                options={[
+                  { value: "1", label: "1" },
+                  { value: "2", label: "2" },
+                  { value: "3", label: "3" },
+                  { value: "4", label: "4" },
+                  { value: "5", label: "5" },
+                ]}
+              />
+              <DetailRow
+                label="Client Segment"
+                value={clientDetails.clientSegment}
+                onUpdate={handleUpdateField("clientSegment")}
+                options={[
+                  { value: "A", label: "A" },
+                  { value: "B", label: "B" },
+                  { value: "C", label: "C" },
+                  { value: "D", label: "D" },
+                  { value: "E", label: "E" },
+                ]}
+              />
+              <DetailRow
+                label="Client Name"
+                value={clientDetails.name}
+                onUpdate={handleUpdateField("name")}
+              />
+              <DetailRow
+                label="Client Phone Number"
+                value={clientDetails.phoneNumber}
+                onUpdate={handleUpdateField("phoneNumber")}
+              />
+            </div>
+          </div>
+          <CollapsibleContent className="px-4 pb-4">
+            <div className="space-y-3">
+              <DetailRow
+                label="Client Email(s)"
+                value={clientDetails.emails?.join(", ") || ""}
+                onUpdate={handleUpdateEmails}
+                alwaysShowEdit={true}
+              />
+              <DetailRow
+                label="Client Industry"
+                value={clientDetails.industry}
+                onUpdate={handleUpdateField("industry")}
+              />
+              <DetailRow
+                label="Client Website"
+                value={clientDetails.website}
+                onUpdate={handleUpdateField("website")}
+              />
+              <DetailRow
+                label="Google Maps Link"
+                value={clientDetails.googleMapsLink}
+                onUpdate={handleUpdateField("googleMapsLink")}
+              />
+              <DetailRow
+                label="Client Location"
+                value={clientDetails.location}
+                onUpdate={handleUpdateField("location")}
+              />
+              <DetailRow
+                label="Client Address"
+                value={clientDetails.address}
+                onUpdate={handleUpdateField("address")}
+              />
+              <DetailRow
+                label="Country of Business"
+                value={clientDetails.countryOfBusiness}
+                onUpdate={handleUpdateField("countryOfBusiness")}
+              />
+              <DetailRow
+                label="LinkedIn Profile"
+                value={clientDetails.linkedInProfile}
+                onUpdate={handleUpdateField("linkedInProfile")}
+                optional
+              />
+              <FileUploadRow
+                id="vat-copy-upload"
+                label="VAT Copy"
+                className="border-b"
+                onFileSelect={handleFileUpload("vatCopy")}
+                docUrl={clientDetails?.vatCopy?.url}
+                currentFileName={clientDetails?.vatCopy?.fileName}
+                onPreview={() => handlePreviewFile(clientDetails?.vatCopy?.url || "")}
+                onDownload={() => handleDownloadFile(clientDetails?.vatCopy?.url || "")}
+              />
+              <FileUploadRow
+                id="cr-copy-upload"
+                label="CR Copy"
+                className="border-b"
+                onFileSelect={handleFileUpload("crCopy")}
+                docUrl={clientDetails?.crCopy?.url}
+                currentFileName={clientDetails?.crCopy?.fileName}
+                onPreview={() => handlePreviewFile(clientDetails?.crCopy?.url || "")}
+                onDownload={() => handleDownloadFile(clientDetails?.crCopy?.url || "")}
+              />
+              <FileUploadRow
+                id="gst-tin-document-upload"
+                label="GST IN Doc"
+                onFileSelect={handleFileUpload("gstTinDocument")}
+                docUrl={clientDetails?.gstTinDocument?.url}
+                currentFileName={clientDetails?.gstTinDocument?.fileName}
+                onPreview={() => handlePreviewFile(clientDetails?.gstTinDocument?.url || "")}
+                onDownload={() => handleDownloadFile(clientDetails?.gstTinDocument?.url || "")}
+              />
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
       <div className="space-y-6">
-        <CollapsibleSection title="Contract Information">
-          <ContractSection clientId={clientId} clientData={clientData} />
-        </CollapsibleSection>
+        <Collapsible className="rounded-lg border shadow-sm">
+          <div className="flex items-center justify-between p-4">
+            <h4 className="text-sm font-semibold">Contract Overview</h4>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-xs p-1">
+                Show Complete Details
+                <ChevronsUpDown />
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="px-4 pb-4">
+            <ContractOverview
+              lineOfBusiness={clientData.lineOfBusiness}
+              onViewDetails={() => onTabSwitch?.("Contract")}
+            />
+          </CollapsibleContent>
+        </Collapsible>
 
-        <CollapsibleSection title="Sales Team Info">
-          <SalesInfo />
-        </CollapsibleSection>
+        <Collapsible className="rounded-lg border shadow-sm">
+          <div className="flex items-center justify-between p-4">
+            <h4 className="text-sm font-semibold">Company Related Information</h4>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-xs p-1">
+                Show Complete Details
+                <ChevronsUpDown />
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="px-4 pb-4">
+            <SalesInfo />
+          </CollapsibleContent>
+        </Collapsible>
 
         <div className="bg-white rounded-lg border shadow-sm p-4">
           <div className="flex items-center justify-between mb-4">

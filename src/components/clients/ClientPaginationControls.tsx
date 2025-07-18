@@ -1,7 +1,13 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 interface ClientPaginationControlsProps {
   currentPage: number;
@@ -26,7 +32,8 @@ const ClientPaginationControls: React.FC<ClientPaginationControlsProps> = ({
     <div className="flex items-center justify-between p-4 border-t">
       <div className="flex items-center space-x-4">
         <div className="text-sm text-muted-foreground">
-          Showing {clientsLength > 0 ? (currentPage - 1) * pageSize + 1 : 0} to {Math.min(currentPage * pageSize, totalClients)} of {totalClients} clients
+          Showing {clientsLength > 0 ? (currentPage - 1) * pageSize + 1 : 0} to{" "}
+          {Math.min(currentPage * pageSize, totalClients)} of {totalClients} clients
         </div>
         <div className="flex items-center space-x-2">
           <span className="text-sm">Show</span>
@@ -42,12 +49,11 @@ const ClientPaginationControls: React.FC<ClientPaginationControlsProps> = ({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1000">All</SelectItem>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="25">25</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-              <SelectItem value="100">100</SelectItem>
-              <SelectItem value="200">200</SelectItem>
+              {["1000", "10", "25", "50", "100", "200"].map((item) => (
+                <SelectItem key={item} value={item}>
+                  {item}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <span className="text-sm">per page</span>
@@ -59,9 +65,8 @@ const ClientPaginationControls: React.FC<ClientPaginationControlsProps> = ({
           size="sm"
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage <= 1}
-          
         >
-          <ArrowLeft size={16}/> Previous
+          <ArrowLeft size={16} /> Previous
         </Button>
         <div className="text-sm">
           Page {currentPage} of {totalPages}
@@ -78,4 +83,4 @@ const ClientPaginationControls: React.FC<ClientPaginationControlsProps> = ({
   );
 };
 
-export default ClientPaginationControls; 
+export default ClientPaginationControls;

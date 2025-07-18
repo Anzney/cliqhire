@@ -1,28 +1,7 @@
 "use client";
 import axios from "axios";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { useRouter, useParams } from "next/navigation";
 import { useState, useMemo, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { getJobCountsByClient } from "@/services/jobService";
-import { Plus, RefreshCcw, SlidersHorizontal, MoreVertical } from "lucide-react";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { CreateClientModal } from "@/components/create-client-modal/create-client-modal";
 import {
   getClients,
@@ -31,15 +10,11 @@ import {
   ClientResponse,
   ClientStageStatus,
 } from "@/services/clientService";
-import { ClientStageBadge } from "@/components/client-stage-badge";
-import { ClientStageStatusBadge } from "@/components/client-stage-status-badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -48,6 +23,7 @@ import Dashboardheader from "@/components/dashboard-header";
 import Tableheader from "@/components/table-header";
 import ClientTableRow from "@/components/clients/ClientTableRow";
 import ClientPaginationControls from "@/components/clients/ClientPaginationControls";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 const columsArr = [
   "Name",
@@ -61,14 +37,14 @@ const columsArr = [
   "Job Count",
 ];
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://aems-backend.onrender.com/api";
 
 interface Client {
   id: string;
   name: string;
   industry: string;
   location: string;
-  stage: "Lead" | "Negotiation" | "Engaged" | "Signed";
+  stage: "Lead" | "Engaged" | "Signed";
   clientStageStatus: ClientStageStatus;
   owner: string;
   team: string;
@@ -92,7 +68,6 @@ interface Filters {
 }
 
 export default function ClientsPage() {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: "name", order: "asc" });
@@ -174,7 +149,7 @@ export default function ClientsPage() {
       }
 
       // Fallback: Direct API call
-      const directResponse = await axios.get(`${API_URL}/api/clients`, {
+      const directResponse = await axios.get(`${API_URL}/clients`, {
         params: {
           // Don't pass page/limit to get all clients
           ...(filters.name && { search: filters.name }),
@@ -420,93 +395,43 @@ export default function ClientsPage() {
   const handleCancelChange = () => {
     setPendingChange(null);
     setShowConfirmDialog(false);
+    setError(null);
   };
 
   return (
     <>
-      <Dialog
+      {/* Confirmation Dialog for Stage Change */}
+      <ConfirmDialog
         open={showConfirmDialog}
-        onOpenChange={(open) => {
-          if (!open) {
-            setShowConfirmDialog(false);
-            setError(null);
-            setPendingChange(null);
-          }
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Stage Change</DialogTitle>
-            <DialogDescription>
-              {error ? (
-                <div className="text-red-600 mb-4 p-3 bg-red-50 rounded-md">{error}</div>
-              ) : (
-                "Are you sure you want to update the client stage?"
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={handleCancelChange}
-              disabled={isUpdating}
-              className="mr-2"
-            >
-              {error ? "Close" : "Cancel"}
-            </Button>
-            {!error && (
-              <Button
-                onClick={handleConfirmChange}
-                disabled={isUpdating}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {isUpdating ? (
-                  <>
-                    <RefreshCcw className="h-4 w-4 mr-2 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  "Confirm"
-                )}
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onOpenChange={setShowConfirmDialog}
+        onConfirm={handleConfirmChange}
+        onCancel={handleCancelChange}
+        title="Confirm Stage Change"
+        description="Are you sure you want to update the client stage?"
+        confirmText="Confirm"
+        cancelText="Cancel"
+        loading={isUpdating}
+        error={error}
+        confirmVariant="default"
+      />
 
       {/* Confirmation Dialog for Stage Status Change */}
-      <Dialog open={showStatusConfirmDialog} onOpenChange={setShowStatusConfirmDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Are you sure?</DialogTitle>
-          </DialogHeader>
-          <DialogDescription>
-            This will update the client&apos;s stage status.
-            {error && <div className="text-red-600 mt-4 p-3 bg-red-50 rounded-md">{error}</div>}
-          </DialogDescription>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowStatusConfirmDialog(false);
-                setError(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button variant="default" onClick={handleConfirmStatusChange} disabled={isUpdating}>
-              {isUpdating ? (
-                <>
-                  <RefreshCcw className="h-4 w-4 mr-2 animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                "Confirm"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        open={showStatusConfirmDialog}
+        onOpenChange={setShowStatusConfirmDialog}
+        onConfirm={handleConfirmStatusChange}
+        onCancel={() => {
+          setShowStatusConfirmDialog(false);
+          setError(null);
+        }}
+        title="Are you sure?"
+        description="This will update the client's stage status."
+        confirmText="Confirm"
+        cancelText="Cancel"
+        loading={isUpdating}
+        error={error}
+        confirmVariant="default"
+      />
 
       <div className="flex flex-col h-full">
         {/* Header */}

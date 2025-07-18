@@ -29,22 +29,25 @@ export function ContactDetailsTab({
   setIsContactModalOpen,
   errors = {},
 }: ContactDetailsTabProps) {
-
   const getCountryCodeLabel = (code: string) => {
     const country = countryCodes.find((option) => option.code === code);
     return country ? country.label : code;
   };
 
-  const handleInputChange = (field: keyof ClientContactInfo) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData((prev) => ({ ...prev, [field]: e.target.value }));
-  };
+  const handleInputChange =
+    (field: keyof ClientContactInfo) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+    };
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pt-4 pb-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pb-2">
         {/* Client Name */}
         <div className="space-y-1 ml-2">
-          <Label htmlFor="name">Client Name<span className="text-red-700">*</span></Label>
+          <Label htmlFor="name">
+            Client Name<span className="text-red-700">*</span>
+          </Label>
           <Input
             id="name"
             value={formData.name}
@@ -63,7 +66,9 @@ export function ContactDetailsTab({
             id="emails"
             type="text"
             value={formData.emails?.join(", ")}
-            onChange={(e) => setFormData((prev) => ({ ...prev, emails: e.target.value.split(", ") }))}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, emails: e.target.value.split(", ") }))
+            }
             placeholder="Enter client email(s) separated by commas"
             autoComplete="off"
             className="w-full"
@@ -72,7 +77,9 @@ export function ContactDetailsTab({
 
         {/* Client Landline Number */}
         <div className="space-y-1 ml-2">
-          <Label htmlFor="phoneNumber">Client Landline Number<span className="text-red-700">*</span></Label>
+          <Label htmlFor="phoneNumber">
+            Client Landline Number<span className="text-red-700">*</span>
+          </Label>
           <PhoneInput
             country={"sa"}
             value={formData.phoneNumber || "966"}
@@ -88,7 +95,9 @@ export function ContactDetailsTab({
 
         {/* Client Address */}
         <div className="space-y-1">
-          <Label htmlFor="address">Client Address <span className="text-red-700">*</span></Label>
+          <Label htmlFor="address">
+            Client Address <span className="text-red-700">*</span>
+          </Label>
           <Input
             id="address"
             value={formData.address}
@@ -143,7 +152,9 @@ export function ContactDetailsTab({
           <Input
             id="countryOfBusiness"
             value={formData.countryOfBusiness}
-            onChange={(e) => setFormData((prev) => ({ ...prev, countryOfBusiness: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, countryOfBusiness: e.target.value }))
+            }
             placeholder="Enter country of business"
             className="w-full"
           />
@@ -152,7 +163,9 @@ export function ContactDetailsTab({
       {/* Primary Contacts full row */}
       <div className="space-y-1 ml-2 mb-6">
         <div className="flex items-center justify-between mb-2">
-          <Label>Primary Contacts <span className="text-red-700">*</span></Label>
+          <Label>
+            Primary Contacts <span className="text-red-700">*</span>
+          </Label>
           <Button
             variant="outline"
             size="sm"

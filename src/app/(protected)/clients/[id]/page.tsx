@@ -10,6 +10,7 @@ import {
   FileIcon,
   TriangleAlert,
   Loader,
+  FilePen,
 } from "lucide-react";
 import { useRouter, notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,9 @@ import { ContactsContent } from "@/components/clients/contacts/contacts-content"
 import { HistoryContent } from "@/components/clients/history/history-content";
 import { JobsContent } from "@/components/clients/jobs/jobs-content";
 
-import { CreateJobRequirementForm } from "@/components/new-jobs/create-jobs-form";
+import { CreateJobModal } from "@/components/jobs/create-job-modal";
+import { getClientById } from "@/services/clientService";
+import { ContractSection } from "@/components/clients/contract/contract-section";
 
 interface PageProps {
   params: { id: string };
@@ -40,20 +43,14 @@ export default function ClientPage({ params }: PageProps) {
   const [isCreateJobOpen, setIsCreateJobOpen] = useState(false);
   const [client, setClient] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("Summary");
 
   const fetchClientData = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/clients/${id}`);
-      if (!response.ok) {
-        if (response.status === 404) notFound();
-        throw new Error("Failed to fetch client data");
-      }
-      const responseData = await response.json();
-      if (responseData.success === true && responseData.data) {
-        setClient(responseData.data);
-      } else {
-        throw new Error("Invalid client data format");
+      const response = await getClientById(id);
+      if (response) {
+        setClient(response);
       }
     } catch (error) {
       setError(error instanceof Error ? error.message : "An error occurred");
@@ -68,6 +65,10 @@ export default function ClientPage({ params }: PageProps) {
 
   const handleRefresh = () => {
     router.refresh();
+  };
+
+  const handleTabSwitch = (tabValue: string) => {
+    setActiveTab(tabValue);
   };
 
   if (error) {
@@ -145,7 +146,7 @@ export default function ClientPage({ params }: PageProps) {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="Summary" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="flex border-b w-full rounded-none justify-start h-12 bg-transparent p-0">
           <TabsTrigger
             value="Summary"
@@ -153,6 +154,14 @@ export default function ClientPage({ params }: PageProps) {
           >
             <FileIcon className="h-4 w-4" />
             Summary
+          </TabsTrigger>
+
+          <TabsTrigger
+            value="Contract"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+          >
+            <FilePen className="h-4 w-4" />
+            Contract Details
           </TabsTrigger>
 
           <TabsTrigger
@@ -211,7 +220,7 @@ export default function ClientPage({ params }: PageProps) {
         </TabsContent>
 
         <TabsContent value="Summary" className="p-4">
-          <SummaryContent clientId={id} clientData={client} />
+          <SummaryContent clientId={id} clientData={client} onTabSwitch={handleTabSwitch} />
         </TabsContent>
 
         {/* <TabsContent value="Activities" className="p-4">
@@ -237,14 +246,19 @@ export default function ClientPage({ params }: PageProps) {
         <TabsContent value="History" className="p-4">
           <HistoryContent clientId={id} />
         </TabsContent>
+
+        <TabsContent value="Contract" className="p-4">
+          <ContractSection clientId={id} clientData={client} />
+        </TabsContent>
       </Tabs>
 
       {/* Create Job Modal */}
-      <CreateJobRequirementForm
+      <CreateJobModal
         open={isCreateJobOpen}
         onOpenChange={setIsCreateJobOpen}
-        lockedClientId={id}
-        lockedClientName={client.name}
+        clientId={id}
+        clientName={client.name}
+        onJobCreated={handleRefresh}
       />
     </div>
   );

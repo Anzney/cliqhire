@@ -23,13 +23,9 @@ interface ClientInformationTabProps {
   setFormData: React.Dispatch<React.SetStateAction<ClientGeneralInfo>>;
 }
 
-export function ClientInformationTab({
-  formData,
-  setFormData,
-}: ClientInformationTabProps) {
-
+export function ClientInformationTab({ formData, setFormData }: ClientInformationTabProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pt-4 pb-2">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pb-2">
       <div className="space-y-1 ml-2">
         <div className="flex items-center mb-1">
           <Popover>
@@ -144,9 +140,9 @@ export function ClientInformationTab({
           <SelectContent>
             <SelectGroup>
               <SelectLabel>Segment</SelectLabel>
-              <SelectItem value="A Class Client">A Class Client </SelectItem>
-              <SelectItem value="B Class Client">B Class Client</SelectItem>
-              <SelectItem value="C Class Client">C Class Client </SelectItem>
+              <SelectItem value="A">A</SelectItem>
+              <SelectItem value="B">B</SelectItem>
+              <SelectItem value="C">C</SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
