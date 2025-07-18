@@ -8,7 +8,7 @@ interface JobInfoSectionProps {
 
 export function JobInfoSection({ jobDetails, handleFieldEdit }: JobInfoSectionProps) {
   return (
-    <CollapsibleSection title="Job Info">
+    <CollapsibleSection title="Job Team Info">
       <div className="bg-white rounded-lg border shadow-sm p-4 space-y-3">
         <DetailRow
           label="Recruitment Manager"

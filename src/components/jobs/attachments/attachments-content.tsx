@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
-import { Plus , RefreshCcw  } from "lucide-react";
+import { Plus , RefreshCcw, Loader } from "lucide-react";
 import { toast } from "sonner";
 
 // Reuse the UploadAttachment and AttachmentList components from the client attachments folder
@@ -116,8 +116,8 @@ export function AttachmentsContent({ jobId }: AttachmentsContentProps) {
 
       {loading ? (
         <div className="flex flex-col items-center justify-center min-h-[60vh]">
-          <RefreshCcw className="h-8 w-8 mb-2 animate-spin text-gray-500" />
-          <div className="text-lg text-gray-600">Loading...</div>
+          <Loader className="size-6 animate-spin" />
+          <div className="text-lg text-gray-600 mt-2">Loading Attachments Details ......</div>
         </div>
       ) : attachments.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-6 text-center">

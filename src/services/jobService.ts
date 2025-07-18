@@ -219,6 +219,39 @@ const getJobCountsByClient = async (): Promise<JobCountByClient[]> => {
   }
 };
 
+// Job Notes API
+export async function createJobNote(note: { content: string; jobId: string }) {
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+  // Backend expects job_id, not jobId
+  const res = await axios.post(`${API_BASE}/api/jobnotes`, { content: note.content, job_id: note.jobId });
+  return res.data.data;
+}
+
+export async function getAllJobNotes() {
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+  const res = await axios.get(`${API_BASE}/api/jobnotes`);
+  return res.data.data;
+}
+
+export async function getJobNotesByJobId(jobId: string) {
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+  const res = await axios.get(`${API_BASE}/api/jobnotes/job/${jobId}`);
+  return res.data.data;
+}
+
+export async function updateJobNote(id: string, content: string, jobId: string) {
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+  // Backend expects job_id, not jobId
+  const res = await axios.patch(`${API_BASE}/api/jobnotes/${id}`, { content, job_id: jobId });
+  return res.data.data;
+}
+
+export async function deleteJobNote(id: string) {
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+  const res = await axios.delete(`${API_BASE}/api/jobnotes/${id}`);
+  return res.data.data;
+}
+
 export {
   createJob,
   getJobs,

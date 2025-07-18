@@ -7,6 +7,12 @@ import { AddNoteDialog } from "@/components/clients/notes/add-note-dialog";
 import { NotesList } from "@/components/clients/notes/notes-list";
 import axios from "axios";
 import { toast } from "sonner";
+import {
+  createJobNote,
+  getJobNotesByJobId,
+  updateJobNote,
+  deleteJobNote,
+} from "@/services/jobService";
 
 export interface Note {
   id: string;
@@ -40,9 +46,8 @@ export function NotesContent({ jobId }: { jobId: string }) {
 
   useEffect(() => {
     if (!jobId) return;
-    axios
-      .get(`${API_BASE}/api/notes/job/${jobId}`)
-      .then((res) => setNotes(res.data.data.map(mapNote)))
+    getJobNotesByJobId(jobId)
+      .then((data) => setNotes(data.map(mapNote)))
       .catch((err) => console.error("Failed to fetch notes:", err));
   }, [jobId]);
 
@@ -51,14 +56,9 @@ export function NotesContent({ jobId }: { jobId: string }) {
       alert("Job ID not found in URL. Cannot create note.");
       return;
     }
-    const newNote = {
-      content: note.content,
-      createdBy: jobId,
-      // relatedTo: ... // Add if needed
-    };
     try {
-      const res = await axios.post(`${API_BASE}/api/notes`, newNote);
-      setNotes([mapNote(res.data.data), ...notes]);
+      const res = await createJobNote({ content: note.content, jobId });
+      setNotes([mapNote(res), ...notes]);
       toast.success("Notes Add Successfully");
     } catch (error) {
       console.error("Failed to add note:", error);
@@ -69,25 +69,24 @@ export function NotesContent({ jobId }: { jobId: string }) {
   const handleUpdateNote = async (updated: { content: string }) => {
     if (!editNote) return;
     try {
-      const res = await axios.patch(`${API_BASE}/api/notes/${editNote.id}`, {
-        content: updated.content,
-        // relatedTo: ... // Add if needed
-      });
-      const updatedNote = mapNote(res.data.data);
+      const res = await updateJobNote(editNote.id, updated.content, jobId);
+      const updatedNote = mapNote(res);
       const updatedNotes = notes.map((n) =>
         n.id === updatedNote.id ? updatedNote : n
       );
       setNotes(updatedNotes);
       setEditNote(null);
       setIsEditDialogOpen(false);
+      toast.success("Note updated successfully");
     } catch (error) {
       console.error("Failed to update note:", error);
+      toast.error("Failed to update note");
     }
   };
 
   const handleDeleteNote = async (noteToDelete: Note) => {
     try {
-      await axios.delete(`${API_BASE}/api/notes/${noteToDelete.id}`);
+      await deleteJobNote(noteToDelete.id);
       setNotes(notes.filter((n) => n.id !== noteToDelete.id));
       toast.success("Note deleted successfully");
     } catch (error) {
