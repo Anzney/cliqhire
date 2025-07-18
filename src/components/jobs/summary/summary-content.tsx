@@ -185,6 +185,7 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
             label="Salary Range"
             value={`${jobDetails.salaryCurrency || "SAR"} ${jobDetails.minimumSalary || jobDetails.minSalary || 0} - ${jobDetails.maximumSalary || jobDetails.maxSalary || 0}`}
             onUpdate={() => setIsSalaryDialogOpen(true)}
+            disableInternalEdit={true}
           />
         </div>
         {/* Job Description */}
@@ -267,7 +268,10 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
           maxSalary: jobDetails.maximumSalary || jobDetails.maxSalary || 0,
           currency: jobDetails.salaryCurrency || "SAR",
         }}
-        onSave={handleSalarySave}
+        onSave={async (values) => {
+          await handleSalarySave(values);
+          setIsSalaryDialogOpen(false); // Ensure dialog closes after save
+        }}
       />
       {/* Description Modal (reuse EditFieldDialog for description) */}
       {isDescriptionModalOpen && (
