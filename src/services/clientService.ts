@@ -2,6 +2,7 @@ import axios, { AxiosError } from "axios";
 
 // Interface for Primary Contact
 export interface PrimaryContact {
+  _id: string;
   name: string;
   email: string;
   phone: string;
