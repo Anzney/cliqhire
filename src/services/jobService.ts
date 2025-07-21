@@ -187,9 +187,7 @@ const getJobById = async (id: string): Promise<JobResponse> => {
 
 const updateJobById = async (id: string, jobData: Partial<JobData>): Promise<JobResponse> => {
   try {
-    const processedData = processJobData(jobData);
-    // PATCH instead of PUT
-    const response = await axios.patch<JobResponse>(`${API_URL}/api/jobs/${id}`, processedData);
+    const response = await axios.patch<JobResponse>(`${API_URL}/api/jobs/${id}`, jobData);
     return response.data;
   } catch (error) {
     handleApiError(error, 'job update');

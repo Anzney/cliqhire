@@ -111,7 +111,7 @@ export function AttachmentsContent({ clientId }: AttachmentsContentProps) {
       {loading ? (
         <div className="text-center py-8 text-gray-500">Loading attachments...</div>
       ) : attachments.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-6 text-center">
+        <div className="flex flex-col items-center justify-center text-center">
           <div className="w-48 h-48 mb-6">
             <svg viewBox="0 0 200 200" className="w-full h-full text-blue-500">
               <rect x="50" y="80" width="100" height="60" rx="10" fill="currentColor" opacity="0.1" />
