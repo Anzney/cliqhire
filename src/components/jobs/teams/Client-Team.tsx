@@ -144,52 +144,61 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
               <Label className="mb-2 block text-sm">Team involved from client Side to handle this job</Label>
               {selected.map((contact: any) => (
                 <div key={contact._id} className="p-3 rounded-md border bg-gray-50">
-                  <div className="flex flex-col gap-1">
+                  <div className="flex gap-6">
+
                     <div>
-                      <span className="text-xs font-semibold text-gray-500 mr-1">Name:</span>
-                      <span className="text-sm text-muted-foreground">
-                        {contact.firstName || contact.lastName ? `${contact.firstName || ''} ${contact.lastName || ''}`.trim() : contact.name || 'Unnamed Contact'}
-                      </span>
-                    </div>
-                    {contact.gender && (
-                      <div className="text-sm text-muted-foreground">
-                        <span className="text-xs font-semibold text-gray-500 mr-1">Gender:</span>
-                        {contact.gender}
+                      <div>
+                        <span className="text-xs font-semibold text-gray-500 mr-1">Name:</span>
+                        <span className="text-sm text-muted-foreground">
+                          {contact.firstName || contact.lastName ? `${contact.firstName || ''} ${contact.lastName || ''}`.trim() : contact.name || 'Unnamed Contact'}
+                        </span>
                       </div>
-                    )}
-                    {contact.position && (
-                      <div className="text-sm text-muted-foreground">
+
+                      <div>
                         <span className="text-xs font-semibold text-gray-500 mr-1">Position:</span>
-                        {contact.position}
+                        <span className="text-sm text-muted-foreground">{contact.position || '—'}</span>
                       </div>
-                    )}
-                    {contact.email && (
-                      <div className="text-sm text-muted-foreground">
+
+                       <div>
                         <span className="text-xs font-semibold text-gray-500 mr-1">Email:</span>
-                        {contact.email}
+                        <span className="text-sm text-muted-foreground">{contact.email || '—'}</span>
                       </div>
-                    )}
-                    <div className="text-sm text-muted-foreground">
-                      <span className="text-xs font-semibold text-gray-500 mr-1">Phone Number:</span>
-                      {getCountryCodeLabel(contact.countryCode || "")}
-                      <span className="mx-1">-</span>
-                      {contact.phone || "No phone"}
+                      
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      <span className="text-xs font-semibold text-gray-500 mr-1">LinkedIn:</span>
-                      {contact.linkedin ? (
-                        <a
-                          href={contact.linkedin}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-gray-500 hover:underline"
-                        >
-                          {contact.linkedin}
-                        </a>
-                      ) : (
-                        "No LinkedIn"
-                      )}
+
+                    <div>
+                      
+
+                      <div>
+                        <span className="text-xs font-semibold text-gray-500 mr-1">Gender:</span>
+                        <span className="text-sm text-muted-foreground">{contact.gender || '—'}</span>
+                      </div>
+
+                      <div>
+                        <span className="text-xs font-semibold text-gray-500 mr-1">LinkedIn:</span>
+                        <span className="text-sm text-muted-foreground">
+                          {contact.linkedin ? (
+                            <a
+                              href={contact.linkedin}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-gray-500 hover:underline"
+                            >
+                              {contact.linkedin}
+                            </a>
+                          ) : (
+                            "No LinkedIn"
+                          )}
+                        </span>
+                      </div>
+                       
+                        <div>
+                        <span className="text-xs font-semibold text-gray-500 mr-1">Phone:</span>
+                        <span className="text-sm text-muted-foreground">{getCountryCodeLabel(contact.countryCode || "")}<span className="mx-1">-</span>{contact.phone || "No phone"}</span>
+                      </div>
+
                     </div>
+
                   </div>
                 </div>
               ))}
@@ -283,51 +292,54 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
                           )}
                           <div className="p-3 rounded-md border mb-2 bg-gray-50">
                             <div className="flex justify-between items-start">
-                              <div className="flex-1 flex flex-col gap-1">
-                                <div>
-                                  <span className="text-xs font-semibold text-gray-500 mr-1">Name:</span>
-                                  <span className="text-sm text-muted-foreground">
-                                    {contact.firstName || contact.lastName ? `${contact.firstName || ''} ${contact.lastName || ''}`.trim() : contact.name || 'Unnamed Contact'}
-                                  </span>
-                                </div>
-                                {contact.gender && (
-                                  <div className="text-sm text-muted-foreground">
-                                    <span className="text-xs font-semibold text-gray-500 mr-1">Gender:</span>
-                                    {contact.gender}
+                              <div className="flex-1 flex  gap-8">
+
+                                <div >
+                                  <div>
+                                    <span className="text-xs font-semibold text-gray-500 mr-1">Name:</span>
+                                    <span className="text-sm text-muted-foreground">
+                                      {contact.firstName || contact.lastName ? `${contact.firstName || ''} ${contact.lastName || ''}`.trim() : contact.name || 'Unnamed Contact'}
+                                    </span>
                                   </div>
-                                )}
-                                {contact.position && (
-                                  <div className="text-sm text-muted-foreground">
+                                  <div>
                                     <span className="text-xs font-semibold text-gray-500 mr-1">Position:</span>
-                                    {contact.position}
+                                    <span className="text-sm text-muted-foreground">{contact.position || '—'}</span>
                                   </div>
-                                )}
-                                {contact.email && (
-                                  <div className="text-sm text-muted-foreground">
+                                  <div>
                                     <span className="text-xs font-semibold text-gray-500 mr-1">Email:</span>
-                                    {contact.email}
+                                    <span className="text-sm text-muted-foreground">{contact.email || '—'}</span>
                                   </div>
-                                )}
-                                <div className="text-sm text-muted-foreground">
-                                  <span className="text-xs font-semibold text-gray-500 mr-1">Phone Number:</span>
-                                  {getCountryCodeLabel(contact.countryCode || "")}
-                                  <span className="mx-1">-</span>
-                                  {contact.phone || "No phone"}
                                 </div>
-                                <div className="text-sm text-muted-foreground">
-                                  <span className="text-xs font-semibold text-gray-500 mr-1">LinkedIn:</span>
-                                  {contact.linkedin ? (
-                                    <a
-                                      href={contact.linkedin}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-gray-500 hover:underline"
-                                    >
-                                      {contact.linkedin}
-                                    </a>
-                                  ) : (
-                                    "No LinkedIn"
-                                  )}
+                                {/* Row 2: Phone | Position */}
+                                <div >
+                                  <div>
+                                    <span className="text-xs font-semibold text-gray-500 mr-1">Gender:</span>
+                                    <span className="text-sm text-muted-foreground">{contact.gender || '—'}</span>
+                                  </div>
+
+                                  <div>
+                                    <span className="text-xs font-semibold text-gray-500 mr-1">LinkedIn:</span>
+                                    <span className="text-sm text-muted-foreground">
+                                      {contact.linkedin ? (
+                                        <a
+                                          href={contact.linkedin}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-gray-500 hover:underline"
+                                        >
+                                          {contact.linkedin}
+                                        </a>
+                                      ) : (
+                                        "No LinkedIn"
+                                      )}
+                                    </span>
+                                  </div>
+
+                                  <div>
+                                    <span className="text-xs font-semibold text-gray-500 mr-1">Phone Number:</span>
+                                    <span className="text-sm text-muted-foreground">{getCountryCodeLabel(contact.countryCode || "")}<span className="mx-1">-</span>{contact.phone || "No phone"}</span>
+                                  </div>
+                                  
                                 </div>
                               </div>
                               {/* For new contacts, show Edit button */}
