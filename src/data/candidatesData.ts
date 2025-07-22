@@ -1,4 +1,7 @@
+import axios from 'axios';
+
 export type Candidate = {
+  _id?: string;
   name: string;
   email: string;
   phone: string;
@@ -11,6 +14,7 @@ export type Candidate = {
 
 export const mockCandidates: Candidate[] = [
   {
+    _id: "665b2c1234567890abcdef01", // Added unique _id
     name: "John Doe",
     email: "john@example.com",
     phone: "1234567890",
@@ -20,11 +24,11 @@ export const mockCandidates: Candidate[] = [
     resume: "",
     status: "Active",
   },
-  // Add more mock candidates as needed
+  // Add more mock candidates as needed, each with a unique _id
 ];
 
 // This function will fetch from API in the future
 export async function fetchCandidatesFromAPI(): Promise<Candidate[]> {
-  // Example: return fetch('/api/candidates').then(res => res.json());
-  return mockCandidates; // For now, return mock
+  const res = await axios.get('/api/candidates');
+  return res.data;
 }

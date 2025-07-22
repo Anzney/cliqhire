@@ -342,6 +342,8 @@ export default function CreateCandidateForm({
 
       if (response.status === 201) {
         const createdCandidate = response.data;
+
+        // router.push(`/candidates/${createdCandidate._id}`);
         
         // Call the callback with the created candidate
         if (onCandidateCreated) {
