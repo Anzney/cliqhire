@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, X, Pencil, Users } from "lucide-react";
+import { Plus, UserPlus } from "lucide-react";
 import { getJobById } from "@/services/jobService";
 import { getClientById } from "@/services/clientService";
 import { AddContactModal } from "@/components/clients/modals/add-contact-modal";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
-import { Command as CommandPrimitive } from "cmdk";
-import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { ClientPrimaryContactsDialog } from "./ClientPrimaryContactsDialog";
 
 interface ClientTeamProps {
   jobId: string;
@@ -20,16 +17,10 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
   const [selectedContacts, setSelectedContacts] = useState<any[]>([]);
   const [showPrimaryContactsDialog, setShowPrimaryContactsDialog] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [addContactOpen, setAddContactOpen] = useState(false);
   // New state for newly added contacts (main state)
   const [newContacts, setNewContacts] = useState<any[]>([]);
-  // For editing
   const [editContact, setEditContact] = useState<any | null>(null);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  // Temporary dialog state
-  const [dialogSelectedContactIds, setDialogSelectedContactIds] = useState<string[]>([]);
-  const [dialogNewContacts, setDialogNewContacts] = useState<any[]>([]);
+  
 
   // Use the same options as in ContactsContent
   const countryCodes = [
@@ -117,7 +108,7 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
   }));
 
   // Helper to check if a contact is new
-  const isNewContact = (contact: any) => dialogNewContacts.some((nc) => nc._id === contact._id);
+  const isNewContact = (contact: any) => newContacts.some((nc) => nc._id === contact._id);
 
   return (
     <div className="bg-white rounded-lg border px-4 py-4 h-[60vh] flex flex-col">
@@ -128,9 +119,6 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
           size="sm"
           className="gap-1"
           onClick={() => {
-            // When opening dialog, initialize dialog state from main state
-            setDialogSelectedContactIds(selectedContactIds);
-            setDialogNewContacts([]);
             setShowPrimaryContactsDialog(true);
           }}
         >
@@ -147,7 +135,7 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
           if (selected.length === 0 && !error) {
             return (
               <div className="flex flex-col items-center justify-center h-full text-gray-400 py-8">
-                <Users className="w-10 h-10 mb-2" />
+                <UserPlus className="w-10 h-10 mb-2" />
                 <span className="text-base font-medium">
                   Add primary contact related to this job.
                 </span>
@@ -229,299 +217,17 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
           );
         })()}
       </div>
-      <Dialog open={showPrimaryContactsDialog} onOpenChange={setShowPrimaryContactsDialog}>
-        <DialogContent className="max-w-3xl min-h-[400px] flex flex-col !pt-0 h-[500px] mt-2">
-          {/* Fixed header inside dialog */}
-          <div className="text-lg font-bold !mb-0 !mt-4 !pb-0 !pt-0 sticky top-0 bg-white z-30">
-            Primary Contacts
-          </div>
-          {/* Scrollable content area for selection and contacts */}
-          <div className="flex-1 overflow-auto !m-0 !p-0" style={{ minHeight: 0 }}>
-            <Label className="!mb-0 mt-4 !pb-0 !pt-0">Select Primary Contact for this Job</Label>
-            {/* Selection UI */}
-            <Command className="w-full flex-col overflow-visible mt-2 !mb-0 !pt-0 !pb-0 !h-auto">
-              {/* Sticky badges+input bar */}
-              <div
-                className="rounded-md border border-input w-full box-border flex flex-nowrap items-center px-3 py-2 text-sm bg-white z-20 sticky top-16"
-                style={{ top: 64 }}
-              >
-                {/* Show badges for selected primary contacts only */}
-                {primaryContacts
-                  .filter((c) => dialogSelectedContactIds.includes(c._id))
-                  .map((contact: any) => (
-                    <Badge key={contact._id} variant="secondary" className="select-none">
-                      {contact.name}
-                      <X
-                        className="size-3 text-muted-foreground hover:text-foreground ml-2 cursor-pointer"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() =>
-                          setDialogSelectedContactIds((ids) =>
-                            ids.filter((id) => id !== contact._id),
-                          )
-                        }
-                      />
-                    </Badge>
-                  ))}
-                <CommandPrimitive.Input
-                  placeholder="Select contacts..."
-                  className="flex-1 min-w-0 bg-transparent outline-none border-none border-transparent rounded-none m-0 p-0 placeholder:text-muted-foreground"
-                  onFocus={() => setDropdownOpen(true)}
-                  onBlur={() => setDropdownOpen(false)}
-                />
-              </div>
-              {/* Scrollable dropdown below sticky bar */}
-              {dropdownOpen && (
-                <div className="relative w-full" style={{ maxHeight: 240 }}>
-                  <CommandList>
-                    <div className="absolute top-0 left-0 z-10 w-full rounded-md border bg-white text-popover-foreground shadow-md outline-none pr-8 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 max-h-60 overflow-y-auto">
-                      <CommandGroup className="h-full w-full">
-                        {primaryContacts.map((contact: any) => {
-                          const isSelected = dialogSelectedContactIds.includes(contact._id);
-                          return (
-                            <CommandItem
-                              key={contact._id}
-                              onMouseDown={(e) => e.preventDefault()}
-                              onSelect={() => {
-                                setDialogSelectedContactIds((ids) =>
-                                  isSelected
-                                    ? ids.filter((id) => id !== contact._id)
-                                    : [...ids, contact._id],
-                                );
-                              }}
-                              className={`w-full cursor-pointer flex items-center bg-white ${isSelected ? "bg-gray-400 text-white" : ""}`}
-                            >
-                              <span className="truncate flex-1">{contact.name}</span>
-                              {isSelected && (
-                                <span className="text-green-600 ml-auto pl-2 pr-2 flex-shrink-0">
-                                  ✔
-                                </span>
-                              )}
-                            </CommandItem>
-                          );
-                        })}
-                      </CommandGroup>
-                    </div>
-                  </CommandList>
-                </div>
-              )}
-            </Command>
-            {/* Unified contact list (primary + new) */}
-            {(() => {
-              // Only show selected primary contacts and all new contacts
-              const selectedPrimaryContacts = primaryContacts.filter((pc) =>
-                dialogSelectedContactIds.includes(pc._id),
-              );
-              const allContacts = [
-                ...selectedPrimaryContacts,
-                ...dialogNewContacts.filter(
-                  (nc) => !selectedPrimaryContacts.some((pc) => pc._id === nc._id),
-                ),
-              ];
-              if (allContacts.length === 0) return null;
-              return (
-                <div className="mt-3">
-                  <h3 className="text-sm font-semibold !mb-0">Contacts</h3>
-                  {(() => {
-                    let newContactLabelShown = false;
-                    return allContacts.map((contact: any, idx: number) => {
-                      const isSelected = dialogSelectedContactIds.includes(contact._id);
-                      const isNew = isNewContact(contact);
-                      const showNewContactLabel = isNew && !newContactLabelShown;
-                      if (showNewContactLabel) newContactLabelShown = true;
-                      return (
-                        <React.Fragment key={contact._id}>
-                          {showNewContactLabel && (
-                            <div>
-                              <h3 className="text-sm font-semibold">New Contact</h3>
-                            </div>
-                          )}
-                          <div className="p-3 rounded-md border mb-2 bg-gray-50">
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1 flex  gap-8">
-                                <div>
-                                  <div>
-                                    <span className="text-xs font-semibold text-gray-500 mr-1">
-                                      Name:
-                                    </span>
-                                    <span className="text-sm text-muted-foreground">
-                                      {contact.firstName || contact.lastName
-                                        ? `${contact.firstName || ""} ${contact.lastName || ""}`.trim()
-                                        : contact.name || "Unnamed Contact"}
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <span className="text-xs font-semibold text-gray-500 mr-1">
-                                      Position:
-                                    </span>
-                                    <span className="text-sm text-muted-foreground">
-                                      {contact.position || "—"}
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <span className="text-xs font-semibold text-gray-500 mr-1">
-                                      Email:
-                                    </span>
-                                    <span className="text-sm text-muted-foreground">
-                                      {contact.email || "—"}
-                                    </span>
-                                  </div>
-                                </div>
-                                {/* Row 2: Phone | Position */}
-                                <div>
-                                  <div>
-                                    <span className="text-xs font-semibold text-gray-500 mr-1">
-                                      Gender:
-                                    </span>
-                                    <span className="text-sm text-muted-foreground">
-                                      {contact.gender || "—"}
-                                    </span>
-                                  </div>
-
-                                  <div>
-                                    <span className="text-xs font-semibold text-gray-500 mr-1">
-                                      LinkedIn:
-                                    </span>
-                                    <span className="text-sm text-muted-foreground">
-                                      {contact.linkedin ? (
-                                        <a
-                                          href={contact.linkedin}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="text-gray-500 hover:underline"
-                                        >
-                                          {contact.linkedin}
-                                        </a>
-                                      ) : (
-                                        "No LinkedIn"
-                                      )}
-                                    </span>
-                                  </div>
-
-                                  <div>
-                                    <span className="text-xs font-semibold text-gray-500 mr-1">
-                                      Phone Number:
-                                    </span>
-                                    <span className="text-sm text-muted-foreground">
-                                      {getCountryCodeLabel(contact.countryCode || "")}
-                                      <span className="mx-1">-</span>
-                                      {contact.phone || "No phone"}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                              {/* For new contacts, show Edit button */}
-                              {isNew && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="ml-2 flex items-center gap-1 border border-gray-300 shadow-none"
-                                  onClick={() => {
-                                    setEditContact(contact);
-                                    setAddContactOpen(true);
-                                  }}
-                                  type="button"
-                                >
-                                  <Pencil className="w-4 h-4 text-black" />
-                                  <span className="text-xs text-black font-medium">Edit</span>
-                                </Button>
-                              )}
-                              {/* For selected primary contacts, show red cross button for removal */}
-                              {!isNew && isSelected && (
-                                <button
-                                  className="ml-2 p-1 rounded hover:bg-gray-100 z-10"
-                                  title="Remove"
-                                  onClick={() =>
-                                    setDialogSelectedContactIds((ids) =>
-                                      ids.filter((id) => id !== contact._id),
-                                    )
-                                  }
-                                  type="button"
-                                >
-                                  <X className="w-4 h-4 text-red-500" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </React.Fragment>
-                      );
-                    });
-                  })()}
-                </div>
-              );
-            })()}
-          </div>
-          {/* Fixed footer inside dialog */}
-          <div className="flex items-center justify-between mt-4 border-t pt-4 bg-white">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1"
-              onClick={() => setAddContactOpen(true)}
-            >
-              <Plus className="w-4 h-4" />
-              Add New Contact
-            </Button>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => {
-                // Merge dialog new contacts into main primaryContacts (avoid duplicates by _id)
-                setPrimaryContacts((prev) => {
-                  const ids = new Set(prev.map((c) => c._id));
-                  return [...prev, ...dialogNewContacts.filter((nc) => !ids.has(nc._id))];
-                });
-                // Update selectedContactIds to dialog selection (including new contacts)
-                setSelectedContactIds(dialogSelectedContactIds);
-                setNewContacts([]); // clear main newContacts (not used anymore)
-                setEditContact(null);
-                setShowPrimaryContactsDialog(false);
-              }}
-            >
-              Save
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-      <AddContactModal
-        open={addContactOpen}
-        onOpenChange={(open) => {
-          setAddContactOpen(open);
-          if (!open) setEditContact(null);
-        }}
-        onAdd={(contact: any) => {
-          if (editContact) {
-            // Update existing contact in dialogNewContacts
-            setDialogNewContacts((prev) =>
-              prev.map((c) =>
-                c._id === editContact._id
-                  ? {
-                      ...c,
-                      ...contact,
-                      name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim(),
-                    }
-                  : c,
-              ),
-            );
-            setEditContact(null);
-          } else {
-            // Add new contact to dialogNewContacts
-            const newId = Math.random().toString(36).substr(2, 9);
-            setDialogNewContacts((prev) => [
-              ...prev,
-              {
-                ...contact,
-                _id: newId, // temp id
-                name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim(),
-              },
-            ]);
-            // Automatically select the new contact
-            setDialogSelectedContactIds((ids) => [...ids, newId]);
-          }
+      <ClientPrimaryContactsDialog
+        open={showPrimaryContactsDialog}
+        onOpenChange={setShowPrimaryContactsDialog}
+        primaryContacts={primaryContacts}
+        onSave={(updatedContacts, selectedIds) => {
+          setPrimaryContacts(updatedContacts);
+          setSelectedContactIds(selectedIds);
         }}
         countryCodes={countryCodes}
         positionOptions={positionOptions}
-        // Pass initial values for edit
-        initialValues={editContact || undefined}
+        AddContactModal={AddContactModal}
       />
     </div>
   );
