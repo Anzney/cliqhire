@@ -1,30 +1,30 @@
-import React, { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Plus, X, Pencil, Users } from "lucide-react"
-import { getJobById } from "@/services/jobService"
-import { getClientById } from "@/services/clientService"
-import { AddContactModal } from "@/components/clients/modals/add-contact-modal"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command"
-import { Command as CommandPrimitive } from "cmdk"
-import { Badge } from "@/components/ui/badge"
-import { Label } from "@/components/ui/label"
+import React, { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Plus, X, Pencil, Users } from "lucide-react";
+import { getJobById } from "@/services/jobService";
+import { getClientById } from "@/services/clientService";
+import { AddContactModal } from "@/components/clients/modals/add-contact-modal";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { Command as CommandPrimitive } from "cmdk";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 
 interface ClientTeamProps {
   jobId: string;
 }
 
 export function ClientTeam({ jobId }: ClientTeamProps) {
-  const [primaryContacts, setPrimaryContacts] = useState<any[]>([])
-  const [selectedContactIds, setSelectedContactIds] = useState<string[]>([])
-  const [selectedContacts, setSelectedContacts] = useState<any[]>([])
-  const [showPrimaryContactsDialog, setShowPrimaryContactsDialog] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [addContactOpen, setAddContactOpen] = useState(false)
+  const [primaryContacts, setPrimaryContacts] = useState<any[]>([]);
+  const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
+  const [selectedContacts, setSelectedContacts] = useState<any[]>([]);
+  const [showPrimaryContactsDialog, setShowPrimaryContactsDialog] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [addContactOpen, setAddContactOpen] = useState(false);
   // New state for newly added contacts (main state)
-  const [newContacts, setNewContacts] = useState<any[]>([])
+  const [newContacts, setNewContacts] = useState<any[]>([]);
   // For editing
-  const [editContact, setEditContact] = useState<any | null>(null)
+  const [editContact, setEditContact] = useState<any | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // Temporary dialog state
@@ -58,8 +58,18 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
   const handleAddContact = (contact: any) => {
     if (editContact) {
       // Update existing contact
-      setNewContacts((prev) => prev.map((c) => c._id === editContact._id ? { ...c, ...contact, name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim() } : c))
-      setEditContact(null)
+      setNewContacts((prev) =>
+        prev.map((c) =>
+          c._id === editContact._id
+            ? {
+                ...c,
+                ...contact,
+                name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim(),
+              }
+            : c,
+        ),
+      );
+      setEditContact(null);
     } else {
       // Add new contact
       setNewContacts((prev) => [
@@ -69,44 +79,42 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
           _id: Math.random().toString(36).substr(2, 9), // temp id
           name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim(),
         },
-      ])
+      ]);
     }
-  }
+  };
 
   useEffect(() => {
     const fetchPrimaryContact = async () => {
-      setError(null)
+      setError(null);
       try {
-        const jobRes = await getJobById(jobId)
-        let job = jobRes.data
-        if (Array.isArray(job)) job = job[0]
-        if (!job || typeof job !== 'object') throw new Error("Invalid job data")
-        const clientId = (job as any)?.client?._id || (job as any)?.client
-        if (!clientId) throw new Error("No clientId found for this job")
-        const client = await getClientById(clientId)
-        const contacts = client.primaryContacts || []
-        setPrimaryContacts(contacts)
+        const jobRes = await getJobById(jobId);
+        let job = jobRes.data;
+        if (Array.isArray(job)) job = job[0];
+        if (!job || typeof job !== "object") throw new Error("Invalid job data");
+        const clientId = (job as any)?.client?._id || (job as any)?.client;
+        if (!clientId) throw new Error("No clientId found for this job");
+        const client = await getClientById(clientId);
+        const contacts = client.primaryContacts || [];
+        setPrimaryContacts(contacts);
         // Remove default selection of all contacts:
-        setSelectedContactIds([])
-        setSelectedContacts([])
+        setSelectedContactIds([]);
+        setSelectedContacts([]);
       } catch (err: any) {
-        setError(err.message || "Failed to load primary contacts")
-      } 
-    }
-    if (jobId) fetchPrimaryContact()
-  }, [jobId])
+        setError(err.message || "Failed to load primary contacts");
+      }
+    };
+    if (jobId) fetchPrimaryContact();
+  }, [jobId]);
 
   // Update selectedContacts whenever selectedContactIds or primaryContacts changes
   useEffect(() => {
-    setSelectedContacts(
-      primaryContacts.filter((c) => selectedContactIds.includes(c._id))
-    )
-  }, [selectedContactIds, primaryContacts])
+    setSelectedContacts(primaryContacts.filter((c) => selectedContactIds.includes(c._id)));
+  }, [selectedContactIds, primaryContacts]);
 
   const contactOptions = primaryContacts.map((c) => ({
     label: c.name, // Only show name
     value: c._id,
-  }))
+  }));
 
   // Helper to check if a contact is new
   const isNewContact = (contact: any) => dialogNewContacts.some((nc) => nc._id === contact._id);
@@ -115,12 +123,17 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
     <div className="bg-white rounded-lg border px-4 py-4 h-[60vh] flex flex-col">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold">Client Team</h2>
-        <Button variant="default" size="sm" className="gap-1" onClick={() => {
-          // When opening dialog, initialize dialog state from main state
-          setDialogSelectedContactIds(selectedContactIds);
-          setDialogNewContacts([]);
-          setShowPrimaryContactsDialog(true)
-        }}>
+        <Button
+          variant="default"
+          size="sm"
+          className="gap-1"
+          onClick={() => {
+            // When opening dialog, initialize dialog state from main state
+            setDialogSelectedContactIds(selectedContactIds);
+            setDialogNewContacts([]);
+            setShowPrimaryContactsDialog(true);
+          }}
+        >
           <Plus className="w-4 h-4" />
           Primary Contacts
         </Button>
@@ -130,48 +143,56 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
         {/* Show empty state if no contacts */}
         {(() => {
           // Only use primaryContacts after Save
-          const selected = primaryContacts.filter(c => selectedContactIds.includes(c._id));
+          const selected = primaryContacts.filter((c) => selectedContactIds.includes(c._id));
           if (selected.length === 0 && !error) {
             return (
               <div className="flex flex-col items-center justify-center h-full text-gray-400 py-8">
                 <Users className="w-10 h-10 mb-2" />
-                <span className="text-base font-medium">Add primary contact related to this job.</span>
+                <span className="text-base font-medium">
+                  Add primary contact related to this job.
+                </span>
               </div>
             );
           }
           return (
             <div className="space-y-2">
-              <Label className="mb-2 block text-sm">Team involved from client Side to handle this job</Label>
+              <Label className="mb-2 block text-sm">
+                Team involved from client Side to handle this job
+              </Label>
               {selected.map((contact: any) => (
                 <div key={contact._id} className="p-3 rounded-md border bg-gray-50">
                   <div className="flex gap-6">
-
                     <div>
                       <div>
                         <span className="text-xs font-semibold text-gray-500 mr-1">Name:</span>
                         <span className="text-sm text-muted-foreground">
-                          {contact.firstName || contact.lastName ? `${contact.firstName || ''} ${contact.lastName || ''}`.trim() : contact.name || 'Unnamed Contact'}
+                          {contact.firstName || contact.lastName
+                            ? `${contact.firstName || ""} ${contact.lastName || ""}`.trim()
+                            : contact.name || "Unnamed Contact"}
                         </span>
                       </div>
 
                       <div>
                         <span className="text-xs font-semibold text-gray-500 mr-1">Position:</span>
-                        <span className="text-sm text-muted-foreground">{contact.position || '—'}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {contact.position || "—"}
+                        </span>
                       </div>
 
-                       <div>
+                      <div>
                         <span className="text-xs font-semibold text-gray-500 mr-1">Email:</span>
-                        <span className="text-sm text-muted-foreground">{contact.email || '—'}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {contact.email || "—"}
+                        </span>
                       </div>
-                      
                     </div>
 
                     <div>
-                      
-
                       <div>
                         <span className="text-xs font-semibold text-gray-500 mr-1">Gender:</span>
-                        <span className="text-sm text-muted-foreground">{contact.gender || '—'}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {contact.gender || "—"}
+                        </span>
                       </div>
 
                       <div>
@@ -191,14 +212,16 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
                           )}
                         </span>
                       </div>
-                       
-                        <div>
+
+                      <div>
                         <span className="text-xs font-semibold text-gray-500 mr-1">Phone:</span>
-                        <span className="text-sm text-muted-foreground">{getCountryCodeLabel(contact.countryCode || "")}<span className="mx-1">-</span>{contact.phone || "No phone"}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {getCountryCodeLabel(contact.countryCode || "")}
+                          <span className="mx-1">-</span>
+                          {contact.phone || "No phone"}
+                        </span>
                       </div>
-
                     </div>
-
                   </div>
                 </div>
               ))}
@@ -208,27 +231,37 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
       </div>
       <Dialog open={showPrimaryContactsDialog} onOpenChange={setShowPrimaryContactsDialog}>
         <DialogContent className="max-w-3xl min-h-[400px] flex flex-col !pt-0 h-[500px] mt-2">
-          <div className="flex-1 overflow-auto !m-0 !p-0">
-            <div className="text-lg font-bold !mb-0 !mt-4 !pb-0 !pt-0">Primary Contacts</div>
-            <Label className="!mb-0 !mt-0 !pb-0 !pt-0">Select Primary Contact for this Job</Label>
+          {/* Fixed header inside dialog */}
+          <div className="text-lg font-bold !mb-0 !mt-4 !pb-0 !pt-0 sticky top-0 bg-white z-30">
+            Primary Contacts
+          </div>
+          {/* Scrollable content area for selection and contacts */}
+          <div className="flex-1 overflow-auto !m-0 !p-0" style={{ minHeight: 0 }}>
+            <Label className="!mb-0 mt-4 !pb-0 !pt-0">Select Primary Contact for this Job</Label>
             {/* Selection UI */}
-            <Command className="w-full flex-col overflow-visible !mt-0 !mb-0 !pt-0 !pb-0 !h-auto">
-              <div className="rounded-md border border-input w-full box-border flex flex-nowrap items-center px-3 py-2 text-sm">
+            <Command className="w-full flex-col overflow-visible mt-2 !mb-0 !pt-0 !pb-0 !h-auto">
+              {/* Sticky badges+input bar */}
+              <div
+                className="rounded-md border border-input w-full box-border flex flex-nowrap items-center px-3 py-2 text-sm bg-white z-20 sticky top-16"
+                style={{ top: 64 }}
+              >
                 {/* Show badges for selected primary contacts only */}
-                {primaryContacts.filter(c => dialogSelectedContactIds.includes(c._id)).map((contact: any) => (
-                  <Badge
-                    key={contact._id}
-                    variant="secondary"
-                    className="select-none"
-                  >
-                    {contact.name}
-                    <X
-                      className="size-3 text-muted-foreground hover:text-foreground ml-2 cursor-pointer"
-                      onMouseDown={e => e.preventDefault()}
-                      onClick={() => setDialogSelectedContactIds(ids => ids.filter(id => id !== contact._id))}
-                    />
-                  </Badge>
-                ))}
+                {primaryContacts
+                  .filter((c) => dialogSelectedContactIds.includes(c._id))
+                  .map((contact: any) => (
+                    <Badge key={contact._id} variant="secondary" className="select-none">
+                      {contact.name}
+                      <X
+                        className="size-3 text-muted-foreground hover:text-foreground ml-2 cursor-pointer"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() =>
+                          setDialogSelectedContactIds((ids) =>
+                            ids.filter((id) => id !== contact._id),
+                          )
+                        }
+                      />
+                    </Badge>
+                  ))}
                 <CommandPrimitive.Input
                   placeholder="Select contacts..."
                   className="flex-1 min-w-0 bg-transparent outline-none border-none border-transparent rounded-none m-0 p-0 placeholder:text-muted-foreground"
@@ -236,29 +269,32 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
                   onBlur={() => setDropdownOpen(false)}
                 />
               </div>
+              {/* Scrollable dropdown below sticky bar */}
               {dropdownOpen && (
-                <div className="relative mt-2">
+                <div className="relative w-full" style={{ maxHeight: 240 }}>
                   <CommandList>
-                    <div className="absolute top-0 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none pr-8 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"> {/* Increased pr-8 and added custom scrollbar classes */}
-                      <CommandGroup className="h-full overflow-auto">
+                    <div className="absolute top-0 left-0 z-10 w-full rounded-md border bg-white text-popover-foreground shadow-md outline-none pr-8 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 max-h-60 overflow-y-auto">
+                      <CommandGroup className="h-full w-full">
                         {primaryContacts.map((contact: any) => {
                           const isSelected = dialogSelectedContactIds.includes(contact._id);
                           return (
                             <CommandItem
                               key={contact._id}
-                              onMouseDown={e => e.preventDefault()}
+                              onMouseDown={(e) => e.preventDefault()}
                               onSelect={() => {
-                                setDialogSelectedContactIds(ids =>
+                                setDialogSelectedContactIds((ids) =>
                                   isSelected
-                                    ? ids.filter(id => id !== contact._id)
-                                    : [...ids, contact._id]
+                                    ? ids.filter((id) => id !== contact._id)
+                                    : [...ids, contact._id],
                                 );
                               }}
-                              className={"cursor-pointer flex justify-between items-center"}
+                              className={`w-full cursor-pointer flex items-center bg-white ${isSelected ? "bg-gray-400 text-white" : ""}`}
                             >
-                              <span>{contact.name}</span>
+                              <span className="truncate flex-1">{contact.name}</span>
                               {isSelected && (
-                                <span className="ml-2 text-green-600">✔</span>
+                                <span className="text-green-600 ml-auto pl-2 pr-2 flex-shrink-0">
+                                  ✔
+                                </span>
                               )}
                             </CommandItem>
                           );
@@ -272,11 +308,18 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
             {/* Unified contact list (primary + new) */}
             {(() => {
               // Only show selected primary contacts and all new contacts
-              const selectedPrimaryContacts = primaryContacts.filter(pc => dialogSelectedContactIds.includes(pc._id));
-              const allContacts = [...selectedPrimaryContacts, ...dialogNewContacts.filter(nc => !selectedPrimaryContacts.some(pc => pc._id === nc._id))];
+              const selectedPrimaryContacts = primaryContacts.filter((pc) =>
+                dialogSelectedContactIds.includes(pc._id),
+              );
+              const allContacts = [
+                ...selectedPrimaryContacts,
+                ...dialogNewContacts.filter(
+                  (nc) => !selectedPrimaryContacts.some((pc) => pc._id === nc._id),
+                ),
+              ];
               if (allContacts.length === 0) return null;
               return (
-                <div className="mt-0">
+                <div className="mt-3">
                   <h3 className="text-sm font-semibold !mb-0">Contacts</h3>
                   {(() => {
                     let newContactLabelShown = false;
@@ -288,37 +331,56 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
                       return (
                         <React.Fragment key={contact._id}>
                           {showNewContactLabel && (
-                            <div className="mb-1 text-xs text-gray-500 font-semibold">New Contact</div>
+                            <div>
+                              <h3 className="text-sm font-semibold">New Contact</h3>
+                            </div>
                           )}
                           <div className="p-3 rounded-md border mb-2 bg-gray-50">
                             <div className="flex justify-between items-start">
                               <div className="flex-1 flex  gap-8">
-
-                                <div >
+                                <div>
                                   <div>
-                                    <span className="text-xs font-semibold text-gray-500 mr-1">Name:</span>
+                                    <span className="text-xs font-semibold text-gray-500 mr-1">
+                                      Name:
+                                    </span>
                                     <span className="text-sm text-muted-foreground">
-                                      {contact.firstName || contact.lastName ? `${contact.firstName || ''} ${contact.lastName || ''}`.trim() : contact.name || 'Unnamed Contact'}
+                                      {contact.firstName || contact.lastName
+                                        ? `${contact.firstName || ""} ${contact.lastName || ""}`.trim()
+                                        : contact.name || "Unnamed Contact"}
                                     </span>
                                   </div>
                                   <div>
-                                    <span className="text-xs font-semibold text-gray-500 mr-1">Position:</span>
-                                    <span className="text-sm text-muted-foreground">{contact.position || '—'}</span>
+                                    <span className="text-xs font-semibold text-gray-500 mr-1">
+                                      Position:
+                                    </span>
+                                    <span className="text-sm text-muted-foreground">
+                                      {contact.position || "—"}
+                                    </span>
                                   </div>
                                   <div>
-                                    <span className="text-xs font-semibold text-gray-500 mr-1">Email:</span>
-                                    <span className="text-sm text-muted-foreground">{contact.email || '—'}</span>
+                                    <span className="text-xs font-semibold text-gray-500 mr-1">
+                                      Email:
+                                    </span>
+                                    <span className="text-sm text-muted-foreground">
+                                      {contact.email || "—"}
+                                    </span>
                                   </div>
                                 </div>
                                 {/* Row 2: Phone | Position */}
-                                <div >
+                                <div>
                                   <div>
-                                    <span className="text-xs font-semibold text-gray-500 mr-1">Gender:</span>
-                                    <span className="text-sm text-muted-foreground">{contact.gender || '—'}</span>
+                                    <span className="text-xs font-semibold text-gray-500 mr-1">
+                                      Gender:
+                                    </span>
+                                    <span className="text-sm text-muted-foreground">
+                                      {contact.gender || "—"}
+                                    </span>
                                   </div>
 
                                   <div>
-                                    <span className="text-xs font-semibold text-gray-500 mr-1">LinkedIn:</span>
+                                    <span className="text-xs font-semibold text-gray-500 mr-1">
+                                      LinkedIn:
+                                    </span>
                                     <span className="text-sm text-muted-foreground">
                                       {contact.linkedin ? (
                                         <a
@@ -336,10 +398,15 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
                                   </div>
 
                                   <div>
-                                    <span className="text-xs font-semibold text-gray-500 mr-1">Phone Number:</span>
-                                    <span className="text-sm text-muted-foreground">{getCountryCodeLabel(contact.countryCode || "")}<span className="mx-1">-</span>{contact.phone || "No phone"}</span>
+                                    <span className="text-xs font-semibold text-gray-500 mr-1">
+                                      Phone Number:
+                                    </span>
+                                    <span className="text-sm text-muted-foreground">
+                                      {getCountryCodeLabel(contact.countryCode || "")}
+                                      <span className="mx-1">-</span>
+                                      {contact.phone || "No phone"}
+                                    </span>
                                   </div>
-                                  
                                 </div>
                               </div>
                               {/* For new contacts, show Edit button */}
@@ -348,7 +415,10 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
                                   variant="outline"
                                   size="sm"
                                   className="ml-2 flex items-center gap-1 border border-gray-300 shadow-none"
-                                  onClick={() => { setEditContact(contact); setAddContactOpen(true); }}
+                                  onClick={() => {
+                                    setEditContact(contact);
+                                    setAddContactOpen(true);
+                                  }}
                                   type="button"
                                 >
                                   <Pencil className="w-4 h-4 text-black" />
@@ -360,7 +430,11 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
                                 <button
                                   className="ml-2 p-1 rounded hover:bg-gray-100 z-10"
                                   title="Remove"
-                                  onClick={() => setDialogSelectedContactIds(ids => ids.filter(id => id !== contact._id))}
+                                  onClick={() =>
+                                    setDialogSelectedContactIds((ids) =>
+                                      ids.filter((id) => id !== contact._id),
+                                    )
+                                  }
                                   type="button"
                                 >
                                   <X className="w-4 h-4 text-red-500" />
@@ -376,23 +450,33 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
               );
             })()}
           </div>
+          {/* Fixed footer inside dialog */}
           <div className="flex items-center justify-between mt-4 border-t pt-4 bg-white">
-            <Button variant="outline" size="sm" className="gap-1" onClick={() => setAddContactOpen(true)}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1"
+              onClick={() => setAddContactOpen(true)}
+            >
               <Plus className="w-4 h-4" />
               Add New Contact
             </Button>
-            <Button variant="default" size="sm" onClick={() => {
-              // Merge dialog new contacts into main primaryContacts (avoid duplicates by _id)
-              setPrimaryContacts(prev => {
-                const ids = new Set(prev.map(c => c._id));
-                return [...prev, ...dialogNewContacts.filter(nc => !ids.has(nc._id))];
-              });
-              // Update selectedContactIds to dialog selection (including new contacts)
-              setSelectedContactIds(dialogSelectedContactIds);
-              setNewContacts([]); // clear main newContacts (not used anymore)
-              setEditContact(null);
-              setShowPrimaryContactsDialog(false);
-            }}>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => {
+                // Merge dialog new contacts into main primaryContacts (avoid duplicates by _id)
+                setPrimaryContacts((prev) => {
+                  const ids = new Set(prev.map((c) => c._id));
+                  return [...prev, ...dialogNewContacts.filter((nc) => !ids.has(nc._id))];
+                });
+                // Update selectedContactIds to dialog selection (including new contacts)
+                setSelectedContactIds(dialogSelectedContactIds);
+                setNewContacts([]); // clear main newContacts (not used anymore)
+                setEditContact(null);
+                setShowPrimaryContactsDialog(false);
+              }}
+            >
               Save
             </Button>
           </div>
@@ -401,14 +485,24 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
       <AddContactModal
         open={addContactOpen}
         onOpenChange={(open) => {
-          setAddContactOpen(open)
-          if (!open) setEditContact(null)
+          setAddContactOpen(open);
+          if (!open) setEditContact(null);
         }}
         onAdd={(contact: any) => {
           if (editContact) {
             // Update existing contact in dialogNewContacts
-            setDialogNewContacts((prev) => prev.map((c) => c._id === editContact._id ? { ...c, ...contact, name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim() } : c))
-            setEditContact(null)
+            setDialogNewContacts((prev) =>
+              prev.map((c) =>
+                c._id === editContact._id
+                  ? {
+                      ...c,
+                      ...contact,
+                      name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim(),
+                    }
+                  : c,
+              ),
+            );
+            setEditContact(null);
           } else {
             // Add new contact to dialogNewContacts
             const newId = Math.random().toString(36).substr(2, 9);
@@ -419,9 +513,9 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
                 _id: newId, // temp id
                 name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim(),
               },
-            ])
+            ]);
             // Automatically select the new contact
-            setDialogSelectedContactIds(ids => [...ids, newId]);
+            setDialogSelectedContactIds((ids) => [...ids, newId]);
           }
         }}
         countryCodes={countryCodes}
@@ -430,5 +524,5 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
         initialValues={editContact || undefined}
       />
     </div>
-  )
-} 
+  );
+}
