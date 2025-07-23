@@ -261,22 +261,16 @@ const updateJobStage = async (id: string, stage: string): Promise<JobResponse> =
   }
 };
 
-const updateJobPrimaryContacts = async (jobId: string, selectedContacts: any[], selectedContactIds: string[], newContacts: any[] = [], clientId?: string): Promise<JobResponse> => {
+const updateJobPrimaryContacts = async (
+  jobId: string,
+  selectedContactIds: string[], // Only IDs
+  newContacts: any[] = [],
+  clientId?: string
+): Promise<JobResponse> => {
   try {
-    console.log(`Updating primary contacts for job ${jobId}`);
-    console.log("Selected contacts (full data):", selectedContacts);
-    console.log("New contacts:", newContacts);
-
-    // Make sure selectedContacts is an array
-    if (!Array.isArray(selectedContacts)) {
-      console.error("selectedContacts is not an array:", selectedContacts);
-      throw new Error("selectedContacts must be an array");
-    }
-
-    // Create the request payload with complete contact data and IDs
+    // Create the request payload with IDs only
     const payload = {
-      selectedContacts: selectedContacts, // Full contact objects
-      selectedContactIds: selectedContactIds, // Contact IDs
+      selectedContacts: selectedContactIds, // Only IDs
       newContact: newContacts || [],
       clientId: clientId || ""
     };

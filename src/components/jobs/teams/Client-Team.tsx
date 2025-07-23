@@ -218,18 +218,22 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
           setLoading(true);
           setError(null);
           try {
-            // Separate new contacts (no _id or temp _id) from existing
-            const newContactsToSave = (dialogNewContacts || []).map((c: any) => {
-              // Remove temp _id if present
-              const { _id, ...rest } = c;
-              return rest;
-            });
+            // Existing contact IDs: those in selectedIds AND present in allClientContacts (with real backend _id)
+            const existingIdsSet = new Set(allClientContacts.map((c: any) => c._id));
+            const selectedExistingContactIds = selectedIds.filter(id => existingIdsSet.has(id));
+            // New contacts: those in dialogNewContacts with temp _id (not in allClientContacts)
+            const newContactsToSave = (dialogNewContacts || [])
+              .filter((c: any) => !existingIdsSet.has(c._id))
+              .map((c: any) => {
+                // Remove temp _id if present, and add client_id
+                const { _id, ...rest } = c;
+                return { ...rest, client_id: clientId };
+              });
             await updateJobPrimaryContacts(
               jobId,
-              [], // Not needed by backend, but kept for compatibility
-              selectedIds,
-              newContactsToSave,
-              clientId
+              selectedExistingContactIds, // array of IDs
+              newContactsToSave,          // array of new contact objects
+              clientId                    // string
             );
             // Refresh contacts from backend
             const pcRes = await getPrimaryContactsByJobId(jobId);
