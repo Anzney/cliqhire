@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, X, Pencil } from "lucide-react";
+import { Plus, X, Pencil, Check, Ghost } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Command as CommandPrimitive } from "cmdk";
@@ -105,7 +105,7 @@ export function ClientPrimaryContactsDialog({
               {dropdownOpen && (
                 <div className="relative w-full" style={{ maxHeight: 240 }}>
                   <CommandList>
-                    <div className="absolute top-0 left-0 z-10 w-full rounded-md border bg-gray-100 text-popover-foreground shadow-md outline-none pr-8 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 max-h-60 overflow-y-auto">
+                    <div className="absolute top-0 left-0 z-10 w-full rounded-md border bg-white text-popover-foreground shadow-md outline-none scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 max-h-60 overflow-y-auto">
                       <CommandGroup className="h-full w-full">
                         {primaryContacts.map((contact: any) => {
                           const isSelected = dialogSelectedContactIds.includes(contact._id);
@@ -120,13 +120,11 @@ export function ClientPrimaryContactsDialog({
                                     : [...ids, contact._id],
                                 );
                               }}
-                              className={`w-full cursor-pointer flex items-center bg-white ${isSelected ? "bg-gray-00 text-black" : ""}`}
+                              className={`w-full cursor-pointer flex items-center bg-white ${isSelected ? "text-black" : ""}`}
                             >
                               <span className="truncate flex-1">{contact.name}</span>
                               {isSelected && (
-                                <span className="text-green-600 ml-auto pl-2 pr-2 flex-shrink-0">
-                                  ✔
-                                </span>
+                                <Check className="size-5 text-green-500"/>
                               )}
                             </CommandItem>
                           );
@@ -265,17 +263,18 @@ export function ClientPrimaryContactsDialog({
                               {!isNew && isSelected && (
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <button
-                                      className="ml-2 p-1 rounded hover:bg-gray-100 z-10"
+                                    <Button
                                       onClick={() =>
                                         setDialogSelectedContactIds((ids) =>
                                           ids.filter((id) => id !== contact._id),
                                         )
                                       }
                                       type="button"
+                                      variant="ghost"
+                                      size="icon"
                                     >
                                       <X className="w-4 h-4 text-red-500" />
-                                    </button>
+                                    </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>Remove</TooltipContent>
                                 </Tooltip>
