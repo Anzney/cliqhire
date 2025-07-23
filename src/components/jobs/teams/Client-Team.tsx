@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, UserPlus } from "lucide-react";
-import { getJobById } from "@/services/jobService";
+import { getJobById, getPrimaryContactsByJobId, updateJobPrimaryContacts } from "@/services/jobService";
 import { getClientById } from "@/services/clientService";
 import { AddContactModal } from "@/components/clients/modals/add-contact-modal";
 import { Label } from "@/components/ui/label";
@@ -12,14 +12,14 @@ interface ClientTeamProps {
 }
 
 export function ClientTeam({ jobId }: ClientTeamProps) {
-  const [primaryContacts, setPrimaryContacts] = useState<any[]>([]);
-  const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
-  const [selectedContacts, setSelectedContacts] = useState<any[]>([]);
+  const [allClientContacts, setAllClientContacts] = useState<any[]>([]); // All client contacts
+  const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]); // Job's selected contacts
+  const [jobContacts, setJobContacts] = useState<any[]>([]); // Job's primary contacts from API
   const [showPrimaryContactsDialog, setShowPrimaryContactsDialog] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // New state for newly added contacts (main state)
-  const [newContacts, setNewContacts] = useState<any[]>([]);
-  const [editContact, setEditContact] = useState<any | null>(null);
+  const [newContacts, setNewContacts] = useState<any[]>([]); // For new contacts added in dialog
+  const [clientId, setClientId] = useState<string>("");
+  const [loading, setLoading] = useState(false);
   
 
   // Use the same options as in ContactsContent
@@ -47,65 +47,52 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
 
   // Add new contact to local state (for demo, append to primaryContacts)
   const handleAddContact = (contact: any) => {
-    if (editContact) {
-      // Update existing contact
-      setNewContacts((prev) =>
-        prev.map((c) =>
-          c._id === editContact._id
-            ? {
-                ...c,
-                ...contact,
-                name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim(),
-              }
-            : c,
-        ),
-      );
-      setEditContact(null);
-    } else {
-      // Add new contact
-      setNewContacts((prev) => [
-        ...prev,
-        {
-          ...contact,
-          _id: Math.random().toString(36).substr(2, 9), // temp id
-          name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim(),
-        },
-      ]);
-    }
+    // Add new contact
+    setNewContacts((prev) => [
+      ...prev,
+      {
+        ...contact,
+        _id: Math.random().toString(36).substr(2, 9), // temp id
+        name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim(),
+      },
+    ]);
   };
 
+
+  // Fetch client contacts and job's selected contacts
   useEffect(() => {
-    const fetchPrimaryContact = async () => {
+    const fetchClientAndJobContacts = async () => {
       setError(null);
+      setLoading(true);
       try {
+        // Get job to extract clientId
         const jobRes = await getJobById(jobId);
         let job = jobRes.data;
         if (Array.isArray(job)) job = job[0];
         if (!job || typeof job !== "object") throw new Error("Invalid job data");
-        const clientId = (job as any)?.client?._id || (job as any)?.client;
-        if (!clientId) throw new Error("No clientId found for this job");
-        const client = await getClientById(clientId);
-        const contacts = client.primaryContacts || [];
-        setPrimaryContacts(contacts);
-        // Remove default selection of all contacts:
-        setSelectedContactIds([]);
-        setSelectedContacts([]);
+        const cid = (job as any)?.client?._id || (job as any)?.client;
+        if (!cid) throw new Error("No clientId found for this job");
+        setClientId(cid);
+        // Fetch client contacts (all options)
+        const client = await getClientById(cid);
+        setAllClientContacts(client.primaryContacts || []);
+        // Fetch job's primary contacts (selected)
+        const pcRes = await getPrimaryContactsByJobId(jobId);
+        const jobContactsArr = pcRes?.data?.primaryContacts || [];
+        setJobContacts(jobContactsArr);
+        setSelectedContactIds(jobContactsArr.map((c: any) => c._id));
+        setNewContacts([]);
       } catch (err: any) {
         setError(err.message || "Failed to load primary contacts");
+        setAllClientContacts([]);
+        setSelectedContactIds([]);
+        setNewContacts([]);
+      } finally {
+        setLoading(false);
       }
     };
-    if (jobId) fetchPrimaryContact();
+    if (jobId) fetchClientAndJobContacts();
   }, [jobId]);
-
-  // Update selectedContacts whenever selectedContactIds or primaryContacts changes
-  useEffect(() => {
-    setSelectedContacts(primaryContacts.filter((c) => selectedContactIds.includes(c._id)));
-  }, [selectedContactIds, primaryContacts]);
-
-  const contactOptions = primaryContacts.map((c) => ({
-    label: c.name, // Only show name
-    value: c._id,
-  }));
 
   // Helper to check if a contact is new
   const isNewContact = (contact: any) => newContacts.some((nc) => nc._id === contact._id);
@@ -130,8 +117,13 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
         {error && <div className="text-red-500 text-sm">{error}</div>}
         {/* Show empty state if no contacts */}
         {(() => {
-          // Only use primaryContacts after Save
-          const selected = primaryContacts.filter((c) => selectedContactIds.includes(c._id));
+          // Show selected contacts (from allClientContacts if present, else from jobContacts)
+          const selected = selectedContactIds
+            .map(id =>
+              allClientContacts.find(c => c._id === id) ||
+              jobContacts.find(c => c._id === id)
+            )
+            .filter(Boolean);
           if (selected.length === 0 && !error) {
             return (
               <div className="flex flex-col items-center justify-center h-full text-gray-400 py-8">
@@ -220,10 +212,36 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
       <ClientPrimaryContactsDialog
         open={showPrimaryContactsDialog}
         onOpenChange={setShowPrimaryContactsDialog}
-        primaryContacts={primaryContacts}
-        onSave={(updatedContacts, selectedIds) => {
-          setPrimaryContacts(updatedContacts);
-          setSelectedContactIds(selectedIds);
+        primaryContacts={allClientContacts}
+        initialSelectedContactIds={selectedContactIds}
+        onSave={async (updatedContacts, selectedIds, dialogNewContacts = []) => {
+          setLoading(true);
+          setError(null);
+          try {
+            // Separate new contacts (no _id or temp _id) from existing
+            const newContactsToSave = (dialogNewContacts || []).map((c: any) => {
+              // Remove temp _id if present
+              const { _id, ...rest } = c;
+              return rest;
+            });
+            await updateJobPrimaryContacts(
+              jobId,
+              [], // Not needed by backend, but kept for compatibility
+              selectedIds,
+              newContactsToSave,
+              clientId
+            );
+            // Refresh contacts from backend
+            const pcRes = await getPrimaryContactsByJobId(jobId);
+            const jobContacts = pcRes?.data?.primaryContacts || [];
+            setSelectedContactIds(jobContacts.map((c: any) => c._id));
+            setNewContacts([]);
+            setShowPrimaryContactsDialog(false);
+          } catch (err: any) {
+            setError(err.message || "Failed to update primary contacts");
+          } finally {
+            setLoading(false);
+          }
         }}
         countryCodes={countryCodes}
         positionOptions={positionOptions}

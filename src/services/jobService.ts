@@ -85,7 +85,7 @@ export interface JobCountByClient {
   clientName?: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ;
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Utility function to handle API errors consistently
 const handleApiError = (error: any, context: string) => {
@@ -261,6 +261,112 @@ const updateJobStage = async (id: string, stage: string): Promise<JobResponse> =
   }
 };
 
+const updateJobPrimaryContacts = async (jobId: string, selectedContacts: any[], selectedContactIds: string[], newContacts: any[] = [], clientId?: string): Promise<JobResponse> => {
+  try {
+    console.log(`Updating primary contacts for job ${jobId}`);
+    console.log("Selected contacts (full data):", selectedContacts);
+    console.log("New contacts:", newContacts);
+
+    // Make sure selectedContacts is an array
+    if (!Array.isArray(selectedContacts)) {
+      console.error("selectedContacts is not an array:", selectedContacts);
+      throw new Error("selectedContacts must be an array");
+    }
+
+    // Create the request payload with complete contact data and IDs
+    const payload = {
+      selectedContacts: selectedContacts, // Full contact objects
+      selectedContactIds: selectedContactIds, // Contact IDs
+      newContact: newContacts || [],
+      clientId: clientId || ""
+    };
+    console.log("Request payload:", payload);
+
+    // Send the request
+    const response = await axios.patch<JobResponse>(
+      `${API_URL}/api/jobs/${jobId}/primarycontact`,
+      payload,
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    console.log("Response from server:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating primary contacts:", error);
+    handleApiError(error, 'job primary contacts update');
+    throw error;
+  }
+};
+
+const getPrimaryContactsByJobId = async (jobId: string): Promise<any> => {
+  try {
+    console.log(`Fetching primary contacts for job ${jobId}`);
+    const response = await axios.get(`${API_URL}/api/jobs/${jobId}/primarycontact`);
+    console.log("Primary contacts response:", response.data);
+
+    // Normalize the response structure to ensure consistent data format
+    if (response.data) {
+      // If the response has primaryContacts array directly in data
+      if (response.data.primaryContacts) {
+        return {
+          success: true,
+          data: {
+            primaryContacts: response.data.primaryContacts
+          }
+        };
+      }
+      // If the response has data.primaryContacts
+      else if (response.data.data && response.data.data.primaryContacts) {
+        return {
+          success: true,
+          data: {
+            primaryContacts: response.data.data.primaryContacts
+          }
+        };
+      }
+      // If the response is an array directly
+      else if (Array.isArray(response.data)) {
+        return {
+          success: true,
+          data: {
+            primaryContacts: response.data
+          }
+        };
+      }
+      // If the response has data as an array
+      else if (response.data.data && Array.isArray(response.data.data)) {
+        return {
+          success: true,
+          data: {
+            primaryContacts: response.data.data
+          }
+        };
+      }
+    }
+
+    // Default case - return the original response
+    return response.data;
+  } catch (error) {
+    // If it's a 404, it might mean no contacts are assigned yet
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      console.log("No primary contacts found (404), returning empty array");
+      return {
+        success: true,
+        data: {
+          primaryContacts: []
+        }
+      };
+    }
+    console.error("Error fetching primary contacts:", error);
+    handleApiError(error, 'fetching job primary contacts');
+    throw error;
+  }
+};
+
 export {
   createJob,
   getJobs,
@@ -268,5 +374,7 @@ export {
   updateJobById,
   deleteJobById,
   getJobCountsByClient,
-  updateJobStage
+  updateJobStage,
+  updateJobPrimaryContacts,
+  getPrimaryContactsByJobId
 };

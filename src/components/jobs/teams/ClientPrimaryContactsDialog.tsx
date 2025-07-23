@@ -12,10 +12,12 @@ interface ClientPrimaryContactsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   primaryContacts: any[];
-  onSave: (updatedContacts: any[], selectedContactIds: string[]) => void;
+  onSave: (updatedContacts: any[], selectedContactIds: string[], newContacts?: any[]) => void;
   countryCodes: { code: string; label: string }[];
   positionOptions: { value: string; label: string }[];
   AddContactModal: React.ComponentType<any>;
+  initialSelectedContactIds?: string[];
+  initialNewContacts?: any[];
 }
 
 export function ClientPrimaryContactsDialog({
@@ -26,19 +28,23 @@ export function ClientPrimaryContactsDialog({
   countryCodes,
   positionOptions,
   AddContactModal,
+  initialSelectedContactIds = [],
+  initialNewContacts = [],
 }: ClientPrimaryContactsDialogProps) {
-  const [dialogSelectedContactIds, setDialogSelectedContactIds] = useState<string[]>([]);
-  const [dialogNewContacts, setDialogNewContacts] = useState<any[]>([]);
+  const [dialogSelectedContactIds, setDialogSelectedContactIds] = useState<string[]>(initialSelectedContactIds);
+  const [dialogNewContacts, setDialogNewContacts] = useState<any[]>(initialNewContacts);
   const [editContact, setEditContact] = useState<any | null>(null);
   const [addContactOpen, setAddContactOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  const wasOpen = React.useRef(false);
   React.useEffect(() => {
-    if (open) {
-      setDialogSelectedContactIds([]);
-      setDialogNewContacts([]);
+    if (open && !wasOpen.current) {
+      setDialogSelectedContactIds(initialSelectedContactIds || []);
+      setDialogNewContacts(initialNewContacts || []);
       setEditContact(null);
     }
+    wasOpen.current = open;
   }, [open]);
 
   const getCountryCodeLabel = (code: string) => {
@@ -310,7 +316,7 @@ export function ClientPrimaryContactsDialog({
                   ...primaryContacts,
                   ...dialogNewContacts.filter((nc) => !ids.has(nc._id)),
                 ];
-                onSave(updatedContacts, dialogSelectedContactIds);
+                onSave(updatedContacts, dialogSelectedContactIds, dialogNewContacts);
                 setEditContact(null);
                 onOpenChange(false);
               }}
