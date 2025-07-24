@@ -298,64 +298,35 @@ const updateJobPrimaryContacts = async (
 
 const getPrimaryContactsByJobId = async (jobId: string): Promise<any> => {
   try {
-    console.log(`Fetching primary contacts for job ${jobId}`);
-    const response = await axios.get(`${API_URL}/api/jobs/${jobId}/primarycontact`);
-    console.log("Primary contacts response:", response.data);
-
-    // Normalize the response structure to ensure consistent data format
-    if (response.data) {
-      // If the response has primaryContacts array directly in data
-      if (response.data.primaryContacts) {
-        return {
-          success: true,
-          data: {
-            primaryContacts: response.data.primaryContacts
-          }
-        };
-      }
-      // If the response has data.primaryContacts
-      else if (response.data.data && response.data.data.primaryContacts) {
-        return {
-          success: true,
-          data: {
-            primaryContacts: response.data.data.primaryContacts
-          }
-        };
-      }
-      // If the response is an array directly
-      else if (Array.isArray(response.data)) {
-        return {
-          success: true,
-          data: {
-            primaryContacts: response.data
-          }
-        };
-      }
-      // If the response has data as an array
-      else if (response.data.data && Array.isArray(response.data.data)) {
-        return {
-          success: true,
-          data: {
-            primaryContacts: response.data.data
-          }
-        };
-      }
+    const response = await axios.get(`${API_URL}/api/jobs/${jobId}/primarycontacts`);
+    const res = response.data;
+    // Try every possible structure for primaryContacts array
+    if (res?.data?.primaryContacts && Array.isArray(res.data.primaryContacts)) {
+      return { success: true, data: { primaryContacts: res.data.primaryContacts } };
     }
-
-    // Default case - return the original response
-    return response.data;
+    if (res?.primaryContacts && Array.isArray(res.primaryContacts)) {
+      return { success: true, data: { primaryContacts: res.primaryContacts } };
+    }
+    if (Array.isArray(res?.data?.primaryContacts)) {
+      return { success: true, data: { primaryContacts: res.data.primaryContacts } };
+    }
+    if (Array.isArray(res?.primaryContacts)) {
+      return { success: true, data: { primaryContacts: res.primaryContacts } };
+    }
+    // New: if data.data has jobId/jobTitle and primaryContacts
+    if (res?.data && res.data.primaryContacts && Array.isArray(res.data.primaryContacts)) {
+      return { success: true, data: { primaryContacts: res.data.primaryContacts } };
+    }
+    // Fallback: try to find array in any data property
+    if (res?.data && Array.isArray(res.data)) {
+      return { success: true, data: { primaryContacts: res.data } };
+    }
+    // If nothing found, return empty
+    return { success: false, data: { primaryContacts: [] } };
   } catch (error) {
-    // If it's a 404, it might mean no contacts are assigned yet
     if (axios.isAxiosError(error) && error.response?.status === 404) {
-      console.log("No primary contacts found (404), returning empty array");
-      return {
-        success: true,
-        data: {
-          primaryContacts: []
-        }
-      };
+      return { success: true, data: { primaryContacts: [] } };
     }
-    console.error("Error fetching primary contacts:", error);
     handleApiError(error, 'fetching job primary contacts');
     throw error;
   }
