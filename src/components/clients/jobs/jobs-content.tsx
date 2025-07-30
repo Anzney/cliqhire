@@ -141,13 +141,9 @@ export function JobsContent({ clientId, clientName }: JobsContentProps) {
         <div className="flex items-center">
           {/* <Checkbox id="selectAll" className="mr-4 border-gray-400" /> */}
           <div className="grid grid-cols-7 w-full text-sm font-medium text-gray-500">
-            <div>Position Name</div>
-            <div>Job Type</div>
-            <div>Location</div>
-            <div>Headcount</div>
-            <div>Stage</div>
-            <div>Minimum Salary</div>
-            <div>Maximum Salary</div>
+            {["Position Name", "Job Type", "Location", "Headcount", "Stage", "Minimum Salary", "Maximum Salary"].map((item, index) => (
+              <div key={index}>{item}</div>
+            ))}
           </div>
         </div>
       </div>

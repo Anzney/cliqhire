@@ -12,12 +12,14 @@ import { AttachmentsContent } from "./attachments/attachments-content"
 import { TeamContent } from "./teams/team-content"
 import { SourcingContent } from "./sourcing/sourcing-content"
 import { ReportsContent } from "./reports/reports-content"
+import { JobData } from "./types"
 
 interface JobTabsProps {
   jobId: string;
+  jobData: JobData;
 }
 
-export function JobTabs({ jobId }: JobTabsProps) {
+export function JobTabs({ jobId, jobData }: JobTabsProps) {
   return (
     <Tabs defaultValue="summary" className="w-full">
       <JobTabsList />
@@ -29,7 +31,7 @@ export function JobTabs({ jobId }: JobTabsProps) {
       
       <JobTabContent value="summary">
       
-        <SummaryContent jobId={jobId} />
+        <SummaryContent jobId={jobId} jobData={jobData} />
       </JobTabContent>
       
       <JobTabContent value="team">
