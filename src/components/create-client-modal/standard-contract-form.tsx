@@ -7,6 +7,9 @@ import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Checkbox } from "../ui/checkbox";
 
+// --- Constants ---
+import { CONTRACT_TYPES, CURRENCIES, LEVELS, levelFieldMap } from "./constants";
+
 type LevelValue = {
   percentage: number;
   notes: string;
@@ -59,43 +62,6 @@ type UploadedFiles = {
 };
 
 // --- Constants ---
-const CONTRACT_TYPES = [
-  "Fix with Advance",
-  "Fix without Advance",
-  "Level Based (Hiring)",
-  "Level Based With Advance",
-];
-const CURRENCIES = ["USD", "EUR", "GBP", "SAR", "AED", "INR"];
-const LEVELS = ["Senior Level", "Executives", "Non-Executives", "Other"];
-const levelFieldMap: Record<
-  string,
-  { percentage: string; currency: string; money: string; notes: string }
-> = {
-  "Senior Level": {
-    percentage: "seniorLevelPercentage",
-    currency: "seniorLevelCurrency",
-    money: "seniorLevelMoney",
-    notes: "seniorLevelNotes",
-  },
-  Executives: {
-    percentage: "executivesPercentage",
-    currency: "executivesCurrency",
-    money: "executivesMoney",
-    notes: "executivesNotes",
-  },
-  "Non-Executives": {
-    percentage: "nonExecutivesPercentage",
-    currency: "nonExecutivesCurrency",
-    money: "nonExecutivesMoney",
-    notes: "nonExecutivesNotes",
-  },
-  Other: {
-    percentage: "otherPercentage",
-    currency: "otherCurrency",
-    money: "otherMoney",
-    notes: "otherNotes",
-  },
-};
 
 // --- Reusable Components ---
 const ContractDocumentUpload: React.FC<{
@@ -240,7 +206,7 @@ const PercentageCurrencyNotesRow: React.FC<{
           placeholder={notesPlaceholder}
           onChange={(e) => onNotesChange(e.target.value)}
           value={notesValue || ""}
-          className="h-16 text-xs w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-16 w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           rows={3}
         />
       </div>
@@ -251,7 +217,7 @@ const PercentageCurrencyNotesRow: React.FC<{
           placeholder={notesPlaceholder}
           onChange={(e) => onNotesChange(e.target.value)}
           value={notesValue || ""}
-          className="h-16 text-xs w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-16 w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           rows={3}
         />
       </div>
@@ -357,180 +323,180 @@ const StandardContractForm = ({ formData, setFormData }: StandardContractFormPro
 
   return (
     <div className="flex flex-col gap-4 mt-4">
-      <div className="flex flex-col gap-2">
-        <div className="flex flex-row gap-4">
-          {/* Contract Start Date */}
-          <div className="flex-1 space-y-1">
-            <Label htmlFor="contractStartDate">Contract Start Date</Label>
-            <div className="grid gap-2">
-              <DatePicker
-                open={openStartDate}
-                setOpen={setOpenStartDate}
-                value={formData.contractStartDate!}
-                setValue={(value: Date) =>
-                  setFormData((prev: typeof formData) => ({ ...prev, contractStartDate: value }))
-                }
-              />
-            </div>
-          </div>
-          {/* Contract End Date */}
-          <div className="flex-1 space-y-1">
-            <Label htmlFor="contractEndDate">Contract End Date</Label>
-            <div className="grid gap-2">
-              <DatePicker
-                open={openEndDate}
-                setOpen={setOpenEndDate}
-                value={formData.contractEndDate!}
-                setValue={(value: Date) =>
-                  setFormData((prev: typeof formData) => ({ ...prev, contractEndDate: value }))
-                }
-              />
-            </div>
-          </div>
-          {/* Contract Type */}
-          <div className="flex-1 space-y-1">
-            <Label htmlFor="contractType">Contract Type</Label>
-            <Select
-              value={formData.contractType}
-              onValueChange={(value) =>
-                setFormData((prev: typeof formData) => ({ ...prev, contractType: value }))
+      <div className="flex flex-row gap-4">
+        {/* Contract Start Date */}
+        <div className="flex-1 space-y-1">
+          <Label htmlFor="contractStartDate">Contract Start Date</Label>
+          <div className="grid gap-2">
+            <DatePicker
+              open={openStartDate}
+              setOpen={setOpenStartDate}
+              value={formData.contractStartDate!}
+              setValue={(value: Date) =>
+                setFormData((prev: typeof formData) => ({ ...prev, contractStartDate: value }))
               }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select contract type" />
-              </SelectTrigger>
-              <SelectContent>
-                {CONTRACT_TYPES.map((item) => (
-                  <SelectItem key={item} value={item}>
-                    {item}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
           </div>
         </div>
-        {/* Contract type-specific block below, in a single row if possible */}
-        {formData.contractType === "Fix with Advance" && (
-          <div className="w-full">
-            <div className="space-y-4 col-span-1 sm:col-span-2 border rounded-lg p-4">
-              <div className="border-2 shadow-sm rounded-lg p-2 cursor-pointer transition-colors w-full border-primary">
-                <div className="flex flex-col sm:flex-row items-center sm:space-x-4 space-y-2 sm:space-y-0">
-                  <h4 className="font-medium text-xs sm:text-sm w-28">Fix with Advance</h4>
-                  <PercentageCurrencyNotesRow
-                    percentageValue={formData.fixedPercentage}
-                    onPercentageChange={(value) =>
-                      setFormData((prev: typeof formData) => ({ ...prev, fixedPercentage: value }))
-                    }
-                    showCurrency
-                    currencyValue={formData.advanceMoneyCurrency}
-                    onCurrencyChange={(value) =>
-                      setFormData((prev: typeof formData) => ({
-                        ...prev,
-                        advanceMoneyCurrency: value,
-                      }))
-                    }
-                    amountValue={formData.advanceMoneyAmount}
-                    onAmountChange={(value) =>
-                      setFormData((prev: typeof formData) => ({
-                        ...prev,
-                        advanceMoneyAmount: value,
-                      }))
-                    }
-                    notesValue={formData.fixedPercentageAdvanceNotes}
-                    onNotesChange={(value) =>
-                      setFormData((prev: typeof formData) => ({
-                        ...prev,
-                        fixedPercentageAdvanceNotes: value,
-                      }))
-                    }
-                    fullWidth
-                    splitNotesBelow // NEW PROP
-                  />
-                </div>
-              </div>
-              <ContractDocumentUpload
-                fileKey="fixedPercentageAdvance"
-                formData={formData}
-                handleFileChange={handleFileChange}
-                handlePreview={handlePreview}
-                handleDownload={handleDownload}
-                label="Contract Document"
-              />
-            </div>
+        {/* Contract End Date */}
+        <div className="flex-1 space-y-1">
+          <Label htmlFor="contractEndDate">Contract End Date</Label>
+          <div className="grid gap-2">
+            <DatePicker
+              open={openEndDate}
+              setOpen={setOpenEndDate}
+              value={formData.contractEndDate!}
+              setValue={(value: Date) =>
+                setFormData((prev: typeof formData) => ({ ...prev, contractEndDate: value }))
+              }
+            />
           </div>
-        )}
-        {formData.contractType === "Fix without Advance" && (
-          <div className="w-full">
-            <div className="space-y-4 col-span-1 sm:col-span-2 border rounded-lg p-4">
-              <div className="border-2 shadow-sm rounded-lg p-2 cursor-pointer transition-colors w-full border-primary">
-                <div className="flex flex-col sm:flex-row items-center sm:space-x-4 space-y-2 sm:space-y-0">
-                  <h4 className="font-medium text-xs sm:text-sm w-28">Fix without Advance</h4>
-                  <PercentageCurrencyNotesRow
-                    percentageValue={formData.fixWithoutAdvanceValue}
-                    onPercentageChange={(value) =>
-                      setFormData((prev: typeof formData) => ({
-                        ...prev,
-                        fixWithoutAdvanceValue: value,
-                      }))
-                    }
-                    notesValue={formData.fixWithoutAdvanceNotes}
-                    onNotesChange={(value) =>
-                      setFormData((prev: typeof formData) => ({
-                        ...prev,
-                        fixWithoutAdvanceNotes: value,
-                      }))
-                    }
-                    fullWidth // Make percentage input fill available width
-                    splitNotesBelow // Move notes below as full-width
-                  />
-                </div>
+        </div>
+        {/* Contract Type */}
+        <div className="flex-1 space-y-1">
+          <Label htmlFor="contractType">Contract Type</Label>
+          <Select
+            value={formData.contractType}
+            onValueChange={(value) =>
+              setFormData((prev: typeof formData) => ({ ...prev, contractType: value }))
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select contract type" />
+            </SelectTrigger>
+            <SelectContent>
+              {CONTRACT_TYPES.map((item) => (
+                <SelectItem key={item} value={item}>
+                  {item}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      {/* Contract type-specific block below, in a single row if possible */}
+      {formData.contractType === "Fix with Advance" && (
+        <div className="w-full">
+          <div className="space-y-4 col-span-1 sm:col-span-2 border rounded-lg p-4">
+            <div className="shadow-sm rounded-lg p-2 cursor-pointer transition-colors w-full">
+              <div className="flex flex-col">
+                <h4 className="font-medium text-xs sm:text-sm shrink-0">Fix with Advance</h4>
+                <PercentageCurrencyNotesRow
+                  percentageValue={formData.fixedPercentage}
+                  onPercentageChange={(value) =>
+                    setFormData((prev: typeof formData) => ({ ...prev, fixedPercentage: value }))
+                  }
+                  showCurrency
+                  currencyValue={formData.advanceMoneyCurrency}
+                  onCurrencyChange={(value) =>
+                    setFormData((prev: typeof formData) => ({
+                      ...prev,
+                      advanceMoneyCurrency: value,
+                    }))
+                  }
+                  amountValue={formData.advanceMoneyAmount}
+                  onAmountChange={(value) =>
+                    setFormData((prev: typeof formData) => ({
+                      ...prev,
+                      advanceMoneyAmount: value,
+                    }))
+                  }
+                  notesValue={formData.fixedPercentageAdvanceNotes}
+                  onNotesChange={(value) =>
+                    setFormData((prev: typeof formData) => ({
+                      ...prev,
+                      fixedPercentageAdvanceNotes: value,
+                    }))
+                  }
+                  fullWidth
+                  splitNotesBelow // NEW PROP
+                />
               </div>
-              <ContractDocumentUpload
-                fileKey="fixWithoutAdvance"
-                formData={formData}
-                handleFileChange={handleFileChange}
-                handlePreview={handlePreview}
-                handleDownload={handleDownload}
-                label="Contract Document"
-              />
             </div>
+            <ContractDocumentUpload
+              fileKey="fixedPercentageAdvance"
+              formData={formData}
+              handleFileChange={handleFileChange}
+              handlePreview={handlePreview}
+              handleDownload={handleDownload}
+              label="Contract Document"
+            />
           </div>
-        )}
-        {/* Level Based Hiring */}
-        {formData.contractType === "Level Based (Hiring)" && (
-          <div className="w-full">
-            <div className="space-y-4 col-span-1 sm:col-span-2 border rounded-lg p-4">
-              <div className="space-y-1">
-                <Label>Select Levels</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
-                  {LEVELS.map((level) => (
-                    <div key={level} className="flex items-center space-x-1">
-                      <Checkbox
-                        id={`level-${level}`}
-                        checked={formData.levelBasedHiring.levelTypes.includes(level)}
-                        onCheckedChange={() => handleLevelChangeFix(level)}
-                      />
-                      <label
-                        htmlFor={`level-${level}`}
-                        className="text-xs sm:text-sm font-medium leading-none cursor-pointer"
-                      >
-                        {level}
-                      </label>
-                    </div>
-                  ))}
-                </div>
+        </div>
+      )}
+      {formData.contractType === "Fix without Advance" && (
+        <div className="w-full">
+          <div className="space-y-4 col-span-1 sm:col-span-2 border rounded-lg p-4">
+            <div className="shadow-sm rounded-lg p-2 cursor-pointer transition-colors w-full">
+              <div className="flex flex-col">
+                <h4 className="font-medium text-xs sm:text-sm">Fix without Advance</h4>
+                <PercentageCurrencyNotesRow
+                  percentageValue={formData.fixWithoutAdvanceValue}
+                  onPercentageChange={(value) =>
+                    setFormData((prev: typeof formData) => ({
+                      ...prev,
+                      fixWithoutAdvanceValue: value,
+                    }))
+                  }
+                  notesValue={formData.fixWithoutAdvanceNotes}
+                  onNotesChange={(value) =>
+                    setFormData((prev: typeof formData) => ({
+                      ...prev,
+                      fixWithoutAdvanceNotes: value,
+                    }))
+                  }
+                  fullWidth // Make percentage input fill available width
+                  splitNotesBelow // Move notes below as full-width
+                />
               </div>
+            </div>
+            <ContractDocumentUpload
+              fileKey="fixWithoutAdvance"
+              formData={formData}
+              handleFileChange={handleFileChange}
+              handlePreview={handlePreview}
+              handleDownload={handleDownload}
+              label="Contract Document"
+            />
+          </div>
+        </div>
+      )}
+      {/* Level Based Hiring */}
+      {formData.contractType === "Level Based (Hiring)" && (
+        <div className="w-full">
+          <div className="space-y-4 col-span-1 sm:col-span-2 border rounded-lg p-4">
+            <div className="space-y-1">
+              <Label>Select Levels</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
+                {LEVELS.map((level) => (
+                  <div key={level} className="flex items-center space-x-1">
+                    <Checkbox
+                      id={`level-${level}`}
+                      checked={formData.levelBasedHiring.levelTypes.includes(level)}
+                      onCheckedChange={() => handleLevelChangeFix(level)}
+                    />
+                    <label
+                      htmlFor={`level-${level}`}
+                      className="text-xs sm:text-sm font-medium leading-none cursor-pointer"
+                    >
+                      {level}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="">
               {formData.levelBasedHiring.levelTypes.length > 0 && (
-                <div className="space-y-2">
+                <div className="grid grid-cols-2">
                   {formData.levelBasedHiring.levelTypes.map((level) => {
                     const fieldKeys = levelFieldMap[level];
                     return (
                       <div
                         key={level}
-                        className="border-2 shadow-sm rounded-lg p-2 cursor-pointer transition-colors w-full"
+                        className="rounded-lg p-2 cursor-pointer transition-colors w-full"
                       >
-                        <div className="flex flex-col sm:flex-row items-center sm:space-x-4 space-y-2 sm:space-y-0">
-                          <h4 className="font-medium text-xs sm:text-sm w-28">{level}</h4>
+                        <div className="flex flex-col">
+                          <h4 className="font-medium text-xs sm:text-sm">{level}</h4>
                           <PercentageCurrencyNotesRow
                             percentageValue={
                               (formData.levelBasedHiring[levelToKey(level)] as LevelValue)
@@ -552,117 +518,115 @@ const StandardContractForm = ({ formData, setFormData }: StandardContractFormPro
                   })}
                 </div>
               )}
-
-              <ContractDocumentUpload
-                fileKey="fixWithoutAdvance"
-                formData={formData}
-                handleFileChange={handleFileChange}
-                handlePreview={handlePreview}
-                handleDownload={handleDownload}
-                label="Contract Document"
-              />
             </div>
+
+            <ContractDocumentUpload
+              fileKey="fixWithoutAdvance"
+              formData={formData}
+              handleFileChange={handleFileChange}
+              handlePreview={handlePreview}
+              handleDownload={handleDownload}
+              label="Contract Document"
+            />
           </div>
-        )}
-        {/* Level Based With Advance */}
-        {formData.contractType === "Level Based With Advance" && (
-          <div className="w-full">
-            <div className="space-y-4 col-span-1 sm:col-span-2 border rounded-lg p-4">
-              <div className="space-y-1">
-                <Label>Select Levels</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
-                  {LEVELS.map((level) => (
-                    <div key={level} className="flex items-center space-x-1">
-                      <Checkbox
-                        id={`level-${level}`}
-                        checked={formData.levelBasedAdvanceHiring.levelTypes.includes(level)}
-                        onCheckedChange={() => handleLevelChangeAdvance(level)}
-                      />
-                      <label
-                        htmlFor={`level-${level}`}
-                        className="text-xs sm:text-sm font-medium leading-none cursor-pointer"
-                      >
-                        {level}
-                      </label>
-                    </div>
-                  ))}
-                </div>
+        </div>
+      )}
+      {/* Level Based With Advance */}
+      {formData.contractType === "Level Based With Advance" && (
+        <div className="w-full">
+          <div className="space-y-4 col-span-1 sm:col-span-2 border rounded-lg p-4">
+            <div className="space-y-1">
+              <Label>Select Levels</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
+                {LEVELS.map((level) => (
+                  <div key={level} className="flex items-center space-x-1">
+                    <Checkbox
+                      id={`level-${level}`}
+                      checked={formData.levelBasedAdvanceHiring.levelTypes.includes(level)}
+                      onCheckedChange={() => handleLevelChangeAdvance(level)}
+                    />
+                    <label
+                      htmlFor={`level-${level}`}
+                      className="text-xs sm:text-sm font-medium leading-none cursor-pointer"
+                    >
+                      {level}
+                    </label>
+                  </div>
+                ))}
               </div>
-              {formData.levelBasedAdvanceHiring.levelTypes.length > 0 && (
-                <div className="space-y-2">
-                  {formData.levelBasedAdvanceHiring.levelTypes.map((level) => {
-                    const fieldKeys = levelFieldMap[level];
-                    return (
-                      <div
-                        key={level}
-                        className="border-2 shadow-sm rounded-lg p-2 cursor-pointer transition-colors w-full"
-                      >
-                        <div className="flex flex-col sm:flex-row items-center sm:space-x-4 space-y-2 sm:space-y-0">
-                          <h4 className="font-medium text-xs sm:text-sm w-28">{level}</h4>
-                          <PercentageCurrencyNotesRow
-                            percentageValue={
-                              (
-                                formData.levelBasedAdvanceHiring[
-                                  levelToKey(level)
-                                ] as LevelValueAdvance
-                              ).percentage
-                            }
-                            onPercentageChange={(value) =>
-                              handleValueChangeAdvance(level, value, "percentage")
-                            }
-                            showCurrency={formData.contractType === "Level Based With Advance"}
-                            currencyValue={
-                              (
-                                formData.levelBasedAdvanceHiring[
-                                  levelToKey(level)
-                                ] as LevelValueAdvance
-                              ).currency
-                            }
-                            onCurrencyChange={(value) =>
-                              handleValueChangeAdvance(level, value, "currency")
-                            }
-                            amountValue={
-                              (
-                                formData.levelBasedAdvanceHiring[
-                                  levelToKey(level)
-                                ] as LevelValueAdvance
-                              ).amount
-                            }
-                            onAmountChange={(value) =>
-                              handleValueChangeAdvance(level, value, "amount")
-                            }
-                            notesValue={
-                              (
-                                formData.levelBasedAdvanceHiring[
-                                  levelToKey(level)
-                                ] as LevelValueAdvance
-                              ).notes
-                            }
-                            onNotesChange={(value) =>
-                              handleValueChangeAdvance(level, value, "notes")
-                            }
-                            fullWidth
-                            splitNotesBelow
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              <ContractDocumentUpload
-                fileKey="fixWithoutAdvance"
-                formData={formData}
-                handleFileChange={handleFileChange}
-                handlePreview={handlePreview}
-                handleDownload={handleDownload}
-                label="Contract Document"
-              />
             </div>
+            {formData.levelBasedAdvanceHiring.levelTypes.length > 0 && (
+              <div className="space-y-2">
+                {formData.levelBasedAdvanceHiring.levelTypes.map((level) => {
+                  const fieldKeys = levelFieldMap[level];
+                  return (
+                    <div
+                      key={level}
+                      className=" rounded-lg p-2 cursor-pointer transition-colors w-full"
+                    >
+                      <div className="flex flex-col">
+                        <h4 className="font-medium text-xs sm:text-sm">{level}</h4>
+                        <PercentageCurrencyNotesRow
+                          percentageValue={
+                            (
+                              formData.levelBasedAdvanceHiring[
+                                levelToKey(level)
+                              ] as LevelValueAdvance
+                            ).percentage
+                          }
+                          onPercentageChange={(value) =>
+                            handleValueChangeAdvance(level, value, "percentage")
+                          }
+                          showCurrency={formData.contractType === "Level Based With Advance"}
+                          currencyValue={
+                            (
+                              formData.levelBasedAdvanceHiring[
+                                levelToKey(level)
+                              ] as LevelValueAdvance
+                            ).currency
+                          }
+                          onCurrencyChange={(value) =>
+                            handleValueChangeAdvance(level, value, "currency")
+                          }
+                          amountValue={
+                            (
+                              formData.levelBasedAdvanceHiring[
+                                levelToKey(level)
+                              ] as LevelValueAdvance
+                            ).amount
+                          }
+                          onAmountChange={(value) =>
+                            handleValueChangeAdvance(level, value, "amount")
+                          }
+                          notesValue={
+                            (
+                              formData.levelBasedAdvanceHiring[
+                                levelToKey(level)
+                              ] as LevelValueAdvance
+                            ).notes
+                          }
+                          onNotesChange={(value) => handleValueChangeAdvance(level, value, "notes")}
+                          fullWidth
+                          splitNotesBelow
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <ContractDocumentUpload
+              fileKey="fixWithoutAdvance"
+              formData={formData}
+              handleFileChange={handleFileChange}
+              handlePreview={handlePreview}
+              handleDownload={handleDownload}
+              label="Contract Document"
+            />
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

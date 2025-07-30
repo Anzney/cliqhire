@@ -11,7 +11,7 @@ export type JobStage = 'New' | 'Sourcing' | 'Screening' | 'Interviewing' | 'Shor
 export interface Job {
   salaryRange: any
   _id: string;
-  positionName: string;
+  jobTitle: string;
   client: string;
   location: string;
   headcount: string;
@@ -23,6 +23,7 @@ export interface Job {
   minimumSalary?: number;
   maximumSalary?: number;
   department: string;
+  jobType?:string;
 }
 
 // Add the Updated InterFace
@@ -44,7 +45,8 @@ export interface Job {
 // types/job.ts
 
 export interface JobResponse {
-   success: boolean;
+  success: boolean;
+  data?: any; // Add this line to match jobService.ts and API respons
   message?: string;
   count?: number;
   total?: number;

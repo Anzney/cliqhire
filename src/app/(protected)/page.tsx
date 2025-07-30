@@ -6,7 +6,8 @@ import { CreateCandidateButton } from "@/components/candidates/create-candidate-
 import { useState } from "react"
 import { CreateClientModal } from "@/components/create-client-modal/create-client-modal"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { CreateJobModal } from "@/components/jobs/create-job-modal";
+// import { CreateJobModal } from "@/components/jobs/create-job-modal";
+import { CreateJobRequirementForm } from "@/components/new-jobs/create-jobs-form";
 
 export default function Home() {
     const router = useRouter();
@@ -158,18 +159,22 @@ export default function Home() {
                 </Card>
             </div>
 
-            <CreateJobModal
+            {/* <CreateJobModal
                 open={openJobModal}
                 onOpenChange={setJobModal}
                 clientId={""} // TODO: Replace with actual clientId
                 clientName={""} // TODO: Replace with actual clientName
                 onJobCreated={() => console.log("")}
-            />
+            /> */}
 
 
             <CreateClientModal
                 open={open}
                 onOpenChange={setOpen}
+            />
+            <CreateJobRequirementForm
+                open={openJobModal}
+                onOpenChange={setJobModal}
             />
         </>
     )

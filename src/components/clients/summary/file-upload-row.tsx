@@ -25,16 +25,12 @@ export const FileUploadRow = ({ id, label, onFileSelect, docUrl, currentFileName
     onFileSelect(file);
   };
 
-  const fileName = selectedFile
-    ? selectedFile.name
-    : currentFileName || (docUrl ? docUrl.split(/[\\/]/).pop() : "");
-
   return (
-    <div className={`grid grid-cols-2 items-center gap-2 py-2 ${className || ''}`}>
-      <p className="text-sm font-medium text-gray-700">{label}</p>
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-gray-800 truncate" title={fileName || "No Details"}>
-          {fileName || <span className="text-gray-400">No Details</span>}
+    <div className={`flex items-center justify-between py-2 ${className || ''}`}>
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <div className="flex items-center gap-10">
+        <span className="text-sm text-gray-800 truncate" title={currentFileName || "No Details"}>
+          {currentFileName || <span className="text-gray-400">No Details</span>}
         </span>
         <div className="flex items-center gap-4">
           {onPreview && (

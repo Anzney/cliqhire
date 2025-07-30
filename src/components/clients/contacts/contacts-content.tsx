@@ -9,6 +9,8 @@ import {
   PrimaryContact,
   ClientResponse,
   updateClient,
+  updatePrimaryContact, // <-- add this import
+  addPrimaryContact, // <-- add this import
 } from "@/services/clientService";
 import { EditFieldModal } from "../summary/edit-field-modal";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
@@ -22,9 +24,11 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 interface ContactsContentProps {
-  clientId: string;
+  clientId: string ;
+  clientData : any;
 }
 
 interface ExtendedPrimaryContact extends PrimaryContact {
@@ -33,79 +37,57 @@ interface ExtendedPrimaryContact extends PrimaryContact {
   gender?: string;
 }
 
-export function ContactsContent({ clientId }: ContactsContentProps) {
+export function ContactsContent({ clientId , clientData }: ContactsContentProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [primaryContacts, setPrimaryContacts] = useState<ExtendedPrimaryContact[]>([]);
   const [clientPhoneNumber, setClientPhoneNumber] = useState<string>("");
   const [clientWebsite, setClientWebsite] = useState<string>("");
   const [clientEmails, setClientEmails] = useState<string[]>([]);
   const [clientLinkedIn, setClientLinkedIn] = useState<string>("");
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true); // new state for initial load
   const [error, setError] = useState("");
   const [isContactEditOpen, setIsContactEditOpen] = useState(false);
   const [deleteContactIndex, setDeleteContactIndex] = useState<number | null>(null);
-  const [editPrimaryContactIndex, setEditPrimaryContactIndex] = useState<number | null>(null);
+  const [editContactIndex, setEditContactIndex] = useState<number | null>(null);
+  const [addEditModalOpen, setAddEditModalOpen] = useState(false);
+  
 
   useEffect(() => {
-    const fetchClientData = async () => {
+    if (clientData) {
+      setInitialLoading(true);
+      setError("");
+
       try {
-        setLoading(true);
-        setError("");
-
-        const response: any = await getClientById(clientId);
-
-        // Handle different possible response structures
-        let clientData: any;
-
-        if (response && typeof response === "object") {
-          if ("data" in response && response.data) {
-            clientData = response.data;
-          } else if ("name" in response) {
-            clientData = response;
-          } else if (response.client) {
-            clientData = response.client;
-          } else if (response.result) {
-            clientData = response.result;
-          } else {
-            throw new Error("Invalid response structure from API");
-          }
-        } else {
-          throw new Error("No valid response received from API");
-        }
-
-        // Map primary contacts to include gender and split name into firstName/lastName
-        const mappedContacts = (clientData.primaryContacts || []).map((c: any) => ({
-          name: c.name || "",
-          email: c.email || "",
-          phone: c.phone || "",
-          countryCode: c.countryCode || "",
-          position: c.position || "",
-          linkedin: c.linkedin || "",
-          firstName: c.firstName || (c.name ? c.name.split(" ")[0] : ""),
-          lastName: c.lastName || (c.name ? c.name.split(" ").slice(1).join(" ") : ""),
-          gender: c.gender || "",
-        }));
+        // Map primary contacts to always split name into firstName/lastName
+        const mappedContacts = (clientData.primaryContacts || []).map((c: any) => {
+          const name = c.name || "";
+          const nameParts = name.trim().split(" ");
+          return {
+            ...c,
+            firstName: nameParts[0] || "",
+            lastName: nameParts.slice(1).join(" ") || "",
+          };
+        });
 
         setPrimaryContacts(mappedContacts || []);
         setClientPhoneNumber(clientData.phoneNumber || "");
         setClientWebsite(clientData.website || "");
         setClientEmails(clientData.emails || []);
         setClientLinkedIn(clientData.linkedInProfile || "");
-        setLoading(false);
+        setInitialLoading(false);
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Failed to load client data";
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to process client data";
         setError(`${errorMessage}. Please try again.`);
-        setLoading(false);
+        setInitialLoading(false);
       }
-    };
-
-    if (clientId) {
-      fetchClientData();
     } else {
       setError("No client ID provided");
-      setLoading(false);
+      setInitialLoading(false);
     }
-  }, [clientId]);
+  }, [clientId, clientData]);
+
+  console.log(primaryContacts);
 
   const countryCodes = [
     { code: "+966", label: "+966 (Saudi Arabia)" },
@@ -128,107 +110,192 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
     return country ? country.label : code;
   };
 
-  const handlePhoneNumberUpdate = async (newPhoneNumber: string) => {
-    setLoading(true);
+  // Reusable function for adding a contact
+  const handleAddContact = async (contact: {
+    firstName?: string;
+    lastName?: string;
+    email: string;
+    phone: string;
+    countryCode: string;
+    position: string;
+    linkedin: string;
+  }) => {
     setError("");
     try {
-      // Fetch the latest client data to avoid overwriting other fields
-      const clientData: ClientResponse = await getClientById(clientId);
-      // Prepare the update payload (omit _id, createdAt, updatedAt)
-      const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
-      // Update only the phoneNumber field
-      const updatedClient = await updateClient(clientId, {
-        ...updatePayload,
-        phoneNumber: newPhoneNumber,
-      });
-      console.log("Updated client response:", updatedClient);
-      setClientPhoneNumber(
-        updatedClient && updatedClient.phoneNumber ? updatedClient.phoneNumber : newPhoneNumber,
-      );
-      setIsContactEditOpen(false);
+      // Prepare the contact data for backend - map to PrimaryContact interface
+      const contactData = {
+        name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim() || "Unnamed Contact",
+        email: contact.email,
+        phone: contact.phone,
+        countryCode: contact.countryCode,
+        position: contact.position,
+        linkedin: contact.linkedin,
+      };
+      // Use the POST API to add a new primary contact
+      await addPrimaryContact(clientId, contactData);
+      // Fetch updated client data
+      const updatedClient = await getClientById(clientId);
+      setPrimaryContacts(updatedClient.primaryContacts || []);
+      toast.success("Contact added successfully!");
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to update phone number";
+      const errorMessage = err instanceof Error ? err.message : "Failed to add contact";
       setError(errorMessage);
-    } finally {
-      setLoading(false);
+      toast.error(errorMessage);
     }
   };
 
-  const handleWebsiteUpdate = async (newWebsite: string) => {
-    setLoading(true);
+  // Reusable function for saving contact details
+  const handleSaveContactDetails = async (values: {
+    phoneNumber: string;
+    website: string;
+    emails: string[];
+    linkedInProfile: string;
+  }, closeModal: () => void) => {
     setError("");
     try {
-      const clientData: ClientResponse = await getClientById(clientId);
+      // const clientData: ClientResponse = await getClientById(clientId);
       const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
       const updatedClient = await updateClient(clientId, {
         ...updatePayload,
-        website: newWebsite,
+        phoneNumber: values.phoneNumber,
+        website: values.website,
+        emails: values.emails,
+        linkedInProfile: values.linkedInProfile,
       });
-      setClientWebsite(updatedClient && updatedClient.website ? updatedClient.website : newWebsite);
-      setIsContactEditOpen(false);
+      // Update state with the response data, ensuring proper fallbacks
+      setClientPhoneNumber(updatedClient?.phoneNumber || values.phoneNumber || "");
+      setClientWebsite(updatedClient?.website || values.website || "");
+      setClientEmails(updatedClient?.emails || values.emails || []);
+      setClientLinkedIn(updatedClient?.linkedInProfile || values.linkedInProfile || "");
+      closeModal();
+      toast.success("Contact details updated successfully!");
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to update website";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to update contact details";
       setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEmailsUpdate = async (newEmails: string) => {
-    setLoading(true);
-    setError("");
-    const emailsArray = newEmails
-      .split(",")
-      .map((e) => e.trim())
-      .filter(Boolean);
-    try {
-      const clientData: ClientResponse = await getClientById(clientId);
-      const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
-      const updatedClient = await updateClient(clientId, {
-        ...updatePayload,
-        emails: emailsArray,
-      });
-      setClientEmails(updatedClient && updatedClient.emails ? updatedClient.emails : emailsArray);
-      setIsContactEditOpen(false);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to update emails";
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLinkedInUpdate = async (newLinkedIn: string) => {
-    setLoading(true);
-    setError("");
-    try {
-      const clientData: ClientResponse = await getClientById(clientId);
-      const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
-      const updatedClient = await updateClient(clientId, {
-        ...updatePayload,
-        linkedInProfile: newLinkedIn,
-      });
-      setClientLinkedIn(
-        updatedClient && updatedClient.linkedInProfile
-          ? updatedClient.linkedInProfile
-          : newLinkedIn,
-      );
-      setIsContactEditOpen(false);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to update LinkedIn profile";
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
+      toast.error(errorMessage);
     }
   };
 
   // Handler for deleting a primary contact
-  const handleDeleteContact = (index: number) => {
-    setPrimaryContacts((prev) => prev.filter((_, i) => i !== index));
-    setDeleteContactIndex(null);
+  const handleDeleteContact = async (index: number) => {
+    setError("");
+    try {
+      // Get current client data
+      // const clientData: ClientResponse = await getClientById(clientId);
+      const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
+
+      // Remove the contact at the specified index
+      const updatedPrimaryContacts = (clientData.primaryContacts || []).filter((_: any, i: number) => i !== index);
+
+      // Update the client with the updated primary contacts
+      const updatedClient = await updateClient(clientId, {
+        ...updatePayload,
+        primaryContacts: updatedPrimaryContacts,
+      });
+
+      // Update local state with the response from backend
+      setPrimaryContacts(updatedClient?.primaryContacts || updatedPrimaryContacts || []);
+      setDeleteContactIndex(null);
+      toast.success("Contact deleted successfully!");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete contact";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    }
   };
 
-  if (loading) {
+  // Unified add/edit handler
+  const handleAddOrEditContact = async (contact: any) => {
+    setError("");
+    try {
+      const contactData = {
+        name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim() || "Unnamed Contact",
+        email: contact.email,
+        phone: contact.phone,
+        countryCode: contact.countryCode,
+        position: contact.position,
+        linkedin: contact.linkedin,
+        gender: contact.gender, // ensure gender is included
+      };
+      const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
+      let updatedPrimaryContacts;
+      if (editContactIndex !== null) {
+        // Edit mode
+        const contactList = clientData.primaryContacts || [];
+        const contactToEdit = contactList[editContactIndex];
+        if (contactToEdit && contactToEdit._id) {
+          // Only send changed fields for PATCH
+          const patchData: any = {};
+          if (contactData.name && contactData.name !== contactToEdit.name) patchData.name = contactData.name;
+          if (contactData.email && contactData.email !== contactToEdit.email) patchData.email = contactData.email;
+          if (contactData.phone && contactData.phone !== contactToEdit.phone) patchData.phone = contactData.phone;
+          if (contactData.countryCode && contactData.countryCode !== contactToEdit.countryCode) patchData.countryCode = contactData.countryCode;
+          if (contactData.position && contactData.position !== contactToEdit.position) patchData.position = contactData.position;
+          if (contactData.linkedin && contactData.linkedin !== contactToEdit.linkedin) patchData.linkedin = contactData.linkedin;
+          if (contactData.gender && contactData.gender !== contactToEdit.gender) patchData.gender = contactData.gender;
+
+          // Only send if at least one field is changed
+          if (Object.keys(patchData).length > 0) {
+            await updatePrimaryContact(clientId, contactToEdit._id, patchData);
+          }
+          const updatedClient = await getClientById(clientId);
+          setPrimaryContacts(updatedClient.primaryContacts || []);
+        } else {
+          // Fallback: update the whole client (legacy logic)
+          updatedPrimaryContacts = contactList.map((c: any, i: number) =>
+            i === editContactIndex ? contactData : c
+          );
+          const updatedClient = await updateClient(clientId, {
+            ...updatePayload,
+            primaryContacts: updatedPrimaryContacts,
+          });
+          setPrimaryContacts(updatedClient?.primaryContacts || updatedPrimaryContacts || []);
+        }
+      } else {
+        // Add mode
+        updatedPrimaryContacts = [contactData, ...(clientData.primaryContacts || [])];
+        const updatedClient = await updateClient(clientId, {
+          ...updatePayload,
+          primaryContacts: updatedPrimaryContacts,
+        });
+        setPrimaryContacts(updatedClient?.primaryContacts || updatedPrimaryContacts || []);
+      }
+      setAddEditModalOpen(false);
+      setEditContactIndex(null);
+      toast.success(editContactIndex !== null ? "Contact updated successfully!" : "Contact added successfully!");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to add/edit contact";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    }
+  };
+
+  // Prepare initial values for modal
+  const initialContactValues =
+    editContactIndex !== null && primaryContacts[editContactIndex]
+      ? {
+          firstName: primaryContacts[editContactIndex].firstName || "",
+          lastName: primaryContacts[editContactIndex].lastName || "",
+          gender: primaryContacts[editContactIndex].gender || "",
+          email: primaryContacts[editContactIndex].email || "",
+          phone: primaryContacts[editContactIndex].phone || "",
+          countryCode: primaryContacts[editContactIndex].countryCode || "+966",
+          position: primaryContacts[editContactIndex].position || "",
+          linkedin: primaryContacts[editContactIndex].linkedin || "",
+        }
+      : {
+          firstName: "",
+          lastName: "",
+          gender: "",
+          email: "",
+          phone: "",
+          countryCode: "+966",
+          position: "",
+          linkedin: "",
+        };
+
+  if (initialLoading) {
     return <div className="p-8 text-center">Loading contacts...</div>;
   }
 
@@ -261,14 +328,26 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
                   </span>
                   {clientPhoneNumber ? (
                     (() => {
-                      const parsed = parsePhoneNumberFromString("+" + clientPhoneNumber);
-                      if (parsed && parsed.isValid()) {
+                      try {
+                        // Only parse if clientPhoneNumber is a valid string
+                        if (clientPhoneNumber && typeof clientPhoneNumber === 'string' && clientPhoneNumber.trim()) {
+                          const parsed = parsePhoneNumberFromString("+" + clientPhoneNumber);
+                          if (parsed && parsed.isValid()) {
+                            return (
+                              <span className="text-sm text-muted-foreground mr-1">
+                                {parsed.formatInternational()}
+                              </span>
+                            );
+                          }
+                        }
+                        // Fallback to showing the raw phone number
                         return (
                           <span className="text-sm text-muted-foreground mr-1">
-                            {parsed.formatInternational()}
+                            {clientPhoneNumber}
                           </span>
                         );
-                      } else {
+                      } catch (error) {
+                        // If parsing fails, show the raw phone number
                         return (
                           <span className="text-sm text-muted-foreground mr-1">
                             {clientPhoneNumber}
@@ -360,36 +439,8 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
                 emails: clientEmails,
                 linkedInProfile: clientLinkedIn,
               }}
-              onSave={async (values: {
-                phoneNumber: string;
-                website: string;
-                emails: string[];
-                linkedInProfile: string;
-              }) => {
-                setLoading(true);
-                setError("");
-                try {
-                  const clientData: ClientResponse = await getClientById(clientId);
-                  const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
-                  const updatedClient = await updateClient(clientId, {
-                    ...updatePayload,
-                    phoneNumber: values.phoneNumber,
-                    website: values.website,
-                    emails: values.emails,
-                    linkedInProfile: values.linkedInProfile,
-                  });
-                  setClientPhoneNumber(updatedClient.phoneNumber || "");
-                  setClientWebsite(updatedClient.website || "");
-                  setClientEmails(updatedClient.emails || []);
-                  setClientLinkedIn(updatedClient.linkedInProfile || "");
-                  setIsContactEditOpen(false);
-                } catch (err) {
-                  const errorMessage =
-                    err instanceof Error ? err.message : "Failed to update contact details";
-                  setError(errorMessage);
-                } finally {
-                  setLoading(false);
-                }
+              onSave={async (values) => {
+                await handleSaveContactDetails(values, () => setIsContactEditOpen(false));
               }}
             />
           </div>
@@ -398,7 +449,7 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
             <div className="bg-white rounded-lg border shadow-sm p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-semibold">Primary Contacts</span>
-                <Button variant="outline" size="sm" onClick={() => setIsDialogOpen(true)}>
+                <Button variant="outline" size="sm" onClick={() => { setEditContactIndex(null); setAddEditModalOpen(true); }}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add
                 </Button>
@@ -420,6 +471,13 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
                               contact.name ||
                               "Unnamed Contact"}
                           </span>
+                          {/* Gender */}
+                          {contact.gender && (
+                            <p className="text-sm text-muted-foreground">
+                              <span className="text-xs font-semibold text-gray-500 mr-1">Gender:</span>
+                              {contact.gender}
+                            </p>
+                          )}
                           {/* Position */}
                           {contact.position && (
                             <p className="text-sm text-muted-foreground">
@@ -470,7 +528,7 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
                           <Button
                             variant="outline"
                             size="icon"
-                            onClick={() => setEditPrimaryContactIndex(index)}
+                            onClick={() => { setEditContactIndex(index); setAddEditModalOpen(true); }}
                           >
                             <Pencil className="size-4" />
                           </Button>
@@ -491,25 +549,16 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
           </div>
         </div>
         <AddContactModal
-          open={isDialogOpen}
-          onOpenChange={setIsDialogOpen}
-          onAdd={(contact) =>
-            setPrimaryContacts((prev) => [
-              {
-                ...contact,
-                ...(typeof contact.firstName === "string" && contact.firstName
-                  ? { name: contact.firstName }
-                  : {
-                      name:
-                        `${contact.firstName || ""} ${contact.lastName || ""}`.trim() ||
-                        "Unnamed Contact",
-                    }),
-              },
-              ...prev,
-            ])
-          }
+          open={addEditModalOpen}
+          onOpenChange={(open) => {
+            setAddEditModalOpen(open);
+            if (!open) setEditContactIndex(null);
+          }}
+          onAdd={handleAddOrEditContact}
           countryCodes={countryCodes}
           positionOptions={positionOptions}
+          initialValues={initialContactValues}
+          isEdit={editContactIndex !== null}
         />
         {/* Delete confirmation (now using Shadcn Dialog) */}
         <Dialog open={deleteContactIndex !== null} onOpenChange={() => setDeleteContactIndex(null)}>
@@ -531,47 +580,6 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        {editPrimaryContactIndex !== null && (
-          <EditPrimaryContactDialog
-            open={editPrimaryContactIndex !== null}
-            onOpenChange={() => setEditPrimaryContactIndex(null)}
-            contact={primaryContacts[editPrimaryContactIndex]}
-            onSave={async (updatedContact) => {
-              setLoading(true);
-              setError("");
-              try {
-                const clientData: ClientResponse = await getClientById(clientId);
-                const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
-                const updatedPrimaryContacts = (primaryContacts || []).map((c, i) =>
-                  i === editPrimaryContactIndex
-                    ? {
-                        ...updatedContact,
-                        ...(typeof updatedContact.name === "string" && updatedContact.name
-                          ? { name: updatedContact.name }
-                          : {
-                              name:
-                                `${updatedContact.firstName || ""} ${updatedContact.lastName || ""}`.trim() ||
-                                "Unnamed Contact",
-                            }),
-                      }
-                    : c,
-                );
-                const updatedClient = await updateClient(clientId, {
-                  ...updatePayload,
-                  primaryContacts: updatedPrimaryContacts,
-                });
-                setPrimaryContacts(updatedClient.primaryContacts || updatedPrimaryContacts || []);
-                setEditPrimaryContactIndex(null);
-              } catch (err) {
-                const errorMessage =
-                  err instanceof Error ? err.message : "Failed to update primary contact";
-                setError(errorMessage);
-              } finally {
-                setLoading(false);
-              }
-            }}
-          />
-        )}
       </div>
     );
   }
@@ -602,21 +610,7 @@ export function ContactsContent({ clientId }: ContactsContentProps) {
       <AddContactModal
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        onAdd={(contact) =>
-          setPrimaryContacts((prev) => [
-            {
-              ...contact,
-              ...(typeof contact.firstName === "string" && contact.firstName
-                ? { name: contact.firstName }
-                : {
-                    name:
-                      `${contact.firstName || ""} ${contact.lastName || ""}`.trim() ||
-                      "Unnamed Contact",
-                  }),
-            },
-            ...prev,
-          ])
-        }
+        onAdd={handleAddContact}
         countryCodes={countryCodes}
         positionOptions={positionOptions}
       />

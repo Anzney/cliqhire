@@ -7,7 +7,7 @@ import {
   UpdateRecruiterData 
 } from '@/types/recruiter';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://aems-backend.onrender.com/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ;
 
 // ========================================
 // DUMMY DATA - REMOVE WHEN API IS WORKING
@@ -165,7 +165,7 @@ export const getRecruiters = async (filters?: RecruiterFilters): Promise<{ recru
   // ========================================
   /*
   try {
-    const response = await axios.get(`${API_URL}/recruiters`, {
+    const response = await axios.get(`${API_URL}/api/recruiters`, {
       params: filters
     });
 
@@ -209,7 +209,7 @@ export const getRecruiterById = async (id: string): Promise<Recruiter> => {
   // ========================================
   /*
   try {
-    const response = await axios.get(`${API_URL}/recruiters/${id}`);
+    const response = await axios.get(`${API_URL}/api/recruiters/${id}`);
     
     if (response.data && response.data.success) {
       return response.data.data;
@@ -258,7 +258,7 @@ export const createRecruiter = async (recruiterData: CreateRecruiterData): Promi
   // ========================================
   /*
   try {
-    const response = await axios.post(`${API_URL}/recruiters`, recruiterData);
+    const response = await axios.post(`${API_URL}/api/recruiters`, recruiterData);
     
     if (response.data && response.data.success) {
       return response.data.data;
@@ -307,7 +307,7 @@ export const updateRecruiter = async (recruiterData: UpdateRecruiterData): Promi
   /*
   try {
     const { _id, ...updateData } = recruiterData;
-    const response = await axios.put(`${API_URL}/recruiters/${_id}`, updateData);
+    const response = await axios.put(`${API_URL}/api/recruiters/${_id}`, updateData);
     
     if (response.data && response.data.success) {
       return response.data.data;
@@ -347,7 +347,7 @@ export const deleteRecruiter = async (id: string): Promise<void> => {
   // ========================================
   /*
   try {
-    const response = await axios.delete(`${API_URL}/recruiters/${id}`);
+    const response = await axios.delete(`${API_URL}/api/recruiters/${id}`);
     
     if (!response.data || !response.data.success) {
       throw new Error(response.data?.message || 'Failed to delete recruiter');
@@ -389,7 +389,7 @@ export const updateRecruiterStatus = async (id: string, status: string): Promise
   // ========================================
   /*
   try {
-    const response = await axios.patch(`${API_URL}/recruiters/${id}/status`, { status });
+    const response = await axios.patch(`${API_URL}/api/recruiters/${id}/status`, { status });
     
     if (response.data && response.data.success) {
       return response.data.data;
@@ -436,7 +436,7 @@ export const uploadResume = async (id: string, file: File): Promise<{ resumeUrl:
     const formData = new FormData();
     formData.append('resume', file);
     
-    const response = await axios.post(`${API_URL}/recruiters/${id}/resume`, formData, {
+    const response = await axios.post(`${API_URL}/api/recruiters/${id}/resume`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -488,7 +488,7 @@ export const getRecruiterStats = async (id: string): Promise<{
   // ========================================
   /*
   try {
-    const response = await axios.get(`${API_URL}/recruiters/${id}/stats`);
+    const response = await axios.get(`${API_URL}/api/recruiters/${id}/stats`);
     
     if (response.data && response.data.success) {
       return response.data.data;

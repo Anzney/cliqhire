@@ -19,7 +19,7 @@ interface JobTabsProps {
 
 export function JobTabs({ jobId }: JobTabsProps) {
   return (
-    <Tabs defaultValue="candidates" className="w-full">
+    <Tabs defaultValue="summary" className="w-full">
       <JobTabsList />
       
       <JobTabContent value="candidates">

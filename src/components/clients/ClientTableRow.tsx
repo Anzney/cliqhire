@@ -11,7 +11,7 @@ export interface ClientTableRowProps {
     name: string;
     industry: string;
     location: string;
-    stage: "Lead" | "Negotiation" | "Engaged" | "Signed";
+    stage: "Lead" | "Engaged" | "Signed";
     clientStageStatus: ClientStageStatus;
     owner: string;
     team: string;
@@ -19,7 +19,7 @@ export interface ClientTableRowProps {
     jobCount: number;
     incorporationDate: string;
   };
-  onStageChange: (clientId: string, newStage: "Lead" | "Negotiation" | "Engaged" | "Signed") => void;
+  onStageChange: (clientId: string, newStage: "Lead" | "Engaged" | "Signed") => void;
   onStatusChange: (clientId: string, newStatus: ClientStageStatus) => void;
   getYearDifference: (createdAt: string) => number;
 }
@@ -45,11 +45,7 @@ export const ClientTableRow: React.FC<ClientTableRowProps> = ({
       <TableCell className="text-sm">{client.industry}</TableCell>
       <TableCell className="text-sm">{client.location}</TableCell>
       <TableCell className="text-sm">
-        <ClientStageBadge
-          id={client.id}
-          stage={client.stage}
-          onStageChange={onStageChange}
-        />
+        <ClientStageBadge id={client.id} stage={client.stage} onStageChange={onStageChange} />
       </TableCell>
       <TableCell className="text-sm">
         <ClientStageStatusBadge
@@ -71,4 +67,4 @@ export const ClientTableRow: React.FC<ClientTableRowProps> = ({
   );
 };
 
-export default ClientTableRow; 
+export default ClientTableRow;

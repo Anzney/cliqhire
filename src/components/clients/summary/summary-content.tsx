@@ -4,30 +4,20 @@ import { SectionHeader } from "./section-header";
 import { DetailRow } from "./detail-row";
 import { TeamMember } from "./team-member";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { FileUploadRow } from "./file-upload-row";
 import { AddTeamMemberModal } from "../modals/add-team-member-modal";
 import { AddContactModal } from "../modals/add-contact-modal";
 import { EditDescriptionModal } from "../modals/edit-description-modal";
-import { Plus, Pencil } from "lucide-react";
-import { getClientById } from "@/services/clientService";
-import { ContractSection } from "./contract-section";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { Plus, Pencil, ChevronsUpDown } from "lucide-react";
+import { ContractSection } from "../contract/contract-section";
 import { Label } from "@/components/ui/label";
 import { SalesInfo } from "./sales/salesInfo";
+import { CollapsibleSection } from "./collapsible-section";
+import { toast } from "sonner";
 
-interface SummaryContentProps {
-  clientId: string;
-}
-
-interface ClientResponse {
-  client?: ClientDetails;
-  result?: ClientDetails;
-  data?: ClientDetails;
-  name?: string;
-}
-
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import ContractOverview from "./contract-overview";
 interface ClientDetails {
   clientPriority: string;
   clientSegment: string;
@@ -47,11 +37,20 @@ interface ClientDetails {
   linkedInProfile?: string;
   clientLinkedInPage?: string;
   linkedInPage?: string;
-  gstTinDocument?: string;
   clientProfileImage?: string;
   profileImage?: string;
-  crCopy?: string;
-  vatCopy?: string;
+  crCopy?: {
+    url: string;
+    fileName: string;
+  };
+  vatCopy?: {
+    url: string;
+    fileName: string;
+  };
+  gstTinDocument?: {
+    url: string;
+    fileName: string;
+  };
   phoneNumber?: string;
   googleMapsLink?: string;
   position?: string;
@@ -98,115 +97,48 @@ interface ContactType {
   position: string;
 }
 
-export function SummaryContent({ clientId }: SummaryContentProps) {
-  const [clientDetails, setClientDetails] = useState<ClientDetails>({
-    clientPriority: "1",
-    clientSegment: "A",
-    name: "",
-    emails: [],
+export function SummaryContent({
+  clientId,
+  clientData,
+  onTabSwitch,
+}: {
+  clientId: string;
+  clientData: any;
+  onTabSwitch?: (tabValue: string) => void;
+}) {
+  const [clientDetails, setClientDetails] = useState<ClientDetails>(() => {
+    // Initialize with clientData and map primary contacts
+    const mappedContacts = (clientData?.primaryContacts || []).map((c: any) => ({
+      firstName: c.firstName || (c.name ? c.name.split(" ")[0] : ""),
+      lastName: c.lastName || (c.name ? c.name.split(" ").slice(1).join(" ") : ""),
+      gender: c.gender || "",
+      email: c.email || "",
+      phone: c.phone || "",
+      countryCode: c.countryCode || "",
+      position: c.position || c.designation || "",
+      linkedin: c.linkedin || "",
+    }));
+
+    return {
+      ...clientData,
+      primaryContacts: mappedContacts,
+    };
   });
+
+  console.log(clientData);
+
   const [teamMembers, setTeamMembers] = useState<TeamMemberType[]>([
     { name: "Shaswat singh", role: "Admin", email: "shaswat@example.com", isActive: true },
   ]);
-  const [contacts, setContacts] = useState<ContactType[]>([]);
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchClientData = async () => {
-      try {
-        setLoading(true);
-        setError(""); // Clear previous errors
-
-        const response: ClientResponse = await getClientById(clientId);
-
-        // Handle different possible response structures
-        let clientData: ClientDetails;
-
-        if (response && typeof response === 'object') {
-          if ('data' in response && response.data) {
-            clientData = response.data;
-          } else if ('name' in response) {
-            clientData = response as ClientDetails;
-          } else if (response.client) {
-            clientData = response.client;
-          } else if (response.result) {
-            clientData = response.result;
-          } else {
-            throw new Error("Invalid response structure from API");
-          }
-        } else {
-          throw new Error("No valid response received from API");
-        }
-
-        // --- MAPPING PRIMARY CONTACTS ---
-        const mappedContacts = (clientData.primaryContacts || []).map((c: any) => ({
-          firstName: c.firstName || (c.name ? c.name.split(' ')[0] : ''),
-          lastName: c.lastName || (c.name ? c.name.split(' ').slice(1).join(' ') : ''),
-          gender: c.gender || '',
-          email: c.email || '',
-          phone: c.phone || '',
-          countryCode: c.countryCode || '',
-          position: c.position || c.designation || '',
-          linkedin: c.linkedin || '',
-        }));
-
-        setClientDetails({
-          clientPriority: clientData.clientPriority || "1",
-          clientSegment: clientData.clientSegment || "A",
-          name: clientData.name || "",
-          website: clientData.website || "",
-          industry: clientData.industry || "",
-          location: clientData.location || "",
-          address: clientData.address || "",
-          incorporationDate: clientData.incorporationDate || "",
-          countryOfRegistration: clientData.countryOfRegistration || "",
-          registrationNumber: clientData.registrationNumber || "",
-          countryOfBusiness: clientData.countryOfBusiness || "",
-          description: clientData.description || "",
-          salesLead: clientData.salesLead || "",
-          referredBy: clientData.referredBy || "",
-          linkedInProfile: clientData.linkedInProfile || "",
-          clientLinkedInPage: clientData.linkedInPage || clientData.clientLinkedInPage || "",
-          gstTinDocument: clientData.gstTinDocument || "",
-          clientProfileImage: clientData.profileImage || clientData.clientProfileImage || "",
-          crCopy: clientData.crCopy || "",
-          vatCopy: clientData.vatCopy || "",
-          phoneNumber: clientData.phoneNumber || "",
-          googleMapsLink: clientData.googleMapsLink || "",
-          primaryContacts: mappedContacts,
-          labelType: clientData.labelType || {
-            seniorLevel: clientData.seniorLevel || "",
-            executives: clientData.executives || "",
-            nonExecutives: clientData.nonExecutives || "",
-            other: clientData.other || ""
-          },
-          contractStartDate: clientData.contractStartDate || "",
-          contractEndDate: clientData.contractEndDate || "",
-          emails: clientData.emails || [],
-        });
-
-        setLoading(false);
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Failed to load client data";
-        setError(`${errorMessage}. Please try again.`);
-        setLoading(false);
-      }
-    };
-
-    if (clientId) {
-      fetchClientData();
-    } else {
-      setError("No client ID provided");
-      setLoading(false);
-    }
-  }, [clientId]);
-
-
-  const updateClientDetails = async (fieldName: string, value: string | string[]) => {
+  const updateClientDetails = async (
+    fieldName: string,
+    value: string | string[] | PrimaryContact,
+  ) => {
     try {
       const response = await fetch(`https://aems-backend.onrender.com/api/clients/${clientId}`, {
         method: "PATCH",
@@ -219,58 +151,62 @@ export function SummaryContent({ clientId }: SummaryContentProps) {
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Update failed:", response.status, errorText);
-        throw new Error(`Failed to update client details: ${response.status}`);
+        toast.error("Failed to update client details");
       }
 
       setClientDetails((prev) => ({
         ...prev,
         [fieldName]: value,
       }));
+      toast.success("Client details updated successfully");
     } catch (error) {
-      console.error("Error updating client details:", error);
-      setError("Failed to update client details. Please try again.");
+      toast.error("Failed to update client details");
     }
   };
 
-  const handleFileUpload = (field: keyof ClientDetails) => (file: File | null): void => {
-    if (!file) return;
-    (async () => {
-      try {
-        const formData = new FormData();
-        formData.append("file", file);      // The file itself
-        formData.append("field", field);    // The field name (e.g., "vatCopy" or "crCopy")
+  const handleFileUpload =
+    (field: keyof ClientDetails) =>
+    (file: File | null): void => {
+      if (!file) return;
+      (async () => {
+        try {
+          const formData = new FormData();
+          formData.append("file", file); // The file itself
+          formData.append("field", field); // The field name (e.g., "vatCopy" or "crCopy")
 
-        const response = await fetch(
-          `https://aems-backend.onrender.com/api/clients/${clientId}/upload`,
-          {
-            method: "POST",
-            body: formData,
+          const response = await fetch(
+            `https://aems-backend.onrender.com/api/clients/${clientId}/upload`,
+            {
+              method: "POST",
+              body: formData,
+            },
+          );
+
+          if (!response.ok) {
+            toast.error("Failed to upload file");
           }
-        );
 
-        if (!response.ok) {
-          throw new Error(`Failed to upload ${field}: ${response.status}`);
+          const result = await response.json();
+          const fileUrl = result.data?.filePath || file.name;
+
+          setClientDetails((prev) => ({
+            ...prev,
+            [field]: fileUrl,
+          }));
+          toast.success("File uploaded successfully");
+
+          await updateClientDetails(field, fileUrl);
+        } catch (error) {
+          console.error(`Error uploading ${field}:`, error);
+          setClientDetails((prev) => ({
+            ...prev,
+            [field]: file?.name || "",
+          }));
+          setError(`Failed to upload ${field} to server. File name stored locally.`);
+          toast.error("Failed to upload file");
         }
-
-        const result = await response.json();
-        const fileUrl = result.data?.filePath || file.name;
-
-        setClientDetails((prev) => ({
-          ...prev,
-          [field]: fileUrl,
-        }));
-
-        await updateClientDetails(field, fileUrl);
-      } catch (error) {
-        console.error(`Error uploading ${field}:`, error);
-        setClientDetails((prev) => ({
-          ...prev,
-          [field]: file?.name || '',
-        }));
-        setError(`Failed to upload ${field} to server. File name stored locally.`);
-      }
-    })();
-  };
+      })();
+    };
 
   const handleUpdateField = (field: keyof ClientDetails) => (value: string) => {
     updateClientDetails(field, value);
@@ -285,8 +221,7 @@ export function SummaryContent({ clientId }: SummaryContentProps) {
       ...prev,
       primaryContacts: [...(prev.primaryContacts || []), contact],
     }));
-
-    
+    updateClientDetails("primaryContacts", contact);
   };
 
   const handleUpdateDescription = (description: string) => {
@@ -298,14 +233,16 @@ export function SummaryContent({ clientId }: SummaryContentProps) {
     setClientDetails((prev) => ({
       ...prev,
       primaryContacts: prev.primaryContacts?.map((contact, i) =>
-        i === index ? { ...contact, [field]: value } : contact
+        i === index ? { ...contact, [field]: value } : contact,
       ),
     }));
   };
 
   const handlePreviewFile = (fileName: string) => {
     if (fileName) {
-      const fileUrl = fileName.startsWith("https") ? fileName : `https://aems-backend.onrender.com/${fileName}`;
+      const fileUrl = fileName.startsWith("https")
+        ? fileName
+        : `https://aems-backend.onrender.com/${fileName}`;
       window.open(fileUrl, "_blank");
     } else {
       console.error("No file to preview");
@@ -314,48 +251,38 @@ export function SummaryContent({ clientId }: SummaryContentProps) {
 
   const handleDownloadFile = async (fileName: string) => {
     if (fileName) {
-      const fileUrl = fileName.startsWith("https") ? fileName : `https://aems-backend.onrender.com/${fileName}`;
+      const fileUrl = fileName.startsWith("https")
+        ? fileName
+        : `https://aems-backend.onrender.com/${fileName}`;
       try {
         const response = await fetch(fileUrl);
-        if (!response.ok) throw new Error('Network response was not ok.');
+        if (!response.ok) throw new Error("Network response was not ok.");
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = url;
-        link.setAttribute('download', fileName.split('/').pop() || 'download');
+        link.setAttribute("download", fileName.split("/").pop() || "download");
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
       } catch (error) {
-        console.error('Download failed:', error);
-        window.open(fileUrl, '_blank');
+        console.error("Download failed:", error);
+        window.open(fileUrl, "_blank");
       }
     } else {
-      console.error('No file to download');
+      console.error("No file to download");
     }
   };
 
   const handleUpdateEmails = (emailsString: string) => {
-    const emailsArray = emailsString.split(',').map(e => e.trim()).filter(Boolean);
-    updateClientDetails('emails', emailsArray);
+    const emailsArray = emailsString
+      .split(",")
+      .map((e) => e.trim())
+      .filter(Boolean);
+    updateClientDetails("emails", emailsArray);
     setClientDetails((prev) => ({ ...prev, emails: emailsArray }));
   };
-
-  if (loading) {
-    return <div className="p-8 text-center">Loading client details...</div>;
-  }
-
-  if (error) {
-    return (
-      <div className="p-8 text-center">
-        <div className="text-red-500 mb-4">{error}</div>
-        <Button onClick={() => window.location.reload()}>
-          Retry
-        </Button>
-      </div>
-    );
-  }
 
   const positionOptions = [
     { value: "HR", label: "HR" },
@@ -368,208 +295,176 @@ export function SummaryContent({ clientId }: SummaryContentProps) {
   return (
     <div className="grid grid-cols-2 gap-6 p-4">
       <div className="space-y-6">
-        <div className="bg-white rounded-lg border shadow-sm p-4">
-          <h2 className="text-sm font-semibold">Details</h2>
-          <div className="space-y-3 mt-4">
-              
-          <DetailRow
-              label="Sales Lead (Internal)"
-              value={clientDetails.salesLead}
-              onUpdate={handleUpdateField("salesLead")}
-            />
-            <DetailRow
-              label="Referred By (External)"
-              value={clientDetails.referredBy}
-              onUpdate={handleUpdateField("referredBy")}
-            />
-
-            <DetailRow
-              label="Client Priority"
-              value={clientDetails.clientPriority}
-              onUpdate={handleUpdateField("clientPriority")}
-              options={[
-                { value: "1", label: "1" },
-                { value: "2", label: "2" },
-                { value: "3", label: "3" },
-                { value: "4", label: "4" },
-                { value: "5", label: "5" },
-              ]}
-            />
-            <DetailRow
-              label="Client Segment"
-              value={clientDetails.clientSegment}
-              onUpdate={handleUpdateField("clientSegment")}
-              options={[
-                { value: "A", label: "A" },
-                { value: "B", label: "B" },
-                { value: "C", label: "C" },
-                { value: "D", label: "D" },
-                { value: "E", label: "E" },
-              ]}
-            />
-            <DetailRow
-              label="Client Name"
-              value={clientDetails.name}
-              onUpdate={handleUpdateField("name")}
-            />
-            <DetailRow
-              label="Client Phone Number"
-              value={clientDetails.phoneNumber}
-              onUpdate={handleUpdateField("phoneNumber")}
-            />
-            <DetailRow
-              label="Client Email(s)"
-              value={clientDetails.emails?.join(", ") || ""}
-              onUpdate={handleUpdateEmails}
-              alwaysShowEdit={true}
-            />
-            <div className="bg-white rounded-lg border shadow-sm p-2">
-              <div className="flex items-center justify-between mb-1">
-                <Label>Primary Contacts</Label>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsContactModalOpen(true)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add
-                </Button>
-              </div>
-              {clientDetails.primaryContacts?.length === 0 ? (
-                <div className="text-sm text-muted-foreground text-center py-4"></div>
-              ) : (
-                <div className="space-y-3">
-                  {clientDetails.primaryContacts?.map((contact, index) => (
-                    <div key={index} className="p-3 bg-muted/30 rounded-lg">
-                      <div key={index} className="p-3 rounded-md border space-y-1">
-                        <div className="text-sm text-muted-foreground">
-                          <span className="text-xs font-semibold text-gray-500 mr-1">Name:</span>
-                          {`${contact.firstName} ${contact.lastName}`.trim() || "Unnamed Contact"}
-                        </div>
-                        {contact.gender && (
-                          <div className="text-sm text-muted-foreground">
-                            <span className="text-xs font-semibold text-gray-500 mr-1">Gender:</span>
-                            {contact.gender}
-                          </div>
-                        )}
-                        {contact.position && (
-                          <div className="text-sm text-muted-foreground">
-                            <span className="text-xs font-semibold text-gray-500 mr-1">Position:</span>
-                            {contact.position}
-                          </div>
-                        )}
-                        {contact.email && (
-                          <div className="text-sm text-muted-foreground">
-                            <span className="text-xs font-semibold text-gray-500 mr-1">Email:</span>
-                            {contact.email}
-                          </div>
-                        )}
-                        {(contact.countryCode || contact.phone) && (
-                          <div className="text-sm text-muted-foreground">
-                            <span className="text-xs font-semibold text-gray-500 mr-1">Phone Number:</span>
-                            {contact.countryCode ? `${contact.countryCode} ` : ""}{contact.phone || "No phone"}
-                          </div>
-                        )}
-                        <div className="text-sm text-muted-foreground">
-                          <span className="text-xs font-semibold text-gray-500 mr-1">LinkedIn:</span>
-                          {contact.linkedin ? (
-                            <a
-                              href={contact.linkedin}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline"
-                            >
-                              {contact.linkedin}
-                            </a>
-                          ) : (
-                            "No LinkedIn"
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            <DetailRow
-              label="Client Industry"
-              value={clientDetails.industry}
-              onUpdate={handleUpdateField("industry")}
-            />
-            <DetailRow
-              label="Client Website"
-              value={clientDetails.website}
-              onUpdate={handleUpdateField("website")}
-            />
-            <DetailRow
-              label="Google Maps Link"
-              value={clientDetails.googleMapsLink}
-              onUpdate={handleUpdateField("googleMapsLink")}
-            />
-            <DetailRow
-              label="Client Location"
-              value={clientDetails.location}
-              onUpdate={handleUpdateField("location")}
-            />
-            <DetailRow
-              label="Client Address"
-              value={clientDetails.address}
-              onUpdate={handleUpdateField("address")}
-            />
-            {/* <DetailRow
-              label="Registration Number"
-              value={clientDetails.registrationNumber}
-              onUpdate={handleUpdateField("registrationNumber")}
-            /> */}
-            <DetailRow
-              label="Country of Business"
-              value={clientDetails.countryOfBusiness}
-              onUpdate={handleUpdateField("countryOfBusiness")}
-            />
-            <DetailRow
-              label="LinkedIn Profile"
-              value={clientDetails.linkedInProfile}
-              onUpdate={handleUpdateField("linkedInProfile")}
-              optional
-            />
-            {/* <DetailRow
-              label="Client LinkedIn Page"
-              value={clientDetails.clientLinkedInPage || clientDetails.linkedInPage}
-              onUpdate={handleUpdateField(clientDetails.linkedInPage ? "linkedInPage" : "clientLinkedInPage")}
-            /> */}
-            <FileUploadRow
-              id="vat-copy-upload"
-              label="VAT Copy"
-              className="border-b"
-              onFileSelect={handleFileUpload("vatCopy")}
-              docUrl={clientDetails.vatCopy}
-              currentFileName={typeof clientDetails.vatCopy === "string" ? clientDetails.vatCopy.split("/").pop() || "" : ""}
-              onPreview={() => handlePreviewFile(clientDetails.vatCopy || "")}
-              onDownload={() => handleDownloadFile(clientDetails.vatCopy || "")}
-            />
-            <FileUploadRow
-              id="cr-copy-upload"
-              label="CR Copy"
-              onFileSelect={handleFileUpload("crCopy")}
-              docUrl={clientDetails.crCopy}
-              currentFileName={typeof clientDetails.crCopy === "string" ? clientDetails.crCopy.split("/").pop() || "" : ""}
-              onPreview={() => handlePreviewFile(clientDetails.crCopy || "")}
-              onDownload={() => handleDownloadFile(clientDetails.crCopy || "")}
-            />
+        <Collapsible className="rounded-lg border shadow-sm">
+          <div className="flex items-center justify-between p-4">
+            <h4 className="text-sm font-semibold">Details</h4>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-xs p-1">
+                Show Complete Details
+                <ChevronsUpDown />
+              </Button>
+            </CollapsibleTrigger>
           </div>
-        </div>
+          <div className="px-4 pb-4">
+            <div className="space-y-3">
+              <DetailRow
+                label="Sales Lead (Internal)"
+                value={clientDetails.salesLead}
+                onUpdate={handleUpdateField("salesLead")}
+              />
+              <DetailRow
+                label="Referred By (External)"
+                value={clientDetails.referredBy}
+                onUpdate={handleUpdateField("referredBy")}
+              />
+
+              <DetailRow
+                label="Client Priority"
+                value={clientDetails.clientPriority}
+                onUpdate={handleUpdateField("clientPriority")}
+                options={[
+                  { value: "1", label: "1" },
+                  { value: "2", label: "2" },
+                  { value: "3", label: "3" },
+                  { value: "4", label: "4" },
+                  { value: "5", label: "5" },
+                ]}
+              />
+              <DetailRow
+                label="Client Segment"
+                value={clientDetails.clientSegment}
+                onUpdate={handleUpdateField("clientSegment")}
+                options={[
+                  { value: "A", label: "A" },
+                  { value: "B", label: "B" },
+                  { value: "C", label: "C" },
+                  { value: "D", label: "D" },
+                  { value: "E", label: "E" },
+                ]}
+              />
+              <DetailRow
+                label="Client Name"
+                value={clientDetails.name}
+                onUpdate={handleUpdateField("name")}
+              />
+              <DetailRow
+                label="Client Phone Number"
+                value={clientDetails.phoneNumber}
+                onUpdate={handleUpdateField("phoneNumber")}
+              />
+            </div>
+          </div>
+          <CollapsibleContent className="px-4 pb-4">
+            <div className="space-y-3">
+              <DetailRow
+                label="Client Email(s)"
+                value={clientDetails.emails?.join(", ") || ""}
+                onUpdate={handleUpdateEmails}
+                alwaysShowEdit={true}
+              />
+              <DetailRow
+                label="Client Industry"
+                value={clientDetails.industry}
+                onUpdate={handleUpdateField("industry")}
+              />
+              <DetailRow
+                label="Client Website"
+                value={clientDetails.website}
+                onUpdate={handleUpdateField("website")}
+              />
+              <DetailRow
+                label="Google Maps Link"
+                value={clientDetails.googleMapsLink}
+                onUpdate={handleUpdateField("googleMapsLink")}
+              />
+              <DetailRow
+                label="Client Location"
+                value={clientDetails.location}
+                onUpdate={handleUpdateField("location")}
+              />
+              <DetailRow
+                label="Client Address"
+                value={clientDetails.address}
+                onUpdate={handleUpdateField("address")}
+              />
+              <DetailRow
+                label="Country of Business"
+                value={clientDetails.countryOfBusiness}
+                onUpdate={handleUpdateField("countryOfBusiness")}
+              />
+              <DetailRow
+                label="LinkedIn Profile"
+                value={clientDetails.linkedInProfile}
+                onUpdate={handleUpdateField("linkedInProfile")}
+                optional
+              />
+              <FileUploadRow
+                id="vat-copy-upload"
+                label="VAT Copy"
+                className="border-b"
+                onFileSelect={handleFileUpload("vatCopy")}
+                docUrl={clientDetails?.vatCopy?.url}
+                currentFileName={clientDetails?.vatCopy?.fileName}
+                onPreview={() => handlePreviewFile(clientDetails?.vatCopy?.url || "")}
+                onDownload={() => handleDownloadFile(clientDetails?.vatCopy?.url || "")}
+              />
+              <FileUploadRow
+                id="cr-copy-upload"
+                label="CR Copy"
+                className="border-b"
+                onFileSelect={handleFileUpload("crCopy")}
+                docUrl={clientDetails?.crCopy?.url}
+                currentFileName={clientDetails?.crCopy?.fileName}
+                onPreview={() => handlePreviewFile(clientDetails?.crCopy?.url || "")}
+                onDownload={() => handleDownloadFile(clientDetails?.crCopy?.url || "")}
+              />
+              <FileUploadRow
+                id="gst-tin-document-upload"
+                label="GST IN Doc"
+                onFileSelect={handleFileUpload("gstTinDocument")}
+                docUrl={clientDetails?.gstTinDocument?.url}
+                currentFileName={clientDetails?.gstTinDocument?.fileName}
+                onPreview={() => handlePreviewFile(clientDetails?.gstTinDocument?.url || "")}
+                onDownload={() => handleDownloadFile(clientDetails?.gstTinDocument?.url || "")}
+              />
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
       <div className="space-y-6">
-        <ContractSection 
-          clientId={clientId} 
-          clientData={{
-          contractStartDate: clientDetails.contractStartDate,
-          contractEndDate: clientDetails.contractEndDate,
-          labelType: clientDetails.labelType
-          }} 
-        />
-        <SalesInfo />
-        
+        <Collapsible className="rounded-lg border shadow-sm">
+          <div className="flex items-center justify-between p-4">
+            <h4 className="text-sm font-semibold">Contract Overview</h4>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-xs p-1">
+                Show Complete Details
+                <ChevronsUpDown />
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="px-4 pb-4">
+            <ContractOverview
+              lineOfBusiness={clientData.lineOfBusiness}
+              onViewDetails={() => onTabSwitch?.("Contract")}
+            />
+          </CollapsibleContent>
+        </Collapsible>
+
+        <Collapsible className="rounded-lg border shadow-sm">
+          <div className="flex items-center justify-between p-4">
+            <h4 className="text-sm font-semibold">Company Related Information</h4>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-xs p-1">
+                Show Complete Details
+                <ChevronsUpDown />
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="px-4 pb-4">
+            <SalesInfo />
+          </CollapsibleContent>
+        </Collapsible>
+
         <div className="bg-white rounded-lg border shadow-sm p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold">Team</h2>
@@ -582,7 +477,12 @@ export function SummaryContent({ clientId }: SummaryContentProps) {
               {teamMembers.length} team member{teamMembers.length !== 1 ? "s" : ""}
             </div>
             {teamMembers.map((member, index) => (
-              <TeamMember key={index} name={member.name} role={member.role} isActive={member.isActive} />
+              <TeamMember
+                key={index}
+                name={member.name}
+                role={member.role}
+                isActive={member.isActive}
+              />
             ))}
           </div>
         </div>
@@ -590,11 +490,7 @@ export function SummaryContent({ clientId }: SummaryContentProps) {
         <div className="bg-white rounded-lg border shadow-sm p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold">Description</h2>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsDescriptionModalOpen(true)}
-            >
+            <Button variant="outline" size="sm" onClick={() => setIsDescriptionModalOpen(true)}>
               {clientDetails.description ? (
                 <>
                   <Pencil className="h-4 w-4 mr-2" />
@@ -612,14 +508,12 @@ export function SummaryContent({ clientId }: SummaryContentProps) {
             {clientDetails.description ? (
               <p className="text-sm whitespace-pre-wrap">{clientDetails.description}</p>
             ) : (
-              <div className="text-sm text-muted-foreground text-center py-4">No description added yet</div>
+              <div className="text-sm text-muted-foreground text-center py-4">
+                No description added yet
+              </div>
             )}
           </div>
         </div>
-        
-
-
-
       </div>
       <AddTeamMemberModal
         open={isTeamModalOpen}

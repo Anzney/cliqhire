@@ -50,6 +50,7 @@ export interface JobData {
   link?: string;
   keySkills?: string;
   numberOfPositions?: number;
+  jobDescriptionInternal?: string; // <-- Added for internal job description
 }
 
 export interface Job extends JobData {
@@ -58,6 +59,7 @@ export interface Job extends JobData {
   createdAt: string;
   updatedAt: string;
   isActive?: boolean;
+  jobDescriptionInternal?: string; // <-- Added for internal job description
 }
 
 export interface JobResponse {
@@ -83,7 +85,7 @@ export interface JobCountByClient {
   clientName?: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://aems-backend.onrender.com/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ;
 
 // Utility function to handle API errors consistently
 const handleApiError = (error: any, context: string) => {
@@ -130,7 +132,7 @@ const processJobData = (jobData: JobData | Partial<JobData>) => {
 const createJob = async (jobData: JobData): Promise<JobResponse> => {
   try {
     const processedData = processJobData(jobData);
-    const response = await axios.post<JobResponse>(`${API_URL}/jobs`, processedData);
+    const response = await axios.post<JobResponse>(`${API_URL}/api/jobs`, processedData);
     return response.data;
   } catch (error) {
     handleApiError(error, 'job creation');
@@ -160,7 +162,7 @@ const getJobs = async (
       ...(params?.jobType && { jobType: params.jobType.toLowerCase() }),
       ...(params?.gender && { gender: params.gender.toLowerCase() })
     };
-    const response = await axios.get<PaginatedJobResponse>(`${API_URL}/jobs`, {
+    const response = await axios.get<PaginatedJobResponse>(`${API_URL}/api/jobs`, {
       params: processedParams
     });
     return response.data;
@@ -172,7 +174,7 @@ const getJobs = async (
 
 const getJobById = async (id: string): Promise<JobResponse> => {
   try {
-    const response = await axios.get<JobResponse>(`${API_URL}/jobs/${id}`);
+    const response = await axios.get<JobResponse>(`${API_URL}/api/jobs/${id}`);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -186,7 +188,7 @@ const getJobById = async (id: string): Promise<JobResponse> => {
 const updateJobById = async (id: string, jobData: Partial<JobData>): Promise<JobResponse> => {
   try {
     const processedData = processJobData(jobData);
-    const response = await axios.put<JobResponse>(`${API_URL}/jobs/${id}`, processedData);
+    const response = await axios.put<JobResponse>(`${API_URL}/api/jobs/${id}`, processedData);
     return response.data;
   } catch (error) {
     handleApiError(error, 'job update');
@@ -196,7 +198,7 @@ const updateJobById = async (id: string, jobData: Partial<JobData>): Promise<Job
 
 const deleteJobById = async (id: string): Promise<JobResponse> => {
   try {
-    const response = await axios.delete<JobResponse>(`${API_URL}/jobs/${id}`);
+    const response = await axios.delete<JobResponse>(`${API_URL}/api/jobs/${id}`);
     return response.data;
   } catch (error) {
     handleApiError(error, 'job deletion');
@@ -208,7 +210,7 @@ const deleteJobById = async (id: string): Promise<JobResponse> => {
 const getJobCountsByClient = async (): Promise<JobCountByClient[]> => {
   try {
     const response = await axios.get<{ success: boolean, data: JobCountByClient[] }>(
-      `${API_URL}/jobs/clients/count`
+      `${API_URL}/api/jobs/clients/count`
     );
     return response.data.data;
   } catch (error) {
@@ -216,6 +218,39 @@ const getJobCountsByClient = async (): Promise<JobCountByClient[]> => {
     throw error;
   }
 };
+
+// Job Notes API
+export async function createJobNote(note: { content: string; jobId: string }) {
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+  // Backend expects job_id, not jobId
+  const res = await axios.post(`${API_BASE}/api/jobnotes`, { content: note.content, job_id: note.jobId });
+  return res.data.data;
+}
+
+export async function getAllJobNotes() {
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+  const res = await axios.get(`${API_BASE}/api/jobnotes`);
+  return res.data.data;
+}
+
+export async function getJobNotesByJobId(jobId: string) {
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+  const res = await axios.get(`${API_BASE}/api/jobnotes/job/${jobId}`);
+  return res.data.data;
+}
+
+export async function updateJobNote(id: string, content: string, jobId: string) {
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+  // Backend expects job_id, not jobId
+  const res = await axios.patch(`${API_BASE}/api/jobnotes/${id}`, { content, job_id: jobId });
+  return res.data.data;
+}
+
+export async function deleteJobNote(id: string) {
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+  const res = await axios.delete(`${API_BASE}/api/jobnotes/${id}`);
+  return res.data.data;
+}
 
 export {
   createJob,

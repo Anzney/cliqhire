@@ -24,6 +24,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { JobStageBadge } from "./job-stage-badge"
 import { useEffect, useState } from "react"
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ;
+
 interface JobsTableProps {
   jobs: Job[]
   clientId?: string
@@ -71,7 +73,7 @@ export function JobsTable({ jobs, clientId, clientName }: JobsTableProps) {
       try {
         setIsLoading(true);
   
-        const response = await fetch(`https://aems-backend.onrender.com/api/jobs/${jobId}`, {
+        const response = await fetch(`${API_URL}/api/jobs/${jobId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ stage: newStage }),

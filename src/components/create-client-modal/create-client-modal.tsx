@@ -15,21 +15,19 @@ import { ContactDetailsTab } from "./ContactDetailsTab";
 import { ContractInformationTab } from "./ContractInformationTab";
 import { DocumentsTab } from "@/components/create-client-modal/DocumentsTab";
 import { ContactModal } from "@/components/create-client-modal/ContactModal";
-import {
-  PrimaryContact,
-  LocationSuggestion,
-} from "@/components/create-client-modal/type";;
+import { PrimaryContact, LocationSuggestion } from "@/components/create-client-modal/type";
 import axios from "axios";
 import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
-import { 
-  clientContactInfoInitialstate, 
-  clientGeneralInfoInitialState, 
-  clientSubStages, 
-  primaryContactInitialState 
+import {
+  clientContactInfoInitialstate,
+  clientGeneralInfoInitialState,
+  clientSubStages,
+  primaryContactInitialState,
 } from "./constants";
 import { ClientContractInfo, ClientContactInfo, ClientGeneralInfo } from "./type";
 import { createClient } from "./api";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export function CreateClientModal({
   open,
@@ -40,15 +38,19 @@ export function CreateClientModal({
 }) {
   const router = useRouter();
 
-  const [clientGeneralInfo, setClientGeneralInfo] = useState<ClientGeneralInfo>(clientGeneralInfoInitialState)
+  const [clientGeneralInfo, setClientGeneralInfo] = useState<ClientGeneralInfo>(
+    clientGeneralInfoInitialState,
+  );
 
-  const [clientContactInfo, setClientContactInfo] = useState<ClientContactInfo>(clientContactInfoInitialstate)
+  const [clientContactInfo, setClientContactInfo] = useState<ClientContactInfo>(
+    clientContactInfoInitialstate,
+  );
 
   const [clientContractInfo, setClientContractInfo] = useState<ClientContractInfo>({
     lineOfBusiness: [],
     contractForms: {},
-  })
-  
+  });
+
   const [primaryContact, setPrimaryContact] = useState<PrimaryContact>(primaryContactInitialState);
 
   const [loading, setLoading] = useState(false);
@@ -185,7 +187,7 @@ export function CreateClientModal({
 
     setClientContactInfo((prev) => ({
       ...prev,
-       primaryContacts: [
+      primaryContacts: [
         ...prev.primaryContacts,
         { ...contact, name: `${contact.firstName} ${contact.lastName}`.trim() },
       ],
@@ -210,9 +212,9 @@ export function CreateClientModal({
     setLoading(true);
     const formData = new FormData();
     // Client General Info
-    if(clientSubStages.includes(clientGeneralInfo.clientSubStage!)){
+    if (clientSubStages.includes(clientGeneralInfo.clientSubStage!)) {
       formData.append("clientStage", "Engaged");
-      formData.append("clientSubStage", clientGeneralInfo.clientSubStage!); 
+      formData.append("clientSubStage", clientGeneralInfo.clientSubStage!);
     } else {
       formData.append("clientStage", clientGeneralInfo.clientStage ?? "");
       formData.append("clientSubStage", "");
@@ -231,7 +233,6 @@ export function CreateClientModal({
     formData.append("address", clientContactInfo.address.trim() || "");
     formData.append("countryOfBusiness", clientContactInfo.countryOfBusiness.trim() || "");
     formData.append("linkedInProfile", clientContactInfo.linkedInProfile.trim() || "");
-    formData.append("location", clientContactInfo.location.trim() || "");
     formData.append("googleMapsLink", clientContactInfo.googleMapsLink.trim() || "");
     formData.append("primaryContacts", JSON.stringify(clientContactInfo.primaryContacts));
 
@@ -240,12 +241,12 @@ export function CreateClientModal({
 
     Object.entries(clientContractInfo.contractForms).forEach(([key, value]) => {
       // console.log(key, value);
-      if(key === "HR Consulting") {
+      if (key === "HR Consulting") {
         const { technicalProposalDocument, financialProposalDocument, ...rest } = value as any;
         formData.append("consultingContractHRC", JSON.stringify(rest));
         formData.append("techProposalDocHRC", technicalProposalDocument ?? "");
         formData.append("finProposalDocHRC", financialProposalDocument ?? "");
-      } else if(key === "Mgt Consulting") {
+      } else if (key === "Mgt Consulting") {
         const { technicalProposalDocument, financialProposalDocument, ...rest } = value as any;
         formData.append("consultingContractMGTC", JSON.stringify(rest));
         formData.append("techProposalDocMGTC", technicalProposalDocument ?? "");
@@ -256,7 +257,7 @@ export function CreateClientModal({
         formData.append("contractDocumentRQT", contractDocument ?? "");
       } else if (key === "HR Managed Services") {
         const { contractDocument, ...rest } = value as any;
-        formData.append("businessContractDetailsHMS", JSON.stringify(rest));
+        formData.append("businessContractHMS", JSON.stringify(rest));
         formData.append("contractDocumentHMS", contractDocument ?? "");
       } else if (key === "IT & Technology") {
         const { contractDocument, ...rest } = value as any;
@@ -267,8 +268,8 @@ export function CreateClientModal({
         formData.append("outsourcingContract", JSON.stringify(rest));
         formData.append("contractDocumentOutsourcing", contractDocument ?? "");
       }
-    })
-    
+    });
+
     // Documents
     formData.append("profileImage", uploadedFiles.profileImage ?? "");
     formData.append("crCopy", uploadedFiles.crCopy ?? "");
@@ -277,7 +278,7 @@ export function CreateClientModal({
 
     try {
       const result = await createClient(formData);
-      if (result && result.success && result.data && result.data.data && result.data.data._id) {
+      if (result.data.data._id) {
         router.push(`/clients/${result.data.data._id}`);
         return;
       }
@@ -289,11 +290,14 @@ export function CreateClientModal({
       });
       setPrimaryContact(primaryContactInitialState);
       setLoading(false);
+      toast.success("Client created successfully");
     } catch (error) {
-      console.error("Error creating client:", error);
+      setLoading(false);
+      setErrors({ general: "Error creating client" });
+      toast.error("Error creating client");
     }
-  }
-  
+  };
+
   const handleNext = () => {
     const newTab = Math.min(currentTab + 1, 3);
     setCurrentTab(newTab);
@@ -390,17 +394,15 @@ export function CreateClientModal({
                     </div>
                     <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                       {currentTab < 3 ? (
-                        
-                          <Button
-                            type="button"
-                            onClick={handleNext}
-                            disabled={loading}
-                            className="w-full sm:w-auto"
-                          >
-                            Next
-                            <ArrowRightIcon className="size-5" />
-                          </Button>
-                        
+                        <Button
+                          type="button"
+                          onClick={handleNext}
+                          disabled={loading}
+                          className="w-full sm:w-auto"
+                        >
+                          Next
+                          <ArrowRightIcon className="size-5" />
+                        </Button>
                       ) : (
                         <>
                           <Button
