@@ -132,10 +132,10 @@ export default function CandidatesPage() {
               ) : (
                 candidates.map((candidate, idx) => (
                   <TableRow
-                    key={candidate.email + idx}
+                    key={candidate._id}
                     className="cursor-pointer hover:bg-gray-100"
                     onClick={() =>
-                      router.push(`/candidates/${encodeURIComponent(candidate.email)}`)
+                      router.push(`/candidates/${candidate._id}`)
                     }
                   >
                     <TableCell className="text-sm font-medium">{candidate.name}</TableCell>
