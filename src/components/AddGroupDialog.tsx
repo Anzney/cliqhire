@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState , useEffect} from "react";
 import {
   Dialog,
   DialogTrigger,
@@ -15,17 +15,32 @@ import { Input } from "@/components/ui/input";
 interface AddGroupDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onAddGroup?: (groupName: string) => void;
+  initialGroupName?: string;
+  submitButtonLabel?: string;
+  onSubmit?: (groupName: string) => void;
 }
 
-export const AddGroupDialog: React.FC<AddGroupDialogProps> = ({ open, onOpenChange }) => {
-  const [groupName, setGroupName] = useState("");
+export const AddGroupDialog: React.FC<AddGroupDialogProps> = ({ open, onOpenChange, onAddGroup, initialGroupName = "", submitButtonLabel = "Add", onSubmit }) => {
+  const [groupName, setGroupName] = useState(initialGroupName);
+
+  useEffect(() => {
+    setGroupName(initialGroupName);
+  }, [initialGroupName, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // handle group creation logic here
+    if (groupName.trim()) {
+      if (typeof onSubmit === 'function') {
+        onSubmit(groupName.trim());
+      } else if (typeof onAddGroup === 'function') {
+        onAddGroup(groupName.trim());
+      }
+    }
     onOpenChange(false);
     setGroupName("");
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -47,7 +62,7 @@ export const AddGroupDialog: React.FC<AddGroupDialogProps> = ({ open, onOpenChan
             <DialogClose asChild>
               <Button type="button" variant="outline">Cancel</Button>
             </DialogClose>
-            <Button type="submit">Add</Button>
+            <Button type="submit">{submitButtonLabel}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

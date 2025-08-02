@@ -17,18 +17,18 @@ const ClientCandidateTabs = dynamic(() => import('./ClientCandidateTabs'), { ssr
 
 export default async function CandidatePage({ params }: { params: { id: string } }) {
   const { id } = params;
-  const res = await fetch(`/api/candidates/${id}`);
-  const candidate = await res.json();
+  // const res = await fetch(`/api/candidates/${id}`);
+  // const candidate = await res.json();
 
-  if (!candidate) {
-    return (
-      <div className="min-h-[300px] font-sans w-full flex items-center justify-center">
-        <div className="text-gray-500 text-lg">Candidate not found.</div>
-      </div>
-    );
-  }
+  // if (!candidate) {
+  //   return (
+  //     <div className="min-h-[300px] font-sans w-full flex items-center justify-center">
+  //       <div className="text-gray-500 text-lg">Candidate not found.</div>
+  //     </div>
+  //   );
+  // }
 
   return (
-    <ClientCandidateTabs candidate={candidate} tabs={TABS} />
+    <ClientCandidateTabs candidate={{}} tabs={TABS} />
   );
 }

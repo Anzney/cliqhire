@@ -4,7 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Group } from "lucide-react";
 import { AddGroupDialog } from "@/components/AddGroupDialog";
 
-export const EmptyState = () => {
+interface EmptyStateProps {
+  onAddGroup: (groupName: string) => void;
+}
+
+export const EmptyState: React.FC<EmptyStateProps> = ({ onAddGroup }) => {
   const [open, setOpen] = useState(false);
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
@@ -13,7 +17,7 @@ export const EmptyState = () => {
         <Group className="mr-2 h-4 w-4" />
         Add Group
       </Button>
-      <AddGroupDialog open={open} onOpenChange={setOpen} />
+      <AddGroupDialog open={open} onOpenChange={setOpen} onAddGroup={onAddGroup} />
     </div>
   );
 };
