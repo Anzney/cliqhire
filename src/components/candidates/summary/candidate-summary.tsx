@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, ChevronsUpDown } from "lucide-react";
 import { EditFieldModal } from "./edit-field-modal";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const detailsFields = [
   { key: "name", label: "Candidate Name" },
@@ -20,6 +21,10 @@ const detailsFields = [
   { key: "nationality", label: "Nationality" },
   { key: "universityName", label: "University Name" },
 ];
+
+// Split details fields into default visible and collapsible sections
+const defaultDetailsFields = detailsFields.slice(0, 7); // Up to "Referred By"
+const collapsibleDetailsFields = detailsFields.slice(7); // From "Gender" onwards
 
 const contactFields = [
   { key: "phone", label: "Phone Number" },
@@ -138,32 +143,88 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
   };
 
   return (
-    <div className="flex gap-6">
-      {/* Details Section */}
-      <div className="bg-white rounded-xl shadow p-6 flex-1">
-        <div className="font-medium text-lg mb-4">Details</div>
-        {detailsFields.map((field) => renderField(field, detailsFields))}
+    <div className="grid grid-cols-2 gap-6 p-4">
+      <div className="space-y-6">
+        {/* Details Section */}
+        <Collapsible className="rounded-lg border shadow-sm">
+          <div className="flex items-center justify-between p-4">
+            <h4 className="text-sm font-semibold">Details</h4>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-xs p-1">
+                Show Complete Details
+                <ChevronsUpDown />
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          {/* Default visible fields */}
+          <div className="px-4 pb-4">
+            <div className="space-y-3">
+              {defaultDetailsFields.map((field) => renderField(field, defaultDetailsFields))}
+            </div>
+          </div>
+          {/* Collapsible additional fields */}
+          <CollapsibleContent className="px-4 pb-4">
+            <div className="space-y-3">
+              {collapsibleDetailsFields.map((field) => renderField(field, collapsibleDetailsFields))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
       
-      {/* Right Column - Contact Info, Previous Company Info, and Skill */}
-      <div className="flex flex-col gap-6 flex-1">
+      <div className="space-y-6">
         {/* Contact Info Section */}
-        <div className="bg-white rounded-xl shadow p-6 h-fit">
-          <div className="font-medium text-lg mb-4">Contact Info</div>
-          {contactFields.map((field) => renderField(field, contactFields))}
-        </div>
+        <Collapsible className="rounded-lg border shadow-sm">
+          <div className="flex items-center justify-between p-4">
+            <h4 className="text-sm font-semibold">Contact Info</h4>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-xs p-1">
+                Show Complete Details
+                <ChevronsUpDown />
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="px-4 pb-4">
+            <div className="space-y-3">
+              {contactFields.map((field) => renderField(field, contactFields))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
         
         {/* Previous Company Info Section */}
-        <div className="bg-white rounded-xl shadow p-6 h-fit">
-          <div className="font-medium text-lg mb-4">Previous Company Info</div>
-          {previousCompanyFields.map((field) => renderField(field, previousCompanyFields))}
-        </div>
+        <Collapsible className="rounded-lg border shadow-sm">
+          <div className="flex items-center justify-between p-4">
+            <h4 className="text-sm font-semibold">Previous Company Info</h4>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-xs p-1">
+                Show Complete Details
+                <ChevronsUpDown />
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="px-4 pb-4">
+            <div className="space-y-3">
+              {previousCompanyFields.map((field) => renderField(field, previousCompanyFields))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
         
         {/* Skill Section */}
-        <div className="bg-white rounded-xl shadow p-6 h-fit">
-          <div className="font-medium text-lg mb-4">Skill</div>
-          {skillFields.map((field) => renderSkillField(field))}
-        </div>
+        <Collapsible className="rounded-lg border shadow-sm">
+          <div className="flex items-center justify-between p-4">
+            <h4 className="text-sm font-semibold">Skill</h4>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-xs p-1">
+                Show Complete Details
+                <ChevronsUpDown />
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="px-4 pb-4">
+            <div className="space-y-3">
+              {skillFields.map((field) => renderSkillField(field))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
     </div>
   );
