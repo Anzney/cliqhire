@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Pencil } from "lucide-react";
 import { EditFieldModal } from "./edit-field-modal";
 import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 
 const detailsFields = [
   { key: "name", label: "Candidate Name" },
@@ -36,6 +37,11 @@ const previousCompanyFields = [
   { key: "noticePeriod", label: "Notice Period" },
 ];
 
+const skillFields = [
+  { key: "softSkill", label: "Soft Skill" },
+  { key: "technicalSkill", label: "Technical Skill" },
+];
+
 interface CandidateSummaryProps {
   candidate: any;
   onCandidateUpdate?: (updatedCandidate: any) => void;
@@ -56,7 +62,7 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
     }
     
     // Show success toast message
-    const allFields = [...detailsFields, ...contactFields, ...previousCompanyFields];
+    const allFields = [...detailsFields, ...contactFields, ...previousCompanyFields, ...skillFields];
     const fieldLabel = allFields.find(field => field.key === fieldKey)?.label || fieldKey;
     toast.success(`${fieldLabel} updated successfully`);
   };
@@ -95,6 +101,42 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
     );
   };
 
+  const renderSkillField = (field: any) => {
+    const rawValue = localCandidate?.[field.key];
+    const hasValue = rawValue !== undefined && rawValue !== null && rawValue !== '';
+    
+    return (
+      <div key={field.key} className="mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-muted-foreground">
+            {field.label}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 flex items-center"
+            onClick={() => setEditField(field.key)}
+          >
+            <Pencil className="h-4 w-4 mr-2" />Edit
+          </Button>
+        </div>
+        <Textarea
+          value={hasValue ? rawValue : ''}
+          placeholder="No Details"
+          className="min-h-[80px] resize-none"
+          readOnly
+        />
+        <EditFieldModal
+          open={editField === field.key}
+          onClose={() => setEditField(null)}
+          fieldName={field.label}
+          currentValue={typeof rawValue === 'string' ? rawValue : ''}
+          onSave={(val: string) => handleSave(field.key, val)}
+        />
+      </div>
+    );
+  };
+
   return (
     <div className="flex gap-6">
       {/* Details Section */}
@@ -103,7 +145,7 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
         {detailsFields.map((field) => renderField(field, detailsFields))}
       </div>
       
-      {/* Right Column - Contact Info and Previous Company Info */}
+      {/* Right Column - Contact Info, Previous Company Info, and Skill */}
       <div className="flex flex-col gap-6 flex-1">
         {/* Contact Info Section */}
         <div className="bg-white rounded-xl shadow p-6 h-fit">
@@ -115,6 +157,12 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
         <div className="bg-white rounded-xl shadow p-6 h-fit">
           <div className="font-medium text-lg mb-4">Previous Company Info</div>
           {previousCompanyFields.map((field) => renderField(field, previousCompanyFields))}
+        </div>
+        
+        {/* Skill Section */}
+        <div className="bg-white rounded-xl shadow p-6 h-fit">
+          <div className="font-medium text-lg mb-4">Skill</div>
+          {skillFields.map((field) => renderSkillField(field))}
         </div>
       </div>
     </div>
