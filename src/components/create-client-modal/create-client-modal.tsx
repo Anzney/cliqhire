@@ -28,6 +28,10 @@ import { ClientContractInfo, ClientContactInfo, ClientGeneralInfo } from "./type
 import { createClient } from "./api";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createClientFormSchema, CreateClientFormData } from "./schema";
+import { Form } from "@/components/ui/form";
 
 export function CreateClientModal({
   open,
@@ -38,56 +42,45 @@ export function CreateClientModal({
 }) {
   const router = useRouter();
 
-  const [clientGeneralInfo, setClientGeneralInfo] = useState<ClientGeneralInfo>(
-    clientGeneralInfoInitialState,
-  );
-
-  const [clientContactInfo, setClientContactInfo] = useState<ClientContactInfo>(
-    clientContactInfoInitialstate,
-  );
-
-  const [clientContractInfo, setClientContractInfo] = useState<ClientContractInfo>({
-    lineOfBusiness: [],
-    contractForms: {},
+  const form = useForm<CreateClientFormData>({
+    resolver: zodResolver(createClientFormSchema),
+    defaultValues: {
+      clientGeneralInfo: clientGeneralInfoInitialState,
+      clientContactInfo: clientContactInfoInitialstate,
+      clientContractInfo: {
+        lineOfBusiness: [],
+        contractForms: {},
+      },
+      uploadedFiles: {
+        profileImage: null,
+        crCopy: null,
+        vatCopy: null,
+        gstTinDocument: null,
+      },
+    },
   });
 
-  const [primaryContact, setPrimaryContact] = useState<PrimaryContact>(primaryContactInitialState);
-
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{
-    general?: string;
-    name?: string;
-    phoneNumber?: string;
-    address?: string;
-    primaryContacts?: string;
-    website?: string;
-    linkedInProfile?: string;
-    googleMapsLink?: string;
-    primaryContactEmails?: string;
-  }>({});
   const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
   const [currentTab, setCurrentTab] = useState(0);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [primaryContact, setPrimaryContact] = useState<PrimaryContact>(primaryContactInitialState);
 
-  const [uploadedFiles, setUploadedFiles] = useState<{ [key: string]: File | null }>({
-    profileImage: null,
-    crCopy: null,
-    vatCopy: null,
-    gstTinDocument: null,
-  });
+  // Watch form values for location suggestions
+  const watchedContactInfo = form.watch("clientContactInfo");
 
   // Location suggestions
   useEffect(() => {
     const fetchLocationSuggestions = async () => {
-      if (!clientContactInfo.location || clientContactInfo.location.length < 3) {
+      if (!watchedContactInfo.location || watchedContactInfo.location.length < 3) {
         setLocationSuggestions([]);
         return;
       }
       try {
         const response = await axios.get(
           `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-            clientContactInfo.location,
+            watchedContactInfo.location,
           )}`,
         );
         setLocationSuggestions(response.data);
@@ -98,7 +91,7 @@ export function CreateClientModal({
     };
     const debounceTimer = setTimeout(fetchLocationSuggestions, 300);
     return () => clearTimeout(debounceTimer);
-  }, [clientContactInfo.location]);
+  }, [watchedContactInfo.location]);
 
   // URL validation
   const validateUrl = (url: string): boolean => {
@@ -112,32 +105,27 @@ export function CreateClientModal({
   };
 
   const handleFileChange =
-    (field: keyof typeof uploadedFiles) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    (field: keyof CreateClientFormData["uploadedFiles"]) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files[0]) {
         const file = e.target.files[0];
         const maxSize = 5 * 1024 * 1024; // 5MB
         if (file.size > maxSize) {
-          setErrors({ general: `File ${file.name} is too large. Maximum size is 5MB.` });
+          toast.error(`File ${file.name} is too large. Maximum size is 5MB.`);
           return;
         }
         const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "application/pdf"];
         if (!allowedTypes.includes(file.type)) {
-          setErrors({
-            general: `Invalid file type for ${file.name}. Allowed types are: JPEG, PNG, PDF`,
-          });
+          toast.error(`Invalid file type for ${file.name}. Allowed types are: JPEG, PNG, PDF`);
           return;
         }
-        setUploadedFiles((prev) => ({
-          ...prev,
-          [field]: file,
-        }));
-        setErrors({});
+        form.setValue(`uploadedFiles.${field}`, file);
       }
     };
 
   const handlePreview = (file: File | string | null) => {
     if (!file) {
-      setErrors({ general: "No file uploaded to preview." });
+      toast.error("No file uploaded to preview.");
       return;
     }
 
@@ -148,13 +136,13 @@ export function CreateClientModal({
       const fileUrl = URL.createObjectURL(file);
       window.open(fileUrl, "_blank");
     } else {
-      setErrors({ general: "Unsupported file type for preview." });
+      toast.error("Unsupported file type for preview.");
     }
   };
 
   const handleDownload = (file: File | null) => {
     if (!file) {
-      setErrors({ general: "No file uploaded to download." });
+      toast.error("No file uploaded to download.");
       return;
     }
     const fileUrl = URL.createObjectURL(file);
@@ -169,29 +157,25 @@ export function CreateClientModal({
 
   const handleAddContact = (contact: PrimaryContact) => {
     if (!contact.firstName || contact.firstName.trim() === "") {
-      setErrors({ general: "Contact first name is required" });
+      toast.error("Contact first name is required");
       return;
     }
     if (contact.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email)) {
-      setErrors({ general: `Invalid contact email: ${contact.email}` });
+      toast.error(`Invalid contact email: ${contact.email}`);
       return;
     }
     if (!contact.phone) {
-      setErrors({ general: "Contact phone number is required" });
+      toast.error("Contact phone number is required");
       return;
     }
     if (contact.linkedin && !validateUrl(contact.linkedin)) {
-      setErrors({ general: "Invalid LinkedIn URL" });
+      toast.error("Invalid LinkedIn URL");
       return;
     }
 
-    setClientContactInfo((prev) => ({
-      ...prev,
-      primaryContacts: [
-        ...prev.primaryContacts,
-        { ...contact, name: `${contact.firstName} ${contact.lastName}`.trim() },
-      ],
-    }));
+    const currentContacts = form.getValues("clientContactInfo.primaryContacts");
+    form.setValue("clientContactInfo.primaryContacts", [...currentContacts, contact]);
+
     setPrimaryContact({
       firstName: "",
       lastName: "",
@@ -204,103 +188,203 @@ export function CreateClientModal({
       isPrimary: true,
     });
     setIsContactModalOpen(false);
-    setErrors({});
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
-    const formData = new FormData();
-    // Client General Info
-    if (clientSubStages.includes(clientGeneralInfo.clientSubStage!)) {
-      formData.append("clientStage", "Engaged");
-      formData.append("clientSubStage", clientGeneralInfo.clientSubStage!);
-    } else {
-      formData.append("clientStage", clientGeneralInfo.clientStage ?? "");
-      formData.append("clientSubStage", "");
+  const validateCurrentTab = async (): Promise<boolean> => {
+    const formData = form.getValues();
+
+    try {
+      switch (currentTab) {
+        case 0: // Client General Info
+          await createClientFormSchema.shape.clientGeneralInfo.parseAsync(
+            formData.clientGeneralInfo,
+          );
+          break;
+        case 1: // Client Contact Info
+          await createClientFormSchema.shape.clientContactInfo.parseAsync(
+            formData.clientContactInfo,
+          );
+          break;
+        case 2: // Contract Information
+          await createClientFormSchema.shape.clientContractInfo.parseAsync(
+            formData.clientContractInfo,
+          );
+          // Additional validation for contract forms
+          const selectedBusinesses = formData.clientContractInfo.lineOfBusiness;
+          const filledForms = Object.keys(formData.clientContractInfo.contractForms);
+          const missingForms = selectedBusinesses.filter(
+            (business) => !filledForms.includes(business),
+          );
+
+          if (missingForms.length > 0) {
+            toast.error(`Please fill contract forms for: ${missingForms.join(", ")}`);
+            return false;
+          }
+          break;
+        case 3: // Documents (optional)
+          break;
+      }
+      return true;
+    } catch (error: any) {
+      if (error.errors) {
+        const errorMessage = error.errors[0]?.message || "Please fill all required fields";
+        toast.error(errorMessage);
+      }
+      return false;
     }
-    formData.append("salesLead", clientGeneralInfo.salesLead ?? "");
-    formData.append("referredBy", clientGeneralInfo.referredBy ?? "");
-    formData.append("clientPriority", clientGeneralInfo.clientPriority?.toString() ?? "");
-    formData.append("clientSegment", clientGeneralInfo.clientSegment ?? "");
-    formData.append("clientSource", clientGeneralInfo.clientSource ?? "");
-    formData.append("industry", clientGeneralInfo.industry ?? "");
+  };
+
+  const handleSubmit = async (formData: CreateClientFormData) => {
+    setLoading(true);
+    const submissionFormData = new FormData();
+
+    // Client General Info
+    const { clientGeneralInfo } = formData;
+    if (clientSubStages.includes(clientGeneralInfo.clientSubStage!)) {
+      submissionFormData.append("clientStage", "Engaged");
+      submissionFormData.append("clientSubStage", clientGeneralInfo.clientSubStage!);
+    } else {
+      submissionFormData.append("clientStage", clientGeneralInfo.clientStage ?? "");
+      submissionFormData.append("clientSubStage", "");
+    }
+    submissionFormData.append("salesLead", clientGeneralInfo.salesLead ?? "");
+    submissionFormData.append("referredBy", clientGeneralInfo.referredBy ?? "");
+    submissionFormData.append("clientPriority", clientGeneralInfo.clientPriority?.toString() ?? "");
+    submissionFormData.append("clientSegment", clientGeneralInfo.clientSegment ?? "");
+    submissionFormData.append("clientSource", clientGeneralInfo.clientSource ?? "");
+    submissionFormData.append("industry", clientGeneralInfo.industry ?? "");
+
     // Client Contact Info
-    formData.append("name", clientContactInfo.name.trim() || "");
-    formData.append("emails", JSON.stringify(clientContactInfo.emails));
-    formData.append("website", clientContactInfo.website.trim() || "");
-    formData.append("phoneNumber", clientContactInfo.phoneNumber.trim() || "");
-    formData.append("address", clientContactInfo.address.trim() || "");
-    formData.append("countryOfBusiness", clientContactInfo.countryOfBusiness.trim() || "");
-    formData.append("linkedInProfile", clientContactInfo.linkedInProfile.trim() || "");
-    formData.append("googleMapsLink", clientContactInfo.googleMapsLink.trim() || "");
-    formData.append("primaryContacts", JSON.stringify(clientContactInfo.primaryContacts));
+    const { clientContactInfo } = formData;
+    submissionFormData.append("name", clientContactInfo.name.trim() || "");
+    submissionFormData.append("emails", JSON.stringify(clientContactInfo.emails));
+    submissionFormData.append("website", clientContactInfo.website.trim() || "");
+    submissionFormData.append("phoneNumber", clientContactInfo.phoneNumber.trim() || "");
+    submissionFormData.append("address", clientContactInfo.address.trim() || "");
+    submissionFormData.append(
+      "countryOfBusiness",
+      clientContactInfo.countryOfBusiness?.trim() || "",
+    );
+    submissionFormData.append("linkedInProfile", clientContactInfo.linkedInProfile.trim() || "");
+    submissionFormData.append("googleMapsLink", clientContactInfo.googleMapsLink.trim() || "");
+    submissionFormData.append("primaryContacts", JSON.stringify(clientContactInfo.primaryContacts));
 
     // Client Contract Info
-    formData.append("lineOfBusiness", JSON.stringify(clientContractInfo.lineOfBusiness) || "");
+    const { clientContractInfo } = formData;
+    submissionFormData.append(
+      "lineOfBusiness",
+      JSON.stringify(clientContractInfo.lineOfBusiness) || "",
+    );
+
+    // Group all contracts under a single 'contracts' object
+    const contracts: Record<string, any> = {};
 
     Object.entries(clientContractInfo.contractForms).forEach(([key, value]) => {
-      // console.log(key, value);
+      const formData = value as any;
+
       if (key === "HR Consulting") {
-        const { technicalProposalDocument, financialProposalDocument, ...rest } = value as any;
-        formData.append("consultingContractHRC", JSON.stringify(rest));
-        formData.append("techProposalDocHRC", technicalProposalDocument ?? "");
-        formData.append("finProposalDocHRC", financialProposalDocument ?? "");
+        const { technicalProposalDocument, financialProposalDocument, ...rest } = formData;
+        contracts.consultingContractHRC = rest;
       } else if (key === "Mgt Consulting") {
-        const { technicalProposalDocument, financialProposalDocument, ...rest } = value as any;
-        formData.append("consultingContractMGTC", JSON.stringify(rest));
-        formData.append("techProposalDocMGTC", technicalProposalDocument ?? "");
-        formData.append("finProposalDocMGTC", financialProposalDocument ?? "");
+        const { technicalProposalDocument, financialProposalDocument, ...rest } = formData;
+        contracts.consultingContractMGTC = rest;
       } else if (key === "Recruitment") {
-        const { contractDocument, ...rest } = value as any;
-        formData.append("businessContractRQT", JSON.stringify(rest));
-        formData.append("contractDocumentRQT", contractDocument ?? "");
+        const { contractDocument, ...rest } = formData;
+        contracts.businessContractRQT = rest;
       } else if (key === "HR Managed Services") {
-        const { contractDocument, ...rest } = value as any;
-        formData.append("businessContractHMS", JSON.stringify(rest));
-        formData.append("contractDocumentHMS", contractDocument ?? "");
+        const { contractDocument, ...rest } = formData;
+        contracts.businessContractHMS = rest;
       } else if (key === "IT & Technology") {
-        const { contractDocument, ...rest } = value as any;
-        formData.append("businessContractIT", JSON.stringify(rest));
-        formData.append("contractDocumentIT", contractDocument ?? "");
+        const { contractDocument, ...rest } = formData;
+        contracts.businessContractIT = rest;
       } else if (key === "Outsourcing") {
-        const { contractDocument, ...rest } = value as any;
-        formData.append("outsourcingContract", JSON.stringify(rest));
-        formData.append("contractDocumentOutsourcing", contractDocument ?? "");
+        const { contractDocument, ...rest } = formData;
+        contracts.outsourcingContract = rest;
       }
     });
 
-    // Documents
-    formData.append("profileImage", uploadedFiles.profileImage ?? "");
-    formData.append("crCopy", uploadedFiles.crCopy ?? "");
-    formData.append("vatCopy", uploadedFiles.vatCopy ?? "");
-    formData.append("gstTinDocument", uploadedFiles.gstTinDocument ?? "");
+    // Send all contracts as a single JSON object (without documents)
+    submissionFormData.append("contracts", JSON.stringify(contracts));
+
+    // Now take all the documents from the contracts
+    Object.entries(clientContractInfo.contractForms).forEach(([key, value]) => {
+      const formData = value as any;
+      if(key === "HR Consulting"){
+        if(formData.technicalProposalDocument){
+          submissionFormData.append("techProposalDocHRC", formData.technicalProposalDocument);
+        }
+        if(formData.financialProposalDocument){
+          submissionFormData.append("finProposalDocHRC", formData.financialProposalDocument);
+        }
+      }
+      if(key === "Mgt Consulting"){
+        if(formData.technicalProposalDocument){
+          submissionFormData.append("techProposalDocMGTC", formData.technicalProposalDocument);
+        }
+        if(formData.financialProposalDocument){
+          submissionFormData.append("finProposalDocMGTC", formData.financialProposalDocument);
+        }
+      }
+      if(key === "Recruitment"){
+        if(formData.contractDocument){
+          submissionFormData.append("businessContractRQTDocument", formData.contractDocument);
+        }
+      }
+      if(key === "HR Managed Services"){
+        if(formData.contractDocument){
+          submissionFormData.append("businessContractHMSDocument", formData.contractDocument);
+        }
+      }
+      if(key === "IT & Technology"){
+        if(formData.contractDocument){
+          submissionFormData.append("businessContractITDocument", formData.contractDocument);
+        }
+      }
+      if(key === "Outsourcing"){
+        if(formData.contractDocument){
+          submissionFormData.append("outsourcingContractDocument", formData.contractDocument);
+        }
+      }
+    })
+
+    // Client Documents (uploaded to Cloudinary)
+    const { uploadedFiles } = formData;
+    if (uploadedFiles.profileImage) {
+      submissionFormData.append("profileImage", uploadedFiles.profileImage);
+    }
+    if (uploadedFiles.crCopy) {
+      submissionFormData.append("crCopy", uploadedFiles.crCopy);
+    }
+    if (uploadedFiles.vatCopy) {
+      submissionFormData.append("vatCopy", uploadedFiles.vatCopy);
+    }
+    if (uploadedFiles.gstTinDocument) {
+      submissionFormData.append("gstTinDocument", uploadedFiles.gstTinDocument);
+    }
 
     try {
-      const result = await createClient(formData);
+      console.log(formData)
+      console.log(submissionFormData)
+      const result = await createClient(submissionFormData);
       if (result.data.data._id) {
         router.push(`/clients/${result.data.data._id}`);
         return;
       }
-      setClientContactInfo(clientContactInfoInitialstate);
-      setClientGeneralInfo(clientGeneralInfoInitialState);
-      setClientContractInfo({
-        lineOfBusiness: [],
-        contractForms: {},
-      });
-      setPrimaryContact(primaryContactInitialState);
+      form.reset();
       setLoading(false);
       toast.success("Client created successfully");
     } catch (error) {
       setLoading(false);
-      setErrors({ general: "Error creating client" });
       toast.error("Error creating client");
     }
   };
 
-  const handleNext = () => {
-    const newTab = Math.min(currentTab + 1, 3);
-    setCurrentTab(newTab);
+  const handleNext = async () => {
+    const isValid = await validateCurrentTab();
+    if (isValid) {
+      const newTab = Math.min(currentTab + 1, 3);
+      setCurrentTab(newTab);
+    }
   };
 
   const handlePrevious = () => {
@@ -337,93 +421,73 @@ export function CreateClientModal({
 
         <div className="w-full h-[400px] overflow-y-auto pb-10">
           <div className="pr-2">
-            <form onSubmit={handleSubmit}>
-              {Object.keys(errors).length > 0 && (
-                <div className="bg-red-50 text-red-500 p-3 rounded-md mb-4 text-sm">
-                  <div className="font-semibold mb-1">
-                    Please check form and fill the missing field.
-                  </div>
-                </div>
-              )}
-              {currentTab === 0 && (
-                <ClientInformationTab
-                  formData={clientGeneralInfo}
-                  setFormData={setClientGeneralInfo}
-                />
-              )}
-              {currentTab === 1 && (
-                <ContactDetailsTab
-                  formData={clientContactInfo}
-                  setFormData={setClientContactInfo}
-                  setIsContactModalOpen={setIsContactModalOpen}
-                  errors={errors}
-                />
-              )}
-              {currentTab === 2 && (
-                <ContractInformationTab
-                  formData={clientContractInfo}
-                  setFormData={setClientContractInfo}
-                />
-              )}
-              {currentTab === 3 && (
-                <DocumentsTab
-                  uploadedFiles={uploadedFiles}
-                  handleFileChange={handleFileChange}
-                  handlePreview={handlePreview}
-                  handleDownload={handleDownload}
-                />
-              )}
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)}>
+                {currentTab === 0 && <ClientInformationTab form={form} />}
+                {currentTab === 1 && (
+                  <ContactDetailsTab form={form} setIsContactModalOpen={setIsContactModalOpen} />
+                )}
+                {currentTab === 2 && <ContractInformationTab form={form} />}
+                {currentTab === 3 && (
+                  <DocumentsTab
+                    uploadedFiles={form.watch("uploadedFiles")}
+                    handleFileChange={handleFileChange}
+                    handlePreview={handlePreview}
+                    handleDownload={handleDownload}
+                  />
+                )}
 
-              {/* Move DialogFooter and buttons inside the form */}
-              <div className="fixed left-1/2 -translate-x-1/2 bottom-0 w-full max-w-[95vw] sm:max-w-[90vw] md:max-w-3xl lg:max-w-4xl xl:max-w-5xl bg-white z-50 border-t p-4 rounded-b-xl shadow-lg">
-                <DialogFooter>
-                  <div className="flex flex-col sm:flex-row justify-between w-full gap-2">
-                    <div>
-                      {currentTab > 0 && (
-                        <Button
-                          variant="outline"
-                          type="button"
-                          onClick={handlePrevious}
-                          disabled={loading}
-                          className="w-full sm:w-auto"
-                        >
-                          <ArrowLeftIcon className="size-5" />
-                          Previous
-                        </Button>
-                      )}
-                    </div>
-                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                      {currentTab < 3 ? (
-                        <Button
-                          type="button"
-                          onClick={handleNext}
-                          disabled={loading}
-                          className="w-full sm:w-auto"
-                        >
-                          Next
-                          <ArrowRightIcon className="size-5" />
-                        </Button>
-                      ) : (
-                        <>
+                {/* Move DialogFooter and buttons inside the form */}
+                <div className="fixed left-1/2 -translate-x-1/2 bottom-0 w-full max-w-[95vw] sm:max-w-[90vw] md:max-w-3xl lg:max-w-4xl xl:max-w-5xl bg-white z-50 border-t p-4 rounded-b-xl shadow-lg">
+                  <DialogFooter>
+                    <div className="flex flex-col sm:flex-row justify-between w-full gap-2">
+                      <div>
+                        {currentTab > 0 && (
                           <Button
                             variant="outline"
                             type="button"
-                            onClick={() => onOpenChange(false)}
+                            onClick={handlePrevious}
                             disabled={loading}
                             className="w-full sm:w-auto"
                           >
-                            Cancel
+                            <ArrowLeftIcon className="size-5" />
+                            Previous
                           </Button>
-                          <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-                            {loading ? "Creating..." : "Create Client"}
+                        )}
+                      </div>
+                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                        {currentTab < 3 ? (
+                          <Button
+                            type="button"
+                            onClick={handleNext}
+                            disabled={loading}
+                            className="w-full sm:w-auto"
+                          >
+                            Next
+                            <ArrowRightIcon className="size-5" />
                           </Button>
-                        </>
-                      )}
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              type="button"
+                              onClick={() => onOpenChange(false)}
+                              disabled={loading}
+                              className="w-full sm:w-auto"
+                            >
+                              Cancel
+                            </Button>
+                            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+                              {loading ? "Creating..." : "Create Client"}
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </DialogFooter>
-              </div>
-            </form>
+                  </DialogFooter>
+                </div>
+              </form>
+            </Form>
           </div>
         </div>
 

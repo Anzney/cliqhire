@@ -10,12 +10,7 @@ import {
   ClientResponse,
   ClientStageStatus,
 } from "@/services/clientService";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { differenceInYears } from "date-fns";
@@ -45,7 +40,7 @@ interface Client {
   name: string;
   industry: string;
   location: string;
-  stage: "Lead" | "Engaged" | "Signed";
+  stage: "Lead" | "Engaged" | "Signed" | "Negotiation";
   clientStageStatus: ClientStageStatus;
   owner: string;
   team: string;

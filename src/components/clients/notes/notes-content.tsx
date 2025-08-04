@@ -96,7 +96,7 @@ useEffect(() => {
   };
 
   return (
-    <div className="flex-1 p-6">
+    <div className="flex-1">
       <div className="mb-6 flex justify-end">
         <Button onClick={() => setIsAddDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" /> Add Note

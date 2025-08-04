@@ -174,7 +174,7 @@ const getJobs = async (
 
 const getJobById = async (id: string): Promise<JobResponse> => {
   try {
-    const response = await axios.get<JobResponse>(`${API_URL}/api/jobs/${id}`);
+    const response = await axios.get<JobResponse>(`${API_URL}/api/jobs/getJobById/${id}`);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 404) {

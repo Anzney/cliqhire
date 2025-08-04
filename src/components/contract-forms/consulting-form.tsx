@@ -3,7 +3,7 @@ import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { Upload } from "lucide-react";
-import DatePicker from "./date-picker";
+import DatePicker from "../create-client-modal/date-picker";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "../ui/tooltip";
 
 interface ConsultingContractFormProps {
@@ -18,7 +18,7 @@ interface ConsultingContractFormProps {
   setFormData: React.Dispatch<React.SetStateAction<any>>;
 }
 
-const ConsultingContractForm = ({ formData, setFormData }: ConsultingContractFormProps) => {
+const ConsultingForm = ({ formData, setFormData }: ConsultingContractFormProps) => {
   const [openStartDatePicker, setOpenStartDatePicker] = useState(false);
   const [openEndDatePicker, setOpenEndDatePicker] = useState(false);
 
@@ -81,21 +81,20 @@ const ConsultingContractForm = ({ formData, setFormData }: ConsultingContractFor
                 accept=".pdf,.jpg,.jpeg,.png"
                 className="hidden"
                 onChange={(e) =>
-                  setFormData({ ...formData, technicalProposalDocument: e.target.files?.[0] || null })
+                  setFormData({
+                    ...formData,
+                    technicalProposalDocument: e.target.files?.[0] || null,
+                  })
                 }
               />
               {formData.technicalProposalDocument && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span
-                      className="text-xs text-muted-foreground truncate max-w-[150px] inline-block align-middle cursor-pointer"
-                    >
+                    <span className="text-xs text-muted-foreground truncate max-w-[150px] inline-block align-middle cursor-pointer">
                       {formData.technicalProposalDocument.name}
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    {formData.technicalProposalDocument.name}
-                  </TooltipContent>
+                  <TooltipContent>{formData.technicalProposalDocument.name}</TooltipContent>
                 </Tooltip>
               )}
             </div>
@@ -124,21 +123,20 @@ const ConsultingContractForm = ({ formData, setFormData }: ConsultingContractFor
                 accept=".pdf,.jpg,.jpeg,.png"
                 className="hidden"
                 onChange={(e) =>
-                  setFormData({ ...formData, financialProposalDocument: e.target.files?.[0] || null })
+                  setFormData({
+                    ...formData,
+                    financialProposalDocument: e.target.files?.[0] || null,
+                  })
                 }
               />
               {formData.financialProposalDocument && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span
-                      className="text-xs text-muted-foreground truncate max-w-[150px] inline-block align-middle cursor-pointer"
-                    >
+                    <span className="text-xs text-muted-foreground truncate max-w-[150px] inline-block align-middle cursor-pointer">
                       {formData.financialProposalDocument.name}
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    {formData.financialProposalDocument.name}
-                  </TooltipContent>
+                  <TooltipContent>{formData.financialProposalDocument.name}</TooltipContent>
                 </Tooltip>
               )}
             </div>
@@ -149,4 +147,4 @@ const ConsultingContractForm = ({ formData, setFormData }: ConsultingContractFor
   );
 };
 
-export default ConsultingContractForm;
+export default ConsultingForm;

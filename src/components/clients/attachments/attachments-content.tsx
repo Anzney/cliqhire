@@ -88,7 +88,7 @@ export function AttachmentsContent({ clientId }: AttachmentsContentProps) {
   }, [clientId]);
 
   return (
-    <div className="p-6">
+    <div className="">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-800">Upload File</h3>
         <Button

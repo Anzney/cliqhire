@@ -308,13 +308,10 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
         formData.append("file", file);
         formData.append("field", "agreement");
         formData.append("clientName", contractDetails.clientName);
-        const response = await fetch(
-          `${API_URL}/api/clients/${clientId}/upload`,
-          {
-            method: "POST",
-            body: formData,
-          },
-        );
+        const response = await fetch(`${API_URL}/api/clients/${clientId}/upload`, {
+          method: "POST",
+          body: formData,
+        });
         if (!response.ok) throw new Error("Failed to upload agreement");
         const updatedData = await response.json();
         setContract((prev) => ({
