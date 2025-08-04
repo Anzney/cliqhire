@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {DialogFooter} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import DatePicker from "../create-client-modal/date-picker";
 import ReactSelect, { SingleValue } from "react-select";
 import countryList, { Country } from "react-select-country-list";
 import ReactCountryFlag from "react-country-flag";
+import { Upload } from "lucide-react";
 
 interface CreateCandidateFormProps {
   onCandidateCreated?: (candidate: any) => void;
@@ -40,12 +41,14 @@ export default function CreateCandidateForm({
     country: "",
     nationality: "",
     willingToRelocate: "",
+    cv: null as File | null,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const [dobOpen, setDobOpen] = useState(false);
   const [countryOptions] = useState<Country[]>(countryList().getData());
   const [nationalityOptions] = useState<Country[]>(countryList().getData());
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -64,6 +67,28 @@ export default function CreateCandidateForm({
     setForm((prev) => ({ ...prev, nationality: option ? option.label : "" }));
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Check file type
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Please select a valid file type (PDF, DOC, or DOCX)');
+        return;
+      }
+      // Check file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB');
+        return;
+      }
+      setForm((prev) => ({ ...prev, cv: file }));
+    }
+  };
+
+  const handleFileClick = () => {
+    fileInputRef.current?.click();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -75,16 +100,38 @@ export default function CreateCandidateForm({
         return;
       }
 
-      if (showAdvanced) {
-        if (!form.phone || !form.email || !form.location) {
-          alert("Please fill in all required fields (Phone, Email, Location)");
-          setIsSubmitting(false);
-          return;
-        }
+      if (!form.phone || !form.email) {
+        alert("Please fill in all required fields (Phone, Email)");
+        setIsSubmitting(false);
+        return;
       }
 
+      if (showAdvanced && !form.location) {
+        alert("Please fill in all required fields (Location)");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Create FormData for file upload
+      const formData = new FormData();
+      
+      // Add all form fields to FormData
+      Object.keys(form).forEach(key => {
+        if (key === 'cv' && form.cv) {
+          formData.append('cv', form.cv);
+        } else if (key === 'dateOfBirth' && form.dateOfBirth) {
+          formData.append('dateOfBirth', form.dateOfBirth.toISOString());
+        } else if (key !== 'cv' && key !== 'dateOfBirth') {
+          formData.append(key, (form as any)[key]);
+        }
+      });
+
       // Send data to backend using axios
-      const response = await axios.post('/api/candidates', form);
+      const response = await axios.post('/api/candidates', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
       if (response.status === 201) {
         const createdCandidate = response.data;
@@ -189,6 +236,39 @@ export default function CreateCandidateForm({
             </div>
           </div>
 
+          {/* Phone Number - Required */}
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone Number<span className="text-red-500">*</span></Label>
+            <Input 
+              id="phone" 
+              name="phone" 
+              value={form.phone} 
+              onChange={handleChange} 
+              placeholder="Enter phone number" 
+              required
+            />
+          </div>
+
+          {/* Email - Required */}
+          <div className="space-y-2">
+            <Label htmlFor="email">Email<span className="text-red-500">*</span></Label>
+            <div className="relative">
+              <Input
+                id="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="Enter email address"
+                maxLength={255}
+                className="pr-16"
+                required
+              />
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none bg-white px-0 py-1">
+                {form.email.length} / 255
+              </span>
+            </div>
+          </div>
+
           {showAdvanced && (
             <>
               {/* Gender */}
@@ -269,49 +349,15 @@ export default function CreateCandidateForm({
                 </Select>
               </div>
 
-              {/* Phone Number - Required when advanced is shown */}
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number<span className="text-red-500">*</span></Label>
-                <Input 
-                  id="phone" 
-                  name="phone" 
-                  value={form.phone} 
-                  onChange={handleChange} 
-                  placeholder="Enter phone number" 
-                  required={showAdvanced}
-                />
-              </div>
-
-              {/* Email - Required when advanced is shown */}
-              <div className="space-y-2">
-                <Label htmlFor="email">Email<span className="text-red-500">*</span></Label>
-                <div className="relative">
-                  <Input
-                    id="email"
-                    name="email"
-                    value={form.email}
-                    onChange={handleChange}
-                    placeholder="Enter email address"
-                    maxLength={255}
-                    className="pr-16"
-                    required={showAdvanced}
-                  />
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none bg-white px-0 py-1">
-                    {form.email.length} / 255
-                  </span>
-                </div>
-              </div>
-
               {/* Location - Required when advanced is shown */}
               <div className="space-y-2">
-                <Label htmlFor="location">Location<span className="text-red-500">*</span></Label>
+                <Label htmlFor="location">Location</Label>
                 <Input 
                   id="location" 
                   name="location" 
                   value={form.location} 
                   onChange={handleChange} 
                   placeholder="Enter location" 
-                  required={showAdvanced}
                 />
               </div>
 
@@ -327,6 +373,37 @@ export default function CreateCandidateForm({
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                   placeholder="Additional details about the candidate"
                 ></textarea>
+              </div>
+
+              {/* Upload Your CV */}
+              <div className="space-y-2">
+                <Label htmlFor="cv">Upload Your CV</Label>
+                <div 
+                  className="relative border-2 border-dashed border-gray-300 rounded-md p-6 text-center cursor-pointer hover:border-gray-400 transition-colors"
+                  onClick={handleFileClick}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    id="cv"
+                    name="cv"
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                  <div className="text-sm text-gray-600">
+                    {form.cv ? (
+                      <span className="text-green-600 font-medium">{form.cv.name}</span>
+                    ) : (
+                      <>
+                        <span className="font-medium text-gray-900">Click to upload</span>
+                        <br />
+                        <span className="text-gray-500">PDF, DOC, DOCX (max 5MB)</span>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
             </>
           )}
