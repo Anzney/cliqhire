@@ -27,6 +27,15 @@ const contactFields = [
   { key: "linkedin", label: "LinkedIn" },
 ];
 
+const previousCompanyFields = [
+  { key: "previousCompanyName", label: "Previous Company Name" },
+  { key: "currentJobTitle", label: "Current Job Title" },
+  { key: "reportingTo", label: "Reporting To" },
+  { key: "totalStaffReporting", label: "Total Number of Staff Reporting to You" },
+  { key: "totalRelevantExperience", label: "Total Relevant Years of Experience" },
+  { key: "noticePeriod", label: "Notice Period" },
+];
+
 interface CandidateSummaryProps {
   candidate: any;
   onCandidateUpdate?: (updatedCandidate: any) => void;
@@ -47,7 +56,7 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
     }
     
     // Show success toast message
-    const allFields = [...detailsFields, ...contactFields];
+    const allFields = [...detailsFields, ...contactFields, ...previousCompanyFields];
     const fieldLabel = allFields.find(field => field.key === fieldKey)?.label || fieldKey;
     toast.success(`${fieldLabel} updated successfully`);
   };
@@ -94,10 +103,19 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
         {detailsFields.map((field) => renderField(field, detailsFields))}
       </div>
       
-      {/* Contact Info Section */}
-      <div className="bg-white rounded-xl shadow p-6 flex-1 h-fit">
-        <div className="font-medium text-lg mb-4">Contact Info</div>
-        {contactFields.map((field) => renderField(field, contactFields))}
+      {/* Right Column - Contact Info and Previous Company Info */}
+      <div className="flex flex-col gap-6 flex-1">
+        {/* Contact Info Section */}
+        <div className="bg-white rounded-xl shadow p-6 h-fit">
+          <div className="font-medium text-lg mb-4">Contact Info</div>
+          {contactFields.map((field) => renderField(field, contactFields))}
+        </div>
+        
+        {/* Previous Company Info Section */}
+        <div className="bg-white rounded-xl shadow p-6 h-fit">
+          <div className="font-medium text-lg mb-4">Previous Company Info</div>
+          {previousCompanyFields.map((field) => renderField(field, previousCompanyFields))}
+        </div>
       </div>
     </div>
   );
