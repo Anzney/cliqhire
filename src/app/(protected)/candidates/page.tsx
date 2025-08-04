@@ -43,17 +43,6 @@ export default function CandidatesPage() {
   // const [selected, setSelected] = useState("candidate");
   const [open, setOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
-  // const showSelectedOption = () => {
-  //   switch(selected) {
-  //     case 'candidate':
-  //       return  <CreateCandidate />;
-  //     case 'Folder':
-  //       return  <CreateFolder />;
-  //     case 'advanced':
-  //       return  <AdvanceSearch />;
-
-  //   }
-  // }
 
   return (
     <div className="flex flex-col h-full">
@@ -73,36 +62,6 @@ export default function CandidatesPage() {
         buttonText="Create Candidate"
       />
 
-      {/* <CreateCandidate /> */}
-
-      {/* Create Candidate Modal */}
-
-      {/* Create Folder Modal */}
-      {/* <CreateFolder /> */}
-
-      {/* Advanced Search Modal */}
-      {/* <AdvanceSearch
-     /> */}
-
-      {/* Tabs */}
-      {/* <div className="border-b px-4">
-        <Tabs defaultValue="candidates" className="w-full">
-          <TabsList className="w-fit border-b-0">
-            <TabsTrigger value="candidates" className="gap-2" onClick={()=>{setSelected('candidate')}}>
-              <Users className="h-4 w-4" />
-              Candidates
-            </TabsTrigger>
-            <TabsTrigger value="folder" className="gap-2" onClick={()=>{setSelected('Folder')}}>
-              <Folder className="h-4 w-4"  />
-              Folders
-            </TabsTrigger>
-            <TabsTrigger value="advanced" className="gap-2" onClick={()=>{setSelected('advanced')}}>
-              <Search className="h-4 w-4" />
-              Advanced Search
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div> */}
 
       <div className="flex-1">
         {candidates.length === 0 ? (

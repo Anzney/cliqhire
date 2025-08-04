@@ -13,6 +13,13 @@ const fields = [
   { key: "skills", label: "Skills", render: (val: string[] | undefined) => val && val.length ? val.join(", ") : undefined },
   { key: "resume", label: "Resume", render: (val: string | undefined) => val ? <a href={val} target="_blank" rel="noopener noreferrer" className="underline">View Resume</a> : undefined },
   { key: "status", label: "Status" },
+  { key: "referredBy", label: "Referred By" },
+  { key: "gender", label: "Gender" },
+  { key: "dateOfBirth", label: "Date of Birth" },
+  { key: "maritalStatus", label: "Marital Status" },
+  { key: "country", label: "Country" },
+  { key: "nationality", label: "Nationality" },
+  { key: "universityName", label: "University Name" },
 ];
 
 interface CandidateSummaryProps {
@@ -60,15 +67,7 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
                   className="h-8 flex items-center ml-2"
                   onClick={() => setEditField(field.key)}
                 >
-                  {hasValue ? (
-                    <>
-                      <Pencil className="h-4 w-4 mr-2" />Edit
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-4 w-4 mr-2" />Add
-                    </>
-                  )}
+                  <Pencil className="h-4 w-4 mr-2" />Edit
                 </Button>
                 <EditFieldModal
                   open={editField === field.key}
