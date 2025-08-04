@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AddNoteDialog } from "./add-note-dialog";
@@ -18,26 +17,6 @@ export interface Note {
   createdAt: string;
   isPrivate: boolean;
 }
-
-// Sample notes data - in a real app this would come from an API
-// const sampleNotes: Note[] = [
-//   {
-//     id: "1",
-//     content:
-//       "Initial client meeting scheduled for next week. Need to prepare presentation materials.",
-//     author: { name: "John Doe", avatar: "JD" },
-//     createdAt: "2025-04-04T16:10:00Z",
-//     isPrivate: false,
-//   },
-//   {
-//     id: "2",
-//     content:
-//       "Client expressed interest in expanding services to international markets. Follow up needed on compliance requirements.Client expressed interest in expanding services to international markets. Follow up needed on compliance requirements. Client expressed interest in expanding services to international markets. Follow up needed on compliance requirements. Client expressed interest in expanding services to international markets. Follow up needed on compliance requirements.",
-//     author: { name: "Jane Smith", avatar: "JS" },
-//     createdAt: "2025-04-03T14:30:00Z",
-//     isPrivate: true,
-//   },
-// ];
 
 
 // Utility to map backend note to frontend note
@@ -117,7 +96,7 @@ useEffect(() => {
   };
 
   return (
-    <div className="flex-1 p-6">
+    <div className="flex-1">
       <div className="mb-6 flex justify-end">
         <Button onClick={() => setIsAddDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" /> Add Note
@@ -136,7 +115,7 @@ useEffect(() => {
           onDelete={handleDeleteNote}
         />
       ) : (
-        <div className="flex flex-col items-center justify-center text-center py-12">
+        <div className="flex flex-col items-center justify-center text-center">
           <div className="w-48 h-48 mb-6">
             <svg viewBox="0 0 200 200" className="w-full h-full text-blue-500">
               <rect

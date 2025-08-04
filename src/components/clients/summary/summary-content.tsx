@@ -9,15 +9,39 @@ import { FileUploadRow } from "./file-upload-row";
 import { AddTeamMemberModal } from "../modals/add-team-member-modal";
 import { AddContactModal } from "../modals/add-contact-modal";
 import { EditDescriptionModal } from "../modals/edit-description-modal";
-import { Plus, Pencil, ChevronsUpDown } from "lucide-react";
-import { ContractSection } from "../contract/contract-section";
-import { Label } from "@/components/ui/label";
+import { FileUploadModal } from "../modals/file-upload-modal";
+import { Plus, Pencil, ChevronsUpDown, X } from "lucide-react";
 import { SalesInfo } from "./sales/salesInfo";
-import { CollapsibleSection } from "./collapsible-section";
 import { toast } from "sonner";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import ContractOverview from "./contract-overview";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+// Helper function to detect file type
+const getFileType = (fileName: string): "pdf" | "docx" | "image" | "other" => {
+  if (!fileName) return "other";
+
+  const extension = fileName.toLowerCase().split(".").pop();
+
+  switch (extension) {
+    case "pdf":
+      return "pdf";
+    case "docx":
+    case "doc":
+      return "docx";
+    case "jpg":
+    case "jpeg":
+    case "png":
+    case "gif":
+    case "webp":
+    case "svg":
+      return "image";
+    default:
+      return "other";
+  }
+};
+
 interface ClientDetails {
   clientPriority: string;
   clientSegment: string;
@@ -103,7 +127,7 @@ export function SummaryContent({
   onTabSwitch,
 }: {
   clientId: string;
-  clientData: any;
+  clientData?: any;
   onTabSwitch?: (tabValue: string) => void;
 }) {
   const [clientDetails, setClientDetails] = useState<ClientDetails>(() => {
@@ -133,11 +157,19 @@ export function SummaryContent({
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
+  const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
+  const [previewFileUrl, setPreviewFileUrl] = useState("");
+  const [previewFileName, setPreviewFileName] = useState("");
   const [error, setError] = useState("");
+
+  // File upload modal states
+  const [isFileUploadModalOpen, setIsFileUploadModalOpen] = useState(false);
+  const [currentUploadField, setCurrentUploadField] = useState<keyof ClientDetails | null>(null);
+  const [currentUploadTitle, setCurrentUploadTitle] = useState("");
 
   const updateClientDetails = async (
     fieldName: string,
-    value: string | string[] | PrimaryContact,
+    value: string | string[] | PrimaryContact | { url: string; fileName: string },
   ) => {
     try {
       const response = await fetch(`https://aems-backend.onrender.com/api/clients/${clientId}`, {
@@ -164,6 +196,56 @@ export function SummaryContent({
     }
   };
 
+  // Handler for opening file upload modal
+  const handleOpenFileUploadModal = (field: keyof ClientDetails, title: string) => {
+    setCurrentUploadField(field);
+    setCurrentUploadTitle(title);
+    setIsFileUploadModalOpen(true);
+  };
+
+  // Handler for file upload through modal
+  const handleFileUploadFromModal = async (file: File): Promise<void> => {
+    if (!currentUploadField || !file) return;
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("field", currentUploadField);
+
+      const response = await fetch(
+        `https://aems-backend.onrender.com/api/clients/${clientId}/upload`,
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const result = await response.json();
+      const fileUrl = result.data?.filePath || file.name;
+
+      setClientDetails((prev) => ({
+        ...prev,
+        [currentUploadField]: {
+          url: fileUrl,
+          fileName: file.name,
+        },
+      }));
+
+      await updateClientDetails(currentUploadField, {
+        url: fileUrl,
+        fileName: file.name,
+      });
+    } catch (error) {
+      console.error(`Error uploading ${currentUploadField}:`, error);
+      throw error; // Re-throw to let modal handle the error
+    }
+  };
+
+  // Legacy handler (kept for backward compatibility if needed)
   const handleFileUpload =
     (field: keyof ClientDetails) =>
     (file: File | null): void => {
@@ -238,14 +320,32 @@ export function SummaryContent({
     }));
   };
 
-  const handlePreviewFile = (fileName: string) => {
-    if (fileName) {
-      const fileUrl = fileName.startsWith("https")
-        ? fileName
-        : `https://aems-backend.onrender.com/${fileName}`;
-      window.open(fileUrl, "_blank");
-    } else {
+  const handlePreviewFile = (fileName: string, displayName?: string) => {
+    if (!fileName) {
       console.error("No file to preview");
+      return;
+    }
+
+    const fileUrl = fileName.startsWith("https")
+      ? fileName
+      : `https://aems-backend.onrender.com/${fileName}`;
+
+    const fileType = getFileType(fileName);
+
+    if (fileType === "pdf") {
+      // Show PDF in modal with iframe
+      setPreviewFileUrl(fileUrl);
+      setPreviewFileName(displayName || fileName);
+      setIsPdfPreviewOpen(true);
+    } else if (fileType === "docx") {
+      // For DOCX files, try to use Google Docs viewer
+      const googleDocsUrl = `https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+      setPreviewFileUrl(googleDocsUrl);
+      setPreviewFileName(displayName || fileName);
+      setIsPdfPreviewOpen(true);
+    } else {
+      // For images and other files, open in new tab (existing behavior)
+      window.open(fileUrl, "_blank");
     }
   };
 
@@ -403,9 +503,15 @@ export function SummaryContent({
                 label="VAT Copy"
                 className="border-b"
                 onFileSelect={handleFileUpload("vatCopy")}
+                onUploadClick={() => handleOpenFileUploadModal("vatCopy", "VAT Copy")}
                 docUrl={clientDetails?.vatCopy?.url}
                 currentFileName={clientDetails?.vatCopy?.fileName}
-                onPreview={() => handlePreviewFile(clientDetails?.vatCopy?.url || "")}
+                onPreview={() =>
+                  handlePreviewFile(
+                    clientDetails?.vatCopy?.url || "",
+                    clientDetails?.vatCopy?.fileName,
+                  )
+                }
                 onDownload={() => handleDownloadFile(clientDetails?.vatCopy?.url || "")}
               />
               <FileUploadRow
@@ -413,18 +519,32 @@ export function SummaryContent({
                 label="CR Copy"
                 className="border-b"
                 onFileSelect={handleFileUpload("crCopy")}
+                onUploadClick={() => handleOpenFileUploadModal("crCopy", "CR Copy")}
                 docUrl={clientDetails?.crCopy?.url}
                 currentFileName={clientDetails?.crCopy?.fileName}
-                onPreview={() => handlePreviewFile(clientDetails?.crCopy?.url || "")}
+                onPreview={() =>
+                  handlePreviewFile(
+                    clientDetails?.crCopy?.url || "",
+                    clientDetails?.crCopy?.fileName,
+                  )
+                }
                 onDownload={() => handleDownloadFile(clientDetails?.crCopy?.url || "")}
               />
               <FileUploadRow
                 id="gst-tin-document-upload"
                 label="GST IN Doc"
                 onFileSelect={handleFileUpload("gstTinDocument")}
+                onUploadClick={() =>
+                  handleOpenFileUploadModal("gstTinDocument", "GST TIN Document")
+                }
                 docUrl={clientDetails?.gstTinDocument?.url}
                 currentFileName={clientDetails?.gstTinDocument?.fileName}
-                onPreview={() => handlePreviewFile(clientDetails?.gstTinDocument?.url || "")}
+                onPreview={() =>
+                  handlePreviewFile(
+                    clientDetails?.gstTinDocument?.url || "",
+                    clientDetails?.gstTinDocument?.fileName,
+                  )
+                }
                 onDownload={() => handleDownloadFile(clientDetails?.gstTinDocument?.url || "")}
               />
             </div>
@@ -531,6 +651,46 @@ export function SummaryContent({
         onOpenChange={setIsDescriptionModalOpen}
         currentDescription={clientDetails.description || ""}
         onSave={handleUpdateDescription}
+      />
+
+      {/* PDF Preview Modal */}
+      <Dialog open={isPdfPreviewOpen} onOpenChange={setIsPdfPreviewOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] w-[90vw] h-[80vh] p-0">
+          <DialogHeader className="p-4 pb-2">
+            <DialogTitle className="text-lg font-semibold flex items-center justify-between">
+              <span>Document Preview: {previewFileName}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsPdfPreviewOpen(false)}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 p-4 pt-0">
+            <iframe
+              src={previewFileUrl}
+              className="w-full h-full border rounded-lg"
+              title="Document Preview"
+              onError={() => {
+                toast.error("Failed to load document preview");
+                setIsPdfPreviewOpen(false);
+              }}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* File Upload Modal */}
+      <FileUploadModal
+        open={isFileUploadModalOpen}
+        onOpenChange={setIsFileUploadModalOpen}
+        onUpload={handleFileUploadFromModal}
+        title={currentUploadTitle}
+        acceptedFileTypes=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp,.svg"
+        maxSizeInMB={10}
       />
     </div>
   );

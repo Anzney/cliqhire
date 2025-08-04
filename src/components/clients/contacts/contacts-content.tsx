@@ -12,9 +12,7 @@ import {
   updatePrimaryContact, // <-- add this import
   addPrimaryContact, // <-- add this import
 } from "@/services/clientService";
-import { EditFieldModal } from "../summary/edit-field-modal";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
-import { EditPrimaryContactDialog } from "./EditPrimaryContactDialog";
 import EditContactDetailsModal from "./EditContactDetailsModal";
 import {
   Dialog,
@@ -58,18 +56,7 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
       setError("");
 
       try {
-        // Map primary contacts to always split name into firstName/lastName
-        const mappedContacts = (clientData.primaryContacts || []).map((c: any) => {
-          const name = c.name || "";
-          const nameParts = name.trim().split(" ");
-          return {
-            ...c,
-            firstName: nameParts[0] || "",
-            lastName: nameParts.slice(1).join(" ") || "",
-          };
-        });
-
-        setPrimaryContacts(mappedContacts || []);
+        setPrimaryContacts(clientData.primaryContacts || []);
         setClientPhoneNumber(clientData.phoneNumber || "");
         setClientWebsite(clientData.website || "");
         setClientEmails(clientData.emails || []);
@@ -112,8 +99,8 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
 
   // Reusable function for adding a contact
   const handleAddContact = async (contact: {
-    firstName?: string;
-    lastName?: string;
+    firstName: string;
+    lastName: string;
     email: string;
     phone: string;
     countryCode: string;
@@ -124,7 +111,8 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
     try {
       // Prepare the contact data for backend - map to PrimaryContact interface
       const contactData = {
-        name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim() || "Unnamed Contact",
+        firstName: contact.firstName,
+        lastName: contact.lastName,
         email: contact.email,
         phone: contact.phone,
         countryCode: contact.countryCode,
@@ -210,7 +198,8 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
     setError("");
     try {
       const contactData = {
-        name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim() || "Unnamed Contact",
+        firstName: contact.firstName,
+        lastName: contact.lastName,
         email: contact.email,
         phone: contact.phone,
         countryCode: contact.countryCode,
@@ -227,7 +216,8 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
         if (contactToEdit && contactToEdit._id) {
           // Only send changed fields for PATCH
           const patchData: any = {};
-          if (contactData.name && contactData.name !== contactToEdit.name) patchData.name = contactData.name;
+          if (contactData.firstName && contactData.firstName !== contactToEdit.firstName) patchData.firstName = contactData.firstName;
+          if (contactData.lastName && contactData.lastName !== contactToEdit.lastName) patchData.lastName = contactData.lastName;
           if (contactData.email && contactData.email !== contactToEdit.email) patchData.email = contactData.email;
           if (contactData.phone && contactData.phone !== contactToEdit.phone) patchData.phone = contactData.phone;
           if (contactData.countryCode && contactData.countryCode !== contactToEdit.countryCode) patchData.countryCode = contactData.countryCode;
@@ -322,100 +312,106 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
               <h2 className=" text-sm font-semibold mb-4">Client Contact Details</h2>
               <div className="flex mb-2">
                 <div>
-                  <div> 
+                  <div>
                     <span className="text-xs font-semibold text-gray-500 mr-1">
-                    Client Phone Number:
-                  </span>
-                  {clientPhoneNumber ? (
-                    (() => {
-                      try {
-                        // Only parse if clientPhoneNumber is a valid string
-                        if (clientPhoneNumber && typeof clientPhoneNumber === 'string' && clientPhoneNumber.trim()) {
-                          const parsed = parsePhoneNumberFromString("+" + clientPhoneNumber);
-                          if (parsed && parsed.isValid()) {
-                            return (
-                              <span className="text-sm text-muted-foreground mr-1">
-                                {parsed.formatInternational()}
-                              </span>
-                            );
+                      Client Phone Number:
+                    </span>
+                    {clientPhoneNumber ? (
+                      (() => {
+                        try {
+                          // Only parse if clientPhoneNumber is a valid string
+                          if (
+                            clientPhoneNumber &&
+                            typeof clientPhoneNumber === "string" &&
+                            clientPhoneNumber.trim()
+                          ) {
+                            const parsed = parsePhoneNumberFromString("+" + clientPhoneNumber);
+                            if (parsed && parsed.isValid()) {
+                              return (
+                                <span className="text-sm text-muted-foreground mr-1">
+                                  {parsed.formatInternational()}
+                                </span>
+                              );
+                            }
                           }
+                          // Fallback to showing the raw phone number
+                          return (
+                            <span className="text-sm text-muted-foreground mr-1">
+                              {clientPhoneNumber}
+                            </span>
+                          );
+                        } catch (error) {
+                          // If parsing fails, show the raw phone number
+                          return (
+                            <span className="text-sm text-muted-foreground mr-1">
+                              {clientPhoneNumber}
+                            </span>
+                          );
                         }
-                        // Fallback to showing the raw phone number
-                        return (
-                          <span className="text-sm text-muted-foreground mr-1">
-                            {clientPhoneNumber}
-                          </span>
-                        );
-                      } catch (error) {
-                        // If parsing fails, show the raw phone number
-                        return (
-                          <span className="text-sm text-muted-foreground mr-1">
-                            {clientPhoneNumber}
-                          </span>
-                        );
-                      }
-                    })()
-                  ) : (
-                    <span className="text-sm text-muted-foreground mr-1">No phone number</span>
-                  )}
+                      })()
+                    ) : (
+                      <span className="text-sm text-muted-foreground mr-1">No phone number</span>
+                    )}
                   </div>
 
-                 <div>
-                   <span className="text-xs font-semibold text-gray-500 mr-1">Client Website:</span>
-                  {clientWebsite ? (
-                    <a
-                      href={clientWebsite}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-muted-foreground text-gray-500 hover:underline"
-                    >
-                      {clientWebsite}
-                    </a>
-                  ) : (
-                    <span className="text-sm text-muted-foreground">No website</span>
-                  )}
-                 </div>
+                  <div>
+                    <span className="text-xs font-semibold text-gray-500 mr-1">
+                      Client Website:
+                    </span>
+                    {clientWebsite ? (
+                      <a
+                        href={clientWebsite}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-muted-foreground text-gray-500 hover:underline"
+                      >
+                        {clientWebsite}
+                      </a>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">No website</span>
+                    )}
+                  </div>
 
-                <div>
-                   <span className="text-xs font-semibold text-gray-500 mr-1">Client Email(s):</span>
-                {clientEmails && clientEmails.length > 0 ? (
-                  <span className="text-sm text-muted-foreground">
-                    {clientEmails.map((email, idx) => (
-                      <span key={idx}>
-                        <a
-                          href={`mailto:${email}`}
-                          className="text-sm text-muted-foreground text-gray-500 hover:underline"
-                        >
-                          {email}
-                        </a>
-                        {idx < clientEmails.length - 1 ? ", " : ""}
+                  <div>
+                    <span className="text-xs font-semibold text-gray-500 mr-1">
+                      Client Email(s):
+                    </span>
+                    {clientEmails && clientEmails.length > 0 ? (
+                      <span className="text-sm text-muted-foreground">
+                        {clientEmails.map((email, idx) => (
+                          <span key={idx}>
+                            <a
+                              href={`mailto:${email}`}
+                              className="text-sm text-muted-foreground text-gray-500 hover:underline"
+                            >
+                              {email}
+                            </a>
+                            {idx < clientEmails.length - 1 ? ", " : ""}
+                          </span>
+                        ))}
                       </span>
-                    ))}
-                  </span>
-                ) : (
-                  <span className="text-sm text-muted-foreground">No email</span>
-                )}
-                </div>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">No email</span>
+                    )}
+                  </div>
 
-                 <div>
-                   <span className="text-xs font-semibold text-gray-500 mr-1">
-                  Client LinkedIn Profile:
-                </span>
-                {clientLinkedIn ? (
-                  <a
-                    href={clientLinkedIn}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-muted-foreground text-gray-500 hover:underline"
-                  >
-                    {clientLinkedIn}
-                  </a>
-                ) : (
-                  <span className="text-sm text-muted-foreground">No LinkedIn profile</span>
-                )}
-                 </div>
-
-
+                  <div>
+                    <span className="text-xs font-semibold text-gray-500 mr-1">
+                      Client LinkedIn Profile:
+                    </span>
+                    {clientLinkedIn ? (
+                      <a
+                        href={clientLinkedIn}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-muted-foreground text-gray-500 hover:underline"
+                      >
+                        {clientLinkedIn}
+                      </a>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">No LinkedIn profile</span>
+                    )}
+                  </div>
                 </div>
 
                 <Button
@@ -449,7 +445,14 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
             <div className="bg-white rounded-lg border shadow-sm p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-semibold">Primary Contacts</span>
-                <Button variant="outline" size="sm" onClick={() => { setEditContactIndex(null); setAddEditModalOpen(true); }}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setEditContactIndex(null);
+                    setAddEditModalOpen(true);
+                  }}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Add
                 </Button>
@@ -461,20 +464,21 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
               ) : (
                 <div className="space-y-3">
                   {(primaryContacts || []).map((contact, index) => (
+                    console.log(contact),
                     <div key={index} className="p-3 rounded-md border">
                       {/* Name row with right-aligned buttons */}
                       <div className="flex mb-1">
                         <div>
                           <span className="text-xs font-semibold text-gray-500 mr-1">Name:</span>
                           <span className="text-sm text-muted-foreground">
-                            {`${contact.firstName || ""} ${contact.lastName || ""}`.trim() ||
-                              contact.name ||
-                              "Unnamed Contact"}
+                            {contact.firstName} {contact.lastName}
                           </span>
                           {/* Gender */}
                           {contact.gender && (
                             <p className="text-sm text-muted-foreground">
-                              <span className="text-xs font-semibold text-gray-500 mr-1">Gender:</span>
+                              <span className="text-xs font-semibold text-gray-500 mr-1">
+                                Gender:
+                              </span>
                               {contact.gender}
                             </p>
                           )}
@@ -528,7 +532,10 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
                           <Button
                             variant="outline"
                             size="icon"
-                            onClick={() => { setEditContactIndex(index); setAddEditModalOpen(true); }}
+                            onClick={() => {
+                              setEditContactIndex(index);
+                              setAddEditModalOpen(true);
+                            }}
                           >
                             <Pencil className="size-4" />
                           </Button>

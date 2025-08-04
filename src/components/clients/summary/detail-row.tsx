@@ -22,6 +22,7 @@ interface DetailRowProps {
   options?: { value: string; label: string }[];
   isSelect?: boolean;
   alwaysShowEdit?: boolean;
+  disableInternalEdit?: boolean; // NEW PROP
 }
 
 export function DetailRow({
@@ -37,6 +38,7 @@ export function DetailRow({
   options,
   isSelect,
   alwaysShowEdit,
+  disableInternalEdit,
 }: DetailRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -117,7 +119,15 @@ export function DetailRow({
               variant="outline"
               size="sm"
               className="h-8"
-              onClick={() => (isDate ? setShowDatePicker(!showDatePicker) : setIsEditing(true))}
+              onClick={() => {
+                if (disableInternalEdit) {
+                  onUpdate("");
+                } else if (isDate) {
+                  setShowDatePicker(!showDatePicker);
+                } else {
+                  setIsEditing(true);
+                }
+              }}
             >
               {alwaysShowEdit || value ? (
                 <>
@@ -147,7 +157,7 @@ export function DetailRow({
         </div>
       )}
 
-      {!isDate && !isSelect && (
+      {!isDate && !isSelect && !disableInternalEdit && (
         <EditFieldModal
           open={isEditing}
           onClose={() => setIsEditing(false)}

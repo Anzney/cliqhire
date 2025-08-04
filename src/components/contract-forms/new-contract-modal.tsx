@@ -19,18 +19,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
-import { businessInitialState, outsourcingInitialState, consultingInitialState } from "./constants";
-import { UseFormReturn } from "react-hook-form";
-import { CreateClientFormData } from "./schema";
+import { businessInitialState, outsourcingInitialState, consultingInitialState } from "../create-client-modal/constants";
+import { ClientContractInfo } from "../create-client-modal/type";
 import { Pencil, Eye, Trash2 } from "lucide-react";
 import BusinessForm from "../contract-forms/business-form";
 import ConsultingForm from "../contract-forms/consulting-form";
 import OutsourcingForm from "../contract-forms/outsourcing-form";
 
 interface ContractInformationTabProps {
-  form: UseFormReturn<CreateClientFormData>;
+  formData: ClientContractInfo;
+  setFormData: React.Dispatch<React.SetStateAction<ClientContractInfo>>;
 }
 
 interface ConfirmationConfig {
@@ -40,7 +39,7 @@ interface ConfirmationConfig {
   onConfirm: () => void;
 }
 
-export function ContractInformationTab({ form }: ContractInformationTabProps) {
+export function ContractInformationTab({ formData, setFormData }: ContractInformationTabProps) {
   // Business tabs
   const [activeBusinessTab, setActiveBusinessTab] = useState<string | null>(null);
   const [previewBusinessTab, setPreviewBusinessTab] = useState<string | null>(null);
@@ -60,14 +59,10 @@ export function ContractInformationTab({ form }: ContractInformationTabProps) {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [confirmationConfig, setConfirmationConfig] = useState<ConfirmationConfig | null>(null);
 
-  // Watch form values
-  const lineOfBusiness = form.watch("clientContractInfo.lineOfBusiness");
-  const contractForms = form.watch("clientContractInfo.contractForms");
-
   // Effect to populate form data when in preview mode
   useEffect(() => {
-    if (isPreviewMode && modalBusiness && contractForms[modalBusiness]) {
-      const savedData = contractForms[modalBusiness];
+    if (isPreviewMode && modalBusiness && formData.contractForms[modalBusiness]) {
+      const savedData = formData.contractForms[modalBusiness];
 
       if (
         modalBusiness === "Recruitment" ||
@@ -81,7 +76,7 @@ export function ContractInformationTab({ form }: ContractInformationTabProps) {
         setOutsourcingContractFormData(savedData as typeof outsourcingInitialState);
       }
     }
-  }, [isPreviewMode, modalBusiness, contractForms]);
+  }, [isPreviewMode, modalBusiness, formData.contractForms]);
 
   const handleSaveContract = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -89,22 +84,23 @@ export function ContractInformationTab({ form }: ContractInformationTabProps) {
 
     // Only save if not in preview mode
     if (!isPreviewMode) {
-      const currentContractForms = form.getValues("clientContractInfo.contractForms");
-      let updatedContractForms = { ...currentContractForms };
-
       if (
         modalBusiness === "Recruitment" ||
         modalBusiness === "HR Managed Services" ||
         modalBusiness === "IT & Technology"
       ) {
-        updatedContractForms[modalBusiness!] = standardContractFormData;
+        const clonedFormData = structuredClone(formData);
+        clonedFormData.contractForms[modalBusiness!] = standardContractFormData;
+        setFormData(clonedFormData);
       } else if (modalBusiness === "HR Consulting" || modalBusiness === "Mgt Consulting") {
-        updatedContractForms[modalBusiness!] = consultingContractFormData;
+        const clonedFormData = structuredClone(formData);
+        clonedFormData.contractForms[modalBusiness!] = consultingContractFormData;
+        setFormData(clonedFormData);
       } else if (modalBusiness === "Outsourcing") {
-        updatedContractForms[modalBusiness!] = outsourcingContractFormData;
+        const clonedFormData = structuredClone(formData);
+        clonedFormData.contractForms[modalBusiness!] = outsourcingContractFormData;
+        setFormData(clonedFormData);
       }
-
-      form.setValue("clientContractInfo.contractForms", updatedContractForms);
     }
 
     // Reset form states when closing (only if not in preview mode)
@@ -131,19 +127,23 @@ export function ContractInformationTab({ form }: ContractInformationTabProps) {
   };
 
   const removeBusinessFromLineOfBusiness = (business: string) => {
-    const currentLineOfBusiness = form.getValues("clientContractInfo.lineOfBusiness");
-    const currentContractForms = form.getValues("clientContractInfo.contractForms");
+    setFormData((prev: ClientContractInfo) => {
+      const current = Array.isArray(prev.lineOfBusiness)
+        ? prev.lineOfBusiness
+        : prev.lineOfBusiness
+          ? [prev.lineOfBusiness]
+          : [];
 
-    const updatedLineOfBusiness = currentLineOfBusiness.filter((item: string) => item !== business);
-    const updatedContractForms = { ...currentContractForms };
+      const clonedFormData = structuredClone(prev);
+      clonedFormData.lineOfBusiness = current.filter((item: string) => item !== business);
 
-    // Remove the form data
-    if (updatedContractForms[business]) {
-      delete updatedContractForms[business];
-    }
+      // Also remove the form data
+      if (clonedFormData.contractForms[business]) {
+        delete clonedFormData.contractForms[business];
+      }
 
-    form.setValue("clientContractInfo.lineOfBusiness", updatedLineOfBusiness);
-    form.setValue("clientContractInfo.contractForms", updatedContractForms);
+      return clonedFormData;
+    });
 
     if (activeBusinessTab === business) {
       setActiveBusinessTab(null);
@@ -152,10 +152,9 @@ export function ContractInformationTab({ form }: ContractInformationTabProps) {
   };
 
   const deleteFormData = (business: string) => {
-    const currentContractForms = form.getValues("clientContractInfo.contractForms");
-    const updatedContractForms = { ...currentContractForms };
-    delete updatedContractForms[business];
-    form.setValue("clientContractInfo.contractForms", updatedContractForms);
+    const clonedFormData = structuredClone(formData);
+    delete clonedFormData.contractForms[business];
+    setFormData(clonedFormData);
   };
 
   const handleDeleteFormData = (business: string) => {
@@ -169,15 +168,22 @@ export function ContractInformationTab({ form }: ContractInformationTabProps) {
   };
 
   const handleBusinessCheckChange = (business: string, checked: boolean) => {
-    const currentLineOfBusiness = form.getValues("clientContractInfo.lineOfBusiness");
-
     if (checked) {
       // Adding the business - no confirmation needed
-      const updatedLineOfBusiness = [...currentLineOfBusiness, business];
-      form.setValue("clientContractInfo.lineOfBusiness", updatedLineOfBusiness);
+      setFormData((prev: ClientContractInfo) => {
+        const current = Array.isArray(prev.lineOfBusiness)
+          ? prev.lineOfBusiness
+          : prev.lineOfBusiness
+            ? [prev.lineOfBusiness]
+            : [];
+        return {
+          ...prev,
+          lineOfBusiness: [...current, business],
+        };
+      });
     } else {
       // Removing the business - check if form data exists
-      const hasFormData = contractForms[business];
+      const hasFormData = formData.contractForms[business];
 
       if (hasFormData) {
         // Show confirmation dialog
@@ -208,6 +214,8 @@ export function ContractInformationTab({ form }: ContractInformationTabProps) {
     setConfirmationConfig(null);
   };
 
+  // console.log(formData);
+
   const businessOptions = [
     "Recruitment",
     "HR Consulting",
@@ -219,113 +227,110 @@ export function ContractInformationTab({ form }: ContractInformationTabProps) {
 
   return (
     <div className="space-y-6 pb-2">
-      <FormField
-        control={form.control}
-        name="clientContractInfo.lineOfBusiness"
-        render={({ field }) => (
-          <FormItem className="space-y-1">
-            <FormLabel>
-              Line of Business<span className="text-red-700">*</span>
-            </FormLabel>
-            <FormControl>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border rounded-md p-2">
-                {businessOptions.map((option) => (
-                  <div key={option} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`lob-${option}`}
-                      checked={lineOfBusiness?.includes(option)}
-                      onCheckedChange={(checked) => {
-                        handleBusinessCheckChange(option, !!checked);
-                      }}
-                    />
-                    <label
-                      htmlFor={`lob-${option}`}
-                      className={`text-xs sm:text-sm font-medium leading-none cursor-pointer ${
-                        lineOfBusiness?.includes(option) ? "font-bold text-primary" : ""
-                      }`}
-                    >
-                      {option
-                        .split("-")
-                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                        .join(" ")}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      {lineOfBusiness && Array.isArray(lineOfBusiness) && lineOfBusiness.length > 0 && (
-        <div className="w-full">
-          {lineOfBusiness.map((business: string) => {
-            const isFormFilled = contractForms[business];
-
-            return (
-              <div
-                key={business}
-                className="rounded border bg-white py-4 px-6 mb-4 flex items-center justify-between w-full"
+      <div className="space-y-1">
+        <Label htmlFor="lineOfBusiness">
+          Line of Business<span className="text-red-700">*</span>
+        </Label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border rounded-md p-2">
+          {businessOptions.map((option) => (
+            <div key={option} className="flex items-center space-x-2">
+              <Checkbox
+                id={`lob-${option}`}
+                checked={formData.lineOfBusiness?.includes(option)}
+                onCheckedChange={(checked) => {
+                  handleBusinessCheckChange(option, !!checked);
+                }}
+              />
+              <label
+                htmlFor={`lob-${option}`}
+                className={`text-xs sm:text-sm font-medium leading-none cursor-pointer ${
+                  formData.lineOfBusiness?.includes(option) ? "font-bold text-primary" : ""
+                }`}
+                onClick={() =>
+                  formData.lineOfBusiness?.includes(option) &&
+                  setFormData((prev: ClientContractInfo) => ({ ...prev, lineOfBusiness: [option] }))
+                }
               >
-                <span className="font-medium text-xs sm:text-sm">{business} contract form</span>
-                <div className="flex gap-2">
-                  {/* Show Fill Form button only if form is not filled */}
-                  {!isFormFilled && (
-                    <Button
-                      size="sm"
-                      type="button"
-                      className="w-24"
-                      variant="outline"
-                      onClick={() => {
-                        setActiveBusinessTab(business);
-                        setPreviewBusinessTab(null);
-                        setModalBusiness(business);
-                        setIsPreviewMode(false);
-                        setModalOpen(true);
-                      }}
-                    >
-                      <Pencil className="size-4" />
-                      Fill Form
-                    </Button>
-                  )}
+                {option
+                  .split("-")
+                  .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                  .join(" ")}
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
 
-                  {/* Show Preview and Delete buttons only if form is filled */}
-                  {isFormFilled && (
-                    <>
+      {formData.lineOfBusiness &&
+        Array.isArray(formData.lineOfBusiness) &&
+        formData.lineOfBusiness.length > 0 && (
+          <div className="w-full">
+            {formData.lineOfBusiness.map((business: string) => {
+              const isFormFilled = formData.contractForms[business];
+
+              return (
+                <div
+                  key={business}
+                  className="rounded border bg-white py-4 px-6 mb-4 flex items-center justify-between w-full"
+                >
+                  <span className="font-medium text-xs sm:text-sm">{business} contract form</span>
+                  <div className="flex gap-2">
+                    {/* Show Fill Form button only if form is not filled */}
+                    {!isFormFilled && (
                       <Button
                         size="sm"
                         type="button"
                         className="w-24"
+                        variant="outline"
                         onClick={() => {
-                          setPreviewBusinessTab(business);
-                          setActiveBusinessTab(null);
+                          setActiveBusinessTab(business);
+                          setPreviewBusinessTab(null);
                           setModalBusiness(business);
-                          setIsPreviewMode(true);
+                          setIsPreviewMode(false);
                           setModalOpen(true);
                         }}
                       >
-                        <Eye className="size-4" />
-                        Preview
+                        <Pencil className="size-4" />
+                        Fill Form
                       </Button>
-                      <Button
-                        size="sm"
-                        type="button"
-                        variant="destructive"
-                        className="w-24"
-                        onClick={() => handleDeleteFormData(business)}
-                      >
-                        <Trash2 className="size-4" />
-                        Delete
-                      </Button>
-                    </>
-                  )}
+                    )}
+
+                    {/* Show Preview and Delete buttons only if form is filled */}
+                    {isFormFilled && (
+                      <>
+                        <Button
+                          size="sm"
+                          type="button"
+                          className="w-24"
+                          onClick={() => {
+                            setPreviewBusinessTab(business);
+                            setActiveBusinessTab(null);
+                            setModalBusiness(business);
+                            setIsPreviewMode(true);
+                            setModalOpen(true);
+                          }}
+                        >
+                          <Eye className="size-4" />
+                          Preview
+                        </Button>
+                        <Button
+                          size="sm"
+                          type="button"
+                          variant="destructive"
+                          className="w-24"
+                          onClick={() => handleDeleteFormData(business)}
+                        >
+                          <Trash2 className="size-4" />
+                          Delete
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
 
       {/* Modal for contract form */}
       <Dialog open={modalOpen} onOpenChange={handleCloseModal}>

@@ -1,0 +1,32 @@
+export interface JobData {
+  certifications: string[];
+  client: { _id: string; name: string };
+  createdAt: string;
+  dateRange: { start: string | null; end: string | null };
+  department: string;
+  education: [];
+  experience: string;
+  gender: string;
+  headcount: number;
+  jobDescription: string;
+  jobDescriptionPdf: string | null;
+  jobPosition: string[];
+  jobTitle: string;
+  jobType: string;
+  location: string;
+  locations: string[];
+  maximumSalary: number;
+  minimumSalary: number;
+  nationalities: string[];
+  numberOfPositions: number;
+  otherBenefits: string[];
+  relationshipManager: string;
+  salaryCurrency: string;
+  salaryRange: { min: number; max: number; currency: string };
+  specialization: string[];
+  stage: string;
+  teamSize: number;
+  updatedAt: string;
+  workVisa: { workVisa: string; visaCountries: string[] };
+  _id: string;
+}

@@ -13,6 +13,7 @@ import { Bold, Italic, Underline, List, ListOrdered, AlignLeft, AlignCenter, Ali
 import { ListNode, ListItemNode } from "@lexical/list";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { ShareMenu } from "@/components/common/ShareMenu";
+import { Label } from "@/components/ui/label";
 
 interface JobDiscriptionIProps {
   value: string;
@@ -56,7 +57,7 @@ function FakeToolbar() {
   );
 }
 
-export function JobDiscriptionI({ value, onSave, disabled }: JobDiscriptionIProps) {
+export function JobDescriptionInternal({ value, onSave, disabled }: JobDiscriptionIProps) {
   const [editing, setEditing] = useState(false);
   const [editorState, setEditorState] = useState<string>(value);
 
@@ -73,7 +74,7 @@ export function JobDiscriptionI({ value, onSave, disabled }: JobDiscriptionIProp
   return (
     <Card className="border border-input p-4 mt-4">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-base font-bold italic tracking-tight">Job Description By Internal</h3>
+        <Label className="text-sm tracking-tight">Create new job description</Label>
         <div className="flex items-center gap-2">
           <ShareMenu shareText={value ? value.replace(/<[^>]+>/g, '') : 'No internal description'} />
           {!editing && (

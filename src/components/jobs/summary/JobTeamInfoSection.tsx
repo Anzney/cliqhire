@@ -3,27 +3,27 @@ import { DetailRow } from "@/components/clients/summary/detail-row";
 
 interface JobInfoSectionProps {
   jobDetails: any;
-  handleFieldEdit: (field: string, value: any, options?: any) => void;
+  handleUpdateField: (field: string) => (value: string) => void;
 }
 
-export function JobInfoSection({ jobDetails, handleFieldEdit }: JobInfoSectionProps) {
+export function JobTeamInfoSection({ jobDetails, handleUpdateField }: JobInfoSectionProps) {
   return (
     <CollapsibleSection title="Job Team Info">
       <div className="bg-white rounded-lg border shadow-sm p-4 space-y-3">
         <DetailRow
           label="Recruitment Manager"
           value={jobDetails.recruitmentManager}
-          onUpdate={(val: string) => handleFieldEdit("recruitmentManager", jobDetails.recruitmentManager)}
+          onUpdate={(val: string) => handleUpdateField("recruitmentManager")}
         />
         <DetailRow
           label="Recruiter"
           value={jobDetails.recruiter}
-          onUpdate={(val: string) => handleFieldEdit("recruiter", jobDetails.recruiter)}
+          onUpdate={(val: string) => handleUpdateField("recruiter")}
         />
         <DetailRow
           label="Team Lead"
           value={jobDetails.teamLead}
-          onUpdate={(val: string) => handleFieldEdit("teamLead", jobDetails.teamLead)}
+          onUpdate={(val: string) => handleUpdateField("teamLead")}
         />
       </div>
     </CollapsibleSection>

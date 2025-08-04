@@ -1,9 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight, FileText, Calendar, DollarSign } from "lucide-react";
+import { ChevronRight, FileText, Calendar, Edit, Trash2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import BusinessForm from "@/components/contract-forms/business-form";
+import ConsultingForm from "@/components/contract-forms/consulting-form";
+import OutsourcingForm from "@/components/contract-forms/outsourcing-form";
+import { ContractInformationTab } from "@/components/contract-forms/new-contract-modal";
+import { deleteContract, updateContract, addContract } from "@/services/clientContractService";
+import { toast } from "sonner";
+import {
+  businessInitialState,
+  outsourcingInitialState,
+  consultingInitialState,
+} from "@/components/create-client-modal/constants";
+import { ClientContractInfo } from "@/components/create-client-modal/type";
 
 interface ContractSectionProps {
   clientId: string;
@@ -20,8 +34,234 @@ const CONTRACT_MAPPING = {
   Outsourcing: "outsourcingContract",
 };
 
+// Helper function to get form type based on business type
+const getFormType = (businessType: string) => {
+  if (["Recruitment", "HR Managed Services", "IT & Technology"].includes(businessType)) {
+    return "business";
+  }
+  if (["Mgt Consulting", "HR Consulting"].includes(businessType)) {
+    return "consulting";
+  }
+  if (businessType === "Outsourcing") {
+    return "outsourcing";
+  }
+  return "business"; // default
+};
+
 export function ContractSection({ clientId, clientData }: ContractSectionProps) {
   const [expandedContract, setExpandedContract] = useState<string | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState<string | null>(null);
+  const [formData, setFormData] = useState<any>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Add Contract Dialog state
+  const [addContractDialogOpen, setAddContractDialogOpen] = useState(false);
+  const [addContractFormData, setAddContractFormData] = useState<ClientContractInfo>({
+    lineOfBusiness: [],
+    contractForms: {},
+  });
+  const [isAddingContract, setIsAddingContract] = useState(false);
+
+  // Function to map contract data to form data structure
+  const mapContractDataToFormData = (contractData: any, businessType: string) => {
+    const formType = getFormType(businessType);
+
+    if (formType === "business") {
+      return {
+        contractStartDate: contractData?.contractStartDate
+          ? new Date(contractData.contractStartDate)
+          : null,
+        contractEndDate: contractData?.contractEndDate
+          ? new Date(contractData.contractEndDate)
+          : null,
+        contractType: contractData?.ContractType || contractData?.contractType || "",
+        fixedPercentage: contractData?.fixedPercentage || 0,
+        advanceMoneyCurrency: contractData?.advanceMoneyCurrency || "SAR",
+        advanceMoneyAmount: contractData?.advanceMoneyAmount || 0,
+        fixedPercentageAdvanceNotes: contractData?.fixedPercentageAdvanceNotes || "",
+        contractDocument: contractData?.contractDocument || null,
+        fixWithoutAdvanceValue: contractData?.fixedPercentageWithoutAdvance || 0,
+        fixWithoutAdvanceNotes: contractData?.fixedPercentageWithoutAdvanceNotes || "",
+        levelBasedHiring: contractData?.levelBasedHiring || {
+          levelTypes: [],
+          seniorLevel: { percentage: 0, notes: "" },
+          executives: { percentage: 0, notes: "" },
+          nonExecutives: { percentage: 0, notes: "" },
+          other: { percentage: 0, notes: "" },
+        },
+        levelBasedAdvanceHiring: contractData?.levelBasedAdvanceHiring || {
+          levelTypes: [],
+          seniorLevel: { percentage: 0, notes: "", amount: 0, currency: "SAR" },
+          executives: { percentage: 0, notes: "", amount: 0, currency: "SAR" },
+          nonExecutives: { percentage: 0, notes: "", amount: 0, currency: "SAR" },
+          other: { percentage: 0, notes: "", amount: 0, currency: "SAR" },
+        },
+      };
+    }
+
+    if (formType === "consulting") {
+      return {
+        contractStartDate: contractData?.contractStartDate
+          ? new Date(contractData.contractStartDate)
+          : null,
+        contractEndDate: contractData?.contractEndDate
+          ? new Date(contractData.contractEndDate)
+          : null,
+        technicalProposalNotes: contractData?.technicalProposalNotes || "",
+        financialProposalNotes: contractData?.financialProposalNotes || "",
+        technicalProposalDocument: contractData?.technicalProposalDocument || null,
+        financialProposalDocument: contractData?.financialProposalDocument || null,
+      };
+    }
+
+    if (formType === "outsourcing") {
+      return {
+        contractStartDate: contractData?.contractStartDate
+          ? new Date(contractData.contractStartDate)
+          : null,
+        contractEndDate: contractData?.contractEndDate
+          ? new Date(contractData.contractEndDate)
+          : null,
+        contractType: contractData?.ContractType || contractData?.contractType || "",
+        serviceCategory: contractData?.serviceCategory || "",
+        numberOfResources: contractData?.numberOfResources || 0,
+        durationPerResource: contractData?.durationPerResource || 0,
+        slaTerms: contractData?.slaTerms || "",
+        totalCost: contractData?.totalCost || 0,
+        contractDocument: contractData?.contractDocument || null,
+      };
+    }
+
+    return {};
+  };
+
+  const handleEditContract = (businessType: string) => {
+    const contractKey = CONTRACT_MAPPING[businessType as keyof typeof CONTRACT_MAPPING];
+    const contractData = clientData.contracts[contractKey];
+    const mappedData = mapContractDataToFormData(contractData, businessType);
+    setFormData(mappedData);
+    setEditDialogOpen(businessType);
+  };
+
+  const handleFormSubmit = async (updatedFormData: any) => {
+    if (!editDialogOpen || !clientId) return;
+
+    setIsSubmitting(true);
+
+    try {
+      // Get the backend contract type (mapped value) to send to API
+      const contractKey = CONTRACT_MAPPING[editDialogOpen as keyof typeof CONTRACT_MAPPING];
+      await updateContract(clientId, contractKey, updatedFormData);
+
+      toast.success(`${editDialogOpen} contract updated successfully!`);
+      setEditDialogOpen(null);
+
+      // Optional: Refresh client data to show updated values
+      // You might want to call a refresh function here or update local state
+    } catch (error) {
+      console.error("Failed to update contract:", error);
+      toast.error(`Failed to update ${editDialogOpen} contract. Please try again.`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteContract = async () => {
+    if (!deleteDialogOpen || !clientId) return;
+
+    setIsDeleting(true);
+
+    try {
+      // Get the backend contract type (mapped value) to send to API
+      const contractKey = CONTRACT_MAPPING[deleteDialogOpen as keyof typeof CONTRACT_MAPPING];
+      await deleteContract(clientId, contractKey);
+
+      toast.success(`${deleteDialogOpen} contract deleted successfully!`);
+      setDeleteDialogOpen(null);
+
+      // Optional: Refresh client data to remove deleted contract
+      // You might want to call a refresh function here or update local state
+    } catch (error) {
+      console.error("Failed to delete contract:", error);
+      toast.error(`Failed to delete ${deleteDialogOpen} contract. Please try again.`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleAddContract = () => {
+    setAddContractFormData({
+      lineOfBusiness: [],
+      contractForms: {},
+    });
+    setAddContractDialogOpen(true);
+  };
+
+  const handleCloseAddContractDialog = () => {
+    setAddContractDialogOpen(false);
+    setAddContractFormData({
+      lineOfBusiness: [],
+      contractForms: {},
+    });
+  };
+
+  const handleSubmitContract = async () => {
+    if (!clientId || !addContractFormData.lineOfBusiness.length) {
+      toast.error("Please select at least one line of business");
+      return;
+    }
+
+    setIsAddingContract(true);
+
+    try {
+      // Submit contracts for each selected line of business
+      const promises = addContractFormData.lineOfBusiness.map(async (businessType: string) => {
+        // Use businessType as key to access form data (stored by ContractInformationTab)
+        const contractFormData = addContractFormData.contractForms[businessType];
+        console.log(contractFormData);
+        if (contractFormData) {
+          await addContract(
+            clientId,
+            CONTRACT_MAPPING[businessType as keyof typeof CONTRACT_MAPPING],
+            contractFormData,
+          );
+        }
+      });
+
+      await Promise.all(promises);
+
+      toast.success("Contract(s) added successfully!");
+      //handleCloseAddContractDialog();
+
+      // Refresh the page to show new contracts
+      //window.location.reload();
+    } catch (error) {
+      console.error("Failed to add contract:", error);
+      toast.error("Failed to add contract. Please try again.");
+    } finally {
+      setIsAddingContract(false);
+    }
+  };
+
+  const renderEditForm = (businessType: string) => {
+    const formType = getFormType(businessType);
+
+    if (formType === "business") {
+      return <BusinessForm formData={formData} setFormData={setFormData} />;
+    }
+
+    if (formType === "consulting") {
+      return <ConsultingForm formData={formData} setFormData={setFormData} />;
+    }
+
+    if (formType === "outsourcing") {
+      return <OutsourcingForm formData={formData} setFormData={setFormData} />;
+    }
+
+    return null;
+  };
 
   if (!clientData) {
     return <div className="text-center py-8 text-gray-500">Loading contract information...</div>;
@@ -33,18 +273,50 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
   // Filter to only show contracts that exist in the data
   const availableContracts = lineOfBusiness.filter((business: string) => {
     const contractKey = CONTRACT_MAPPING[business as keyof typeof CONTRACT_MAPPING];
-    return contractKey && clientData[contractKey];
+    return contractKey && clientData.contracts[contractKey];
   });
 
   if (availableContracts.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-        <p className="text-sm">No contract information available</p>
-        <p className="text-xs text-gray-400 mt-1">
-          Contract details will appear here once configured
-        </p>
-      </div>
+      <>
+        <div className="text-center py-8 text-gray-500">
+          <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+          <p className="text-sm">No contract information available</p>
+          <p className="text-xs text-gray-400 mt-1">
+            Contract details will appear here once configured
+          </p>
+          <Button onClick={handleAddContract} className="mt-4 flex items-center gap-2 mx-auto">
+            <Plus className="h-4 w-4" />
+            Add Contract
+          </Button>
+        </div>
+        {/* Add Contract Dialog */}
+        <Dialog open={addContractDialogOpen} onOpenChange={handleCloseAddContractDialog}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Add New Contract</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <ContractInformationTab
+                formData={addContractFormData}
+                setFormData={setAddContractFormData}
+              />
+              <div className="flex justify-end space-x-2 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={handleCloseAddContractDialog}
+                  disabled={isAddingContract}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleSubmitContract} disabled={isAddingContract}>
+                  {isAddingContract ? "Adding Contract..." : "Submit Contract"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
     );
   }
 
@@ -60,9 +332,18 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
   const getContractSummary = (contractData: any, contractType: string) => {
     if (!contractData) return null;
 
-    // Common contract info
-    const summary = {
-      contractType: contractData.ContractType || "Not specified",
+    // Common contract info with all possible properties
+    const summary: {
+      contractType?: string;
+      ContractType?: string;
+      startDate?: string;
+      endDate?: string;
+      hasDocument: boolean;
+      details?: string;
+      hasTechProposal?: boolean;
+      hasFinProposal?: boolean;
+    } = {
+      contractType: contractData.ContractType || contractData.contractType || "Not specified",
       startDate: contractData.contractStartDate,
       endDate: contractData.contractEndDate,
       hasDocument: !!contractData.contractDocument?.url,
@@ -111,7 +392,9 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
         <div className="grid grid-cols-3 gap-4 text-sm">
           <div>
             <span className="font-medium text-gray-600">Contract Type:</span>
-            <p className="text-gray-800">{contractData.ContractType || "Not specified"}</p>
+            <p className="text-gray-800">
+              {contractData.ContractType || contractData.contractType || "Not specified"}
+            </p>
           </div>
           <div>
             <span className="font-medium text-gray-600">Duration:</span>
@@ -127,81 +410,85 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
           contractType === "IT & Technology" ||
           contractType === "HR Managed Services") && (
           <div className="space-y-2">
-            {contractData.ContractType === "Fix with Advance" && (
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                <div>
-                  <span className="font-medium text-gray-600">Fixed Percentage:</span>
-                  <p className="text-gray-800">{contractData.fixedPercentage || 0}%</p>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600">Advance Amount:</span>
-                  <p className="text-gray-800">
-                    {contractData.advanceMoneyAmount || 0}{" "}
-                    {contractData.advanceMoneyCurrency || "SAR"}
-                  </p>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600">Notes:</span>
-                  <p className="text-gray-800">
-                    {contractData.fixedPercentageAdvanceNotes || "No notes"}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {contractData.ContractType === "Level Based (Hiring)" &&
-              contractData.levelBasedHiring?.levelTypes?.length > 0 && (
-                <div>
-                  <span className="font-medium text-gray-600">Level Configuration:</span>
-                  <div className="mt-2 space-y-1">
-                    {contractData.levelBasedHiring.levelTypes.map((level: string) => {
-                      const levelKey = level.toLowerCase().replace(/[^a-z]/g, "");
-                      const levelData = contractData.levelBasedHiring[levelKey] || {};
-                      return (
-                        <div key={level} className="flex justify-between text-sm">
-                          <span>{level}:</span>
-                          <span>
-                            {levelData.percentage || 0}% {levelData.notes && `(${levelData.notes})`}
-                          </span>
-                        </div>
-                      );
-                    })}
+            {contractData.ContractType === "Fix with Advance" ||
+              (contractData.contractType === "Fix with Advance" && (
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-gray-600">Fixed Percentage:</span>
+                    <p className="text-gray-800">{contractData.fixedPercentage || 0}%</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">Advance Amount:</span>
+                    <p className="text-gray-800">
+                      {contractData.advanceMoneyAmount || 0}{" "}
+                      {contractData.advanceMoneyCurrency || "SAR"}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">Notes:</span>
+                    <p className="text-gray-800">
+                      {contractData.fixedPercentageAdvanceNotes || "No notes"}
+                    </p>
                   </div>
                 </div>
-              )}
+              ))}
 
-            {contractData.ContractType === "Level Based With Advance" &&
-              contractData.levelBasedAdvanceHiring?.levelTypes?.length > 0 && (
-                <div>
-                  <span className="font-medium text-gray-600">
-                    Level Configuration (With Advance):
-                  </span>
-                  <div className="mt-2 space-y-1">
-                    {contractData.levelBasedAdvanceHiring.levelTypes.map((level: string) => {
-                      const levelKey = level.toLowerCase().replace(/[^a-z]/g, "");
-                      const levelData = contractData.levelBasedAdvanceHiring[levelKey] || {};
-                      return (
-                        <div key={level} className="text-sm">
-                          <div className="flex justify-between items-start">
-                            <span className="font-medium">{level}:</span>
-                            <div className="text-right">
-                              <div>
-                                {levelData.percentage || 0}% + {levelData.amount || 0}{" "}
-                                {levelData.currency || "SAR"}
-                              </div>
-                              {levelData.notes && (
-                                <div className="text-xs text-gray-500 mt-1">
-                                  ({levelData.notes})
+            {contractData.ContractType === "Level Based (Hiring)" ||
+              (contractData.contractType === "Level Based (Hiring)" &&
+                contractData.levelBasedHiring?.levelTypes?.length > 0 && (
+                  <div>
+                    <span className="font-medium text-gray-600">Level Configuration:</span>
+                    <div className="mt-2 space-y-1">
+                      {contractData.levelBasedHiring.levelTypes.map((level: string) => {
+                        const levelKey = level.toLowerCase().replace(/[^a-z]/g, "");
+                        const levelData = contractData.levelBasedHiring[levelKey] || {};
+                        return (
+                          <div key={level} className="flex justify-between text-sm">
+                            <span>{level}:</span>
+                            <span>
+                              {levelData.percentage || 0}%{" "}
+                              {levelData.notes && `(${levelData.notes})`}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+
+            {contractData.ContractType === "Level Based With Advance" ||
+              (contractData.contractType === "Level Based With Advance" &&
+                contractData.levelBasedAdvanceHiring?.levelTypes?.length > 0 && (
+                  <div>
+                    <span className="font-medium text-gray-600">
+                      Level Configuration (With Advance):
+                    </span>
+                    <div className="mt-2 space-y-1">
+                      {contractData.levelBasedAdvanceHiring.levelTypes.map((level: string) => {
+                        const levelKey = level.toLowerCase().replace(/[^a-z]/g, "");
+                        const levelData = contractData.levelBasedAdvanceHiring[levelKey] || {};
+                        return (
+                          <div key={level} className="text-sm">
+                            <div className="flex justify-between items-start">
+                              <span className="font-medium">{level}:</span>
+                              <div className="text-right">
+                                <div>
+                                  {levelData.percentage || 0}% + {levelData.amount || 0}{" "}
+                                  {levelData.currency || "SAR"}
                                 </div>
-                              )}
+                                {levelData.notes && (
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    ({levelData.notes})
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
+                ))}
           </div>
         )}
 
@@ -270,9 +557,17 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
 
   return (
     <div className="space-y-4">
+      {/* Add Contract Button */}
+      <div className="flex justify-end">
+        <Button onClick={handleAddContract} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Add New Contract
+        </Button>
+      </div>
+
       {availableContracts.map((businessType: string) => {
         const contractKey = CONTRACT_MAPPING[businessType as keyof typeof CONTRACT_MAPPING];
-        const contractData = clientData[contractKey];
+        const contractData = clientData.contracts[contractKey];
         const summary = getContractSummary(contractData, businessType);
         const isExpanded = expandedContract === businessType;
 
@@ -284,7 +579,7 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
                   <div className="flex items-center space-x-3">
                     <h3 className="text-sm font-semibold text-gray-800">{businessType} Contract</h3>
                     <Badge variant="secondary" className="text-xs">
-                      {summary?.contractType}
+                      {summary?.contractType || summary?.ContractType}
                     </Badge>
                   </div>
 
@@ -308,17 +603,37 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
                   </div>
                 </div>
 
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleShowDetails(businessType)}
-                  className="text-xs"
-                >
-                  {isExpanded ? "Hide Details" : "Show Complete Details"}
-                  <ChevronRight
-                    className={`h-4 w-4 ml-1 transition-transform ${isExpanded ? "rotate-90" : ""}`}
-                  />
-                </Button>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleShowDetails(businessType)}
+                    className="text-xs"
+                  >
+                    {isExpanded ? "Hide Details" : "Show Complete Details"}
+                    <ChevronRight
+                      className={`h-4 w-4 ml-1 transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                    />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditContract(businessType)}
+                    className="text-xs"
+                  >
+                    <Edit className="h-3 w-3 mr-1" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDeleteDialogOpen(businessType)}
+                    className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Delete
+                  </Button>
+                </div>
               </div>
 
               {isExpanded && renderContractDetails(contractData, businessType)}
@@ -326,6 +641,70 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
           </div>
         );
       })}
+
+      {/* Edit Contract Dialog */}
+      <Dialog open={!!editDialogOpen} onOpenChange={(open) => !open && setEditDialogOpen(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit {editDialogOpen} Contract</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {editDialogOpen && renderEditForm(editDialogOpen)}
+            <div className="flex justify-end space-x-2 pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => setEditDialogOpen(null)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button onClick={() => handleFormSubmit(formData)} disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Contract Confirmation Dialog */}
+      <ConfirmDialog
+        open={!!deleteDialogOpen}
+        onOpenChange={(open) => !open && setDeleteDialogOpen(null)}
+        title="Delete Contract"
+        description={`Are you sure you want to delete the ${deleteDialogOpen} contract? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleDeleteContract}
+        loading={isDeleting}
+        confirmVariant="destructive"
+      />
+
+      {/* Add Contract Dialog */}
+      <Dialog open={addContractDialogOpen} onOpenChange={handleCloseAddContractDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add New Contract</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <ContractInformationTab
+              formData={addContractFormData}
+              setFormData={setAddContractFormData}
+            />
+            <div className="flex justify-end space-x-2 pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={handleCloseAddContractDialog}
+                disabled={isAddingContract}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSubmitContract} disabled={isAddingContract}>
+                {isAddingContract ? "Adding Contract..." : "Submit Contract"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

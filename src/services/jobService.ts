@@ -85,7 +85,7 @@ export interface JobCountByClient {
   clientName?: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ;
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Utility function to handle API errors consistently
 const handleApiError = (error: any, context: string) => {
@@ -174,7 +174,7 @@ const getJobs = async (
 
 const getJobById = async (id: string): Promise<JobResponse> => {
   try {
-    const response = await axios.get<JobResponse>(`${API_URL}/api/jobs/${id}`);
+    const response = await axios.get<JobResponse>(`${API_URL}/api/jobs/getJobById/${id}`);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -187,8 +187,7 @@ const getJobById = async (id: string): Promise<JobResponse> => {
 
 const updateJobById = async (id: string, jobData: Partial<JobData>): Promise<JobResponse> => {
   try {
-    const processedData = processJobData(jobData);
-    const response = await axios.put<JobResponse>(`${API_URL}/api/jobs/${id}`, processedData);
+    const response = await axios.patch<JobResponse>(`${API_URL}/api/jobs/${id}`, jobData);
     return response.data;
   } catch (error) {
     handleApiError(error, 'job update');
@@ -252,11 +251,95 @@ export async function deleteJobNote(id: string) {
   return res.data.data;
 }
 
+const updateJobStage = async (id: string, stage: string): Promise<JobResponse> => {
+  try {
+    const response = await axios.patch<JobResponse>(`${API_URL}/api/jobs/${id}/stage`, { stage });
+    return response.data;
+  } catch (error) {
+    handleApiError(error, 'job stage update');
+    throw error;
+  }
+};
+
+const updateJobPrimaryContacts = async (
+  jobId: string,
+  selectedContactIds: string[], // Only IDs
+  newContacts: any[] = [],
+  clientId?: string
+): Promise<JobResponse> => {
+  try {
+    // Create the request payload with IDs only
+    const payload = {
+      selectedContacts: selectedContactIds, // Only IDs
+      newContact: newContacts || [],
+      clientId: clientId || ""
+    };
+    console.log("Request payload:", payload);
+
+    // Send the request
+    const response = await axios.patch<JobResponse>(
+      `${API_URL}/api/jobs/${jobId}/primarycontact`,
+      payload,
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    console.log("Response from server:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating primary contacts:", error);
+    handleApiError(error, 'job primary contacts update');
+    throw error;
+  }
+};
+
+const getPrimaryContactsByJobId = async (jobId: string): Promise<any> => {
+  try {
+    const response = await axios.get(`${API_URL}/api/jobs/${jobId}/primarycontacts`);
+    const res = response.data;
+    // Try every possible structure for primaryContacts array
+    if (res?.data?.primaryContacts && Array.isArray(res.data.primaryContacts)) {
+      return { success: true, data: { primaryContacts: res.data.primaryContacts } };
+    }
+    if (res?.primaryContacts && Array.isArray(res.primaryContacts)) {
+      return { success: true, data: { primaryContacts: res.primaryContacts } };
+    }
+    if (Array.isArray(res?.data?.primaryContacts)) {
+      return { success: true, data: { primaryContacts: res.data.primaryContacts } };
+    }
+    if (Array.isArray(res?.primaryContacts)) {
+      return { success: true, data: { primaryContacts: res.primaryContacts } };
+    }
+    // New: if data.data has jobId/jobTitle and primaryContacts
+    if (res?.data && res.data.primaryContacts && Array.isArray(res.data.primaryContacts)) {
+      return { success: true, data: { primaryContacts: res.data.primaryContacts } };
+    }
+    // Fallback: try to find array in any data property
+    if (res?.data && Array.isArray(res.data)) {
+      return { success: true, data: { primaryContacts: res.data } };
+    }
+    // If nothing found, return empty
+    return { success: false, data: { primaryContacts: [] } };
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return { success: true, data: { primaryContacts: [] } };
+    }
+    handleApiError(error, 'fetching job primary contacts');
+    throw error;
+  }
+};
+
 export {
   createJob,
   getJobs,
   getJobById,
   updateJobById,
   deleteJobById,
-  getJobCountsByClient
+  getJobCountsByClient,
+  updateJobStage,
+  updateJobPrimaryContacts,
+  getPrimaryContactsByJobId
 };

@@ -10,12 +10,7 @@ import {
   ClientResponse,
   ClientStageStatus,
 } from "@/services/clientService";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { differenceInYears } from "date-fns";
@@ -24,6 +19,7 @@ import Tableheader from "@/components/table-header";
 import ClientTableRow from "@/components/clients/ClientTableRow";
 import ClientPaginationControls from "@/components/clients/ClientPaginationControls";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Loader } from "lucide-react";
 
 const columsArr = [
   "Name",
@@ -44,7 +40,7 @@ interface Client {
   name: string;
   industry: string;
   location: string;
-  stage: "Lead" | "Engaged" | "Signed";
+  stage: "Lead" | "Engaged" | "Signed" | "Negotiation";
   clientStageStatus: ClientStageStatus;
   owner: string;
   team: string;
@@ -455,15 +451,16 @@ export default function ClientsPage() {
               <TableBody>
                 {initialLoading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-[calc(100vh-240px)] text-center">
-                      <div className="py-24">
+                    <TableCell colSpan={10} className="text-center h-[calc(100vh-300px)]">
+                      <div className="flex items-center justify-center gap-2 flex-col">
+                        <Loader className="size-6 animate-spin" />
                         <div className="text-center">Loading clients...</div>
                       </div>
                     </TableCell>
                   </TableRow>
                 ) : filteredAndSortedClients.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-[calc(100vh-240px)] text-center">
+                    <TableCell colSpan={10} className="h-[calc(100vh-300px)] text-center">
                       <div className="py-24">
                         <div className="text-center">No clients found</div>
                       </div>

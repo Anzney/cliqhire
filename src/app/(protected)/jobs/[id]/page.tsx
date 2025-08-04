@@ -1,13 +1,13 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Plus, SlidersHorizontal, RefreshCcw } from "lucide-react"
+import { Plus, SlidersHorizontal, RefreshCcw, Loader } from "lucide-react"
 import { getJobById } from "@/services/jobService"
 import { notFound } from "next/navigation"
 import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { JobTabs } from "@/components/jobs/job-tabs"
-import { JobStageBadge } from "@/components/jobs/job-stage-badge"
+import { JobData } from "@/components/jobs/types"
 
 interface PageProps {
   params: { id: string }
@@ -16,32 +16,38 @@ interface PageProps {
 export default function JobPage({ params }: PageProps) {
   const { id } = params
   const [isLoading, setIsLoading] = useState(true)
-  const [jobData, setJobData] = useState<any>(null)
+  const [jobData, setJobData] = useState<JobData | null>(null)
   const [error, setError] = useState<Error | null>(null)
 
-  useEffect(() => {
-    const fetchJob = async () => {
-      if (!id) return;
-      try {
-        const response = await getJobById(id)
-        const job = Array.isArray(response.data) ? response.data[0] : response.data
-        if (!job) {
-          notFound()
-          return
-        }
-        setJobData(job)
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to fetch job'))
-        console.error("Error fetching job:", err)
-      } finally {
-        setIsLoading(false)
+  const fetchJob = async () => {
+    if (!id) return;
+    setIsLoading(true)
+    try {
+      const response = await getJobById(id)
+      const job = Array.isArray(response.data) ? response.data[0] : response.data
+      if (!job) {
+        notFound()
+        return
       }
+      setJobData(job as unknown as JobData)
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch job'))
+      console.error("Error fetching job:", err)
+    } finally {
+      setIsLoading(false)
     }
+  }
+  useEffect(() => {
     fetchJob()
   }, [id])
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>
+    return <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center gap-2 flex-col">
+        <Loader className="size-6 animate-spin" />
+        <div className="text-center">Loading jobs...</div>
+      </div>
+    </div>
   }
 
   if (error) {
@@ -53,17 +59,7 @@ export default function JobPage({ params }: PageProps) {
   }
 
   const handleRefresh = async () => {
-    setIsLoading(true)
-    try {
-      // Re-fetch job data
-      const response = await getJobById(id)
-      const job = Array.isArray(response.data) ? response.data[0] : response.data
-      setJobData(job)
-    } catch (error) {
-      console.error('Error refreshing data:', error)
-    } finally {
-      setIsLoading(false)
-    }
+    await fetchJob()
   }
 
   // Header values from summary
@@ -133,9 +129,7 @@ export default function JobPage({ params }: PageProps) {
       </div>
 
       {/* Tabs */}
-      <div className="border-b">
-        <JobTabs jobId={id} />
-      </div>
+      <JobTabs jobId={id} jobData={jobData} />
     </div>
   )
 }

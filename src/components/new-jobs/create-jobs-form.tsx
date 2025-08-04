@@ -112,7 +112,7 @@ export function CreateJobRequirementForm({
         jobType: (form.jobType || "full time").toLowerCase(),
         experience: "entry level", // Default value as required by interface
         headcount: form.headcount ? parseInt(form.headcount) : undefined,
-        location: form.location ? [form.location] : undefined,
+        location: form.location || undefined, 
         minimumSalary: form.minSalary ? parseInt(form.minSalary) : undefined,
         maximumSalary: form.maxSalary ? parseInt(form.maxSalary) : undefined,
         salaryCurrency: form.currency || undefined,
