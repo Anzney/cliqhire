@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Label } from "../ui/label";
-import DatePicker from "./date-picker";
+import DatePicker from "../create-client-modal/date-picker";
 import { Download, Eye, Upload } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Checkbox } from "../ui/checkbox";
 
 // --- Constants ---
-import { CONTRACT_TYPES, CURRENCIES, LEVELS, levelFieldMap } from "./constants";
+import { CONTRACT_TYPES, CURRENCIES, LEVELS, levelFieldMap } from "../create-client-modal/constants";
 
 type LevelValue = {
   percentage: number;
@@ -241,7 +241,7 @@ const levelToKey = (level: string): keyof LevelBasedHiring => {
   }
 };
 
-const StandardContractForm = ({ formData, setFormData }: StandardContractFormProps) => {
+const BusinessForm = ({ formData, setFormData }: StandardContractFormProps) => {
   const [openStartDate, setOpenStartDate] = useState(false);
   const [openEndDate, setOpenEndDate] = useState(false);
   const [activeLevel, setActiveLevel] = useState<string | null>(null);
@@ -631,4 +631,4 @@ const StandardContractForm = ({ formData, setFormData }: StandardContractFormPro
   );
 };
 
-export default StandardContractForm;
+export default BusinessForm;

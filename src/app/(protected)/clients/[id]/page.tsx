@@ -16,11 +16,8 @@ import { useRouter, notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 import { Badge } from "@/components/ui/badge";
-import { ClientStageBadge } from "@/components/client-stage-badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
 import { SummaryContent } from "@/components/clients/summary/summary-content";
-// import { ActivitiesContent } from "@/components/clients/activities/activities-content";
 import { NotesContent } from "@/components/clients/notes/notes-content";
 import { AttachmentsContent } from "@/components/clients/attachments/attachments-content";
 import TeamContent from "@/components/clients/team/team-content";
@@ -109,14 +106,6 @@ export default function ClientPage({ params }: PageProps) {
                 Lead
               </Badge>
             </div>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="border rounded-md px-4">
-              Website
-            </Button>
-            <Button variant="outline" size="sm" className="border rounded-md px-4">
-              WhatsApp
-            </Button>
           </div>
         </div>
       </div>

@@ -7,17 +7,19 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { FileUploadRow } from "@/components/clients/summary/file-upload-row";
 import { Plus, Pencil, ChevronsUpDown, RefreshCcw, Loader } from "lucide-react";
-import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { EditFieldDialog } from "./edit-field-dialog";
 import { EditSalaryDialog } from "./edit-salary-dialog";
-import { getJobById, updateJobById } from "@/services/jobService";
-import { JobDiscriptionI } from "./jobDiscriptionI";
-import { JobInfoSection } from "./JobInfoSection";
+import { updateJobById } from "@/services/jobService";
+import { JobDescriptionInternal } from "./job-description";
+import { JobTeamInfoSection } from "./JobTeamInfoSection";
 import { toast } from "sonner";
+import { JobData } from "../types";
+import { Label } from "@/components/ui/label";
 
 interface SummaryContentProps {
   jobId: string;
+  jobData: JobData;
 }
 
 interface TeamMemberType {
@@ -32,39 +34,14 @@ function capitalize(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-export function SummaryContent({ jobId }: SummaryContentProps) {
-  const [jobDetails, setJobDetails] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [editingField, setEditingField] = useState<any>(null);
+export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
+  const [jobDetails, setJobDetails] = useState<JobData>(jobData);
+  const [loading, setLoading] = useState(false);
   const [isSalaryDialogOpen, setIsSalaryDialogOpen] = useState(false);
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
-  const [teamMembers, setTeamMembers] = useState<TeamMemberType[]>([
-    { name: "John Doe", role: "Hiring Manager", email: "john@example.com", isActive: true },
-  ]);
   const [internalDescription, setInternalDescription] = useState("");
 
-  useEffect(() => {
-    const fetchJobDetails = async () => {
-      setLoading(true);
-      try {
-        const response = await getJobById(jobId);
-        const job = Array.isArray(response.data) ? response.data[0] : response.data;
-        setJobDetails(job);
-        setInternalDescription(job?.jobDescriptionInternal || "");
-      } catch (err) {
-        toast.error("Failed to load job details");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchJobDetails();
-  }, [jobId]);
-
-  const handleFieldEdit = (field: string, value: any, options?: any) => {
-    setEditingField({ name: field, value, ...options });
-  };
-
-  const handleFieldSave = async (newValue: string) => {
+  const handleFieldSave = async (editingField: any, newValue: string) => {
     if (!editingField || !jobDetails) return;
     try {
       let processedValue: any = newValue;
@@ -73,23 +50,26 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
       }
       const updatedDetails = {
         ...jobDetails,
-        [editingField.name]: processedValue,
+        [editingField]: processedValue,
       };
-      await updateJobById(jobId, { [editingField.name]: processedValue });
+      await updateJobById(jobId, { [editingField]: processedValue });
       setJobDetails(updatedDetails);
-      setEditingField(null);
       toast.success(
-        editingField.name === "jobDescription"
+        editingField === "jobDescription"
           ? "Job description updated successfully"
           : "Field updated successfully"
       );
     } catch (err) {
       toast.error(
-        editingField.name === "jobDescription"
+        editingField === "jobDescription"
           ? "Failed to update job description"
-          : "Failed to update field"
+          : "Failed to update field",
       );
     }
+  };
+
+  const handleUpdateField = (field: string) => (value: string) => {
+    handleFieldSave(field, value);
   };
 
   const handleSalarySave = async (values: {
@@ -129,15 +109,6 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
     }
   };
 
-  if (loading)
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader className="size-6 animate-spin" />
-        <div className="text-lg text-gray-600 mt-2">Loading Summary Details ......</div>
-      </div>
-    );
-  if (!jobDetails) return <div>No job details found</div>;
-
   return (
     <div className="grid grid-cols-2 gap-6 p-4">
       {/* Left Column: Details (Collapsible) */}
@@ -154,24 +125,74 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
           </div>
           <div className="px-4 pb-4">
             <div className="space-y-3">
-              <DetailRow label="Job Title" value={jobDetails.jobTitle} onUpdate={() => handleFieldEdit("jobTitle", jobDetails.jobTitle)} />
-              <DetailRow label="Department" value={jobDetails.department} onUpdate={() => handleFieldEdit("department", jobDetails.department)} />
-              <DetailRow label="Client" value={jobDetails.client?.name || jobDetails.client} onUpdate={() => {}} />
-              <DetailRow label="Location" value={Array.isArray(jobDetails.location) ? jobDetails.location.join(", ") : jobDetails.location} onUpdate={() => handleFieldEdit("location", jobDetails.location)} />
-              <DetailRow label="Headcount" value={jobDetails.headcount} onUpdate={() => handleFieldEdit("headcount", jobDetails.headcount)} />
-              <DetailRow label="Stage" value={jobDetails.stage} onUpdate={() => handleFieldEdit("stage", jobDetails.stage)} />
+              <DetailRow
+                label="Job Title"
+                value={jobDetails.jobTitle}
+                onUpdate={handleUpdateField("jobTitle")}
+              />
+              <DetailRow
+                label="Department"
+                value={jobDetails.department}
+                onUpdate={handleUpdateField("department")}
+              />
+              <DetailRow
+                label="Location"
+                value={
+                  Array.isArray(jobDetails.location)
+                    ? jobDetails.location.join(", ")
+                    : jobDetails.location
+                }
+                onUpdate={handleUpdateField("location")}
+              />
+              <DetailRow
+                label="Headcount"
+                value={jobDetails.headcount.toString()}
+                onUpdate={handleUpdateField("headcount")}
+              />
+              <DetailRow
+                label="Stage"
+                value={jobDetails.stage}
+                onUpdate={handleUpdateField("stage")}
+              />
             </div>
           </div>
           <CollapsibleContent className="px-4 pb-4">
             <div className="space-y-3">
-              <DetailRow label="Status" value={jobDetails.status} onUpdate={() => handleFieldEdit("status", jobDetails.status)} />
-              <DetailRow label="Job Type" value={capitalize(jobDetails.jobType)} onUpdate={() => handleFieldEdit("jobType", jobDetails.jobType)} />
-              <DetailRow label="Experience" value={capitalize(jobDetails.experience)} onUpdate={() => handleFieldEdit("experience", jobDetails.experience)} />
-              <DetailRow label="Gender" value={capitalize(jobDetails.gender)} onUpdate={() => handleFieldEdit("gender", jobDetails.gender)} />
-              <DetailRow label="Deadline" value={jobDetails.deadline} onUpdate={() => handleFieldEdit("deadline", jobDetails.deadline)} />
-              <DetailRow label="Reporting To" value={jobDetails.reportingTo} onUpdate={() => handleFieldEdit("reportingTo", jobDetails.reportingTo)} />
-              <DetailRow label="Team Size" value={jobDetails.teamSize} onUpdate={() => handleFieldEdit("teamSize", jobDetails.teamSize)} />
-              <DetailRow label="Key Skills" value={jobDetails.keySkills} onUpdate={() => handleFieldEdit("keySkills", jobDetails.keySkills)} />
+              <DetailRow
+                label="Status"
+                value={jobDetails.stage}
+                onUpdate={handleUpdateField("status")}
+              />
+              <DetailRow
+                label="Job Type"
+                value={capitalize(jobDetails.jobType)}
+                onUpdate={handleUpdateField("jobType")}
+              />
+              <DetailRow
+                label="Experience"
+                value={capitalize(jobDetails.experience)}
+                onUpdate={handleUpdateField("experience")}
+              />
+              <DetailRow
+                label="Gender"
+                value={capitalize(jobDetails.gender)}
+                onUpdate={handleUpdateField("gender")}
+              />
+              <DetailRow
+                label="Deadline"
+                value={jobDetails.dateRange.end}
+                onUpdate={handleUpdateField("deadline")}
+              />
+              <DetailRow
+                label="Team Size"
+                value={jobDetails.teamSize.toString()}
+                onUpdate={handleUpdateField("teamSize")}
+              />
+              <DetailRow
+                label="Key Skills"
+                value={jobDetails.specialization.join(", ")}
+                onUpdate={handleUpdateField("keySkills")}
+              />
             </div>
           </CollapsibleContent>
         </Collapsible>
@@ -181,11 +202,18 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
         {/* Package Details */}
         <div className="rounded-lg border shadow-sm px-4 pb-4 pt-4">
           <h4 className="text-sm font-semibold mb-4">Package Details</h4>
-          <DetailRow
-            label="Salary Range"
-            value={`${jobDetails.salaryCurrency || "SAR"} ${jobDetails.minimumSalary || jobDetails.minSalary || 0} - ${jobDetails.maximumSalary || jobDetails.maxSalary || 0}`}
-            onUpdate={() => setIsSalaryDialogOpen(true)}
-          />
+          <div className="flex items-center justify-between">
+            <Label className="text-sm tracking-tight">Salary Range</Label>
+            <div className="flex items-center gap-2">
+              <span className="text-sm">{jobDetails.salaryCurrency || "SAR"} {jobDetails.minimumSalary || 0}</span>
+              <span className="text-sm">-</span>
+              <span className="text-sm">{jobDetails.maximumSalary || 0}</span>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setIsSalaryDialogOpen(true)}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+          </div>
         </div>
         {/* Job Description */}
         <Collapsible className="rounded-lg border shadow-sm">
@@ -240,31 +268,22 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
             </CollapsibleTrigger>
           </div>
           <CollapsibleContent className="px-4 pb-4">
-            <JobDiscriptionI value={internalDescription} onSave={handleInternalDescriptionSave} disabled={loading} />
+            <JobDescriptionInternal
+              value={internalDescription}
+              onSave={handleInternalDescriptionSave}
+              disabled={loading}
+            />
           </CollapsibleContent>
         </Collapsible>
         {/* Job Info Section */}
-        <JobInfoSection jobDetails={jobDetails} handleFieldEdit={handleFieldEdit} />
+        <JobTeamInfoSection jobDetails={jobDetails} handleUpdateField={handleUpdateField} />
       </div>
-      {/* Edit Dialogs */}
-      {editingField && (
-        <EditFieldDialog
-          open={true}
-          onClose={() => setEditingField(null)}
-          fieldName={editingField.name}
-          currentValue={editingField.value}
-          onSave={handleFieldSave}
-          isDate={editingField.isDate}
-          isTextArea={editingField.isTextArea}
-          isSelect={editingField.isSelect}
-        />
-      )}
       <EditSalaryDialog
         open={isSalaryDialogOpen}
         onClose={() => setIsSalaryDialogOpen(false)}
         currentValues={{
-          minSalary: jobDetails.minimumSalary || jobDetails.minSalary || 0,
-          maxSalary: jobDetails.maximumSalary || jobDetails.maxSalary || 0,
+          minSalary: jobDetails.minimumSalary || 0,
+          maxSalary: jobDetails.maximumSalary || 0,
           currency: jobDetails.salaryCurrency || "SAR",
         }}
         onSave={handleSalarySave}
@@ -277,7 +296,7 @@ export function SummaryContent({ jobId }: SummaryContentProps) {
           fieldName="jobDescription"
           currentValue={jobDetails.jobDescription || ""}
           onSave={async (val: string) => {
-            await handleFieldSave(val);
+            await handleFieldSave("jobDescription", val);
             setIsDescriptionModalOpen(false);
           }}
           isTextArea={true}

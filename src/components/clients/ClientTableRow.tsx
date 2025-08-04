@@ -11,7 +11,7 @@ export interface ClientTableRowProps {
     name: string;
     industry: string;
     location: string;
-    stage: "Lead" | "Engaged" | "Signed";
+    stage: "Lead" | "Engaged" | "Signed" | "Negotiation";
     clientStageStatus: ClientStageStatus;
     owner: string;
     team: string;
