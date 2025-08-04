@@ -2,6 +2,7 @@
 import CandidateSummary from '@/components/candidates/summary/candidate-summary';
 import { SlidersHorizontal, RefreshCcw, Plus, FileText, Users, Briefcase, Star, Activity, StickyNote, Paperclip, Clock, User } from "lucide-react";
 import dynamic from 'next/dynamic';
+import { mockCandidates } from '@/data/candidatesData';
 
 const TABS = [
   { label: "Summary", icon: <FileText className="w-4 h-4" /> },
@@ -15,20 +16,31 @@ const TABS = [
 // Dynamically import the client component for tabs and editing
 const ClientCandidateTabs = dynamic(() => import('./ClientCandidateTabs'), { ssr: false });
 
+// Function to get candidate by ID - can be replaced with API call later
+async function getCandidateById(id: string) {
+  // TODO: Replace with actual API call
+  // const response = await fetch(`/api/candidates/${id}`);
+  // return response.json();
+  
+  // For now, return dummy data
+  return mockCandidates.find(candidate => candidate._id === id) || null;
+}
+
 export default async function CandidatePage({ params }: { params: { id: string } }) {
   const { id } = params;
-  // const res = await fetch(`/api/candidates/${id}`);
-  // const candidate = await res.json();
+  
+  // Fetch candidate data - this can be easily replaced with API call
+  const candidate = await getCandidateById(id);
 
-  // if (!candidate) {
-  //   return (
-  //     <div className="min-h-[300px] font-sans w-full flex items-center justify-center">
-  //       <div className="text-gray-500 text-lg">Candidate not found.</div>
-  //     </div>
-  //   );
-  // }
+  if (!candidate) {
+    return (
+      <div className="min-h-[300px] font-sans w-full flex items-center justify-center">
+        <div className="text-gray-500 text-lg">Candidate not found.</div>
+      </div>
+    );
+  }
 
   return (
-    <ClientCandidateTabs candidate={{}} tabs={TABS} />
+    <ClientCandidateTabs candidate={candidate} tabs={TABS} />
   );
 }

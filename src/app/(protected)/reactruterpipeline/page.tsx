@@ -39,7 +39,7 @@ const ReactruterPipelinePage = () => {
         setOpen={setOpen}
         setFilterOpen={setFilterOpen}
         initialLoading={initialLoading}
-        heading="Reactruter Pipeline"
+        heading="Recruitment Pipeline"
         buttonText="Create Pipeline"
       />
       <div className="border-b" />

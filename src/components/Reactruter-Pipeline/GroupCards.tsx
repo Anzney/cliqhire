@@ -8,9 +8,10 @@ export interface Group {
 }
 
 import { Button } from "@/components/ui/button";
-import { Plus, MoreVertical } from "lucide-react";
+import { Plus, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { AddGroupDialog } from "@/components/AddGroupDialog";
 import { toast } from "sonner";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import {
   DropdownMenu,
@@ -76,6 +77,7 @@ export const GroupCards: React.FC<GroupCardsProps> = ({ groups, onAddGroup, onDe
     handleCloseDeleteDialog();
   };
 
+
   // Add Candidate
   const handleOpenAddCandidateDialog = (group: Group) => setAddCandidateDialog({ open: true, group });
   const handleCloseAddCandidateDialog = () => setAddCandidateDialog({ open: false, group: null });
@@ -106,25 +108,49 @@ export const GroupCards: React.FC<GroupCardsProps> = ({ groups, onAddGroup, onDe
             <div className="p-6 pb-0 flex flex-col h-full">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-xl font-semibold text-left">{group.name}</div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="p-1 rounded hover:bg-accent focus:outline-none">
-                      <MoreVertical className="h-5 w-5" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onSelect={() => setEditDialog({ open: true, group })}>
-                      Edit Group Name
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-destructive focus:text-destructive"
-                      onSelect={() => setDeleteDialog({ open: true, group })}
-                    >
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <TooltipProvider>
+                  <DropdownMenu>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-1 rounded hover:bg-accent focus:outline-none">
+                            <MoreVertical className="h-5 w-5" />
+                          </button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Group options</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <DropdownMenuContent align="end" className="w-4">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <DropdownMenuItem onSelect={() => setEditDialog({ open: true, group })}>
+                            <Pencil className="h-4 w-4" />
+                          </DropdownMenuItem>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Edit Group Name</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onSelect={() => setDeleteDialog({ open: true, group })}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </DropdownMenuItem>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Delete</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TooltipProvider>
               </div>
+              <div className="border-b mb-2 -mx-6" />
               <Button
                 size="sm"
                 variant="outline"

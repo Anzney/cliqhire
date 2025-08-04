@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil } from "lucide-react";
 import { EditFieldModal } from "./edit-field-modal";
+import { toast } from "sonner";
 
 const fields = [
   { key: "name", label: "Candidate Name" },
@@ -14,13 +15,28 @@ const fields = [
   { key: "status", label: "Status" },
 ];
 
-const CandidateSummary = ({ candidate }: { candidate: any }) => {
+interface CandidateSummaryProps {
+  candidate: any;
+  onCandidateUpdate?: (updatedCandidate: any) => void;
+}
+
+const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProps) => {
   const [editField, setEditField] = useState<string | null>(null);
   const [localCandidate, setLocalCandidate] = useState(candidate);
 
   const handleSave = (fieldKey: string, newValue: any) => {
-    setLocalCandidate((prev: any) => ({ ...prev, [fieldKey]: newValue }));
+    const updatedCandidate = { ...localCandidate, [fieldKey]: newValue };
+    setLocalCandidate(updatedCandidate);
     setEditField(null);
+    
+    // Notify parent component of the update
+    if (onCandidateUpdate) {
+      onCandidateUpdate(updatedCandidate);
+    }
+    
+    // Show success toast message
+    const fieldLabel = fields.find(field => field.key === fieldKey)?.label || fieldKey;
+    toast.success(`${fieldLabel} updated successfully`);
   };
 
   return (
