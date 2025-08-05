@@ -16,6 +16,9 @@ export interface Candidate {
   country?: string;
   nationality?: string;
   universityName?: string;
+  educationDegree?: string;
+  primaryLanguage?: string;
+  willingToRelocate?: string;
   phone?: string;
   email?: string;
   otherPhone?: string;

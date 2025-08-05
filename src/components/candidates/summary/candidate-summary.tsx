@@ -24,6 +24,9 @@ const detailsFields = [
   { key: "country", label: "Country" },
   { key: "nationality", label: "Nationality" },
   { key: "universityName", label: "University Name" },
+  { key: "educationDegree", label: "Education Degree/Certificate" },
+  { key: "primaryLanguage", label: "Primary Language" },
+  { key: "willingToRelocate", label: "Are you willing to relocate?" },
 ];
 
 // Split details fields into default visible and collapsible sections
