@@ -5,6 +5,7 @@ import { EditFieldModal } from "./edit-field-modal";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { CandidateTeamInfoSection } from "./CandidateTeamInfoSection";
 
 const detailsFields = [
   { key: "name", label: "Candidate Name" },
@@ -225,6 +226,12 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
             </div>
           </CollapsibleContent>
         </Collapsible>
+        
+        {/* Candidate Team Info Section */}
+        <CandidateTeamInfoSection
+          candidateDetails={localCandidate}
+          handleUpdateField={(fieldKey) => (value) => handleSave(fieldKey, value)}
+        />
       </div>
     </div>
   );
