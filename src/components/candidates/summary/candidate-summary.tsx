@@ -24,7 +24,7 @@ const detailsFields = [
   { key: "country", label: "Country" },
   { key: "nationality", label: "Nationality" },
   { key: "universityName", label: "University Name" },
-  { key: "educationDegree", label: "Education Degree/Certificate" },
+  { key: "educationDegree", label: "Education Degree/Certificate", isTextarea: true },
   { key: "primaryLanguage", label: "Primary Language" },
   { key: "willingToRelocate", label: "Are you willing to relocate?" },
 ];
@@ -81,6 +81,41 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
     const rawValue = localCandidate?.[field.key];
     const value = field.render ? field.render(rawValue) : rawValue;
     const hasValue = rawValue !== undefined && rawValue !== null && rawValue !== '' && (!Array.isArray(rawValue) || rawValue.length > 0);
+    
+    // If it's a textarea field, render it differently
+    if (field.isTextarea) {
+      return (
+        <div key={field.key} className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-muted-foreground">
+              {field.label}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 flex items-center"
+              onClick={() => setEditField(field.key)}
+            >
+              <Pencil className="h-4 w-4 mr-2" />Edit
+            </Button>
+          </div>
+          <Textarea
+            value={hasValue ? rawValue : ''}
+            placeholder="No Details"
+            className="min-h-[80px] resize-none"
+            readOnly
+          />
+          <EditFieldModal
+            open={editField === field.key}
+            onClose={() => setEditField(null)}
+            fieldName={field.label}
+            currentValue={typeof rawValue === 'string' ? rawValue : ''}
+            onSave={(val: string) => handleSave(field.key, val)}
+            isTextarea={true}
+          />
+        </div>
+      );
+    }
     
     return (
       <div key={field.key} className="relative border-b last:border-b-0">

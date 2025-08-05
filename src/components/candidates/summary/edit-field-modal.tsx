@@ -3,6 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
@@ -19,6 +20,7 @@ interface EditFieldModalProps {
   isDate?: boolean;
   isNumber?: boolean;
   isCurrency?: boolean;
+  isTextarea?: boolean;
   options?: { value: string; label: string }[];
   currencyOptions?: Array<{ code: string; symbol: string; name: string; countryCode?: string }>;
 }
@@ -32,6 +34,7 @@ export function EditFieldModal({
   onSave,
   isDate,
   isCurrency,
+  isTextarea,
   options,
   currencyOptions
 }: EditFieldModalProps) {
@@ -111,6 +114,14 @@ export function EditFieldModal({
                   </option>
                 ))}
               </select>
+            ) : isTextarea ? (
+              <Textarea
+                id="value"
+                value={value}
+                onChange={e => setValue(e.target.value)}
+                placeholder={`Enter ${fieldName.toLowerCase()}`}
+                className="min-h-[120px] resize-none"
+              />
             ) : (
               <Input
                 id="value"

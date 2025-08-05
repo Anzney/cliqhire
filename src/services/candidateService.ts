@@ -1,6 +1,7 @@
 // Types for candidate data
 export interface Candidate {
-  id: string;
+  id?: string;
+  _id?: string; // MongoDB ID from API response
   name?: string;
   location?: string;
   experience?: string;
@@ -242,6 +243,30 @@ class CandidateService {
       return data;
     } catch (error) {
       console.error('Error uploading resume:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create a new candidate
+   */
+  async createCandidate(candidateData: FormData): Promise<Candidate> {
+    try {
+      const response = await fetch(`${this.baseUrl}/candidates`, {
+        method: 'POST',
+        body: candidateData, // FormData for file uploads
+        // Note: Don't set Content-Type header when sending FormData
+        // The browser will automatically set it with the boundary
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to create candidate: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error creating candidate:', error);
       throw error;
     }
   }

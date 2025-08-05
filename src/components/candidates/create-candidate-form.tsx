@@ -11,13 +11,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import ReactSelect, { SingleValue } from "react-select";
 import countryList, { Country } from "react-select-country-list";
 import ReactCountryFlag from "react-country-flag";
 import { Upload } from "lucide-react";
 import { subDays } from "date-fns";
+import { candidateService } from "@/services/candidateService";
 
 interface CreateCandidateFormProps {
   onCandidateCreated?: (candidate: any) => void;
@@ -130,41 +130,28 @@ export default function CreateCandidateForm({
         }
       });
 
-      // Send data to backend using axios
-      const response = await axios.post('/api/candidates', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      if (response.status === 201) {
-        const createdCandidate = response.data;
-
-        // router.push(`/candidates/${createdCandidate._id}`);
-        
-        // Call the callback with the created candidate
-        if (onCandidateCreated) {
-          onCandidateCreated(createdCandidate);
-        }
-        
-        // Close the modal
-        onClose();
-        
-        // Redirect to candidate summary page
-        router.push(`/candidates/${createdCandidate._id}`);
+      // Send data to backend using candidateService
+      const createdCandidate = await candidateService.createCandidate(formData);
+      
+      // Call the callback with the created candidate
+      if (onCandidateCreated) {
+        onCandidateCreated(createdCandidate);
       }
+      
+      // Close the modal
+      onClose();
+      
+      // Redirect to candidate summary page
+      const candidateId = createdCandidate._id || createdCandidate.id;
+      router.push(`/candidates/${candidateId}`);
       
     } catch (error: any) {
       console.error('Error creating candidate:', error);
       
       // Handle different types of errors
-      if (error.response) {
-        // Server responded with error status
-        const errorMessage = error.response.data?.error || 'Failed to create candidate';
-        alert(`Error: ${errorMessage}`);
-      } else if (error.request) {
-        // Network error
-        alert('Network error. Please check your connection and try again.');
+      if (error.message) {
+        // Service error with message
+        alert(`Error: ${error.message}`);
       } else {
         // Other error
         alert(`Error creating candidate: ${error.message || 'Unknown error'}`);
