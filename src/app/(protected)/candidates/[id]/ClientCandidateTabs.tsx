@@ -159,21 +159,21 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
             Notes
           </TabsTrigger>
 
-          <TabsTrigger
+          {/* <TabsTrigger
             value="ClientTeam"
             className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
           >
             <Users className="h-4 w-4" />
             Client Team
-          </TabsTrigger>
+          </TabsTrigger> */}
 
-          <TabsTrigger
+          {/* <TabsTrigger
             value="Contacts"
             className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
           >
             <User className="h-4 w-4" />
             Contacts
-          </TabsTrigger>
+          </TabsTrigger> */}
 
           <TabsTrigger
             value="History"
