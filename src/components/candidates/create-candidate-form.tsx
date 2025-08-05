@@ -18,6 +18,7 @@ import ReactCountryFlag from "react-country-flag";
 import { Upload } from "lucide-react";
 import { subDays } from "date-fns";
 import { candidateService } from "@/services/candidateService";
+import { toast } from "sonner";
 
 interface CreateCandidateFormProps {
   onCandidateCreated?: (candidate: any) => void;
@@ -133,6 +134,9 @@ export default function CreateCandidateForm({
       // Send data to backend using candidateService
       const createdCandidate = await candidateService.createCandidate(formData);
       
+      // Show success toast message
+      toast.success("Candidate created successfully!");
+      
       // Call the callback with the created candidate
       if (onCandidateCreated) {
         onCandidateCreated(createdCandidate);
@@ -148,13 +152,11 @@ export default function CreateCandidateForm({
     } catch (error: any) {
       console.error('Error creating candidate:', error);
       
-      // Handle different types of errors
+      // Show error toast message
       if (error.message) {
-        // Service error with message
-        alert(`Error: ${error.message}`);
+        toast.error(`Failed to create candidate: ${error.message}`);
       } else {
-        // Other error
-        alert(`Error creating candidate: ${error.message || 'Unknown error'}`);
+        toast.error("Failed to create candidate. Please try again.");
       }
     } finally {
       setIsSubmitting(false);
