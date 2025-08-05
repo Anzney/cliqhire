@@ -102,25 +102,14 @@ const SalaryRange = ({ candidate, onCandidateUpdate }: SalaryRangeProps) => {
   const renderCurrentSalaryRow = () => {
     const currencyValue = localCandidate?.currentSalaryCurrency || "SAR";
     const salaryValue = localCandidate?.currentSalary;
-    const currencyOption = currencyOptions.find((c: any) => c.code === currencyValue);
     const hasSalary = salaryValue !== undefined && salaryValue !== null && salaryValue !== '';
-    
     return (
       <div className="flex items-center gap-4 p-3 border rounded-md bg-gray-50">
-        <div className="flex items-center gap-2 flex-1">
-          <Label className="text-sm font-medium text-gray-700 min-w-[60px]">Currency:</Label>
-          <div className="flex items-center gap-2 bg-white px-3 py-2 rounded border">
-            <div className="w-4 h-3">
-              {currencyOption && <CurrencyFlag currency={currencyOption.code} size="sm" />}
-            </div>
-            <span className="text-sm font-medium">{currencyValue}</span>
-          </div>
-        </div>
         <div className="flex items-center gap-2 flex-1">
           <Label className="text-sm font-medium text-gray-700 min-w-[100px]">Current Salary:</Label>
           <div className="bg-white px-3 py-2 rounded border flex-1">
             <span className={`text-sm ${hasSalary ? 'font-medium' : 'text-gray-500'}`}>
-              {hasSalary ? salaryValue : 'No Details'}
+              {hasSalary ? `${currencyValue} ${salaryValue}` : 'No Details'}
             </span>
           </div>
         </div>
@@ -139,25 +128,14 @@ const SalaryRange = ({ candidate, onCandidateUpdate }: SalaryRangeProps) => {
   const renderExpectedSalaryRow = () => {
     const currencyValue = localCandidate?.expectedSalaryCurrency || "SAR";
     const salaryValue = localCandidate?.expectedSalary;
-    const currencyOption = currencyOptions.find((c: any) => c.code === currencyValue);
     const hasSalary = salaryValue !== undefined && salaryValue !== null && salaryValue !== '';
-    
     return (
       <div className="flex items-center gap-4 p-3 border rounded-md bg-gray-50">
-        <div className="flex items-center gap-2 flex-1">
-          <Label className="text-sm font-medium text-gray-700 min-w-[60px]">Currency:</Label>
-          <div className="flex items-center gap-2 bg-white px-3 py-2 rounded border">
-            <div className="w-4 h-3">
-              {currencyOption && <CurrencyFlag currency={currencyOption.code} size="sm" />}
-            </div>
-            <span className="text-sm font-medium">{currencyValue}</span>
-          </div>
-        </div>
         <div className="flex items-center gap-2 flex-1">
           <Label className="text-sm font-medium text-gray-700 min-w-[100px]">Expected Salary:</Label>
           <div className="bg-white px-3 py-2 rounded border flex-1">
             <span className={`text-sm ${hasSalary ? 'font-medium' : 'text-gray-500'}`}>
-              {hasSalary ? salaryValue : 'No Details'}
+              {hasSalary ? `${currencyValue} ${salaryValue}` : 'No Details'}
             </span>
           </div>
         </div>

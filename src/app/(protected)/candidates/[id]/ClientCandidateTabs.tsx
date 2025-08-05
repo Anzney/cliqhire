@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import CandidateSummary from '@/components/candidates/summary/candidate-summary';
+import { NotesContent } from '@/components/clients/notes/notes-content';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -224,24 +225,7 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
         </TabsContent>
 
         <TabsContent value="Notes" className="p-4">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Notes</h3>
-              <Button size="sm" className="bg-black text-white hover:bg-gray-800">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Note
-              </Button>
-            </div>
-            <div className="space-y-3">
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium">Initial Assessment</span>
-                  <span className="text-xs text-gray-500">Jan 15, 2024</span>
-                </div>
-                <p className="text-gray-700">{enhancedCandidate.notes}</p>
-              </div>
-            </div>
-          </div>
+          <NotesContent candidateId={candidate._id || ""} />
         </TabsContent>
 
         <TabsContent value="ClientTeam" className="p-4">

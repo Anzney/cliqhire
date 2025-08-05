@@ -12,6 +12,8 @@ const detailsFields = [
   { key: "name", label: "Candidate Name" },
   { key: "location", label: "Location" },
   { key: "experience", label: "Experience" },
+  { key: "totalRelevantExperience", label: "Total Relevant Years of Experience" },
+  { key: "noticePeriod", label: "Notice Period" },
   { key: "skills", label: "Skills", render: (val: string[] | undefined) => val && val.length ? val.join(", ") : undefined },
   { key: "resume", label: "Resume", render: (val: string | undefined) => val ? <a href={val} target="_blank" rel="noopener noreferrer" className="underline">View Resume</a> : undefined },
   { key: "status", label: "Status" },
@@ -40,8 +42,6 @@ const previousCompanyFields = [
   { key: "currentJobTitle", label: "Current Job Title" },
   { key: "reportingTo", label: "Reporting To" },
   { key: "totalStaffReporting", label: "Total Number of Staff Reporting to You" },
-  { key: "totalRelevantExperience", label: "Total Relevant Years of Experience" },
-  { key: "noticePeriod", label: "Notice Period" },
 ];
 
 const skillFields = [

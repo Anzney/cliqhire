@@ -7,13 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import DatePicker from "../create-client-modal/date-picker";
 import ReactSelect, { SingleValue } from "react-select";
 import countryList, { Country } from "react-select-country-list";
 import ReactCountryFlag from "react-country-flag";
 import { Upload } from "lucide-react";
+import { subDays } from "date-fns";
 
 interface CreateCandidateFormProps {
   onCandidateCreated?: (candidate: any) => void;
@@ -210,6 +214,8 @@ export default function CreateCandidateForm({
     })
   };
 
+  const yesterday = subDays(new Date(), 1);
+
   return (
     <>
       <form onSubmit={handleSubmit} id="candidate-form" className="overflow-y-auto flex flex-col flex-1 min-h-0 p-2">
@@ -289,12 +295,33 @@ export default function CreateCandidateForm({
               {/* Date of Birth */}
               <div className="space-y-2">
                 <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                <DatePicker
-                  open={dobOpen}
-                  setOpen={setDobOpen}
-                  value={form.dateOfBirth ?? new Date()}
-                  setValue={(date) => setForm((prev) => ({ ...prev, dateOfBirth: date }))}
-                />
+                <Popover open={dobOpen} onOpenChange={setDobOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                      onClick={() => setDobOpen(true)}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {form.dateOfBirth ? format(form.dateOfBirth, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      captionLayout="dropdown"
+                      selected={form.dateOfBirth ?? undefined}
+                      onSelect={(date) => {
+                        setForm((prev) => ({ ...prev, dateOfBirth: date ?? null }));
+                        setDobOpen(false);
+                      }}
+                      fromDate={new Date(1900, 0, 1)}
+                      toDate={yesterday}
+                      initialFocus
+                      disabled={[{ from: new Date(), to: undefined }]}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
 
               {/* Country */}

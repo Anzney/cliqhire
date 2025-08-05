@@ -30,7 +30,13 @@ function mapNote(noteFromApi: any): Note {
   };
 }
 
-export function NotesContent({ clientId }: { clientId: string }) {
+export function NotesContent({ 
+  clientId, 
+  candidateId 
+}: { 
+  clientId?: string;
+  candidateId?: string;
+}) {
   // const router = useRouter();
 
   const [notes, setNotes] = useState<Note[]>([]); // removed sample notes
@@ -41,21 +47,27 @@ export function NotesContent({ clientId }: { clientId: string }) {
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ;
 
 useEffect(() => {
-    if (!clientId) return;
+    const entityId = clientId || candidateId;
+    const entityType = clientId ? 'client' : 'candidate';
+    
+    if (!entityId) return;
     axios
-      .get(`${API_BASE}/api/notes/client/${clientId}`)
+      .get(`${API_BASE}/api/notes/${entityType}/${entityId}`)
       .then((res) => setNotes(res.data.data.map(mapNote)))
       .catch((err) => console.error("Failed to fetch notes:", err));
-  }, [clientId]);
+  }, [clientId, candidateId]);
 
   const handleAddNote = async (note: { content: string }) => {
-    if (!clientId) {
-      alert("Client ID not found in URL. Cannot create note.");
+    const entityId = clientId || candidateId;
+    const entityType = clientId ? 'client' : 'candidate';
+    
+    if (!entityId) {
+      alert(`${entityType.charAt(0).toUpperCase() + entityType.slice(1)} ID not found in URL. Cannot create note.`);
       return;
     }
     const newNote = {
       content: note.content,
-      createdBy: clientId,
+      createdBy: entityId,
       // relatedTo: ... // Add if needed
     };
     try {
