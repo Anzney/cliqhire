@@ -163,6 +163,38 @@ export default function CreateCandidateForm({
     }
   };
 
+  // Reset form state when canceling
+  const handleCancel = () => {
+    // Reset form to initial state
+    setForm({
+      name: "",
+      phone: "",
+      email: "",
+      location: "",
+      description: "",
+      gender: "",
+      dateOfBirth: null,
+      country: "",
+      nationality: "",
+      willingToRelocate: "",
+      cv: null,
+    });
+    
+    // Reset advanced options to hidden
+    setShowAdvanced(false);
+    
+    // Reset date picker state
+    setDobOpen(false);
+    
+    // Clear file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    
+    // Call the original goBack function
+    goBack();
+  };
+
   // Custom styles for ReactSelect to match the black border on focus
   const customStyles = {
     control: (provided: any, state: any) => ({
@@ -433,14 +465,14 @@ export default function CreateCandidateForm({
           </button>
         </div>
       </form>
-      <DialogFooter>
-        <Button type="button" variant="outline" onClick={goBack} disabled={isSubmitting}>
-          Cancel
-        </Button>
-        <Button type="submit" form="candidate-form" disabled={isSubmitting}>
-          {isSubmitting ? "Creating..." : "Continue"}
-        </Button>
-      </DialogFooter>
+             <DialogFooter>
+         <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
+           Cancel
+         </Button>
+         <Button type="submit" form="candidate-form" disabled={isSubmitting}>
+           {isSubmitting ? "Creating..." : "Continue"}
+         </Button>
+       </DialogFooter>
     </>
   );
 }
