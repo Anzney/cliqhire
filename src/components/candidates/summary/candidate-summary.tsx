@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { CandidateTeamInfoSection } from "./CandidateTeamInfoSection";
+import SalaryRange from "./salary-range";
 
 const detailsFields = [
   { key: "name", label: "Candidate Name" },
@@ -188,6 +189,25 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
             <div className="space-y-3">
               {contactFields.map((field) => renderField(field, contactFields))}
             </div>
+          </CollapsibleContent>
+        </Collapsible>
+        
+        {/* Salary Range Section */}
+        <Collapsible className="rounded-lg border shadow-sm">
+          <div className="flex items-center justify-between p-4">
+            <h4 className="text-sm font-semibold">Salary Range</h4>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-xs p-1">
+                Show Complete Details
+                <ChevronsUpDown />
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="px-4 pb-4">
+            <SalaryRange
+              candidate={localCandidate}
+              onCandidateUpdate={onCandidateUpdate}
+            />
           </CollapsibleContent>
         </Collapsible>
         

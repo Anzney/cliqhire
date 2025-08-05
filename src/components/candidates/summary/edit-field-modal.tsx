@@ -4,9 +4,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import CurrencyFlag from "react-currency-flags";
 
 interface EditFieldModalProps {
   open: boolean;
@@ -16,7 +18,9 @@ interface EditFieldModalProps {
   onSave: (value: string) => void;
   isDate?: boolean;
   isNumber?: boolean;
+  isCurrency?: boolean;
   options?: { value: string; label: string }[];
+  currencyOptions?: Array<{ code: string; symbol: string; name: string; countryCode?: string }>;
 }
 
 export function EditFieldModal({
@@ -27,7 +31,9 @@ export function EditFieldModal({
   isNumber,
   onSave,
   isDate,
-  options
+  isCurrency,
+  options,
+  currencyOptions
 }: EditFieldModalProps) {
   const [value, setValue] = useState(currentValue);
   const [selectedDate, setSelectedDate] = useState<Date | null>(
@@ -65,6 +71,34 @@ export function EditFieldModal({
                   className="border p-2 rounded w-full"
                 />
               </div>
+            ) : isCurrency && currencyOptions ? (
+              <Select value={value} onValueChange={setValue}>
+                <SelectTrigger>
+                  <SelectValue>
+                    {value && (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-3">
+                          <CurrencyFlag currency={value} size="sm" />
+                        </div>
+                        <span>{value}</span>
+                      </div>
+                    )}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {currencyOptions.map((currency) => (
+                    <SelectItem key={currency.code} value={currency.code}>
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-3">
+                          <CurrencyFlag currency={currency.code} size="sm" />
+                        </div>
+                        <span>{currency.name}</span>
+                        <span className="text-muted-foreground ml-auto">{currency.symbol}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             ) : options ? (
               <select
                 className="w-full p-2 border rounded text-sm"
