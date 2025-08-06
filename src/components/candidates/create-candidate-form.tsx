@@ -146,7 +146,7 @@ export default function CreateCandidateForm({
       onClose();
       
       // Redirect to candidate summary page
-      const candidateId = createdCandidate._id || createdCandidate.id;
+      const candidateId = createdCandidate._id;
       router.push(`/candidates/${candidateId}`);
       
     } catch (error: any) {

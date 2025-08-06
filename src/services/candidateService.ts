@@ -1,6 +1,5 @@
 // Types for candidate data
 export interface Candidate {
-  id?: string;
   _id?: string; // MongoDB ID from API response
   name?: string;
   location?: string;
@@ -20,22 +19,40 @@ export interface Candidate {
   educationDegree?: string;
   primaryLanguage?: string;
   willingToRelocate?: string;
+  description?: string;
   phone?: string;
   email?: string;
   otherPhone?: string;
   linkedin?: string;
+  currentSalary?: string | number;
+  currentSalaryCurrency?: string;
+  expectedSalary?: string | number;
+  expectedSalaryCurrency?: string;
   previousCompanyName?: string;
   currentJobTitle?: string;
   reportingTo?: string;
   totalStaffReporting?: string;
-  softSkill?: string;
-  technicalSkill?: string;
-  // Add other fields as needed
+  softSkill?: string[];
+  technicalSkill?: string[];
+  recruitmentManager?: string;
+  recruiter?: string;
+  teamLead?: string;
+  cv?: File; // For file upload during creation
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface UpdateFieldRequest {
   fieldKey: string;
   value: any;
+}
+
+// API Response interfaces
+export interface ApiResponse<T> {
+  status: string;
+  message?: string;
+  data?: T;
+  results?: number;
 }
 
 export interface UpdateFieldResponse {
@@ -45,19 +62,13 @@ export interface UpdateFieldResponse {
 }
 
 class CandidateService {
-  private baseUrl: string;
-
-  constructor() {
-    // You can configure this based on your environment
-    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
-  }
 
   /**
    * Fetch candidate details by ID
    */
   async getCandidateById(candidateId: string): Promise<Candidate> {
     try {
-      const response = await fetch(`${this.baseUrl}/candidates/${candidateId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/candidates/${candidateId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -68,8 +79,8 @@ class CandidateService {
         throw new Error(`Failed to fetch candidate: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      return data;
+      const apiResponse: ApiResponse<Candidate> = await response.json();
+      return apiResponse.data || apiResponse as any;
     } catch (error) {
       console.error('Error fetching candidate:', error);
       throw error;
@@ -85,7 +96,7 @@ class CandidateService {
     value: any
   ): Promise<UpdateFieldResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/candidates/${candidateId}/field`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/candidates/${candidateId}/field`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -100,8 +111,12 @@ class CandidateService {
         throw new Error(`Failed to update field: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      return data;
+      const apiResponse: ApiResponse<Candidate> = await response.json();
+      return {
+        success: apiResponse.status === 'success',
+        message: apiResponse.message || 'Field updated successfully',
+        candidate: apiResponse.data
+      };
     } catch (error) {
       console.error('Error updating candidate field:', error);
       throw error;
@@ -116,7 +131,7 @@ class CandidateService {
     updates: Record<string, any>
   ): Promise<UpdateFieldResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/candidates/${candidateId}/fields`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/candidates/${candidateId}/fields`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -128,8 +143,12 @@ class CandidateService {
         throw new Error(`Failed to update fields: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      return data;
+      const apiResponse: ApiResponse<Candidate> = await response.json();
+      return {
+        success: apiResponse.status === 'success',
+        message: apiResponse.message || 'Fields updated successfully',
+        candidate: apiResponse.data
+      };
     } catch (error) {
       console.error('Error updating candidate fields:', error);
       throw error;
@@ -137,15 +156,15 @@ class CandidateService {
   }
 
   /**
-   * Update candidate details (full object)
+   * Update candidate details (partial updates supported)
    */
   async updateCandidate(
     candidateId: string, 
     candidateData: Partial<Candidate>
   ): Promise<Candidate> {
     try {
-      const response = await fetch(`${this.baseUrl}/candidates/${candidateId}`, {
-        method: 'PUT',
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/candidates/${candidateId}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -156,8 +175,8 @@ class CandidateService {
         throw new Error(`Failed to update candidate: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      return data;
+      const apiResponse: ApiResponse<Candidate> = await response.json();
+      return apiResponse.data || apiResponse as any;
     } catch (error) {
       console.error('Error updating candidate:', error);
       throw error;
@@ -169,7 +188,7 @@ class CandidateService {
    */
   async deleteCandidate(candidateId: string): Promise<void> {
     try {
-      const response = await fetch(`${this.baseUrl}/candidates/${candidateId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/candidates/${candidateId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -201,7 +220,7 @@ class CandidateService {
       if (params?.limit) queryParams.append('limit', params.limit.toString());
       if (params?.offset) queryParams.append('offset', params.offset.toString());
 
-      const url = `${this.baseUrl}/candidates${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/api/candidates${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       
       const response = await fetch(url, {
         method: 'GET',
@@ -214,8 +233,11 @@ class CandidateService {
         throw new Error(`Failed to fetch candidates: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      return data;
+      const apiResponse: ApiResponse<Candidate[]> = await response.json();
+      return {
+        candidates: apiResponse.data || [],
+        total: apiResponse.results || 0
+      };
     } catch (error) {
       console.error('Error fetching candidates:', error);
       throw error;
@@ -230,7 +252,7 @@ class CandidateService {
       const formData = new FormData();
       formData.append('resume', file);
 
-      const response = await fetch(`${this.baseUrl}/candidates/${candidateId}/resume`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/candidates/${candidateId}/resume`, {
         method: 'POST',
         body: formData,
       });
@@ -249,22 +271,37 @@ class CandidateService {
 
   /**
    * Create a new candidate
+   * Supports both FormData (for file uploads) and JSON payloads
    */
-  async createCandidate(candidateData: FormData): Promise<Candidate> {
+  async createCandidate(candidateData: FormData | Partial<Candidate>): Promise<Candidate> {
     try {
-      const response = await fetch(`${this.baseUrl}/candidates`, {
-        method: 'POST',
-        body: candidateData, // FormData for file uploads
-        // Note: Don't set Content-Type header when sending FormData
-        // The browser will automatically set it with the boundary
-      });
+      let response: Response;
+      
+      if (candidateData instanceof FormData) {
+        // FormData for file uploads
+        response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/candidates`, {
+          method: 'POST',
+          body: candidateData,
+          // Note: Don't set Content-Type header when sending FormData
+          // The browser will automatically set it with the boundary
+        });
+      } else {
+        // JSON payload
+        response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/candidates`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(candidateData),
+        });
+      }
 
       if (!response.ok) {
         throw new Error(`Failed to create candidate: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      return data;
+      const apiResponse: ApiResponse<Candidate> = await response.json();
+      return apiResponse.data || apiResponse as any;
     } catch (error) {
       console.error('Error creating candidate:', error);
       throw error;
@@ -281,7 +318,7 @@ class CandidateService {
     pending: number;
   }> {
     try {
-      const response = await fetch(`${this.baseUrl}/candidates/stats`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/candidates/stats`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -292,8 +329,13 @@ class CandidateService {
         throw new Error(`Failed to fetch candidate stats: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      return data;
+      const apiResponse: ApiResponse<{
+        total: number;
+        active: number;
+        placed: number;
+        pending: number;
+      }> = await response.json();
+      return apiResponse.data || apiResponse as any;
     } catch (error) {
       console.error('Error fetching candidate stats:', error);
       throw error;
