@@ -48,8 +48,8 @@ const previousCompanyFields = [
 ];
 
 const skillFields = [
-  { key: "softSkill", label: "Soft Skill" },
-  { key: "technicalSkill", label: "Technical Skill" },
+  { key: "softSkill", label: "Soft Skill", isArray: true },
+  { key: "technicalSkill", label: "Technical Skill", isArray: true },
 ];
 
 interface CandidateSummaryProps {
@@ -148,7 +148,11 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
 
   const renderSkillField = (field: any) => {
     const rawValue = localCandidate?.[field.key];
-    const hasValue = rawValue !== undefined && rawValue !== null && rawValue !== '';
+    const hasValue = rawValue !== undefined && rawValue !== null && 
+      (Array.isArray(rawValue) ? rawValue.length > 0 : rawValue !== '');
+    
+    // Display value: if array, join with commas; if string, use as is
+    const displayValue = Array.isArray(rawValue) ? rawValue.join(', ') : rawValue;
     
     return (
       <div key={field.key} className="mb-4">
@@ -166,7 +170,7 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
           </Button>
         </div>
         <Textarea
-          value={hasValue ? rawValue : ''}
+          value={hasValue ? displayValue : ''}
           placeholder="No Details"
           className="min-h-[80px] resize-none"
           readOnly
@@ -175,8 +179,12 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
           open={editField === field.key}
           onClose={() => setEditField(null)}
           fieldName={field.label}
-          currentValue={typeof rawValue === 'string' ? rawValue : ''}
-          onSave={(val: string) => handleSave(field.key, val)}
+          currentValue={displayValue || ''}
+          onSave={(val: string) => {
+            // Convert comma-separated string back to array
+            const arrayValue = val.trim() ? val.split(',').map(item => item.trim()).filter(item => item) : [];
+            handleSave(field.key, arrayValue);
+          }}
         />
       </div>
     );
