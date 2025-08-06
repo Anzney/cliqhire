@@ -48,8 +48,8 @@ const previousCompanyFields = [
 ];
 
 const skillFields = [
-  { key: "softSkill", label: "Soft Skill", isArray: true },
-  { key: "technicalSkill", label: "Technical Skill", isArray: true },
+  { key: "softSkill", label: "Soft Skill", isArray: true, isTextarea: true },
+  { key: "technicalSkill", label: "Technical Skill", isArray: true, isTextarea: true },
 ];
 
 interface CandidateSummaryProps {
@@ -185,6 +185,7 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
             const arrayValue = val.trim() ? val.split(',').map(item => item.trim()).filter(item => item) : [];
             handleSave(field.key, arrayValue);
           }}
+          isTextarea={true}
         />
       </div>
     );
