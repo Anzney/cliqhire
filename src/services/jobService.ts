@@ -43,8 +43,9 @@ export interface JobData {
   jobDescriptionPdf?: string;
   nationalities?: string[];
   gender?: string;
-  deadlineclient?: string | Date | null;
-  deadlineinternal?: string | Date | null;
+  deadlineByClient?: Date | undefined;
+  startDateByInternalTeam?: Date | undefined;
+  endDateByInternalTeam?: Date | undefined;
   reportingTo?: string;
   teamSize?: number;
   link?: string;
@@ -91,12 +92,12 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const handleApiError = (error: any, context: string) => {
   if (error.response) {
     const status = error.response.status;
-    const errorMessage = error.response.data?.message || 'Unknown error occurred';
+    const errorMessage = error.response.data?.message || "Unknown error occurred";
     console.error(`API Error (${context}):`, {
       status,
       message: errorMessage,
       url: error.config.url,
-      data: error.response.data
+      data: error.response.data,
     });
     throw new Error(`${context} failed: ${errorMessage} (Status: ${status})`);
   } else if (error.request) {
@@ -112,20 +113,26 @@ const handleApiError = (error: any, context: string) => {
 const processJobData = (jobData: JobData | Partial<JobData>) => {
   const dataToSend = { ...jobData };
   // Ensure client is just the ID string before sending
-  if (dataToSend.client && typeof dataToSend.client === 'object' && (dataToSend.client as ClientRef)._id) {
+  if (
+    dataToSend.client &&
+    typeof dataToSend.client === "object" &&
+    (dataToSend.client as ClientRef)._id
+  ) {
     dataToSend.client = (dataToSend.client as ClientRef)._id;
   }
   return {
     ...dataToSend,
-    deadlineclient: dataToSend.deadlineclient ? new Date(dataToSend.deadlineclient).toISOString() : null,
-    deadlineinternal: dataToSend.deadlineinternal ? new Date(dataToSend.deadlineinternal).toISOString() : null,
     jobType: dataToSend.jobType?.toLowerCase(),
     gender: dataToSend.gender?.toLowerCase(),
-    salaryRange: dataToSend.salaryRange || (dataToSend.minimumSalary !== undefined || dataToSend.maximumSalary !== undefined ? {
-      min: dataToSend.minimumSalary || 0,
-      max: dataToSend.maximumSalary || 0,
-      currency: dataToSend.salaryCurrency || 'SAR'
-    } : undefined)
+    salaryRange:
+      dataToSend.salaryRange ||
+      (dataToSend.minimumSalary !== undefined || dataToSend.maximumSalary !== undefined
+        ? {
+            min: dataToSend.minimumSalary || 0,
+            max: dataToSend.maximumSalary || 0,
+            currency: dataToSend.salaryCurrency || "SAR",
+          }
+        : undefined),
   };
 };
 
@@ -135,39 +142,37 @@ const createJob = async (jobData: JobData): Promise<JobResponse> => {
     const response = await axios.post<JobResponse>(`${API_URL}/api/jobs`, processedData);
     return response.data;
   } catch (error) {
-    handleApiError(error, 'job creation');
+    handleApiError(error, "job creation");
     throw error;
   }
 };
 
-const getJobs = async (
-  params?: {
-    stage?: string;
-    jobType?: string;
-    location?: string;
-    client?: string;
-    minSalary?: number;
-    maxSalary?: number;
-    currency?: string;
-    gender?: string;
-    search?: string;
-    page?: number;
-    limit?: number;
-    sort?: string;
-  }
-): Promise<PaginatedJobResponse> => {
+const getJobs = async (params?: {
+  stage?: string;
+  jobType?: string;
+  location?: string;
+  client?: string;
+  minSalary?: number;
+  maxSalary?: number;
+  currency?: string;
+  gender?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+  sort?: string;
+}): Promise<PaginatedJobResponse> => {
   try {
     const processedParams = {
       ...params,
       ...(params?.jobType && { jobType: params.jobType.toLowerCase() }),
-      ...(params?.gender && { gender: params.gender.toLowerCase() })
+      ...(params?.gender && { gender: params.gender.toLowerCase() }),
     };
     const response = await axios.get<PaginatedJobResponse>(`${API_URL}/api/jobs`, {
-      params: processedParams
+      params: processedParams,
     });
     return response.data;
   } catch (error) {
-    handleApiError(error, 'jobs fetching');
+    handleApiError(error, "jobs fetching");
     throw error;
   }
 };
@@ -178,9 +183,9 @@ const getJobById = async (id: string): Promise<JobResponse> => {
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 404) {
-      throw new Error('Job not found');
+      throw new Error("Job not found");
     }
-    handleApiError(error, 'job fetching');
+    handleApiError(error, "job fetching");
     throw error;
   }
 };
@@ -190,7 +195,35 @@ const updateJobById = async (id: string, jobData: Partial<JobData>): Promise<Job
     const response = await axios.patch<JobResponse>(`${API_URL}/api/jobs/${id}`, jobData);
     return response.data;
   } catch (error) {
-    handleApiError(error, 'job update');
+    handleApiError(error, "job update");
+    throw error;
+  }
+};
+
+// Upload job file (JD PDF or Benefit PDF)
+const uploadJobFile = async (
+  jobId: string,
+  file: File,
+  field: "jobDescriptionPdf" | "benefitPdf",
+): Promise<{ filePath: string }> => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("field", field);
+
+    const response = await axios.post<{
+      success: boolean;
+      data: { filePath: string };
+    }>(`${API_URL}/api/jobs/${jobId}/upload`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      timeout: 30000,
+    });
+
+    return response.data.data;
+  } catch (error) {
+    handleApiError(error, "job file upload");
     throw error;
   }
 };
@@ -200,7 +233,7 @@ const deleteJobById = async (id: string): Promise<JobResponse> => {
     const response = await axios.delete<JobResponse>(`${API_URL}/api/jobs/${id}`);
     return response.data;
   } catch (error) {
-    handleApiError(error, 'job deletion');
+    handleApiError(error, "job deletion");
     throw error;
   }
 };
@@ -208,21 +241,25 @@ const deleteJobById = async (id: string): Promise<JobResponse> => {
 // Bulk job count by client
 const getJobCountsByClient = async (): Promise<JobCountByClient[]> => {
   try {
-    const response = await axios.get<{ success: boolean, data: JobCountByClient[] }>(
-      `${API_URL}/api/jobs/clients/count`
+    const response = await axios.get<{ success: boolean; data: JobCountByClient[] }>(
+      `${API_URL}/api/jobs/clients/count`,
     );
     return response.data.data;
   } catch (error) {
-    handleApiError(error, 'fetching job counts by client');
+    handleApiError(error, "fetching job counts by client");
     throw error;
   }
 };
 
 // Job Notes API
-export async function createJobNote(note: { content: string; jobId: string }) {
+export async function createJobNote(note: { content: string; jobId: string; clientId: string }) {
   const API_BASE = process.env.NEXT_PUBLIC_API_URL;
   // Backend expects job_id, not jobId
-  const res = await axios.post(`${API_BASE}/api/jobnotes`, { content: note.content, job_id: note.jobId });
+  const res = await axios.post(`${API_BASE}/api/jobnotes`, {
+    content: note.content,
+    job_id: note.jobId,
+    client_id: note.clientId,
+  });
   return res.data.data;
 }
 
@@ -240,7 +277,6 @@ export async function getJobNotesByJobId(jobId: string) {
 
 export async function updateJobNote(id: string, content: string, jobId: string) {
   const API_BASE = process.env.NEXT_PUBLIC_API_URL;
-  // Backend expects job_id, not jobId
   const res = await axios.patch(`${API_BASE}/api/jobnotes/${id}`, { content, job_id: jobId });
   return res.data.data;
 }
@@ -256,7 +292,7 @@ const updateJobStage = async (id: string, stage: string): Promise<JobResponse> =
     const response = await axios.patch<JobResponse>(`${API_URL}/api/jobs/${id}/stage`, { stage });
     return response.data;
   } catch (error) {
-    handleApiError(error, 'job stage update');
+    handleApiError(error, "job stage update");
     throw error;
   }
 };
@@ -265,14 +301,14 @@ const updateJobPrimaryContacts = async (
   jobId: string,
   selectedContactIds: string[], // Only IDs
   newContacts: any[] = [],
-  clientId?: string
+  clientId?: string,
 ): Promise<JobResponse> => {
   try {
     // Create the request payload with IDs only
     const payload = {
       selectedContacts: selectedContactIds, // Only IDs
       newContact: newContacts || [],
-      clientId: clientId || ""
+      clientId: clientId || "",
     };
     console.log("Request payload:", payload);
 
@@ -282,16 +318,16 @@ const updateJobPrimaryContacts = async (
       payload,
       {
         headers: {
-          'Content-Type': 'application/json'
-        }
-      }
+          "Content-Type": "application/json",
+        },
+      },
     );
 
     console.log("Response from server:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error updating primary contacts:", error);
-    handleApiError(error, 'job primary contacts update');
+    handleApiError(error, "job primary contacts update");
     throw error;
   }
 };
@@ -327,7 +363,7 @@ const getPrimaryContactsByJobId = async (jobId: string): Promise<any> => {
     if (axios.isAxiosError(error) && error.response?.status === 404) {
       return { success: true, data: { primaryContacts: [] } };
     }
-    handleApiError(error, 'fetching job primary contacts');
+    handleApiError(error, "fetching job primary contacts");
     throw error;
   }
 };
@@ -337,9 +373,10 @@ export {
   getJobs,
   getJobById,
   updateJobById,
+  uploadJobFile,
   deleteJobById,
   getJobCountsByClient,
   updateJobStage,
   updateJobPrimaryContacts,
-  getPrimaryContactsByJobId
+  getPrimaryContactsByJobId,
 };

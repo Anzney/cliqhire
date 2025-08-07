@@ -4,7 +4,7 @@ import { Plus, LayoutGrid, List, SlidersHorizontal, RefreshCcw, MoreVertical, Lo
 import { JobsEmptyState } from "./empty-state";
 import { useState, useEffect } from "react";
 // import { CreateJobModal } from "@/components/jobs/create-job-modal"
-import {
+import {  
   Table,
   TableBody,
   TableCell,

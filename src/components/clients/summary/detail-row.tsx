@@ -23,6 +23,7 @@ interface DetailRowProps {
   isSelect?: boolean;
   alwaysShowEdit?: boolean;
   disableInternalEdit?: boolean; // NEW PROP
+  customEdit?: () => void; // NEW PROP for custom edit handlers
 }
 
 export function DetailRow({
@@ -39,6 +40,7 @@ export function DetailRow({
   isSelect,
   alwaysShowEdit,
   disableInternalEdit,
+  customEdit,
 }: DetailRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -114,14 +116,14 @@ export function DetailRow({
               )}
             </span>
           )}
-          {!isSelect && (
+          {!isSelect && !disableInternalEdit && (
             <Button
               variant="outline"
               size="sm"
               className="h-8"
               onClick={() => {
-                if (disableInternalEdit) {
-                  onUpdate("");
+                if (customEdit) {
+                  customEdit();
                 } else if (isDate) {
                   setShowDatePicker(!showDatePicker);
                 } else {

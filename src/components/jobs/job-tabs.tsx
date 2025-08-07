@@ -36,7 +36,7 @@ export function JobTabs({ jobId, jobData }: JobTabsProps) {
       
       <JobTabContent value="team">
       
-        <TeamContent jobId={jobId} />
+        <TeamContent jobId={jobId} jobData={jobData} />
       </JobTabContent>
 
       <JobTabContent value="recommendations">
@@ -51,7 +51,7 @@ export function JobTabs({ jobId, jobData }: JobTabsProps) {
       
       <JobTabContent value="notes">
       
-        <NotesContent jobId={jobId} />
+        <NotesContent jobId={jobId} jobData={jobData} />
       </JobTabContent>
       
       <JobTabContent value="attachments">
