@@ -103,16 +103,16 @@ export const JobsContent = forwardRef<JobsContentRef, JobsContentProps>(
 
   return (
     <>
-      <div className="border-b py-2 px-4 w-full">
-        <div className="flex items-center w-full">
-          <div className="grid grid-cols-8 w-full text-sm font-medium text-gray-500">
+      <div className="border-b py-2 px-6 ">
+        <div className="flex items-center -ml-4 -mr-4">
+          <div className="grid grid-cols-8 w-full text-sm font-medium text-gray-500 ">
             {["Job Title", "Client", "Location", "Job Type", "Minimum Salary", "Maximum Salary", "Experience", "Stage"].map((item, index) => (
               <div key={index}>{item}</div>
             ))}
           </div>
         </div>
       </div>
-      <div className="overflow-auto">
+      <div className="overflow-auto -ml-4 -mr-4">
         {candidateJobs.length > 0 ? (
           candidateJobs.map((job) => (
             <div
@@ -135,7 +135,7 @@ export const JobsContent = forwardRef<JobsContentRef, JobsContentProps>(
             </div>
           ))
         ) : (
-          <div className="flex items-center justify-center h-32 text-gray-500">
+          <div className="flex items-center justify-center h-32 text-gray-500 -ml-5 -mr-5">
             No job applications found for this candidate.
           </div>
         )}

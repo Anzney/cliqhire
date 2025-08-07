@@ -157,7 +157,7 @@ export function JobsContent({ clientId, clientName }: JobsContentProps) {
             >
               <div className="flex items-center">
                 {/* <Checkbox id={`job-${job._id}`} className="mr-4 border-gray-400" /> */}
-                <div className="grid grid-cols-7 w-full">
+                <div className="grid grid-cols-7  w-full px-0 mx-0">
                   <div className="font-medium">{job.jobTitle}</div>
                   <div className="capitalize">{job.jobType || "N/A"}</div>
                   <div>{job.location}</div>
