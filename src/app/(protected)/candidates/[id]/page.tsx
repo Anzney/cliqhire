@@ -6,6 +6,7 @@ import { candidateService } from '@/services/candidateService';
 
 const TABS = [
   { label: "Summary", icon: <FileText className="w-4 h-4" /> },
+  { label: "Jobs", icon: <Briefcase className="w-4 h-4" /> },
   { label: "Activities", icon: <Activity className="w-4 h-4" /> },
   { label: "Notes", icon: <StickyNote className="w-4 h-4" /> },
   { label: "Client Team", icon: <Users className="w-4 h-4" /> },

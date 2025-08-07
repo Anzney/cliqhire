@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SlidersHorizontal, RefreshCcw, Plus, FileText, Users, Briefcase, Star, Activity, StickyNote, Paperclip, Clock, User, FileIcon, FilePen, Mail, Phone, MapPin, Calendar } from "lucide-react";
+import { AttachmentsContent } from '@/components/candidates/attachments/attachments-content';
+import { JobsContent } from '@/components/candidates/jobs/jobs-content';
+import { AddToJobDialog } from '@/components/candidates/add-to-job-dialog';
 import { candidateService } from '@/services/candidateService';
 import { toast } from "sonner";
 
@@ -168,12 +171,16 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
 
       {/* Button Bar */}
       <div className="flex items-center justify-between p-4 border-b">
-        <Button
-          className="bg-black text-white hover:bg-gray-800 rounded-md flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Add to Job
-        </Button>
+        <AddToJobDialog 
+          candidateId={candidate._id || ""} 
+          candidateName={enhancedCandidate.name}
+          trigger={
+            <Button className="bg-black text-white hover:bg-gray-800 rounded-md flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Add to Job
+            </Button>
+          }
+        />
 
         <div className="flex items-center gap-2">
           <Button
@@ -209,6 +216,14 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
           </TabsTrigger>
 
           <TabsTrigger
+            value="Jobs"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+          >
+            <Briefcase className="h-4 w-4" />
+            Jobs
+          </TabsTrigger>
+
+          <TabsTrigger
             value="Activities"
             className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
           >
@@ -222,6 +237,14 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
           >
             <StickyNote className="h-4 w-4" />
             Notes
+          </TabsTrigger>
+
+          <TabsTrigger
+            value="Attachments"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+          >
+            <Paperclip className="h-4 w-4" />
+            Attachments
           </TabsTrigger>
 
           {/* <TabsTrigger
@@ -254,6 +277,10 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
             candidate={localCandidate} 
             onCandidateUpdate={handleCandidateUpdate}
           />
+        </TabsContent>
+
+        <TabsContent value="Jobs" className="p-4">
+          <JobsContent candidateId={candidate._id || ""} candidateName={enhancedCandidate.name} />
         </TabsContent>
 
         <TabsContent value="Activities" className="p-4">
@@ -290,6 +317,10 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
 
         <TabsContent value="Notes" className="p-4">
           <NotesContent candidateId={candidate._id || ""} />
+        </TabsContent>
+
+        <TabsContent value="Attachments" className="p-4">
+          <AttachmentsContent candidateId={candidate._id || ""} />
         </TabsContent>
 
         <TabsContent value="ClientTeam" className="p-4">
