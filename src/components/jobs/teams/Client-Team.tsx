@@ -6,12 +6,14 @@ import { getClientById } from "@/services/clientService";
 import { AddContactModal } from "@/components/clients/modals/add-contact-modal";
 import { Label } from "@/components/ui/label";
 import { ClientPrimaryContactsDialog } from "./ClientPrimaryContactsDialog";
+import { JobData } from "../types";
 
 interface ClientTeamProps {
   jobId: string;
+  jobData: JobData;
 }
 
-export function ClientTeam({ jobId }: ClientTeamProps) {
+export function ClientTeam({ jobId, jobData }: ClientTeamProps) {
   const [allClientContacts, setAllClientContacts] = useState<any[]>([]); // All client contacts
   const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]); // Job's selected contacts
   const [jobContacts, setJobContacts] = useState<any[]>([]); // Job's primary contacts from API
@@ -65,16 +67,9 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
       setError(null);
       setLoading(true);
       try {
-        // Get job to extract clientId
-        const jobRes = await getJobById(jobId);
-        let job = jobRes.data;
-        if (Array.isArray(job)) job = job[0];
-        if (!job || typeof job !== "object") throw new Error("Invalid job data");
-        const cid = (job as any)?.client?._id || (job as any)?.client;
-        if (!cid) throw new Error("No clientId found for this job");
-        setClientId(cid);
+        setClientId(jobData.client._id);
         // Fetch client contacts (all options)
-        const client = await getClientById(cid);
+        const client = await getClientById(jobData.client._id);
         setAllClientContacts(client.primaryContacts || []);
         // Fetch job's primary contacts (selected)
         const pcRes = await getPrimaryContactsByJobId(jobId);
@@ -98,7 +93,7 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
   const isNewContact = (contact: any) => newContacts.some((nc) => nc._id === contact._id);
 
   return (
-    <div className="bg-white rounded-lg border px-4 py-4 h-[60vh] flex flex-col">
+    <div className="bg-white rounded-lg border px-4 py-4 h-[56vh] flex flex-col overflow-y-auto">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold">Client Team</h2>
         <Button
@@ -110,7 +105,7 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
           }}
         >
           <Plus className="w-4 h-4" />
-          Primary Contacts
+          Add Primary Contacts
         </Button>
       </div>
       <div className="flex-1 overflow-auto mt-2">
@@ -126,9 +121,9 @@ export function ClientTeam({ jobId }: ClientTeamProps) {
             .filter(Boolean);
           if (selected.length === 0 && !error) {
             return (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400 py-8">
+              <div className="flex flex-col items-center justify-center h-[calc(100%-50px)] text-gray-500 text-sm py-8">
                 <UserPlus className="w-10 h-10 mb-2" />
-                <span className="text-base font-medium">
+                <span className="text-base">
                   Add primary contact related to this job.
                 </span>
               </div>
