@@ -28,9 +28,10 @@ interface AddToJobDialogProps {
   candidateId: string;
   candidateName: string;
   trigger: React.ReactNode;
+  onJobsAdded?: (jobIds: string[], jobData?: Job[]) => void;
 }
 
-export function AddToJobDialog({ candidateId, candidateName, trigger }: AddToJobDialogProps) {
+export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdded }: AddToJobDialogProps) {
   const [open, setOpen] = useState(false);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(false);
@@ -81,8 +82,16 @@ export function AddToJobDialog({ candidateId, candidateName, trigger }: AddToJob
       // TODO: Implement the API call to add candidate to selected jobs
       // This would typically be a call like: await candidateService.addCandidateToJobs(candidateId, selectedJobIds);
       
+      // Get the selected job data
+      const selectedJobs = jobs.filter(job => selectedJobIds.includes(job._id));
+      
       // For now, just show a success message
       toast.success(`Successfully added ${candidateName} to ${selectedJobIds.length} job(s)`);
+      
+      // Call the callback to update the Jobs tab with job data
+      if (onJobsAdded) {
+        onJobsAdded(selectedJobIds, selectedJobs);
+      }
       
       // Reset and close dialog
       setSelectedJobIds([]);

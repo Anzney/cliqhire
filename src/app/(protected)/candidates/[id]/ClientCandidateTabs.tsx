@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import CandidateSummary from '@/components/candidates/summary/candidate-summary';
 import { NotesContent } from '@/components/clients/notes/notes-content';
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SlidersHorizontal, RefreshCcw, Plus, FileText, Users, Briefcase, Star, Activity, StickyNote, Paperclip, Clock, User, FileIcon, FilePen, Mail, Phone, MapPin, Calendar } from "lucide-react";
 import { AttachmentsContent } from '@/components/candidates/attachments/attachments-content';
-import { JobsContent } from '@/components/candidates/jobs/jobs-content';
+import { JobsContent, JobsContentRef } from '@/components/candidates/jobs/jobs-content';
 import { AddToJobDialog } from '@/components/candidates/add-to-job-dialog';
 import { candidateService } from '@/services/candidateService';
 import { toast } from "sonner";
@@ -32,6 +32,7 @@ interface Candidate {
 export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Candidate, tabs: Tab[] }) {
   const [activeTab, setActiveTab] = useState("Summary");
   const [localCandidate, setLocalCandidate] = useState(candidate);
+  const jobsContentRef = useRef<JobsContentRef>(null);
 
   const handleRefresh = async () => {
     try {
@@ -44,6 +45,17 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
     } catch (error) {
       console.error('Error refreshing candidate data:', error);
       toast.error("Failed to refresh data");
+    }
+  };
+
+  const handleJobsAdded = async (jobIds: string[], jobData?: any[]) => {
+    try {
+      // Add the jobs to the candidate's job list
+      if (jobsContentRef.current) {
+        await jobsContentRef.current.addJobsToCandidate(jobIds, jobData);
+      }
+    } catch (error) {
+      console.error('Error adding jobs to candidate:', error);
     }
   };
 
@@ -174,6 +186,7 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
         <AddToJobDialog 
           candidateId={candidate._id || ""} 
           candidateName={enhancedCandidate.name}
+          onJobsAdded={handleJobsAdded}
           trigger={
             <Button className="bg-black text-white hover:bg-gray-800 rounded-md flex items-center gap-2">
               <Plus className="h-4 w-4" />
@@ -280,7 +293,11 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
         </TabsContent>
 
         <TabsContent value="Jobs" className="p-4">
-          <JobsContent candidateId={candidate._id || ""} candidateName={enhancedCandidate.name} />
+          <JobsContent 
+            ref={jobsContentRef}
+            candidateId={candidate._id || ""} 
+            candidateName={enhancedCandidate.name} 
+          />
         </TabsContent>
 
         <TabsContent value="Activities" className="p-4">
