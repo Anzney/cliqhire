@@ -104,12 +104,33 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
 
   const filteredJobs = jobs.filter(job =>
     job.jobTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (job.client && typeof job.client === 'object' && job.client.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    (job.client && typeof job.client === 'object' && job.client.name && job.client.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (typeof job.client === 'string' && job.client.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const getJobDisplayName = (job: Job) => {
-    const clientName = job.client && typeof job.client === 'object' ? job.client.name : 'Unknown Client';
+    let clientName = 'Unknown Client';
+    
+    if (job.client) {
+      if (typeof job.client === 'object' && job.client.name) {
+        clientName = job.client.name;
+      } else if (typeof job.client === 'string') {
+        clientName = job.client;
+      }
+    }
+    
     return `${job.jobTitle} - ${clientName}`;
+  };
+
+  const getClientName = (job: Job) => {
+    if (job.client) {
+      if (typeof job.client === 'object' && job.client.name) {
+        return job.client.name;
+      } else if (typeof job.client === 'string') {
+        return job.client;
+      }
+    }
+    return 'Unknown Client';
   };
 
   return (
@@ -163,7 +184,7 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
                               <span className="font-medium">{job.jobTitle}</span>
                               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                                 <Building className="h-3 w-3" />
-                                {job.client && typeof job.client === 'object' ? job.client.name : 'Unknown Client'}
+                                {getClientName(job)}
                               </div>
                             </div>
                           </MultiSelectorItem>

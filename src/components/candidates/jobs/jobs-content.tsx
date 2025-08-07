@@ -135,7 +135,7 @@ export const JobsContent = forwardRef<JobsContentRef, JobsContentProps>(
             </div>
           ))
         ) : (
-          <div className="flex items-center justify-center h-32 text-gray-500 -ml-5 -mr-5">
+          <div className="flex items-center justify-center h-32 text-gray-500">
             No job applications found for this candidate.
           </div>
         )}
