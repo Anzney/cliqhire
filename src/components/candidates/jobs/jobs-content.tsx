@@ -1,15 +1,34 @@
 "use client";
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
-import { Job, JobStage } from "@/types/job";
+import { JobStage } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
-import { CandidateJobApplication, JobsContentProps } from "./types";
-import { getJobById } from "@/services/jobService";
+import { getJobById, Job } from "@/services/jobService";
 
 export interface JobsContentRef {
   addJobsToCandidate: (jobIds: string[], jobData?: any[]) => Promise<void>;
+}
+
+export interface JobsContentProps {
+  candidateId: string;
+  candidateName: string;
+  onJobsUpdated?: () => void;
+}
+
+// Interface for the job application display (subset of Job data)
+interface CandidateJobApplication {
+  _id: string;
+  jobId: string; // Actual job ID for navigation
+  jobTitle: string;
+  clientName: string;
+  location: string;
+  jobType: string;
+  minimumSalary: string;
+  maximumSalary: string;
+  experience: string;
+  stage: string;
 }
 
 export const JobsContent = forwardRef<JobsContentRef, JobsContentProps>(
