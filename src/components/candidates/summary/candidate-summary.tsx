@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, ChevronsUpDown } from "lucide-react";
 import { EditFieldModal } from "./edit-field-modal";
+import { DateOfBirthDialog, MaritalStatusDialog, GenderDialog, StatusDialog } from "./personal-info-edit-dialog";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { CandidateTeamInfoSection } from "./CandidateTeamInfoSection";
 import SalaryRange from "./salary-range";
+import { ResumeUploadDialog } from "./resume-upload-dialog";
 
 const detailsFields = [
   { key: "name", label: "Candidate Name" },
@@ -15,11 +17,29 @@ const detailsFields = [
   { key: "totalRelevantExperience", label: "Total Relevant Years of Experience" },
   { key: "noticePeriod", label: "Notice Period" },
   { key: "skills", label: "Skills", render: (val: string[] | undefined) => val && val.length ? val.join(", ") : undefined },
-  { key: "resume", label: "Resume", render: (val: string | undefined) => val ? <a href={val} target="_blank" rel="noopener noreferrer" className="underline">View Resume</a> : undefined },
+  { 
+    key: "resume", 
+    label: "Resume", 
+    render: (val: string | undefined) => val ? <a href={val} target="_blank" rel="noopener noreferrer" className="underline">View Resume</a> : undefined,
+    isUpload: true 
+  },
   { key: "status", label: "Status" },
   { key: "referredBy", label: "Referred By" },
   { key: "gender", label: "Gender" },
-  { key: "dateOfBirth", label: "Date of Birth" },
+  { key: "dateOfBirth", label: "Date of Birth", render: (val: string | undefined) => {
+    if (!val) return undefined;
+    try {
+      const date = new Date(val);
+      if (isNaN(date.getTime())) return val; // Return original value if invalid date
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+    } catch (error) {
+      return val; // Return original value if parsing fails
+    }
+  }},
   { key: "maritalStatus", label: "Marital Status" },
   { key: "country", label: "Country" },
   { key: "nationality", label: "Nationality" },
@@ -37,7 +57,28 @@ const contactFields = [
   { key: "phone", label: "Phone Number" },
   { key: "email", label: "Email" },
   { key: "otherPhone", label: "Other Phone Number" },
-  { key: "linkedin", label: "LinkedIn" },
+  { 
+    key: "linkedin", 
+    label: "LinkedIn",
+    render: (val: string | undefined) => {
+      if (!val) return undefined;
+      const isValidUrl = val.startsWith('http://') || val.startsWith('https://');
+      if (isValidUrl) {
+        return (
+          <a 
+            href={val} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="cursor-pointer hover:underline"
+            style={{ textDecoration: 'none' }}
+          >
+            {val}
+          </a>
+        );
+      }
+      return val;
+    }
+  },
 ];
 
 const previousCompanyFields = [
@@ -54,33 +95,194 @@ const skillFields = [
 
 interface CandidateSummaryProps {
   candidate: any;
-  onCandidateUpdate?: (updatedCandidate: any) => void;
+  onCandidateUpdate?: (updatedCandidate: any, fieldKey?: string) => void;
 }
 
 const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProps) => {
   const [editField, setEditField] = useState<string | null>(null);
   const [localCandidate, setLocalCandidate] = useState(candidate);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [showDateOfBirthDialog, setShowDateOfBirthDialog] = useState(false);
+  const [showMaritalStatusDialog, setShowMaritalStatusDialog] = useState(false);
+  const [showGenderDialog, setShowGenderDialog] = useState(false);
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
 
   const handleSave = (fieldKey: string, newValue: any) => {
+    // LinkedIn validation
+    if (fieldKey === "linkedin" && newValue && newValue.trim()) {
+      const trimmedValue = newValue.trim();
+      if (!trimmedValue.startsWith('http://') && !trimmedValue.startsWith('https://')) {
+        toast.error("LinkedIn URL must start with 'http://' or 'https://'");
+        return;
+      }
+    }
+
     const updatedCandidate = { ...localCandidate, [fieldKey]: newValue };
     setLocalCandidate(updatedCandidate);
     setEditField(null);
     
     // Notify parent component of the update
     if (onCandidateUpdate) {
-      onCandidateUpdate(updatedCandidate);
+      onCandidateUpdate(updatedCandidate, fieldKey);
     }
-    
-    // Show success toast message
-    const allFields = [...detailsFields, ...contactFields, ...previousCompanyFields, ...skillFields];
-    const fieldLabel = allFields.find(field => field.key === fieldKey)?.label || fieldKey;
-    toast.success(`${fieldLabel} updated successfully`);
+  };
+
+  const handleResumeUpload = (resumeUrl: string) => {
+    handleSave("resume", resumeUrl);
+    setShowUploadDialog(false);
+  };
+
+  const handleDateOfBirthSave = (value: string) => {
+    handleSave("dateOfBirth", value);
+    setShowDateOfBirthDialog(false);
+  };
+
+  const handleMaritalStatusSave = (value: string) => {
+    handleSave("maritalStatus", value);
+    setShowMaritalStatusDialog(false);
+  };
+
+  const handleGenderSave = (value: string) => {
+    handleSave("gender", value);
+    setShowGenderDialog(false);
+  };
+
+  const handleStatusSave = (value: string) => {
+    handleSave("status", value);
+    setShowStatusDialog(false);
   };
 
   const renderField = (field: any, fieldArray: any[]) => {
     const rawValue = localCandidate?.[field.key];
     const value = field.render ? field.render(rawValue) : rawValue;
     const hasValue = rawValue !== undefined && rawValue !== null && rawValue !== '' && (!Array.isArray(rawValue) || rawValue.length > 0);
+    
+    // Special handling for upload fields (like Resume)
+    if (field.isUpload) {
+      return (
+        <div key={field.key} className="relative border-b last:border-b-0">
+          <div className="flex items-center py-2">
+            <span className="text-sm text-muted-foreground w-1/3">
+              {field.label}
+            </span>
+            <div className="flex items-center justify-between flex-1">
+              <span className={`text-sm ${hasValue ? '' : 'text-muted-foreground'}`}>
+                {hasValue ? value : 'No Details'}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 flex items-center ml-2"
+                onClick={() => setShowUploadDialog(true)}
+              >
+                <Pencil className="h-4 w-4 mr-2" />Edit
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    // Special handling for personal information fields
+    if (field.key === 'dateOfBirth') {
+      return (
+        <div key={field.key} className="relative border-b last:border-b-0">
+          <div className="flex items-center py-2">
+            <span className="text-sm text-muted-foreground w-1/3">
+              {field.label}
+            </span>
+            <div className="flex items-center justify-between flex-1">
+              <span className={`text-sm ${hasValue ? '' : 'text-muted-foreground'}`}>
+                {hasValue ? value : 'No Details'}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 flex items-center ml-2"
+                onClick={() => setShowDateOfBirthDialog(true)}
+              >
+                <Pencil className="h-4 w-4 mr-2" />Edit
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (field.key === 'maritalStatus') {
+      return (
+        <div key={field.key} className="relative border-b last:border-b-0">
+          <div className="flex items-center py-2">
+            <span className="text-sm text-muted-foreground w-1/3">
+              {field.label}
+            </span>
+            <div className="flex items-center justify-between flex-1">
+              <span className={`text-sm ${hasValue ? '' : 'text-muted-foreground'}`}>
+                {hasValue ? value : 'No Details'}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 flex items-center ml-2"
+                onClick={() => setShowMaritalStatusDialog(true)}
+              >
+                <Pencil className="h-4 w-4 mr-2" />Edit
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (field.key === 'gender') {
+      return (
+        <div key={field.key} className="relative border-b last:border-b-0">
+          <div className="flex items-center py-2">
+            <span className="text-sm text-muted-foreground w-1/3">
+              {field.label}
+            </span>
+            <div className="flex items-center justify-between flex-1">
+              <span className={`text-sm ${hasValue ? '' : 'text-muted-foreground'}`}>
+                {hasValue ? value : 'No Details'}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 flex items-center ml-2"
+                onClick={() => setShowGenderDialog(true)}
+              >
+                <Pencil className="h-4 w-4 mr-2" />Edit
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (field.key === 'status') {
+      return (
+        <div key={field.key} className="relative border-b last:border-b-0">
+          <div className="flex items-center py-2">
+            <span className="text-sm text-muted-foreground w-1/3">
+              {field.label}
+            </span>
+            <div className="flex items-center justify-between flex-1">
+              <span className={`text-sm ${hasValue ? '' : 'text-muted-foreground'}`}>
+                {hasValue ? value : 'No Details'}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 flex items-center ml-2"
+                onClick={() => setShowStatusDialog(true)}
+              >
+                <Pencil className="h-4 w-4 mr-2" />Edit
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
     
     // If it's a textarea field, render it differently
     if (field.isTextarea) {
@@ -124,7 +326,9 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
             {field.label}
           </span>
           <div className="flex items-center justify-between flex-1">
-            <span className={`text-sm ${hasValue ? '' : 'text-muted-foreground'}`}>{hasValue ? value : 'No Details'}</span>
+            <span className={`text-sm ${hasValue ? '' : 'text-muted-foreground'}`}>
+              {hasValue ? value : 'No Details'}
+            </span>
             <Button
               variant="outline"
               size="sm"
@@ -300,6 +504,46 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
           handleUpdateField={(fieldKey) => (value) => handleSave(fieldKey, value)}
         />
       </div>
+
+      {/* Resume Upload Dialog */}
+      <ResumeUploadDialog
+        open={showUploadDialog}
+        onClose={() => setShowUploadDialog(false)}
+        onResumeUploaded={handleResumeUpload}
+        candidateId={localCandidate?._id}
+      />
+
+      {/* Date of Birth Dialog */}
+      <DateOfBirthDialog
+        open={showDateOfBirthDialog}
+        onClose={() => setShowDateOfBirthDialog(false)}
+        currentValue={localCandidate?.dateOfBirth}
+        onSave={handleDateOfBirthSave}
+      />
+
+      {/* Marital Status Dialog */}
+      <MaritalStatusDialog
+        open={showMaritalStatusDialog}
+        onClose={() => setShowMaritalStatusDialog(false)}
+        currentValue={localCandidate?.maritalStatus}
+        onSave={handleMaritalStatusSave}
+      />
+
+      {/* Gender Dialog */}
+      <GenderDialog
+        open={showGenderDialog}
+        onClose={() => setShowGenderDialog(false)}
+        currentValue={localCandidate?.gender}
+        onSave={handleGenderSave}
+      />
+
+      {/* Status Dialog */}
+      <StatusDialog
+        open={showStatusDialog}
+        onClose={() => setShowStatusDialog(false)}
+        currentValue={localCandidate?.status}
+        onSave={handleStatusSave}
+      />
     </div>
   );
 };

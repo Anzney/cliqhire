@@ -1,8 +1,8 @@
 // Remove 'use client' and refactor to server component
 import CandidateSummary from '@/components/candidates/summary/candidate-summary';
 import { SlidersHorizontal, RefreshCcw, Plus, FileText, Users, Briefcase, Star, Activity, StickyNote, Paperclip, Clock, User } from "lucide-react";
-import dynamic from 'next/dynamic';
-import { mockCandidates } from '@/data/candidatesData';
+import dynamicImport from 'next/dynamic';
+import { candidateService } from '@/services/candidateService';
 
 const TABS = [
   { label: "Summary", icon: <FileText className="w-4 h-4" /> },
@@ -14,17 +14,21 @@ const TABS = [
 ];
 
 // Dynamically import the client component for tabs and editing
-const ClientCandidateTabs = dynamic(() => import('./ClientCandidateTabs'), { ssr: false });
+const ClientCandidateTabs = dynamicImport(() => import('./ClientCandidateTabs'), { ssr: false });
 
-// Function to get candidate by ID - can be replaced with API call later
+// Function to get candidate by ID using the API service
 async function getCandidateById(id: string) {
-  // TODO: Replace with actual API call
-  // const response = await fetch(`/api/candidates/${id}`);
-  // return response.json();
-  
-  // For now, return dummy data
-  return mockCandidates.find(candidate => candidate._id === id) || null;
+  try {
+    return await candidateService.getCandidateById(id);
+  } catch (error) {
+    console.error('Error fetching candidate:', error);
+    return null;
+  }
 }
+
+// Force dynamic rendering to prevent caching
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function CandidatePage({ params }: { params: { id: string } }) {
   const { id } = params;

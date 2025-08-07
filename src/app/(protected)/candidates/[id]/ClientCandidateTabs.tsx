@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SlidersHorizontal, RefreshCcw, Plus, FileText, Users, Briefcase, Star, Activity, StickyNote, Paperclip, Clock, User, FileIcon, FilePen, Mail, Phone, MapPin, Calendar } from "lucide-react";
+import { candidateService } from '@/services/candidateService';
+import { toast } from "sonner";
 
 interface Tab {
   label: string;
@@ -28,9 +30,18 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
   const [activeTab, setActiveTab] = useState("Summary");
   const [localCandidate, setLocalCandidate] = useState(candidate);
 
-  const handleRefresh = () => {
-    // Refresh logic here
-    console.log("Refreshing...");
+  const handleRefresh = async () => {
+    try {
+      if (candidate._id) {
+        // Re-fetch candidate data from the API
+        const refreshedCandidate = await candidateService.getCandidateById(candidate._id);
+        setLocalCandidate(refreshedCandidate);
+        toast.success("Data refreshed successfully");
+      }
+    } catch (error) {
+      console.error('Error refreshing candidate data:', error);
+      toast.error("Failed to refresh data");
+    }
   };
 
   // Enhanced dummy data for better display
@@ -68,8 +79,61 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
     }
   };
 
-  const handleCandidateUpdate = (updatedCandidate: any) => {
-    setLocalCandidate(updatedCandidate);
+  const handleCandidateUpdate = async (updatedCandidate: any, fieldKey?: string) => {
+    try {
+      // Update local state immediately for optimistic UI
+      setLocalCandidate(updatedCandidate);
+      
+      // Make API call to persist changes
+      if (candidate._id) {
+        await candidateService.updateCandidate(candidate._id, updatedCandidate);
+        
+        // Show success toast message based on API response
+        if (fieldKey) {
+          const allFields = [
+            { key: "name", label: "Candidate Name" },
+            { key: "location", label: "Location" },
+            { key: "experience", label: "Experience" },
+            { key: "totalRelevantExperience", label: "Total Relevant Years of Experience" },
+            { key: "noticePeriod", label: "Notice Period" },
+            { key: "skills", label: "Skills" },
+            { key: "resume", label: "Resume" },
+            { key: "status", label: "Status" },
+            { key: "referredBy", label: "Referred By" },
+            { key: "gender", label: "Gender" },
+            { key: "dateOfBirth", label: "Date of Birth" },
+            { key: "maritalStatus", label: "Marital Status" },
+            { key: "country", label: "Country" },
+            { key: "nationality", label: "Nationality" },
+            { key: "universityName", label: "University Name" },
+            { key: "educationDegree", label: "Education Degree/Certificate" },
+            { key: "primaryLanguage", label: "Primary Language" },
+            { key: "willingToRelocate", label: "Are you willing to relocate?" },
+            { key: "phone", label: "Phone Number" },
+            { key: "email", label: "Email" },
+            { key: "otherPhone", label: "Other Phone Number" },
+            { key: "linkedin", label: "LinkedIn" },
+            { key: "previousCompanyName", label: "Previous Company Name" },
+            { key: "currentJobTitle", label: "Current Job Title" },
+            { key: "reportingTo", label: "Reporting To" },
+            { key: "totalStaffReporting", label: "Total Number of Staff Reporting to You" },
+            { key: "softSkill", label: "Soft Skill" },
+            { key: "technicalSkill", label: "Technical Skill" }
+          ];
+          const fieldLabel = allFields.find(field => field.key === fieldKey)?.label || fieldKey;
+          toast.success(`${fieldLabel} updated successfully`);
+        }
+        
+        // Re-fetch the latest data to ensure UI shows the most up-to-date information
+        const refreshedCandidate = await candidateService.getCandidateById(candidate._id);
+        setLocalCandidate(refreshedCandidate);
+      }
+    } catch (error) {
+      console.error('Error updating candidate:', error);
+      toast.error("Failed to update candidate");
+      // Revert local state on error
+      setLocalCandidate(candidate);
+    }
   };
 
   return (

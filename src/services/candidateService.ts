@@ -96,7 +96,7 @@ class CandidateService {
     value: any
   ): Promise<UpdateFieldResponse> {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/candidates/${candidateId}/field`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/candidates/${candidateId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
