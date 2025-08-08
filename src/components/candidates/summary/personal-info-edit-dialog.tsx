@@ -280,11 +280,14 @@ interface StatusDialogProps {
 }
 
 const statusOptions = [
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
-  { value: "pending", label: "Pending" },
-  { value: "rejected", label: "Rejected" },
-  { value: "hired", label: "Hired" },
+  { value: "Active", label: "Active" },
+  { value: "Inactive", label: "Inactive" },
+  { value: "Shortlisted", label: "Shortlisted" },
+  { value: "Interviewing", label: "Interviewing" },
+  { value: "Offer", label: "Offer" },
+  { value: "Hired", label: "Hired" },
+  { value: "Rejected", label: "Rejected" },
+  { value: "Withdrawn", label: "Withdrawn" },
 ];
 
 export function StatusDialog({

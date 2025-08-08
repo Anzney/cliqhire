@@ -14,17 +14,18 @@ import { AdvanceSearch } from "@/components/candidates/AdvSearch";
 import Dashboardheader from "@/components/dashboard-header";
 import Tableheader from "@/components/table-header";
 import { CreateCandidateModal } from "@/components/candidates/create-candidate-modal";
+import { CandidateStatusBadge } from "@/components/candidate-status-badge";
+import { toast } from "sonner";
 
 const columsArr = [
   "Candidate Name",
   "Candidate Email",
   "Candidate Phone",
   "Location",
+  "Status",
   "Experience",
   "Skills",
   "Resume",
-  "Status",
-  "Actions",
 ];
 
 export default function CandidatesPage() {
@@ -47,6 +48,28 @@ export default function CandidatesPage() {
   // const [selected, setSelected] = useState("candidate");
   const [open, setOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+
+  const handleStatusChange = async (candidateId: string, newStatus: string) => {
+    try {
+      // Update the candidate status in the backend
+      await candidateService.updateCandidate(candidateId, { status: newStatus });
+      
+      // Update the local state
+      setCandidates(prev => 
+        prev.map(candidate => 
+          candidate._id === candidateId 
+            ? { ...candidate, status: newStatus }
+            : candidate
+        )
+      );
+      
+      // Show success toast
+      toast.success(`Candidate status updated to ${newStatus}`);
+    } catch (error) {
+      console.error('Error updating candidate status:', error);
+      toast.error('Failed to update candidate status');
+    }
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -75,7 +98,7 @@ export default function CandidatesPage() {
             </TableHeader>
             <TableBody>
               <TableRow>
-                <TableCell colSpan={9} className="text-center h-[calc(100vh-300px)]">
+                <TableCell colSpan={8} className="text-center h-[calc(100vh-300px)]">
                   <div className="flex items-center justify-center gap-2 flex-col">
                     <Loader className="size-6 animate-spin" />
                     <div className="text-center">Loading candidates...</div>
@@ -96,14 +119,24 @@ export default function CandidatesPage() {
                 <TableRow
                   key={candidate._id}
                   className="cursor-pointer hover:bg-gray-100"
-                  onClick={() =>
-                    router.push(`/candidates/${candidate._id}`)
-                  }
+                  onClick={(e) => {
+                    // Don't navigate if clicking on the status badge
+                    if (!(e.target as HTMLElement).closest('.candidate-status-badge')) {
+                      router.push(`/candidates/${candidate._id}`);
+                    }
+                  }}
                 >
                   <TableCell className="text-sm font-medium">{candidate.name || 'N/A'}</TableCell>
                   <TableCell className="text-sm">{candidate.email || 'N/A'}</TableCell>
                   <TableCell className="text-sm">{candidate.phone || 'N/A'}</TableCell>
                   <TableCell className="text-sm">{candidate.location || 'N/A'}</TableCell>
+                  <TableCell className="text-sm">
+                    <CandidateStatusBadge 
+                      id={candidate._id} 
+                      status={(candidate.status as any) || 'Active'} 
+                      onStatusChange={handleStatusChange}
+                    />
+                  </TableCell>
                   <TableCell className="text-sm">{candidate.experience || 'N/A'}</TableCell>
                   <TableCell className="text-sm">
                     {candidate.skills && Array.isArray(candidate.skills) 
@@ -125,8 +158,6 @@ export default function CandidatesPage() {
                       'N/A'
                     )}
                   </TableCell>
-                  <TableCell className="text-sm">{candidate.status || 'N/A'}</TableCell>
-                  {/* <TableCell className="text-sm">{candidate.actions}</TableCell> */}
                 </TableRow>
               ))}
             </TableBody>
