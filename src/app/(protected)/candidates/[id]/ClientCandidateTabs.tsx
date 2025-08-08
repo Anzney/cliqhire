@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef } from "react";
 import CandidateSummary from '@/components/candidates/summary/candidate-summary';
-import { NotesContent } from '@/components/clients/notes/notes-content';
+import { CandidateNotesContent } from '@/components/candidates/notes/notes-content';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -333,7 +333,7 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
         </TabsContent>
 
         <TabsContent value="Notes" className="p-4">
-          <NotesContent candidateId={candidate._id || ""} />
+          <CandidateNotesContent candidateId={candidate._id || ""} />
         </TabsContent>
 
         <TabsContent value="Attachments" className="p-4">
