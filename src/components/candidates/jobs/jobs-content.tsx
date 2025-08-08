@@ -143,3 +143,5 @@ export const JobsContent = forwardRef<JobsContentRef, JobsContentProps>(
     </>
   );
 });
+
+JobsContent.displayName = 'JobsContent';

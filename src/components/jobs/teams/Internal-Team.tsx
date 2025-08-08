@@ -101,7 +101,7 @@ export function InternalTeam() {
         <div className="flex flex-col items-center justify-center h-[calc(100%-90px)] text-gray-500 text-sm">
           <UserPlus className="w-10 h-10 mb-2" />
           <span className="text-base">
-            No internal team selected. Click "Add Internal Team" to get started.
+            No internal team selected. Click Add Internal Team to get started.
           </span>
         </div>
       )}

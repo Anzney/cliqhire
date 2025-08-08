@@ -104,31 +104,20 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
 
   const filteredJobs = jobs.filter(job =>
     job.jobTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (job.client && typeof job.client === 'object' && job.client.name && job.client.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (typeof job.client === 'string' && job.client.toLowerCase().includes(searchTerm.toLowerCase()))
+    (job.client && typeof job.client === 'object' && job.client.name && job.client.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const getJobDisplayName = (job: Job) => {
-    let clientName = 'Unknown Client';
-    
-    if (job.client) {
-      if (typeof job.client === 'object' && job.client.name) {
-        clientName = job.client.name;
-      } else if (typeof job.client === 'string') {
-        clientName = job.client;
-      }
-    }
+    const clientName = job.client && typeof job.client === 'object' && job.client.name 
+      ? job.client.name 
+      : 'Unknown Client';
     
     return `${job.jobTitle} - ${clientName}`;
   };
 
   const getClientName = (job: Job) => {
-    if (job.client) {
-      if (typeof job.client === 'object' && job.client.name) {
-        return job.client.name;
-      } else if (typeof job.client === 'string') {
-        return job.client;
-      }
+    if (job.client && typeof job.client === 'object' && job.client.name) {
+      return job.client.name;
     }
     return 'Unknown Client';
   };

@@ -202,7 +202,7 @@ export const GroupCards: React.FC<GroupCardsProps> = ({ groups, onAddGroup, onDe
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Group</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this group: "{deleteDialog.group?.name}"?
+              Are you sure you want to delete this group: {deleteDialog.group?.name}?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

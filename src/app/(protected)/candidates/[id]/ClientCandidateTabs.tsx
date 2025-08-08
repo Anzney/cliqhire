@@ -19,14 +19,14 @@ interface Tab {
 
 interface Candidate {
   _id?: string;
-  name: string;
-  email: string;
-  phone: string;
-  location: string;
-  experience: string;
-  skills: string[];
-  resume: string;
-  status: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  experience?: string;
+  skills?: string[];
+  resume?: string;
+  status?: string;
 }
 
 export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Candidate, tabs: Tab[] }) {
@@ -157,7 +157,7 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
       <div className="border-b bg-white py-4 px-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">{enhancedCandidate.name}</h1>
+            <h1 className="text-2xl font-bold">{enhancedCandidate.name || "Unknown Candidate"}</h1>
             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
               <span>{enhancedCandidate.currentRole}</span>
               <span>•</span>
@@ -165,8 +165,8 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
               <span>•</span>
               <span>{enhancedCandidate.location}</span>
               <span>•</span>
-              <Badge variant="outline" className={getStatusColor(enhancedCandidate.status)}>
-                {enhancedCandidate.status}
+              <Badge variant="outline" className={getStatusColor(enhancedCandidate.status || "unknown")}>
+                {enhancedCandidate.status || "Unknown"}
               </Badge>
             </div>
           </div>
@@ -185,7 +185,7 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
       <div className="flex items-center justify-between p-4 border-b">
         <AddToJobDialog 
           candidateId={candidate._id || ""} 
-          candidateName={enhancedCandidate.name}
+          candidateName={enhancedCandidate.name || "Unknown Candidate"}
           onJobsAdded={handleJobsAdded}
           trigger={
             <Button className="bg-black text-white hover:bg-gray-800 rounded-md flex items-center gap-2">
@@ -296,7 +296,7 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
           <JobsContent 
             ref={jobsContentRef}
             candidateId={candidate._id || ""} 
-            candidateName={enhancedCandidate.name} 
+            candidateName={enhancedCandidate.name || "Unknown Candidate"} 
           />
         </TabsContent>
 
