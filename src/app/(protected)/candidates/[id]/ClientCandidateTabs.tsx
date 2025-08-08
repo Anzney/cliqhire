@@ -12,6 +12,7 @@ import { AddToJobDialog } from '@/components/candidates/add-to-job-dialog';
 import { candidateService } from '@/services/candidateService';
 import { toast } from "sonner";
 
+
 interface Tab {
   label: string;
   icon: React.ReactNode;
@@ -33,6 +34,8 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
   const [activeTab, setActiveTab] = useState("Summary");
   const [localCandidate, setLocalCandidate] = useState(candidate);
   const jobsContentRef = useRef<JobsContentRef>(null);
+
+
 
   const handleRefresh = async () => {
     try {
@@ -135,13 +138,24 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
             { key: "softSkill", label: "Soft Skill" },
             { key: "technicalSkill", label: "Technical Skill" }
           ];
-          const fieldLabel = allFields.find(field => field.key === fieldKey)?.label || fieldKey;
+          const fieldLabel = allFields.find(field => field.key === fieldKey)?.label || fieldKey || 'Field';
+          
+          // Show success toast message
           toast.success(`${fieldLabel} updated successfully`);
         }
         
         // Re-fetch the latest data to ensure UI shows the most up-to-date information
-        const refreshedCandidate = await candidateService.getCandidateById(candidate._id);
-        setLocalCandidate(refreshedCandidate);
+        // Use setTimeout to ensure toast is displayed before re-fetching
+        setTimeout(async () => {
+          try {
+            if (candidate._id) {
+              const refreshedCandidate = await candidateService.getCandidateById(candidate._id);
+              setLocalCandidate(refreshedCandidate);
+            }
+          } catch (refreshError) {
+            console.error('Error refreshing candidate data:', refreshError);
+          }
+        }, 100);
       }
     } catch (error) {
       console.error('Error updating candidate:', error);
