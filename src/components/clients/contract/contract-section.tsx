@@ -102,6 +102,22 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
     }
 
     if (formType === "consulting") {
+      // Map documents based on specific consulting type
+      let technicalProposalDocument = null;
+      let financialProposalDocument = null;
+
+      if (businessType === "HR Consulting") {
+        technicalProposalDocument = contractData?.techProposalDocHRC || null;
+        financialProposalDocument = contractData?.finProposalDocHRC || null;
+      } else if (businessType === "Mgt Consulting") {
+        technicalProposalDocument = contractData?.techProposalDocMGTC || null;
+        financialProposalDocument = contractData?.finProposalDocMGTC || null;
+      } else {
+        // Fallback for generic consulting contracts
+        technicalProposalDocument = contractData?.technicalProposalDocument || null;
+        financialProposalDocument = contractData?.financialProposalDocument || null;
+      }
+
       return {
         contractStartDate: contractData?.contractStartDate
           ? new Date(contractData.contractStartDate)
@@ -111,8 +127,8 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
           : null,
         technicalProposalNotes: contractData?.technicalProposalNotes || "",
         financialProposalNotes: contractData?.financialProposalNotes || "",
-        technicalProposalDocument: contractData?.technicalProposalDocument || null,
-        financialProposalDocument: contractData?.financialProposalDocument || null,
+        technicalProposalDocument,
+        financialProposalDocument,
       };
     }
 
@@ -233,10 +249,10 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
       await Promise.all(promises);
 
       toast.success("Contract(s) added successfully!");
-      //handleCloseAddContractDialog();
+      handleCloseAddContractDialog();
 
       // Refresh the page to show new contracts
-      //window.location.reload();
+      window.location.reload();
     } catch (error) {
       console.error("Failed to add contract:", error);
       toast.error("Failed to add contract. Please try again.");
@@ -367,12 +383,13 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
         summary.details = `${levelTypes.length} levels with advance`;
       }
     } else if (contractType === "HR Consulting" || contractType === "Mgt Consulting") {
-      summary.hasTechProposal = !!(
-        contractData.techProposalDocHRC?.url || contractData.techProposalDocMGTC?.url
-      );
-      summary.hasFinProposal = !!(
-        contractData.finProposalDocHRC?.url || contractData.finProposalDocMGTC?.url
-      );
+      if (contractType === "HR Consulting") {
+        summary.hasTechProposal = !!contractData.techProposalDocHRC?.url;
+        summary.hasFinProposal = !!contractData.finProposalDocHRC?.url;
+      } else {
+        summary.hasTechProposal = !!contractData.techProposalDocMGTC?.url;
+        summary.hasFinProposal = !!contractData.finProposalDocMGTC?.url;
+      }
     } else if (contractType === "Outsourcing") {
       summary.details = `${contractData.numberOfResources || 0} resources - ${contractData.totalCost || 0} total cost`;
     }
@@ -512,6 +529,108 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
           </div>
         )}
 
+        {/* HR Consulting Contract Documents */}
+        {contractType === "HR Consulting" && (
+          <div className="space-y-2">
+            {contractData.techProposalDocHRC?.url && (
+              <div className="pt-2 border-t">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <FileText className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm font-medium text-gray-600">
+                      Technical Proposal Document:
+                    </span>
+                    <span className="text-sm text-gray-800">
+                      {contractData.techProposalDocHRC.fileName || "Technical Proposal"}
+                    </span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(contractData.techProposalDocHRC.url, "_blank")}
+                  >
+                    View
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {contractData.finProposalDocHRC?.url && (
+              <div className={contractData.techProposalDocHRC?.url ? "pt-2" : "pt-2 border-t"}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <FileText className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm font-medium text-gray-600">
+                      Financial Proposal Document:
+                    </span>
+                    <span className="text-sm text-gray-800">
+                      {contractData.finProposalDocHRC.fileName || "Financial Proposal"}
+                    </span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(contractData.finProposalDocHRC.url, "_blank")}
+                  >
+                    View
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Mgt Consulting Contract Documents */}
+        {contractType === "Mgt Consulting" && (
+          <div className="space-y-2">
+            {contractData.techProposalDocMGTC?.url && (
+              <div className="pt-2 border-t">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <FileText className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm font-medium text-gray-600">
+                      Technical Proposal Document:
+                    </span>
+                    <span className="text-sm text-gray-800">
+                      {contractData.techProposalDocMGTC.fileName || "Technical Proposal"}
+                    </span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(contractData.techProposalDocMGTC.url, "_blank")}
+                  >
+                    View
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {contractData.finProposalDocMGTC?.url && (
+              <div className={contractData.techProposalDocMGTC?.url ? "pt-2" : "pt-2 border-t"}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <FileText className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm font-medium text-gray-600">
+                      Financial Proposal Document:
+                    </span>
+                    <span className="text-sm text-gray-800">
+                      {contractData.finProposalDocMGTC.fileName || "Financial Proposal"}
+                    </span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(contractData.finProposalDocMGTC.url, "_blank")}
+                  >
+                    View
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Outsourcing specific details */}
         {contractType === "Outsourcing" && (
           <div className="grid grid-cols-3 gap-4 text-sm">
@@ -598,6 +717,18 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
                       <div className="flex items-center space-x-1">
                         <FileText className="h-3 w-3" />
                         <span>Document attached</span>
+                      </div>
+                    )}
+                    {summary?.hasTechProposal && (
+                      <div className="flex items-center space-x-1">
+                        <FileText className="h-3 w-3" />
+                        <span>Technical proposal</span>
+                      </div>
+                    )}
+                    {summary?.hasFinProposal && (
+                      <div className="flex items-center space-x-1">
+                        <FileText className="h-3 w-3" />
+                        <span>Financial proposal</span>
                       </div>
                     )}
                   </div>
