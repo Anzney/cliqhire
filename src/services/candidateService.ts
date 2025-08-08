@@ -61,6 +61,12 @@ export interface UpdateFieldResponse {
   candidate?: Candidate;
 }
 
+export interface ApplyJobResponse {
+  success: boolean;
+  data?: any;
+  message?: string;
+}
+
 class CandidateService {
 
   /**
@@ -200,6 +206,26 @@ class CandidateService {
       }
     } catch (error) {
       console.error('Error deleting candidate:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Apply candidate to a job
+   * Endpoint: POST /api/candidates/:candidateId/apply/:jobId
+   */
+  async applyToJob(candidateId: string, jobId: string): Promise<ApplyJobResponse> {
+    try {
+      const base = process.env.NEXT_PUBLIC_API_URL || '';
+      const url = `${base}/api/candidates/${candidateId}/apply/${jobId}`;
+      const response = await fetch(url, { method: 'POST' });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Failed to apply to job: ${response.status} ${text}`);
+      }
+      return (await response.json()) as ApplyJobResponse;
+    } catch (error) {
+      console.error('Error applying candidate to job:', error);
       throw error;
     }
   }

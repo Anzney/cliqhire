@@ -22,6 +22,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, Briefcase, Building } from "lucide-react";
 import { getJobs, Job } from "@/services/jobService";
+import { candidateService } from "@/services/candidateService";
 import { toast } from "sonner";
 
 interface AddToJobDialogProps {
@@ -79,13 +80,12 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
     }
 
     try {
-      // TODO: Implement the API call to add candidate to selected jobs
-      // This would typically be a call like: await candidateService.addCandidateToJobs(candidateId, selectedJobIds);
+      // Apply candidate to each selected job
+      await Promise.all(selectedJobIds.map((jobId) => candidateService.applyToJob(candidateId, jobId)));
       
       // Get the selected job data
       const selectedJobs = jobs.filter(job => selectedJobIds.includes(job._id));
       
-      // For now, just show a success message
       toast.success(`Successfully added ${candidateName} to ${selectedJobIds.length} job(s)`);
       
       // Call the callback to update the Jobs tab with job data

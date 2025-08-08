@@ -19,12 +19,19 @@ interface AttachmentsContentProps {
   candidateId: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
 export function AttachmentsContent({ candidateId }: AttachmentsContentProps) {
   const [showUploadBox, setShowUploadBox] = useState(false);
   const [attachments, setAttachments] = useState<BackendAttachment[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+
+  const mapApiAttachmentToBackend = (item: any): BackendAttachment => {
+    return {
+      _id: item?._id || item?.id || "",
+      fileName: item?.fileName || item?.originalName || item?.name || "Untitled",
+      uploadedAt: item?.uploadedAt || item?.createdAt || item?.updatedAt || "",
+      url: item?.url || item?.fileUrl || item?.path || "",
+    } as BackendAttachment;
+  };
 
   // Fetch attachments from backend
   const fetchAttachments = async () => {
@@ -32,12 +39,12 @@ export function AttachmentsContent({ candidateId }: AttachmentsContentProps) {
 
     setLoading(true);
     try {
-      // TODO: Replace with actual candidate-specific attachment endpoint
-      // const response = await axios.get(`${API_BASE_URL}/api/candidates/${candidateId}/attachments`);
-      // setAttachments(response.data.data || []);
-      
-      // Dummy data for now
-      setAttachments([]);
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/api/candidate-attachments?candidate_id=${encodeURIComponent(
+        candidateId
+      )}`;
+      const response = await axios.get(url);
+      const items = (response?.data?.data || []) as any[];
+      setAttachments(items.map(mapApiAttachmentToBackend));
     } catch (error) {
       console.error("Error fetching attachments:", error);
       setAttachments([]);
@@ -49,14 +56,12 @@ export function AttachmentsContent({ candidateId }: AttachmentsContentProps) {
   // Bulk delete selected attachments
   const handleBulkDelete = async (ids: string[]) => {
     try {
-      // TODO: Replace with actual candidate-specific attachment endpoint
-      // await Promise.all(
-      //   ids.map(id => axios.delete(`${API_BASE_URL}/api/candidates/${candidateId}/attachments/${id}`))
-      // );
-      // fetchAttachments();
-      
-      // Dummy implementation for now
-      console.log("Bulk delete would delete:", ids);
+      await Promise.all(
+        ids.map((id) =>
+          axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/candidate-attachments/${encodeURIComponent(id)}`)
+        )
+      );
+      await fetchAttachments();
     } catch (error) {
       console.error("Error deleting attachments:", error);
     }
@@ -66,17 +71,13 @@ export function AttachmentsContent({ candidateId }: AttachmentsContentProps) {
   const handleUpload = async (file: File) => {
     if (!candidateId) return;
     try {
-      // TODO: Replace with actual candidate-specific attachment endpoint
-      // const formData = new FormData();
-      // formData.append("file", file);
-      // formData.append("candidate_id", candidateId);
-      // await axios.post(`${API_BASE_URL}/api/candidates/${candidateId}/attachments`, formData);
-      
-      // Dummy implementation for now
-      console.log("Upload would upload file:", file.name, "for candidate:", candidateId);
-      
-      // Always refresh list after upload to ensure new file appears
-      await fetchAttachments();
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("candidate_id", candidateId);
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/candidate-attachments`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      await fetchAttachments(); // refresh list after upload
     } catch (error) {
       console.error("Upload failed:", error);
     }
@@ -85,15 +86,8 @@ export function AttachmentsContent({ candidateId }: AttachmentsContentProps) {
   // Delete a file
   const handleDelete = async (attachmentId: string) => {
     try {
-      // TODO: Replace with actual candidate-specific attachment endpoint
-      // await axios.delete(`${API_BASE_URL}/api/candidates/${candidateId}/attachments/${attachmentId}`);
-      
-      // Dummy implementation for now
-      console.log("Delete would delete attachment:", attachmentId);
-      
-      setAttachments((prev) =>
-        prev.filter((item) => item._id !== attachmentId)
-      );
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/candidate-attachments/${encodeURIComponent(attachmentId)}`);
+      setAttachments((prev) => prev.filter((item) => item._id !== attachmentId));
     } catch (error) {
       console.error("Delete failed:", error);
     }
