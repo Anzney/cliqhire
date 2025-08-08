@@ -1,4 +1,5 @@
 import axios from "axios";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ;
 
 // Update contract API function
 export const updateContract = async (clientId: string, contractType: string, contractData: any) => {
@@ -42,7 +43,7 @@ export const updateContract = async (clientId: string, contractType: string, con
     });
 
     const response = await axios.patch(
-      `http://localhost:8000/api/updatecontracts/${clientId}/${contractType}`,
+      `${API_URL}/api/contracts/updatecontracts/${clientId}/${contractType}`,
       formData,
       {
         headers: {
@@ -62,7 +63,7 @@ export const updateContract = async (clientId: string, contractType: string, con
 export const deleteContract = async (clientId: string, contractType: string) => {
   try {
     const response = await axios.delete(
-      `http://localhost:8000/api/deletecontracts/${clientId}/${contractType}`,
+      `${API_URL}/api/contracts/deletecontracts/${clientId}/${contractType}`,
     );
     return response.data;
   } catch (error) {
@@ -154,7 +155,7 @@ export const addContract = async (clientId: string, contractType: string, contra
       appendToFormData(key, value);
     });
 
-    const response = await axios.post(`http://localhost:8000/api/addContracts`, formData, {
+    const response = await axios.post(`${API_URL}/api/contracts/addContracts`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },

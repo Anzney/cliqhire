@@ -6,7 +6,7 @@ export const createClient = async (data: FormData) => {
   try {
     const response = await axios.post(
       // `${API_URL}/api/clients`,
-      'http://localhost:8000/api/clients',
+      'http://localhost:5000/api/clients',
       data,
       {
         headers: {
