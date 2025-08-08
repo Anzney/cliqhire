@@ -45,7 +45,7 @@ export interface ClientResponse {
   countryCode?: string;
   primaryContacts?: PrimaryContact[];
   clientStage?: "Lead" | "Engaged" | "Negotiation" | "Signed";
-  clientStageStatus?: ClientStageStatus;
+  clientSubStage?: ClientStageStatus;
   clientTeam?: "Enterprise" | "SMB" | "Mid-Market";
   clientRm?: string;
   clientAge?: number;
@@ -620,7 +620,7 @@ const updateClientStageStatus = async (
 
     const dataToUpdate = {
       ...currentClient,
-      clientStageStatus: status,
+      clientSubStage: status,
     };
 
     // Remove fields that should not be sent in an update payload.
