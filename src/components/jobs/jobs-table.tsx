@@ -139,7 +139,7 @@ export function JobsTable({ jobs, clientId, clientName }: JobsTableProps) {
               <TableCell>
                 <Checkbox />
               </TableCell>
-              <TableCell className="font-medium">{job.positionName}</TableCell>
+              <TableCell className="font-medium">{job.jobTitle}</TableCell>
               <TableCell>{clientName}</TableCell>
               <TableCell>{job.location}</TableCell>
               <TableCell>{job.headcount}</TableCell>

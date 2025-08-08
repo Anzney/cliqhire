@@ -11,10 +11,13 @@ export function Header() {
   const router = useRouter();
 
   // Check if we're on an ID page (contains /[id] pattern)
-  const isOnIdPage = /\/[^\/]+\/[^\/]+$/.test(pathname);
+  const isOnIdPage = pathname ? /\/[^\/]+\/[^\/]+$/.test(pathname) : false;
 
   // Determine the back navigation path and label
   const getBackNavigation = () => {
+    if (!pathname) {
+      return { path: "/", label: "Back" };
+    }
     if (pathname.includes("/clients/")) {
       return { path: "/clients", label: "Back to Clients" };
     }

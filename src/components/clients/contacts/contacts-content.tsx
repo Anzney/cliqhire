@@ -29,9 +29,15 @@ interface ContactsContentProps {
   clientData?: any;
 }
 
-interface ExtendedPrimaryContact extends PrimaryContact {
+interface ExtendedPrimaryContact {
+  _id?: string;
   firstName?: string;
   lastName?: string;
+  email?: string;
+  phone?: string;
+  countryCode?: string;
+  position?: string;
+  linkedin?: string;
   gender?: string;
 }
 
@@ -66,13 +72,12 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
         } else {
           // Fetch client data using clientId
           const response = await getClientById(clientId);
-          if (response.success && response.data) {
-            const data = response.data;
-            setPrimaryContacts(data.primaryContacts || []);
-            setClientPhoneNumber(data.phoneNumber || "");
-            setClientWebsite(data.website || "");
-            setClientEmails(data.emails || []);
-            setClientLinkedIn(data.linkedInProfile || "");
+          if (response) {
+            setPrimaryContacts(response.primaryContacts || []);
+            setClientPhoneNumber(response.phoneNumber || "");
+            setClientWebsite(response.website || "");
+            setClientEmails(response.emails || []);
+            setClientLinkedIn(response.linkedInProfile || "");
           } else {
             setError("Failed to fetch client data");
           }
@@ -138,7 +143,7 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
         countryCode: contact.countryCode,
         position: contact.position,
         linkedin: contact.linkedin,
-      };
+      } as any; // Use type assertion to bypass the _id requirement for new contacts
       // Use the POST API to add a new primary contact
       await addPrimaryContact(clientId, contactData);
       // Fetch updated client data

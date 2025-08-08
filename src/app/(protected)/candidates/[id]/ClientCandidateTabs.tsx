@@ -306,7 +306,7 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
           />
         </TabsContent>
 
-        <TabsContent value="Jobs" className="p-4">
+        <TabsContent value="Jobs">
           <JobsContent 
             ref={jobsContentRef}
             candidateId={candidate._id || ""} 

@@ -105,9 +105,8 @@ export function EditSalaryDialog({ open, onClose, currentValues, onSave }: EditS
                       <div className="flex items-center gap-2">
                         <div className="w-4 h-3">
                           {currencies.find((c) => c.code === values.currency)?.flag &&
-                            // @ts-ignore
                             React.createElement(
-                              Flags[currencies.find((c) => c.code === values.currency)?.flag || ""],
+                              Flags[currencies.find((c) => c.code === values.currency)?.flag as keyof typeof Flags] as any,
                             )}
                         </div>
                         <span>{values.currency}</span>
@@ -120,8 +119,7 @@ export function EditSalaryDialog({ open, onClose, currentValues, onSave }: EditS
                     <SelectItem key={currency.code} value={currency.code}>
                       <div className="flex items-center gap-2">
                         <div className="w-4 h-3">
-                          {/* @ts-ignore */}
-                          {Flags[currency.flag] && React.createElement(Flags[currency.flag])}
+                          {Flags[currency.flag as keyof typeof Flags] && React.createElement(Flags[currency.flag as keyof typeof Flags] as any)}
                         </div>
                         <span>{currency.name}</span>
                         <span className="text-muted-foreground ml-auto">{currency.symbol}</span>

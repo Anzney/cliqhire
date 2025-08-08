@@ -40,7 +40,7 @@ interface Client {
   name: string;
   industry: string;
   location: string;
-  stage: "Lead" | "Engaged" | "Signed" | "Negotiation";
+  stage: "Lead" | "Engaged" | "Signed";
   clientStageStatus: ClientStageStatus;
   owner: string;
   team: string;
@@ -111,23 +111,23 @@ export default function ClientsPage() {
           const apiClients: ClientResponse[] = response.clients;
           const total = apiClients.length;
 
-          // Map API clients to our format
-          const mappedClients = apiClients.map((client: ClientResponse) => ({
-            id: client._id,
-            name: client.name || "Unnamed Client",
-            industry: client.industry || "",
-            location: client.location || "",
-            stage: client.clientStage || "Lead",
-            clientStageStatus: client.clientStageStatus || "Calls",
-            owner: client.clientRm || "",
-            team: client.clientTeam || "",
-            createdAt: client.createdAt,
-            incorporationDate: client.incorporationDate || "",
-            jobCount: client.jobCount || 0, // Use jobCount from backend
-          }));
+                  // Map API clients to our format
+        const mappedClients = apiClients.map((client: ClientResponse) => ({
+          id: client._id,
+          name: client.name || "Unnamed Client",
+          industry: client.industry || "",
+          location: client.location || "",
+          stage: (client.clientStage === "Negotiation" ? "Engaged" : client.clientStage) || "Lead",
+          clientStageStatus: client.clientStageStatus || "Calls",
+          owner: client.clientRm || "",
+          team: client.clientTeam || "",
+          createdAt: client.createdAt,
+          incorporationDate: client.incorporationDate || "",
+          jobCount: client.jobCount || 0, // Use jobCount from backend
+        }));
 
           // Set clients state with all clients (pagination is handled client-side)
-          setClients(mappedClients);
+          setClients(mappedClients as Client[]);
 
           // Reset to first page when fetching new data
           setCurrentPage(1);
@@ -167,7 +167,7 @@ export default function ClientsPage() {
           name: client.name || "Unnamed Client",
           industry: client.industry || "",
           location: client.location || "",
-          stage: client.clientStage || "Lead",
+          stage: (client.clientStage === "Negotiation" ? "Engaged" : client.clientStage) || "Lead",
           clientStageStatus: client.clientStageStatus || "Calls",
           owner: client.clientRm || "",
           team: client.clientTeam || "",
@@ -177,7 +177,7 @@ export default function ClientsPage() {
         }));
 
         // Set clients state with all clients (pagination is handled client-side)
-        setClients(mappedClients);
+        setClients(mappedClients as Client[]);
 
         // Reset to first page when fetching new data
         setCurrentPage(1);
@@ -370,7 +370,7 @@ export default function ClientsPage() {
       setClients((prevClients) =>
         prevClients.map((client) =>
           client.id === pendingChange.clientId
-            ? { ...client, stage: updatedClient?.clientStage || pendingChange.stage }
+            ? { ...client, stage: (updatedClient?.clientStage === "Negotiation" ? "Engaged" : updatedClient?.clientStage) || pendingChange.stage }
             : client,
         ),
       );
