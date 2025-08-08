@@ -9,7 +9,8 @@ export interface JobData {
   gender: string;
   headcount: number;
   jobDescription: string;
-  jobDescriptionPdf: string | null;
+  jobDescriptionPdf: File | null;
+  benefitPdf: File | null;
   jobPosition: string[];
   jobTitle: string;
   jobType: string;
@@ -27,6 +28,12 @@ export interface JobData {
   stage: string;
   teamSize: number;
   updatedAt: string;
+  deadlineByClient: Date | undefined;
+  startDateByInternalTeam: Date | undefined;
+  endDateByInternalTeam: Date | undefined;
+  keySkills: string;
+  jobDescriptionByInternalTeam: string;
   workVisa: { workVisa: string; visaCountries: string[] };
+  reportingTo: string
   _id: string;
 }

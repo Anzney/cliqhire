@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { PlusIcon, MinusIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import { PlusIcon, MinusIcon } from "lucide-react";
 import { fetchClients } from "./clientApi";
 import { createJob } from "@/services/jobService";
 import { currencies } from "country-data-list";
@@ -28,20 +28,34 @@ import { Combobox } from "@/components/ui/combobox";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-// 
+// Inteface
+interface Props {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  lockedClientId?: string;
+  lockedClientName?: string;
+}
+
+interface Form {
+  clientName: string;
+  clientId: string;
+  positionName: string;
+  headcount: string;
+  jobType: string;
+  location: string;
+  minSalary: string;
+  maxSalary: string;
+  currency: string;
+  jobDescription: string;
+}
 
 export function CreateJobRequirementForm({
   open,
   onOpenChange,
   lockedClientId,
   lockedClientName,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  lockedClientId?: string;
-  lockedClientName?: string;
-}) {
-  const [form, setForm] = useState({
+}: Props) {
+  const [form, setForm] = useState<Form>({
     clientName: lockedClientName || "",
     clientId: lockedClientId || "",
     positionName: "",
@@ -59,7 +73,7 @@ export function CreateJobRequirementForm({
   const [errors, setErrors] = useState<{ clientName?: string; positionName?: string }>({});
   const router = useRouter();
 
- // Helper to find client by id
+  // Helper to find client by id
   const getClientById = (id: string) => clientOptions.find((c) => c._id === id);
 
   // If lockedClientId is provided, only show that client in the dropdown
@@ -75,13 +89,7 @@ export function CreateJobRequirementForm({
 
   // Form options grouped for readability and reusability
   const formOptions = {
-    jobTypeOptions: [
-      "Full Time",
-      "Part Time",
-      "Internship",
-      "Apprenticeship",
-      "Temporary",
-    ],
+    jobTypeOptions: ["Full Time", "Part Time", "Internship", "Apprenticeship", "Temporary"],
     currencyOptions: Object.values(currencies)
       .filter((c: any) => c.code && c.name && c.symbol)
       .map((c: any) => ({
@@ -101,7 +109,8 @@ export function CreateJobRequirementForm({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     let newErrors: typeof errors = {};
-    if (!lockedClientId && !form.clientName.trim()) newErrors.clientName = "Client Name is required.";
+    if (!lockedClientId && !form.clientName.trim())
+      newErrors.clientName = "Client Name is required.";
     if (!form.positionName.trim()) newErrors.positionName = "Position Name is required.";
     setErrors(newErrors);
     if (Object.keys(newErrors).length === 0) {
@@ -110,9 +119,9 @@ export function CreateJobRequirementForm({
         jobTitle: form.positionName,
         client: form.clientId, // use clientId here
         jobType: (form.jobType || "full time").toLowerCase(),
-        experience: "entry level", // Default value as required by interface
+        experience: "0", // Default value as required by interface
         headcount: form.headcount ? parseInt(form.headcount) : undefined,
-        location: form.location || undefined, 
+        location: form.location ? [form.location] : undefined,
         minimumSalary: form.minSalary ? parseInt(form.minSalary) : undefined,
         maximumSalary: form.maxSalary ? parseInt(form.maxSalary) : undefined,
         salaryCurrency: form.currency || undefined,
@@ -152,7 +161,7 @@ export function CreateJobRequirementForm({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className={`w-full max-w-2xl p-0 flex flex-col ${showAdditional ? 'h-[85vh] max-h-[550px]' : 'h-auto max-h-[410px]'} transition-all duration-300`}
+        className={`w-full max-w-2xl p-0 flex flex-col ${showAdditional ? "h-[85vh] max-h-[550px]" : "h-auto max-h-[410px]"} transition-all duration-300`}
       >
         {/* Fixed Header */}
         <div className="sticky top-0 z-20 bg-white pb-2 flex-shrink-0 rounded-t-xl">
@@ -169,13 +178,25 @@ export function CreateJobRequirementForm({
 
         {/* Scrollable Content */}
         <div
-          className={
-            showAdditional
-              ? "flex-1 min-h-0 overflow-y-auto px-6 pb-20"
-              : "px-6 pb-20"
-          }
+          className={showAdditional ? "flex-1 min-h-0 overflow-y-auto px-6 pb-20" : "px-6 pb-20"}
         >
           <form id="job-form" onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label className="block text-sm font-medium mb-1">
+                Position Name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                name="positionName"
+                value={form?.positionName}
+                onChange={handleChange}
+                placeholder="Enter position name"
+                className={errors.positionName ? "border-red-500" : ""}
+              />
+              {errors.positionName && (
+                <div className="text-xs text-red-500 mt-1">{errors.positionName}</div>
+              )}
+            </div>
+
             <div className="relative">
               <Label className="block text-sm font-medium mb-1">
                 Client Name <span className="text-red-500">*</span>
@@ -201,24 +222,8 @@ export function CreateJobRequirementForm({
                   className={errors.clientName ? "border-red-500" : ""}
                 />
               )}
-              {errors.clientName && (
-                !lockedClientId && <div className="text-xs text-red-500 mt-1">{errors.clientName}</div>
-              )}
-            </div>
-
-            <div>
-              <Label className="block text-sm font-medium mb-1">
-                Position Name <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                name="positionName"
-                value={form.positionName}
-                onChange={handleChange}
-                placeholder="Enter position name"
-                className={errors.positionName ? "border-red-500" : ""}
-              />
-              {errors.positionName && (
-                <div className="text-xs text-red-500 mt-1">{errors.positionName}</div>
+              {errors.clientName && !lockedClientId && (
+                <div className="text-xs text-red-500 mt-1">{errors.clientName}</div>
               )}
             </div>
 
@@ -255,7 +260,10 @@ export function CreateJobRequirementForm({
 
                 <div>
                   <Label className="block text-sm font-medium mb-1">Job Types</Label>
-                  <Select value={form.jobType} onValueChange={(val) => setForm((prev) => ({ ...prev, jobType: val }))}>
+                  <Select
+                    value={form.jobType}
+                    onValueChange={(val) => setForm((prev) => ({ ...prev, jobType: val }))}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select contract type" />
                     </SelectTrigger>
@@ -282,7 +290,10 @@ export function CreateJobRequirementForm({
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <Label className="block text-sm font-medium mb-1">Currency</Label>
-                    <Select value={form.currency} onValueChange={(val) => setForm((prev) => ({ ...prev, currency: val }))}>
+                    <Select
+                      value={form.currency}
+                      onValueChange={(val) => setForm((prev) => ({ ...prev, currency: val }))}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select currency" />
                       </SelectTrigger>

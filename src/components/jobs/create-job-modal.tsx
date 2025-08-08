@@ -140,7 +140,7 @@ export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
     client: "",
     relationshipManager: "",
     jobTypes: "",
-    stage: "New" as JobStage,
+    stage: "Open" as JobStage,
     deadline: null as Date | null,
     clientDeadline: null as Date | null,
     internalDeadline: null as Date | null,
@@ -164,6 +164,7 @@ export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
     link: "",
     keySkills: "",
     jobDescription: "",
+    jobDescriptionByInternalTeam: "",
     otherBenefits: [] as string[],
     certifications: [] as string[]
   })

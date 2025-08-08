@@ -13,6 +13,7 @@ import {
   updateJobNote,
   deleteJobNote,
 } from "@/services/jobService";
+import { JobData } from "../types";
 
 export interface Note {
   id: string;
@@ -29,14 +30,14 @@ export interface Note {
 function mapNote(noteFromApi: any): Note {
   return {
     id: noteFromApi._id || noteFromApi.id,
-    content: noteFromApi.content,
+    content: noteFromApi.note,
     author: noteFromApi.createdBy || { name: "Unknown", avatar: "?" },
     createdAt: noteFromApi.createdAt,
     isPrivate: false, // Adjust if you add this to backend
   };
 }
 
-export function NotesContent({ jobId }: { jobId: string }) {
+export function NotesContent({ jobId, jobData }: { jobId: string, jobData: JobData }) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editNote, setEditNote] = useState<Note | null>(null);
@@ -57,7 +58,7 @@ export function NotesContent({ jobId }: { jobId: string }) {
       return;
     }
     try {
-      const res = await createJobNote({ content: note.content, jobId });
+      const res = await createJobNote({ content: note.content, jobId, clientId: jobData.client._id });
       setNotes([mapNote(res), ...notes]);
       toast.success("Notes Add Successfully");
     } catch (error) {

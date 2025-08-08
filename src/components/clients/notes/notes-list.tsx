@@ -37,12 +37,9 @@ export function NotesList({ notes, onEdit, onDelete }: NotesListProps) {
         <div key={note.id} className="bg-white rounded-lg border p-4 overflow-x-hidden">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
-              <Avatar className="h-8 w-8 bg-blue-500">
-                <AvatarFallback>{note.author.avatar}</AvatarFallback>
-              </Avatar>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">{note.author.name}</span>
+                  <span className="font-medium">Created By: {note.author.name}</span>
                   {note.isPrivate && <Lock className="h-4 w-4 text-muted-foreground" />}
                 </div>
                 <span className="text-sm text-muted-foreground">
