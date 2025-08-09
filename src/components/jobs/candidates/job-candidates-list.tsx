@@ -69,8 +69,8 @@ export const JobCandidatesList = forwardRef<JobCandidatesListRef, JobCandidatesL
               <div>Email</div>
               <div>Phone</div>
               <div>Status</div>
+              <div>Experience</div>
               <div>Location</div>
-              <div>Current Title</div>
             </div>
           </div>
         </div>
@@ -96,8 +96,8 @@ export const JobCandidatesList = forwardRef<JobCandidatesListRef, JobCandidatesL
                     <div>{candidate.email || "-"}</div>
                     <div>{candidate.phone || candidate.otherPhone || "-"}</div>
                     <div>{candidate.status || "-"}</div>
+                    <div>{candidate.experience || candidate.totalRelevantExperience || "-"}</div>
                     <div>{candidate.location || candidate.country || "-"}</div>
-                    <div>{candidate.currentJobTitle || "-"}</div>
                   </div>
                 </div>
               </div>
