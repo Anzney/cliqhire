@@ -8,6 +8,7 @@ import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { JobTabs } from "@/components/jobs/job-tabs"
 import { JobData } from "@/components/jobs/types"
+import { AddCandidateDialog } from "@/components/jobs/candidates/add-candidate-dialog"
 
 interface PageProps {
   params: { id: string }
@@ -18,6 +19,8 @@ export default function JobPage({ params }: PageProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [jobData, setJobData] = useState<JobData | null>(null)
   const [error, setError] = useState<Error | null>(null)
+  const [addCandidateOpen, setAddCandidateOpen] = useState(false)
+  const [reloadToken, setReloadToken] = useState(0)
 
   const fetchJob = async () => {
     if (!id) return;
@@ -61,6 +64,7 @@ export default function JobPage({ params }: PageProps) {
   const handleRefresh = async () => {
     await fetchJob()
   }
+  
 
   // Header values from summary
   const jobTitle = jobData.jobTitle || "Untitled Job"
@@ -104,7 +108,7 @@ export default function JobPage({ params }: PageProps) {
 
       {/* Button Bar */}
       <div className="flex items-center justify-between p-4 border-b">
-        <Button size="sm">
+        <Button size="sm" onClick={() => setAddCandidateOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Add Candidate
         </Button>
@@ -129,7 +133,19 @@ export default function JobPage({ params }: PageProps) {
       </div>
 
       {/* Tabs */}
-      <JobTabs jobId={id} jobData={jobData} />
+      <JobTabs jobId={id} jobData={jobData} reloadToken={reloadToken} />
+
+      {/* Add Candidate Dialog (controlled) */}
+      <AddCandidateDialog
+        jobId={id}
+        jobTitle={jobTitle}
+        open={addCandidateOpen}
+        onOpenChange={setAddCandidateOpen}
+        onCandidatesAdded={async () => {
+          setReloadToken((t) => t + 1)
+          await handleRefresh()
+        }}
+      />
     </div>
   )
 }

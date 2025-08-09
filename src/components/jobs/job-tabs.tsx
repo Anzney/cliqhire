@@ -17,16 +17,16 @@ import { JobData } from "./types"
 interface JobTabsProps {
   jobId: string;
   jobData: JobData;
+  reloadToken?: number;
 }
 
-export function JobTabs({ jobId, jobData }: JobTabsProps) {
+export function JobTabs({ jobId, jobData, reloadToken }: JobTabsProps) {
   return (
     <Tabs defaultValue="summary" className="w-full">
       <JobTabsList />
       
       <JobTabContent value="candidates">
-        
-        <CandidatesContent jobId={jobId} />
+        <CandidatesContent jobId={jobId} jobTitle={jobData.jobTitle} reloadToken={reloadToken} />
       </JobTabContent>
       
       <JobTabContent value="summary">
