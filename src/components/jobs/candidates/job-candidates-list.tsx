@@ -2,8 +2,10 @@
 
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader } from "lucide-react";
+import { Loader, Plus } from "lucide-react";
 import { Candidate } from "@/services/candidateService";
+import { Button } from "@/components/ui/button";
+import { AddCandidateDialog } from "./add-candidate-dialog";
 
 export interface JobCandidatesListRef {
   refresh: () => Promise<void>;
@@ -17,12 +19,13 @@ export function getCandidateDisplayName(candidate: Candidate) {
 
 interface JobCandidatesListProps {
   jobId: string;
+  jobTitle?: string;
   reloadToken?: number;
   onLoaded?: (count: number) => void;
 }
 
 export const JobCandidatesList = forwardRef<JobCandidatesListRef, JobCandidatesListProps>(
-  ({ jobId, reloadToken, onLoaded }, ref) => {
+  ({ jobId, jobTitle = "this job", reloadToken, onLoaded }, ref) => {
     const [candidates, setCandidates] = useState<Candidate[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const router = useRouter();
@@ -100,8 +103,21 @@ export const JobCandidatesList = forwardRef<JobCandidatesListRef, JobCandidatesL
               </div>
             ))
           ) : (
-            <div className="flex items-center justify-center h-32 text-gray-500">
-              No candidates have been added to this job yet.
+            <div className="flex flex-col items-center justify-center h-48 text-gray-500 gap-3">
+              <div>No candidates have been added to this job yet.</div>
+              <AddCandidateDialog
+                jobId={jobId}
+                jobTitle={jobTitle}
+                onCandidatesAdded={async () => {
+                  await fetchCandidatesForJob();
+                }}
+                trigger={
+                  <Button className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add Candidate
+                  </Button>
+                }
+              />
             </div>
           )}
         </div>
