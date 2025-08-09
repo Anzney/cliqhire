@@ -19,7 +19,7 @@ export function JobTabTrigger({ value, icon: Icon, label, count }: JobTabTrigger
     >
       <Icon className="mr-2 h-4 w-4" />
       {label}
-      {count !== undefined && (
+      {typeof count === "number" && count > 0 && (
         <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold">
           {count}
         </span>
