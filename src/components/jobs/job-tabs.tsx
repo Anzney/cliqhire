@@ -18,11 +18,13 @@ interface JobTabsProps {
   jobId: string;
   jobData: JobData;
   reloadToken?: number;
+  activeTab?: string;
+  onTabChange?: (value: string) => void;
 }
 
-export function JobTabs({ jobId, jobData, reloadToken }: JobTabsProps) {
+export function JobTabs({ jobId, jobData, reloadToken, activeTab = "summary", onTabChange }: JobTabsProps) {
   return (
-    <Tabs defaultValue="summary" className="w-full">
+    <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
       <JobTabsList />
       
       <JobTabContent value="candidates">

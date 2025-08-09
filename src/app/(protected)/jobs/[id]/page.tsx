@@ -21,6 +21,7 @@ export default function JobPage({ params }: PageProps) {
   const [error, setError] = useState<Error | null>(null)
   const [addCandidateOpen, setAddCandidateOpen] = useState(false)
   const [reloadToken, setReloadToken] = useState(0)
+  const [activeTab, setActiveTab] = useState<string>("summary")
 
   const fetchJob = async () => {
     if (!id) return;
@@ -133,7 +134,13 @@ export default function JobPage({ params }: PageProps) {
       </div>
 
       {/* Tabs */}
-      <JobTabs jobId={id} jobData={jobData} reloadToken={reloadToken} />
+      <JobTabs
+        jobId={id}
+        jobData={jobData}
+        reloadToken={reloadToken}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
 
       {/* Add Candidate Dialog (controlled) */}
       <AddCandidateDialog
@@ -142,6 +149,7 @@ export default function JobPage({ params }: PageProps) {
         open={addCandidateOpen}
         onOpenChange={setAddCandidateOpen}
         onCandidatesAdded={async () => {
+          setActiveTab("candidates")
           setReloadToken((t) => t + 1)
           await handleRefresh()
         }}
