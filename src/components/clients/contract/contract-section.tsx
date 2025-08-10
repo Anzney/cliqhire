@@ -12,11 +12,6 @@ import OutsourcingForm from "@/components/contract-forms/outsourcing-form";
 import { ContractInformationTab } from "@/components/contract-forms/new-contract-modal";
 import { deleteContract, updateContract, addContract } from "@/services/clientContractService";
 import { toast } from "sonner";
-import {
-  businessInitialState,
-  outsourcingInitialState,
-  consultingInitialState,
-} from "@/components/create-client-modal/constants";
 import { ClientContractInfo } from "@/components/create-client-modal/type";
 
 interface ContractSectionProps {
@@ -32,6 +27,14 @@ const CONTRACT_MAPPING = {
   "Mgt Consulting": "consultingContractMGTC",
   "HR Consulting": "consultingContractHRC",
   Outsourcing: "outsourcingContract",
+};
+
+// Mapping between level type names from backend and object keys
+const LEVEL_TYPE_MAPPING: { [key: string]: string } = {
+  "Non-Executives": "nonExecutives",
+  Executives: "executives",
+  "Senior Level": "seniorLevel",
+  Other: "other",
 };
 
 // Helper function to get form type based on business type
@@ -457,15 +460,27 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
                     <span className="font-medium text-gray-600">Level Configuration:</span>
                     <div className="mt-2 space-y-1">
                       {contractData.levelBasedHiring.levelTypes.map((level: string) => {
-                        const levelKey = level.toLowerCase().replace(/[^a-z]/g, "");
+                        const levelKey =
+                          LEVEL_TYPE_MAPPING[level] || level.toLowerCase().replace(/[^a-z]/g, "");
                         const levelData = contractData.levelBasedHiring[levelKey] || {};
                         return (
-                          <div key={level} className="flex justify-between text-sm">
-                            <span>{level}:</span>
-                            <span>
-                              {levelData.percentage || 0}%{" "}
-                              {levelData.notes && `(${levelData.notes})`}
-                            </span>
+                          <div key={level} className="text-sm grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="font-medium text-gray-600">Level Type:</p>
+                              <p>{level}</p>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-600">Percentage:</p>
+                              <p>{levelData.percentage || 0}%</p>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-600">Amount:</p>
+                              <p>{levelData.amount || 0} {levelData.currency || "SAR"}</p>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-600">Notes:</p>
+                              <p>{levelData.notes || "No notes"}</p>
+                            </div>
                           </div>
                         );
                       })}
@@ -482,23 +497,28 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
                     </span>
                     <div className="mt-2 space-y-1">
                       {contractData.levelBasedAdvanceHiring.levelTypes.map((level: string) => {
-                        const levelKey = level.toLowerCase().replace(/[^a-z]/g, "");
+                        const levelKey =
+                          LEVEL_TYPE_MAPPING[level] || level.toLowerCase().replace(/[^a-z]/g, "");
                         const levelData = contractData.levelBasedAdvanceHiring[levelKey] || {};
                         return (
-                          <div key={level} className="text-sm">
-                            <div className="flex justify-between items-start">
-                              <span className="font-medium">{level}:</span>
-                              <div className="text-right">
-                                <div>
-                                  {levelData.percentage || 0}% + {levelData.amount || 0}{" "}
-                                  {levelData.currency || "SAR"}
-                                </div>
-                                {levelData.notes && (
-                                  <div className="text-xs text-gray-500 mt-1">
-                                    ({levelData.notes})
-                                  </div>
-                                )}
-                              </div>
+                          <div key={level} className="text-sm grid grid-cols-3 gap-4">
+                            <div>
+                              <p className="font-medium text-gray-600">Level Type:</p>
+                              <p>{level}</p>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-600">Percentage:</p>
+                              <p>{levelData.percentage || 0}%</p>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-600">Amount:</p>
+                              <p>
+                                {levelData.amount || 0} {levelData.currency || "SAR"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-600">Notes:</p>
+                              <p>{levelData.notes || "No notes"}</p>
                             </div>
                           </div>
                         );

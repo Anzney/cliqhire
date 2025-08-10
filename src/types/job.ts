@@ -4,7 +4,7 @@ export enum JobStatus {
   ON_HOLD = 'On Hold'
 }
 
-export type JobStage = 'New' | 'Sourcing' | 'Screening' | 'Interviewing' | 'Shortlisted' | 'Offer' | 'Hired' | 'On Hold' | 'Cancelled';
+export type JobStage = 'Open'| 'Hired' | 'On Hold' | 'Closed' | 'Active' | 'Onboarding';
 
 
 

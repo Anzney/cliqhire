@@ -25,15 +25,15 @@ const menuItems = [
   { name: "Jobs", icon: Briefcase, href: "/jobs" },
   { name: "Recruiters", icon: Users, href: "/recruiter" },
   { name: "Candidates", icon: Users, href: "/candidates" }, // Line after "Candidates"
-  { name: "RecruitmentPipeline", icon: Route, href: "/reactruterpipeline" },
-  { name: "Placements", icon: UserCheck, href: "/placements" },
-  { name: "Activities", icon: Calendar, href: "/activities" },
+  { name: "Recruitment Pipeline", icon: Route, href: "/reactruterpipeline" },
+  // { name: "Placements", icon: UserCheck, href: "/placements" },
+  // { name: "Activities", icon: Calendar, href: "/activities" },
 
-  { name: "Inbox", icon: MessageSquare, href: "/inbox" }, // Line after "Inbox"
-  { name: "Account & Finance", icon: DollarSign, href: "/finance" },
-  { name: "Reports", icon: BarChart, href: "/reports" },
-  { name: "Settings", icon: Settings, href: "/settings" },
-  { name: "Administration", icon: Lock, href: "/admin" },
+  // { name: "Inbox", icon: MessageSquare, href: "/inbox" }, // Line after "Inbox"
+  // { name: "Account & Finance", icon: DollarSign, href: "/finance" },
+  // { name: "Reports", icon: BarChart, href: "/reports" },
+  // { name: "Settings", icon: Settings, href: "/settings" },
+  // { name: "Administration", icon: Lock, href: "/admin" },
 ];
 
 export function Sidebar() {

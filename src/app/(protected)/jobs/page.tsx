@@ -271,7 +271,9 @@ export default function JobsPage() {
                       <TableCell className="text-sm capitalize">{job.jobType}</TableCell>
                       <TableCell className="text-sm">{job.location}</TableCell>
                       <TableCell className="text-sm">{job.headcount}</TableCell>
-                      <TableCell className="text-sm">
+                      <TableCell className="text-sm"
+                       onClick={(e)=>e.stopPropagation()}
+                      >
                         <JobStageBadge
                           stage={job.stage}
                           onStageChange={(newStage) => handleStageChange(job._id, newStage)}
@@ -308,14 +310,6 @@ export default function JobsPage() {
         </div>
       </div>
 
-      {/* <CreateJobModal 
-        open={open} 
-        onOpenChange={setOpen}
-        clientId={clientList[0]?._id || ""}
-        clientName={clientList[0]?.name || ""}
-        refreshJobs={refreshJobs}
-        onJobCreated = {()=>console.log("")}
-      /> */}
 
       <ConfirmStageChangeDialog
         open={confirmOpen}
