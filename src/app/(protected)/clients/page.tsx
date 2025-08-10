@@ -111,20 +111,20 @@ export default function ClientsPage() {
           const apiClients: ClientResponse[] = response.clients;
           const total = apiClients.length;
 
-                  // Map API clients to our format
-        const mappedClients = apiClients.map((client: ClientResponse) => ({
-          id: client._id,
-          name: client.name || "Unnamed Client",
-          industry: client.industry || "",
-          location: client.location || "",
-          stage: (client.clientStage === "Negotiation" ? "Engaged" : client.clientStage) || "Lead",
-          clientStageStatus: client.clientStageStatus || "Calls",
-          owner: client.clientRm || "",
-          team: client.clientTeam || "",
-          createdAt: client.createdAt,
-          incorporationDate: client.incorporationDate || "",
-          jobCount: client.jobCount || 0, // Use jobCount from backend
-        }));
+          // Map API clients to our format
+          const mappedClients = apiClients.map((client: ClientResponse) => ({
+            id: client._id,
+            name: client.name || "Unnamed Client",
+            industry: client.industry || "",
+            location: client.location || "",
+            stage: client.clientStage || "Lead",
+            clientStageStatus: client.clientSubStage || "Calls",
+            owner: client.clientRm || "",
+            team: client.clientTeam || "",
+            createdAt: client.createdAt,
+            incorporationDate: client.incorporationDate || "",
+            jobCount: client.jobCount || 0, // Use jobCount from backend
+          }));
 
           // Set clients state with all clients (pagination is handled client-side)
           setClients(mappedClients as Client[]);
@@ -167,8 +167,8 @@ export default function ClientsPage() {
           name: client.name || "Unnamed Client",
           industry: client.industry || "",
           location: client.location || "",
-          stage: (client.clientStage === "Negotiation" ? "Engaged" : client.clientStage) || "Lead",
-          clientStageStatus: client.clientStageStatus || "Calls",
+          stage: client.clientStage || "Lead",
+          clientStageStatus: client.clientSubStage || "Calls",
           owner: client.clientRm || "",
           team: client.clientTeam || "",
           createdAt: client.createdAt,
