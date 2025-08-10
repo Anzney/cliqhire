@@ -44,15 +44,12 @@ interface CountrySuggestion {
 const jobTypes = ["Full time", "Part time", "Project based", "Outsourcing"]
 
 const jobStages: JobStage[] = [
-  "New",
-  "Sourcing",
-  "Screening",
-  "Interviewing",
-  "Shortlisted",
-  "Offer",
+ "Open",
+  "Active",
+  "Onboarding",
   "Hired",
   "On Hold",
-  "Cancelled"
+  "Closed",
 ]
 
 const currencies = [

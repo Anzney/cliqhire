@@ -22,27 +22,22 @@ interface JobsContentProps {
 }
 
 const jobStages: JobStage[] = [
-  "New",
-  "Sourcing",
-  "Screening",
-  "Interviewing",
-  "Shortlisted",
-  "Offer",
+  "Open",
+  "Active",
+  "Onboarding",
   "Hired",
   "On Hold",
-  "Cancelled",
+  "Closed",
 ];
 
 const stageColors: Record<JobStage, string> = {
-  New: "bg-blue-100 text-blue-800",
-  Sourcing: "bg-purple-100 text-purple-800",
-  Screening: "bg-yellow-100 text-yellow-800",
-  Interviewing: "bg-orange-100 text-orange-800",
-  Shortlisted: "bg-green-100 text-green-800",
-  Offer: "bg-pink-100 text-pink-800",
+  Open: "bg-blue-100 text-blue-800",
+  Onboarding: "bg-purple-100 text-purple-800",
+  Active: "bg-yellow-100 text-yellow-800",
+  
   Hired: "bg-green-200 text-green-900",
   "On Hold": "bg-gray-200 text-gray-800",
-  Cancelled: "bg-red-100 text-red-800",
+  Closed: "bg-red-100 text-red-800",
 };
 
 function ConfirmStageChangeDialog({
