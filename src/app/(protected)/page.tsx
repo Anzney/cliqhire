@@ -56,7 +56,7 @@ export default function Home() {
     return (
         <>
             <div className="flex flex-col items-center max-w-6xl mx-auto py-12 px-4">
-                <h1 className="text-4xl font-semibold mb-6">Hello Mann,</h1>
+                <h1 className="text-4xl font-semibold mb-6">Hello Aems,</h1>
                 <p className="text-xl text-gray-600 mb-12">Here are three steps to get you started.</p>
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
