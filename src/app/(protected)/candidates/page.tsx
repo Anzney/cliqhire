@@ -1,9 +1,9 @@
 "use client";
-import { fetchCandidatesFromAPI, Candidate } from "@/data/candidatesData";
+import { Candidate, candidateService } from "@/services/candidateService";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableHeader, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { Users, Folder, Search, Route, Router } from "lucide-react";
+import { Loader } from "lucide-react";
 import { CandidatesEmptyState } from "./empty-states";
 import { CreateCandidate } from "@/components/candidates/create-candidate";
 // import Link from 'next/link'
@@ -14,17 +14,18 @@ import { AdvanceSearch } from "@/components/candidates/AdvSearch";
 import Dashboardheader from "@/components/dashboard-header";
 import Tableheader from "@/components/table-header";
 import { CreateCandidateModal } from "@/components/candidates/create-candidate-modal";
+import { CandidateStatusBadge } from "@/components/candidate-status-badge";
+import { toast } from "sonner";
 
 const columsArr = [
   "Candidate Name",
   "Candidate Email",
   "Candidate Phone",
   "Location",
+  "Status",
   "Experience",
   "Skills",
   "Resume",
-  "Status",
-  "Actions",
 ];
 
 export default function CandidatesPage() {
@@ -35,25 +36,40 @@ export default function CandidatesPage() {
 
   useEffect(() => {
     setInitialLoading(true);
-    fetchCandidatesFromAPI().then(data => {
-      setCandidates(data);
+    candidateService.getCandidates().then(response => {
+      setCandidates(response.candidates);
+      setInitialLoading(false);
+    }).catch(error => {
+      console.error('Error fetching candidates:', error);
+      setCandidates([]);
       setInitialLoading(false);
     });
   }, []);
   // const [selected, setSelected] = useState("candidate");
   const [open, setOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
-  // const showSelectedOption = () => {
-  //   switch(selected) {
-  //     case 'candidate':
-  //       return  <CreateCandidate />;
-  //     case 'Folder':
-  //       return  <CreateFolder />;
-  //     case 'advanced':
-  //       return  <AdvanceSearch />;
 
-  //   }
-  // }
+  const handleStatusChange = async (candidateId: string, newStatus: string) => {
+    try {
+      // Update the candidate status in the backend
+      await candidateService.updateCandidate(candidateId, { status: newStatus });
+      
+      // Update the local state
+      setCandidates(prev => 
+        prev.map(candidate => 
+          candidate._id === candidateId 
+            ? { ...candidate, status: newStatus }
+            : candidate
+        )
+      );
+      
+      // Show success toast
+      toast.success(`Candidate status updated to ${newStatus}`);
+    } catch (error) {
+      console.error('Error updating candidate status:', error);
+      toast.error('Failed to update candidate status');
+    }
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -73,39 +89,25 @@ export default function CandidatesPage() {
         buttonText="Create Candidate"
       />
 
-      {/* <CreateCandidate /> */}
-
-      {/* Create Candidate Modal */}
-
-      {/* Create Folder Modal */}
-      {/* <CreateFolder /> */}
-
-      {/* Advanced Search Modal */}
-      {/* <AdvanceSearch
-     /> */}
-
-      {/* Tabs */}
-      {/* <div className="border-b px-4">
-        <Tabs defaultValue="candidates" className="w-full">
-          <TabsList className="w-fit border-b-0">
-            <TabsTrigger value="candidates" className="gap-2" onClick={()=>{setSelected('candidate')}}>
-              <Users className="h-4 w-4" />
-              Candidates
-            </TabsTrigger>
-            <TabsTrigger value="folder" className="gap-2" onClick={()=>{setSelected('Folder')}}>
-              <Folder className="h-4 w-4"  />
-              Folders
-            </TabsTrigger>
-            <TabsTrigger value="advanced" className="gap-2" onClick={()=>{setSelected('advanced')}}>
-              <Search className="h-4 w-4" />
-              Advanced Search
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div> */}
 
       <div className="flex-1">
-        {candidates.length === 0 ? (
+        {initialLoading ? (
+          <Table>
+            <TableHeader>
+              <Tableheader tableHeadArr={columsArr} />
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell colSpan={8} className="text-center h-[calc(100vh-300px)]">
+                  <div className="flex items-center justify-center gap-2 flex-col">
+                    <Loader className="size-6 animate-spin" />
+                    <div className="text-center">Loading candidates...</div>
+                  </div>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        ) : candidates.length === 0 ? (
           <CandidatesEmptyState />
         ) : (
           <Table>
@@ -113,43 +115,51 @@ export default function CandidatesPage() {
               <Tableheader tableHeadArr={columsArr} />
             </TableHeader>
             <TableBody>
-              {initialLoading ? (
-                <TableRow>
-                  <TableCell colSpan={9} className="h-[calc(100vh-240px)] text-center">
-                    <div className="py-24">
-                      <div className="text-center">Loading candidates...</div>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : candidates.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={9} className="h-[calc(100vh-240px)] text-center">
-                    <div className="py-24">
-                      <div className="text-center">No candidates found</div>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                candidates.map((candidate, idx) => (
-                  <TableRow
-                    key={candidate._id}
-                    className="cursor-pointer hover:bg-gray-100"
-                    onClick={() =>
-                      router.push(`/candidates/${candidate._id}`)
+              {candidates.map((candidate, idx) => (
+                <TableRow
+                  key={candidate._id}
+                  className="cursor-pointer hover:bg-gray-100"
+                  onClick={(e) => {
+                    // Don't navigate if clicking on the status badge
+                    if (!(e.target as HTMLElement).closest('.candidate-status-badge')) {
+                      router.push(`/candidates/${candidate._id}`);
                     }
-                  >
-                    <TableCell className="text-sm font-medium">{candidate.name}</TableCell>
-                    <TableCell className="text-sm">{candidate.email}</TableCell>
-                    <TableCell className="text-sm">{candidate.phone}</TableCell>
-                    <TableCell className="text-sm">{candidate.location}</TableCell>
-                    <TableCell className="text-sm">{candidate.experience}</TableCell>
-                    <TableCell className="text-sm">{candidate.skills}</TableCell>
-                    <TableCell className="text-sm">{candidate.resume}</TableCell>
-                    <TableCell className="text-sm">{candidate.status}</TableCell>
-                    {/* <TableCell className="text-sm">{candidate.actions}</TableCell> */}
-                  </TableRow>
-                ))
-              )}
+                  }}
+                >
+                  <TableCell className="text-sm font-medium">{candidate.name || 'N/A'}</TableCell>
+                  <TableCell className="text-sm">{candidate.email || 'N/A'}</TableCell>
+                  <TableCell className="text-sm">{candidate.phone || 'N/A'}</TableCell>
+                  <TableCell className="text-sm">{candidate.location || 'N/A'}</TableCell>
+                  <TableCell className="text-sm">
+                    <CandidateStatusBadge 
+                      id={candidate._id} 
+                      status={(candidate.status as any) || 'Active'} 
+                      onStatusChange={handleStatusChange}
+                    />
+                  </TableCell>
+                  <TableCell className="text-sm">{candidate.experience || 'N/A'}</TableCell>
+                  <TableCell className="text-sm">
+                    {candidate.skills && Array.isArray(candidate.skills) 
+                      ? candidate.skills.join(', ') 
+                      : candidate.skills || 'N/A'}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {candidate.resume ? (
+                      <a 
+                        href={candidate.resume} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        View Resume
+                      </a>
+                    ) : (
+                      'N/A'
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         )}

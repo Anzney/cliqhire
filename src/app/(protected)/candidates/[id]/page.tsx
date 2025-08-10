@@ -1,10 +1,12 @@
 // Remove 'use client' and refactor to server component
 import CandidateSummary from '@/components/candidates/summary/candidate-summary';
 import { SlidersHorizontal, RefreshCcw, Plus, FileText, Users, Briefcase, Star, Activity, StickyNote, Paperclip, Clock, User } from "lucide-react";
-import dynamic from 'next/dynamic';
+import dynamicImport from 'next/dynamic';
+import { candidateService } from '@/services/candidateService';
 
 const TABS = [
   { label: "Summary", icon: <FileText className="w-4 h-4" /> },
+  { label: "Jobs", icon: <Briefcase className="w-4 h-4" /> },
   { label: "Activities", icon: <Activity className="w-4 h-4" /> },
   { label: "Notes", icon: <StickyNote className="w-4 h-4" /> },
   { label: "Client Team", icon: <Users className="w-4 h-4" /> },
@@ -13,12 +15,27 @@ const TABS = [
 ];
 
 // Dynamically import the client component for tabs and editing
-const ClientCandidateTabs = dynamic(() => import('./ClientCandidateTabs'), { ssr: false });
+const ClientCandidateTabs = dynamicImport(() => import('./ClientCandidateTabs'), { ssr: false });
+
+// Function to get candidate by ID using the API service
+async function getCandidateById(id: string) {
+  try {
+    return await candidateService.getCandidateById(id);
+  } catch (error) {
+    console.error('Error fetching candidate:', error);
+    return null;
+  }
+}
+
+// Force dynamic rendering to prevent caching
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function CandidatePage({ params }: { params: { id: string } }) {
   const { id } = params;
-  const res = await fetch(`/api/candidates/${id}`);
-  const candidate = await res.json();
+  
+  // Fetch candidate data - this can be easily replaced with API call
+  const candidate = await getCandidateById(id);
 
   if (!candidate) {
     return (

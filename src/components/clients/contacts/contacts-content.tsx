@@ -25,13 +25,19 @@ import {
 import { toast } from "sonner";
 
 interface ContactsContentProps {
-  clientId: string ;
-  clientData : any;
+  clientId: string;
+  clientData?: any;
 }
 
-interface ExtendedPrimaryContact extends PrimaryContact {
+interface ExtendedPrimaryContact {
+  _id?: string;
   firstName?: string;
   lastName?: string;
+  email?: string;
+  phone?: string;
+  countryCode?: string;
+  position?: string;
+  linkedin?: string;
   gender?: string;
 }
 
@@ -51,23 +57,42 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
   
 
   useEffect(() => {
-    if (clientData) {
+    const fetchClientData = async () => {
       setInitialLoading(true);
       setError("");
 
       try {
-        setPrimaryContacts(clientData.primaryContacts || []);
-        setClientPhoneNumber(clientData.phoneNumber || "");
-        setClientWebsite(clientData.website || "");
-        setClientEmails(clientData.emails || []);
-        setClientLinkedIn(clientData.linkedInProfile || "");
-        setInitialLoading(false);
+        if (clientData) {
+          // Use provided client data
+          setPrimaryContacts(clientData.primaryContacts || []);
+          setClientPhoneNumber(clientData.phoneNumber || "");
+          setClientWebsite(clientData.website || "");
+          setClientEmails(clientData.emails || []);
+          setClientLinkedIn(clientData.linkedInProfile || "");
+        } else {
+          // Fetch client data using clientId
+          const response = await getClientById(clientId);
+          if (response) {
+            setPrimaryContacts(response.primaryContacts || []);
+            setClientPhoneNumber(response.phoneNumber || "");
+            setClientWebsite(response.website || "");
+            setClientEmails(response.emails || []);
+            setClientLinkedIn(response.linkedInProfile || "");
+          } else {
+            setError("Failed to fetch client data");
+          }
+        }
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Failed to process client data";
         setError(`${errorMessage}. Please try again.`);
+      } finally {
         setInitialLoading(false);
       }
+    };
+
+    if (clientId) {
+      fetchClientData();
     } else {
       setError("No client ID provided");
       setInitialLoading(false);
@@ -118,7 +143,7 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
         countryCode: contact.countryCode,
         position: contact.position,
         linkedin: contact.linkedin,
-      };
+      } as any; // Use type assertion to bypass the _id requirement for new contacts
       // Use the POST API to add a new primary contact
       await addPrimaryContact(clientId, contactData);
       // Fetch updated client data

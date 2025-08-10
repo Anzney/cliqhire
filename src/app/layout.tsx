@@ -4,6 +4,7 @@ import "./globals.css"
 import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "next-themes"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -20,8 +21,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className } suppressHydrationWarning>
-        <Toaster />
-        {children}
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <Toaster />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   )

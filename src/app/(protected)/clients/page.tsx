@@ -40,7 +40,7 @@ interface Client {
   name: string;
   industry: string;
   location: string;
-  stage: "Lead" | "Engaged" | "Signed" | "Negotiation";
+  stage: "Lead" | "Engaged" | "Signed";
   clientStageStatus: ClientStageStatus;
   owner: string;
   team: string;
@@ -127,7 +127,7 @@ export default function ClientsPage() {
           }));
 
           // Set clients state with all clients (pagination is handled client-side)
-          setClients(mappedClients);
+          setClients(mappedClients as Client[]);
 
           // Reset to first page when fetching new data
           setCurrentPage(1);
@@ -177,7 +177,7 @@ export default function ClientsPage() {
         }));
 
         // Set clients state with all clients (pagination is handled client-side)
-        setClients(mappedClients);
+        setClients(mappedClients as Client[]);
 
         // Reset to first page when fetching new data
         setCurrentPage(1);
@@ -370,7 +370,7 @@ export default function ClientsPage() {
       setClients((prevClients) =>
         prevClients.map((client) =>
           client.id === pendingChange.clientId
-            ? { ...client, stage: updatedClient?.clientStage || pendingChange.stage }
+            ? { ...client, stage: (updatedClient?.clientStage === "Negotiation" ? "Engaged" : updatedClient?.clientStage) || pendingChange.stage }
             : client,
         ),
       );

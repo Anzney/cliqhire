@@ -1,0 +1,179 @@
+"use client";
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { JobStage } from "@/types/job";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useRouter } from "next/navigation";
+import { Job } from "@/services/jobService";
+import { Loader } from "lucide-react";
+
+export interface JobsContentRef {
+  addJobsToCandidate: (jobIds: string[], jobData?: any[]) => Promise<void>;
+}
+
+export interface JobsContentProps {
+  candidateId: string;
+  candidateName: string;
+  onJobsUpdated?: () => void;
+}
+
+// Interface for the job application display (subset of Job data)
+interface CandidateJobApplication {
+  _id: string;
+  jobId: string; // Actual job ID for navigation
+  jobTitle: string;
+  clientName: string;
+  location: string;
+  jobType: string;
+  minimumSalary: string;
+  maximumSalary: string;
+  experience: string;
+  stage: string;
+}
+
+export const JobsContent = forwardRef<JobsContentRef, JobsContentProps>(
+  ({ candidateId, candidateName, onJobsUpdated }, ref) => {
+  const [candidateJobs, setCandidateJobs] = useState<CandidateJobApplication[]>([]);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const fetchCandidateJobs = async () => {
+    setLoading(true);
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${API_URL}/api/candidates/${candidateId}/jobs`);
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch candidate jobs");
+      }
+      
+      const result = await response.json();
+      
+      if (result.status === "success" && Array.isArray(result.data)) {
+        // Transform the API response to match our interface
+        const transformedJobs: CandidateJobApplication[] = await Promise.all(
+          result.data.map(async (job: any) => {
+            let clientName = "";
+            
+            // Try to get client name if client ID is provided
+            if (job.client && typeof job.client === 'string') {
+              try {
+                const clientResponse = await fetch(`${API_URL}/api/clients/${job.client}`);
+                if (clientResponse.ok) {
+                  const clientData = await clientResponse.json();
+                  clientName = clientData.data?.name || job.client;
+                } else {
+                  clientName = job.client; // Fallback to client ID if fetch fails
+                }
+              } catch (error) {
+                console.error("Error fetching client name:", error);
+                clientName = job.client; // Fallback to client ID
+              }
+            } else if (job.client && typeof job.client === 'object' && job.client.name) {
+              // If client is already an object with name
+              clientName = job.client.name;
+            } else {
+              clientName = job.client || "";
+            }
+            
+            return {
+              _id: job._id,
+              jobId: job._id, // Use the job ID for navigation
+              jobTitle: job.jobTitle || "",
+              clientName: clientName,
+              location: job.location || "",
+              jobType: job.jobType || "",
+              minimumSalary: job.minimumSalary?.toString() || "0",
+              maximumSalary: job.maximumSalary?.toString() || "0",
+              experience: job.experience || "",
+              stage: job.stage || "",
+            };
+          })
+        );
+        
+        setCandidateJobs(transformedJobs);
+      } else {
+        setCandidateJobs([]);
+      }
+    } catch (error) {
+      console.error("Error fetching candidate jobs:", error);
+      setCandidateJobs([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to add new jobs to the candidate's job list
+  const addJobsToCandidate = async (jobIds: string[], jobData?: any[]) => {
+    try {
+      // After adding jobs, refresh the list from the API to get the updated data
+      await fetchCandidateJobs();
+      
+      if (onJobsUpdated) {
+        onJobsUpdated();
+      }
+    } catch (error) {
+      console.error("Error adding jobs to candidate:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCandidateJobs();
+  }, [candidateId]);
+
+  useImperativeHandle(ref, () => ({
+    addJobsToCandidate,
+  }));
+
+  return (
+    <>
+      <div className="border-b py-2 px-6 ">
+        <div className="flex items-center">
+          <div className="grid grid-cols-8 w-full text-sm font-medium text-gray-500 ">
+            {["Job Title", "Client", "Location", "Job Type", "Minimum Salary", "Maximum Salary", "Experience", "Stage"].map((item, index) => (
+              <div key={index}>{item}</div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="overflow-auto">
+        {loading ? (
+          <div className="flex items-center justify-center h-32">
+            <div className="flex items-center gap-2 flex-col">
+              <Loader className="size-6 animate-spin" />
+              <div className="text-center">Loading candidate jobs...</div>
+            </div>
+          </div>
+        ) : candidateJobs.length > 0 ? (
+          candidateJobs.map((job) => (
+            <div
+              key={job._id}
+              className="border-b hover:bg-gray-50 py-3 px-4 cursor-pointer"
+              onClick={() => router.push(`/jobs/${job.jobId}`)}
+            >
+              <div className="flex items-center">
+                <div className="grid grid-cols-8 w-full">
+                  <div className="font-medium">{job.jobTitle}</div>
+                  <div>{job.clientName}</div>
+                  <div>{job.location}</div>
+                  <div>{job.jobType}</div>
+                  <div>{job.minimumSalary}</div>
+                  <div>{job.maximumSalary}</div>
+                  <div>{job.experience}</div>
+                  <div>{job.stage}</div>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="flex items-center justify-center h-32 text-gray-500">
+            No job applications found for this candidate.
+          </div>
+        )}
+      </div>
+    </>
+  );
+});
+
+JobsContent.displayName = 'JobsContent';

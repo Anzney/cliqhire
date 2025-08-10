@@ -11,7 +11,7 @@ import { Recruiter } from '@/types/recruiter';
 
 export default function RecruiterDetailPage() {
   const params = useParams();
-  const recruiterId = params.id as string;
+  const recruiterId = params?.id as string;
   const [recruiter, setRecruiter] = useState<Recruiter | null>(null);
   const [loading, setLoading] = useState(true);
 

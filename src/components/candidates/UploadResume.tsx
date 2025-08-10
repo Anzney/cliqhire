@@ -9,15 +9,23 @@ interface UploadResumeProps {
   onUploaded?: (url: string) => void;
   onClose?: () => void; // for dialog close (X)
   goBack: () => void; // for Cancel button
+  candidateId?: string; // Add candidateId prop
 }
 
-export const UploadResume: React.FC<UploadResumeProps> = ({ open, onUploaded, onClose, goBack }) => {
-  if (!open) return null;
+export const UploadResume: React.FC<UploadResumeProps> = ({ 
+  open, 
+  onUploaded, 
+  onClose, 
+  goBack, 
+  candidateId 
+}) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
+
+  if (!open) return null;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -59,18 +67,31 @@ export const UploadResume: React.FC<UploadResumeProps> = ({ open, onUploaded, on
       setError("Please select a file to upload.");
       return;
     }
+    if (!candidateId) {
+      setError("Candidate ID is required.");
+      return;
+    }
+    
     setIsUploading(true);
     setError(null);
     try {
       const formData = new FormData();
       formData.append("resume", selectedFile);
-      const response = await fetch("/api/upload-resume", {
-        method: "POST",
+      
+      // Use the correct API endpoint for updating candidate resume
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/candidates/${candidateId}`, {
+        method: "PATCH",
         body: formData,
       });
+      
       if (!response.ok) throw new Error("Upload failed");
       const data = await response.json();
-      if (onUploaded) onUploaded(data.url);
+      
+      // Extract the resume URL from the response
+      const resumeUrl = data.data?.resume || data.resume;
+      if (onUploaded && resumeUrl) {
+        onUploaded(resumeUrl);
+      }
       setSelectedFile(null);
       if (onClose) onClose();
     } catch (err: any) {
