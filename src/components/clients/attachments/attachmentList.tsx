@@ -53,7 +53,7 @@ export function AttachmentList({ attachments, onDelete, onDeleteSelected }: Prop
   };
 
   const handleDownload = (attachment: BackendAttachment) => {
-    window.open(attachment.url, "_blank");
+    window.open(attachment.file, "file");
   };
 
   if (attachments.length === 0) return null;
@@ -82,7 +82,7 @@ export function AttachmentList({ attachments, onDelete, onDeleteSelected }: Prop
         )}
       </div>
       <ul className="space-y-3">
-        {attachments.map((attachment) => (
+        {attachments.map((attachment:any) => (
           <li
             key={attachment._id}
             className={`flex items-center justify-between border rounded-md p-2 ${selectedIds.includes(attachment._id) ? 'bg-gray-200' : 'bg-gray-100'}`}
@@ -113,12 +113,12 @@ export function AttachmentList({ attachments, onDelete, onDeleteSelected }: Prop
                 style={{ cursor: 'pointer' }}
                 onClick={e => {
                   e.stopPropagation();
-                  window.open(attachment.url, '_blank');
+                  window.open(attachment.file, '_blank');
                 }}
                 tabIndex={0}
                 onKeyDown={e => {
                   if (e.key === 'Enter' || e.key === ' ') {
-                    window.open(attachment.url, '_blank');
+                    window.open(attachment.file, '_blank');
                   }
                 }}
                 role="link"
@@ -142,19 +142,11 @@ export function AttachmentList({ attachments, onDelete, onDeleteSelected }: Prop
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem
-                    onClick={() => {
-                      // Download file using anchor programmatically
-                      const link = document.createElement('a');
-                      link.href = attachment.url;
-                      link.download = attachment.fileName;
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                    }}
+                    onClick={() => handleDownload(attachment)}
                   >
                     <Download className="h-4 w-4 mr-2" /> Download
                   </DropdownMenuItem>
-                  {/* <DropdownMenuItem
+                  <DropdownMenuItem
                     onClick={() => {
                       setTimeout(() => {
                         setDeleteId(attachment._id);
@@ -163,7 +155,7 @@ export function AttachmentList({ attachments, onDelete, onDeleteSelected }: Prop
                     }}
                   >
                     <Trash2 className="h-4 w-4 mr-2" /> Delete
-                  </DropdownMenuItem> */}
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
              

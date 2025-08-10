@@ -53,7 +53,7 @@ export function AttachmentList({ attachments, onDelete, onDeleteSelected }: Prop
   };
 
   const handleDownload = (attachment: BackendAttachment) => {
-    window.open(attachment.url, "_blank");
+    window.open(attachment.file, "_blank");
   };
 
   if (attachments.length === 0) return null;
@@ -113,12 +113,12 @@ export function AttachmentList({ attachments, onDelete, onDeleteSelected }: Prop
                 style={{ cursor: 'pointer' }}
                 onClick={e => {
                   e.stopPropagation();
-                  window.open(attachment.url, '_blank');
+                  window.open(attachment.file, '_blank');
                 }}
                 tabIndex={0}
                 onKeyDown={e => {
                   if (e.key === 'Enter' || e.key === ' ') {
-                    window.open(attachment.url, '_blank');
+                    window.open(attachment.file, '_blank');
                   }
                 }}
                 role="link"
@@ -145,7 +145,7 @@ export function AttachmentList({ attachments, onDelete, onDeleteSelected }: Prop
                     onClick={() => {
                       // Download file using anchor programmatically
                       const link = document.createElement('a');
-                      link.href = attachment.url;
+                      link.href = attachment.file;
                       link.download = attachment.fileName;
                       document.body.appendChild(link);
                       link.click();
@@ -154,7 +154,7 @@ export function AttachmentList({ attachments, onDelete, onDeleteSelected }: Prop
                   >
                     <Download className="h-4 w-4 mr-2" /> Download
                   </DropdownMenuItem>
-                  {/* <DropdownMenuItem
+                  <DropdownMenuItem
                     onClick={() => {
                       setTimeout(() => {
                         setDeleteId(attachment._id);
@@ -163,7 +163,7 @@ export function AttachmentList({ attachments, onDelete, onDeleteSelected }: Prop
                     }}
                   >
                     <Trash2 className="h-4 w-4 mr-2" /> Delete
-                  </DropdownMenuItem> */}
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
              

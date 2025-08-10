@@ -12,7 +12,7 @@ export interface BackendAttachment {
   _id: string;
   fileName: string;
   uploadedAt: string;
-  url: string;
+  file: string;
 }
 
 interface AttachmentsContentProps {

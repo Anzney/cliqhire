@@ -6,7 +6,7 @@ export interface Attachment {
   _id: string;
   fileName: string;
   uploadedAt: string;
-  url: string;
+  file: string;
 }
 
 // Create a new attachment (file upload)
