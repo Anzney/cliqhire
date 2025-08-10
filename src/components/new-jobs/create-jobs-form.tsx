@@ -24,7 +24,6 @@ import { fetchClients } from "./clientApi";
 import { createJob } from "@/services/jobService";
 import { currencies } from "country-data-list";
 import CurrencyFlag from "react-currency-flags";
-import { Combobox } from "@/components/ui/combobox";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -182,7 +181,7 @@ export function CreateJobRequirementForm({
         >
           <form id="job-form" onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label className="block text-sm font-medium mb-1">
+              <Label htmlFor="positionName" className="block text-sm font-medium mb-1">
                 Position Name <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -198,7 +197,7 @@ export function CreateJobRequirementForm({
             </div>
 
             <div className="relative">
-              <Label className="block text-sm font-medium mb-1">
+              <Label htmlFor="clientName" className="block text-sm font-medium mb-1">
                 Client Name <span className="text-red-500">*</span>
               </Label>
               {lockedClientId ? (
@@ -206,21 +205,39 @@ export function CreateJobRequirementForm({
                   {lockedClientName}
                 </div>
               ) : (
-                <Combobox
-                  options={clientOptions.map((c) => ({ value: c._id, label: c.name }))}
+                // <Combobox
+                //   options={clientOptions.map((c) => ({ value: c._id, label: c.name }))}
+                //   value={form.clientId}
+                //   onValueChange={(val) => {
+                //     const client = clientOptions.find((c) => c._id === val);
+                //     setForm((prev) => ({
+                //       ...prev,
+                //       clientId: val,
+                //       clientName: client ? client.name : "",
+                //     }));
+                //   }}
+                //   placeholder="Select client"
+                //   inputPlaceholder="Search client name"
+                //   className={errors.clientName ? "border-red-500" : ""}
+                // />
+                <Select
                   value={form.clientId}
                   onValueChange={(val) => {
                     const client = clientOptions.find((c) => c._id === val);
-                    setForm((prev) => ({
-                      ...prev,
-                      clientId: val,
-                      clientName: client ? client.name : "",
-                    }));
+                    setForm((prev) => ({ ...prev, clientId: val, clientName: client ? client.name : "" }));
                   }}
-                  placeholder="Select client"
-                  inputPlaceholder="Search client name"
-                  className={errors.clientName ? "border-red-500" : ""}
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select client" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clientOptions.map((client) => (
+                      <SelectItem key={client._id} value={client._id}>
+                        {client.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
               {errors.clientName && !lockedClientId && (
                 <div className="text-xs text-red-500 mt-1">{errors.clientName}</div>
@@ -247,7 +264,9 @@ export function CreateJobRequirementForm({
             {showAdditional && (
               <div className="space-y-4">
                 <div>
-                  <Label className="block text-sm font-medium mb-1">Headcount</Label>
+                  <Label htmlFor="headcount" className="block text-sm font-medium mb-1">
+                    Headcount
+                  </Label>
                   <Input
                     name="headcount"
                     value={form.headcount}
@@ -259,7 +278,9 @@ export function CreateJobRequirementForm({
                 </div>
 
                 <div>
-                  <Label className="block text-sm font-medium mb-1">Job Types</Label>
+                  <Label htmlFor="jobType" className="block text-sm font-medium mb-1">
+                    Job Types
+                  </Label>
                   <Select
                     value={form.jobType}
                     onValueChange={(val) => setForm((prev) => ({ ...prev, jobType: val }))}
@@ -278,7 +299,9 @@ export function CreateJobRequirementForm({
                 </div>
 
                 <div>
-                  <Label className="block text-sm font-medium mb-1">Location</Label>
+                  <Label htmlFor="location" className="block text-sm font-medium mb-1">
+                    Location
+                  </Label>
                   <Input
                     name="location"
                     value={form.location}
@@ -289,7 +312,9 @@ export function CreateJobRequirementForm({
 
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <Label className="block text-sm font-medium mb-1">Currency</Label>
+                    <Label htmlFor="currency" className="block text-sm font-medium mb-1">
+                      Currency
+                    </Label>
                     <Select
                       value={form.currency}
                       onValueChange={(val) => setForm((prev) => ({ ...prev, currency: val }))}

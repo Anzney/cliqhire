@@ -86,7 +86,7 @@ export function ClientPrimaryContactsDialog({
                   .filter((c) => dialogSelectedContactIds.includes(c._id))
                   .map((contact: any) => (
                     <Badge key={contact._id} variant="secondary" className="select-none flex items-center gap-1 pr-1">
-                      {contact.name}
+                      {contact.name || contact.firstName + " " + contact.lastName}
                       <button
                         type="button"
                         className="ml-1 p-0.5 rounded hover:bg-gray-200"
@@ -111,7 +111,7 @@ export function ClientPrimaryContactsDialog({
               {dropdownOpen && (
                 <div className="relative w-full" style={{ maxHeight: 240 }}>
                   <CommandList>
-                    <div className="absolute top-0 left-0 z-10 w-full rounded-md border bg-white text-popover-foreground shadow-md outline-none scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 max-h-60 overflow-y-auto">
+                    <div className="absolute top-0 left-0 z-10 w-full rounded-md border bg-white text-popover-foreground shadow-md outline-none max-h-60 overflow-y-auto">
                       <CommandGroup className="h-full w-full">
                         {primaryContacts.map((contact: any) => {
                           const isSelected = dialogSelectedContactIds.includes(contact._id);
@@ -128,7 +128,7 @@ export function ClientPrimaryContactsDialog({
                               }}
                               className={`w-full cursor-pointer flex items-center bg-white ${isSelected ? "text-black" : ""}`}
                             >
-                              <span className="truncate flex-1">{contact.name}</span>
+                              <span className="truncate flex-1">{contact.name || contact.firstName + " " + contact.lastName}</span>
                               {isSelected && (
                                 <Check className="size-5 text-green-500"/>
                               )}

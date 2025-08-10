@@ -8,7 +8,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   MultiSelector,
@@ -148,104 +147,113 @@ export function AddCandidateDialog({ jobId, jobTitle, trigger, onCandidatesAdded
     <>
       {enhancedTrigger}
       <Dialog open={currentOpen} onOpenChange={setOpen}>
-      
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] h-[400px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Add Candidate
-          </DialogTitle>
-          <DialogDescription>
-            Select one or more candidates to add to <strong>{jobTitle}</strong>.
-          </DialogDescription>
-        </DialogHeader>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Add Candidate
+            </DialogTitle>
+            <DialogDescription>
+              Select one or more candidates to add to <strong>{jobTitle}</strong>.
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="space-y-4">
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin" />
-              <span className="ml-2">Loading candidates...</span>
-            </div>
-          ) : (
-            <>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search and select candidates</label>
-                <MultiSelector
-                  values={selectedCandidateIds}
-                  onValuesChange={setSelectedCandidateIds}
-                  className="w-full"
-                >
-                  <MultiSelectorTrigger className="min-h-10">
-                    <MultiSelectorInput 
-                      placeholder="Search candidates..." 
-                      value={searchTerm}
-                      onValueChange={setSearchTerm}
-                    />
-                  </MultiSelectorTrigger>
-                  <MultiSelectorContent>
-                    <MultiSelectorList>
-                      {filteredCandidates.length > 0 ? (
-                        filteredCandidates.map((candidate) => (
-                          <MultiSelectorItem
-                            key={candidate._id}
-                            value={candidate._id || ""}
-                            className="flex items-center gap-2"
-                          >
-                            <div className="flex flex-col items-start">
-                              <span className="font-medium">{getCandidateDisplayName(candidate)}</span>
-                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <MapPin className="h-3 w-3" />
-                                {getCandidateLocation(candidate)}
-                              </div>
-                            </div>
-                          </MultiSelectorItem>
-                        ))
-                      ) : (
-                        <div className="p-4 text-center text-muted-foreground">
-                          {searchTerm ? "No candidates found matching your search" : "No candidates available"}
-                        </div>
-                      )}
-                    </MultiSelectorList>
-                  </MultiSelectorContent>
-                </MultiSelector>
+          <div className="max-h-[80vh] h-[400px]">
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span className="ml-2">Loading candidates...</span>
               </div>
-
-              {selectedCandidateIds.length > 0 && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Selected Candidates ({selectedCandidateIds.length})</label>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedCandidateIds.map((candidateId) => {
-                      const candidate = candidates.find(c => c._id === candidateId);
-                      return candidate ? (
-                        <Badge key={candidateId} variant="secondary" className="flex items-center gap-1">
-                          <User className="h-3 w-3" />
-                          {getCandidateDisplayName(candidate)}
-                        </Badge>
-                      ) : null;
-                    })}
-                  </div>
+            ) : (
+              <>
+                <div className="">
+                  <label className="text-sm font-medium">Search and select candidates</label>
+                  <MultiSelector
+                    values={selectedCandidateIds}
+                    onValuesChange={setSelectedCandidateIds}
+                    className="w-full"
+                  >
+                    <MultiSelectorTrigger className="min-h-10">
+                      <MultiSelectorInput
+                        placeholder="Search candidates..."
+                        value={searchTerm}
+                        onValueChange={setSearchTerm}
+                      />
+                    </MultiSelectorTrigger>
+                    <MultiSelectorContent>
+                      <MultiSelectorList>
+                        {filteredCandidates.length > 0 ? (
+                          filteredCandidates.map((candidate) => (
+                            <MultiSelectorItem
+                              key={candidate._id}
+                              value={candidate._id || ""}
+                              className="flex items-center gap-2"
+                            >
+                              <div className="flex flex-col items-start">
+                                <span className="font-medium">
+                                  {getCandidateDisplayName(candidate)}
+                                </span>
+                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                  <MapPin className="h-3 w-3" />
+                                  {getCandidateLocation(candidate)}
+                                </div>
+                              </div>
+                            </MultiSelectorItem>
+                          ))
+                        ) : (
+                          <div className="p-4 text-center text-muted-foreground">
+                            {searchTerm
+                              ? "No candidates found matching your search"
+                              : "No candidates available"}
+                          </div>
+                        )}
+                      </MultiSelectorList>
+                    </MultiSelectorContent>
+                  </MultiSelector>
                 </div>
-              )}
-            </>
-          )}
-        </div>
 
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => setOpen(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleAddCandidates}
-            disabled={selectedCandidateIds.length === 0 || loading}
-          >
-            Add {selectedCandidateIds.length > 0 ? `${selectedCandidateIds.length} Candidate${selectedCandidateIds.length > 1 ? 's' : ''}` : 'Candidates'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+                {selectedCandidateIds.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      Selected Candidates ({selectedCandidateIds.length})
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedCandidateIds.map((candidateId) => {
+                        const candidate = candidates.find((c) => c._id === candidateId);
+                        return candidate ? (
+                          <Badge
+                            key={candidateId}
+                            variant="secondary"
+                            className="flex items-center gap-1"
+                          >
+                            <User className="h-3 w-3" />
+                            {getCandidateDisplayName(candidate)}
+                          </Badge>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddCandidates}
+              disabled={selectedCandidateIds.length === 0 || loading}
+            >
+              Add{" "}
+              {selectedCandidateIds.length > 0
+                ? `${selectedCandidateIds.length} Candidate${selectedCandidateIds.length > 1 ? "s" : ""}`
+                : "Candidates"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
