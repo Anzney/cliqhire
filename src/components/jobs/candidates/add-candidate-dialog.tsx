@@ -1,22 +1,4 @@
 "use client";
-
-/**
- * AddCandidateDialog Component
- * 
- * A dialog component that allows users to select and add multiple candidates to a job.
- * This component follows the same pattern as the AddToJobDialog but with reversed roles.
- * 
- * Usage:
- * <AddCandidateDialog
- *   jobId="job-id"
- *   jobTitle="Software Engineer"
- *   trigger={<Button>Add Candidate</Button>}
- *   onCandidatesAdded={(candidateIds, candidateData) => {
- *     // Handle the newly added candidates
- *   }}
- * />
- */
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
