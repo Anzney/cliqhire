@@ -127,7 +127,7 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
       <DialogTrigger asChild>
         {trigger}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] h-[400px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Briefcase className="h-5 w-5" />
@@ -138,7 +138,7 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="max-h-[80vh] h-[400px]">
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin" />
@@ -146,20 +146,20 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
             </div>
           ) : (
             <>
-              <div className="space-y-2">
+              <div className="">
                 <label className="text-sm font-medium">Search and select jobs</label>
-                                 <MultiSelector
-                   values={selectedJobIds}
-                   onValuesChange={setSelectedJobIds}
-                   className="w-full"
-                 >
-                   <MultiSelectorTrigger className="min-h-10">
-                     <MultiSelectorInput 
-                       placeholder="Search jobs..." 
-                       value={searchTerm}
-                       onValueChange={setSearchTerm}
-                     />
-                   </MultiSelectorTrigger>
+                <MultiSelector
+                  values={selectedJobIds}
+                  onValuesChange={setSelectedJobIds}
+                  className="w-full"
+                >
+                  <MultiSelectorTrigger className="min-h-10">
+                    <MultiSelectorInput 
+                      placeholder="Search jobs..." 
+                      value={searchTerm}
+                      onValueChange={setSearchTerm}
+                    />
+                  </MultiSelectorTrigger>
                   <MultiSelectorContent>
                     <MultiSelectorList>
                       {filteredJobs.length > 0 ? (
