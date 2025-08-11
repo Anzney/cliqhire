@@ -726,17 +726,8 @@ const addPrimaryContact = async (
       }
     );
     
-    // Handle different possible response structures
-    let result;
-    if (response.data.data) {
-      result = response.data.data;
-    } else if (response.data.client) {
-      result = response.data.client;
-    } else {
-      result = response.data;
-    }
-    
-    return result;
+    // The response should always have the data property according to ApiResponse<T> interface
+    return response.data.data;
   } catch (error: any) {
     throw handleError(error);
   }
