@@ -123,10 +123,7 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
   );
 
   const getJobDisplayName = (job: Job) => {
-    const clientName = job.client && typeof job.client === 'object' && job.client.name 
-      ? job.client.name 
-      : 'Unknown Client';
-    
+    const clientName = getClientName(job);
     return `${job.jobTitle} - ${clientName}`;
   };
 
