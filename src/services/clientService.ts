@@ -2,16 +2,19 @@ import axios, { AxiosError } from "axios";
 
 // Interface for Primary Contact
 export interface PrimaryContact {
-  _id: string;
+  _id?: string; // Make _id optional for new contacts
+  client_id?: string; // Backend expects this field to link contact to client
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
   countryCode?: string;
   position?: string;
+  designation?: string; // Backend returns this field
   linkedin?: string;
   error?: string;
   gender?: string;
+  name?: string; // Add name field for backend compatibility
 }
 
 export const clientStageStatuses = [
@@ -194,14 +197,20 @@ const validateAndSanitizeClientData = (data: any) => {
     if (sanitized.primaryContacts && Array.isArray(sanitized.primaryContacts)) {
       sanitized.primaryContacts = sanitized.primaryContacts.map((contact: any) => {
         if (typeof contact === 'object' && contact !== null) {
+          // Create name from firstName and lastName if name doesn't exist
+          const name = contact.name || (contact.firstName && contact.lastName ? `${contact.firstName} ${contact.lastName}`.trim() : '');
           return {
-            name: contact.name || '',
+            client_id: contact.client_id || sanitized._id, // Include client_id for backend linking
+            name: name,
+            firstName: contact.firstName || '',
+            lastName: contact.lastName || '',
             email: contact.email || '',
             phone: contact.phone || '',
             countryCode: contact.countryCode || '',
-            position: contact.position || '',
+            designation: contact.position || contact.designation || '', // Handle both position and designation
             linkedin: contact.linkedin || '',
-            gender: contact.gender || ''
+            gender: contact.gender || '',
+            isPrimary: contact.isPrimary !== undefined ? contact.isPrimary : true
           };
         }
         return contact;
@@ -338,12 +347,6 @@ const sendClientRequest = async (
   try {
     // First validate and sanitize the data
     const validatedData = validateAndSanitizeClientData(rawData);
-    
-    // console.log('Validated data before sending:', {
-    //   name: validatedData.name,
-    //   hasFiles: hasFileUploads(validatedData),
-    //   keys: Object.keys(validatedData)
-    // });
     
     if (hasFileUploads(validatedData)) {
       const formData = prepareFormData(validatedData);
@@ -691,18 +694,49 @@ const addPrimaryContact = async (
   contactData: PrimaryContact
 ): Promise<ClientResponse> => {
   try {
-    // Validate contact data
-    const validatedContact = validateAndSanitizeClientData(contactData);
+    // Handle phone number - remove country code from phone if it's included
+    let phoneNumber = contactData.phone;
+    let countryCode = contactData.countryCode || "";
+    
+    // If phone number starts with the country code, remove it
+    if (phoneNumber && countryCode && phoneNumber.startsWith(countryCode.replace('+', ''))) {
+      phoneNumber = phoneNumber.substring(countryCode.replace('+', '').length);
+    }
+    
+    const contactPayload = {
+      client_id: clientId, // Backend expects this field to link the contact to the client
+      name: contactData.name || `${contactData.firstName} ${contactData.lastName}`.trim(),
+      firstName: contactData.firstName,
+      lastName: contactData.lastName,
+      email: contactData.email,
+      phone: phoneNumber,
+      countryCode: countryCode,
+      designation: contactData.position || "", // Backend expects 'designation' not 'position'
+      linkedin: contactData.linkedin || "",
+      gender: contactData.gender || "",
+      isPrimary: true, // Backend expects this field
+    };
     
     const response = await axios.post<ApiResponse<ClientResponse>>(
-      `${API_URL}/api/clients/${clientId}/primary-contact`,
-      validatedContact,
+      `${API_URL}/api/clients/${clientId}/primarycontact`,
+      contactPayload,
       { 
         headers: { "Content-Type": "application/json" },
         timeout: 15000
       }
     );
-    return response.data.data;
+    
+    // Handle different possible response structures
+    let result;
+    if (response.data.data) {
+      result = response.data.data;
+    } else if (response.data.client) {
+      result = response.data.client;
+    } else {
+      result = response.data;
+    }
+    
+    return result;
   } catch (error: any) {
     throw handleError(error);
   }
@@ -715,12 +749,34 @@ const updatePrimaryContact = async (
   contactData: Partial<PrimaryContact>
 ): Promise<PrimaryContact> => {
   try {
+    // Map position to designation for backend compatibility
+    const patchData = { ...contactData };
+    if (patchData.position !== undefined) {
+      patchData.designation = patchData.position;
+      delete patchData.position;
+    }
+    
     const response = await axios.patch<ApiResponse<PrimaryContact>>(
-      `${API_URL}/api/clients/${clientId}/primary-contact/${contactId}`,
-      contactData,
+      `${API_URL}/api/clients/${clientId}/primarycontact/${contactId}`,
+      patchData,
       { headers: { "Content-Type": "application/json" }, timeout: 15000 }
     );
     return response.data.data;
+  } catch (error: any) {
+    throw handleError(error);
+  }
+};
+
+// Delete a primary contact using DELETE API
+const deletePrimaryContact = async (
+  clientId: string,
+  contactId: string
+): Promise<void> => {
+  try {
+    await axios.delete<ApiResponse<null>>(
+      `${API_URL}/api/clients/${clientId}/primarycontact/${contactId}`,
+      { timeout: 15000 }
+    );
   } catch (error: any) {
     throw handleError(error);
   }
@@ -738,4 +794,5 @@ export {
   uploadClientFile,
   addPrimaryContact,
   updatePrimaryContact,
+  deletePrimaryContact,
 };
