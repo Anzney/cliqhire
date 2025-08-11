@@ -201,7 +201,7 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
       <DialogTrigger asChild>
         {trigger}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Briefcase className="h-5 w-5" />
@@ -212,7 +212,7 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
           </DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[80vh] h-[400px]">
+        <div className="max-h-[70vh]  h-[500px] overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin" />
@@ -281,85 +281,87 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
 
               {/* Detailed view of selected jobs */}
               {selectedJobIds.length > 0 && (
-                <div className="mt-3">
-                  <h3 className="text-sm font-semibold mb-2">Job Details</h3>
-                  {selectedJobIds.map((jobId) => {
-                    const job = jobs.find(j => j._id === jobId);
-                    if (!job) return null;
-                    
-                    return (
-                      <div key={jobId} className="p-3 rounded-md border mb-2 bg-gray-50">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1 flex gap-8">
-                            <div>
-                              <div>
-                                <span className="text-xs font-semibold text-gray-500 mr-1">
-                                  Job Title:
-                                </span>
-                                <span className="text-sm text-muted-foreground">
-                                  {job.jobTitle || "—"}
-                                </span>
+                <div className="mt-4 border-t pt-4">
+                  <h3 className="text-sm font-semibold mb-3">Selected Job Details</h3>
+                  <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                    {selectedJobIds.map((jobId) => {
+                      const job = jobs.find(j => j._id === jobId);
+                      if (!job) return null;
+                      
+                      return (
+                        <div key={jobId} className="p-4 rounded-lg border bg-gray-50/50">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1 grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-semibold text-gray-500 min-w-[80px]">
+                                    Job Title:
+                                  </span>
+                                  <span className="text-sm text-muted-foreground">
+                                    {job.jobTitle || "—"}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-semibold text-gray-500 min-w-[80px]">
+                                    Client:
+                                  </span>
+                                  <span className="text-sm text-muted-foreground">
+                                    {getClientName(job)}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-semibold text-gray-500 min-w-[80px]">
+                                    Location:
+                                  </span>
+                                  <span className="text-sm text-muted-foreground">
+                                    {getJobLocation(job)}
+                                  </span>
+                                </div>
                               </div>
-                              <div>
-                                <span className="text-xs font-semibold text-gray-500 mr-1">
-                                  Client:
-                                </span>
-                                <span className="text-sm text-muted-foreground">
-                                  {getClientName(job)}
-                                </span>
-                              </div>
-                              <div>
-                                <span className="text-xs font-semibold text-gray-500 mr-1">
-                                  Location:
-                                </span>
-                                <span className="text-sm text-muted-foreground">
-                                  {getJobLocation(job)}
-                                </span>
-                              </div>
-                            </div>
-                            <div>
-                              <div>
-                                <span className="text-xs font-semibold text-gray-500 mr-1">
-                                  Salary Range:
-                                </span>
-                                <span className="text-sm text-muted-foreground">
-                                  {getSalaryRange(job)}
-                                </span>
-                              </div>
-                              <div>
-                                <span className="text-xs font-semibold text-gray-500 mr-1">
-                                  Job Type:
-                                </span>
-                                <span className="text-sm text-muted-foreground">
-                                  {getJobType(job)}
-                                </span>
-                              </div>
-                                                              <div>
-                                  <span className="text-xs font-semibold text-gray-500 mr-1">
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-semibold text-gray-500 min-w-[80px]">
+                                    Salary:
+                                  </span>
+                                  <span className="text-sm text-muted-foreground">
+                                    {getSalaryRange(job)}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-semibold text-gray-500 min-w-[80px]">
+                                    Job Type:
+                                  </span>
+                                  <span className="text-sm text-muted-foreground">
+                                    {getJobType(job)}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-semibold text-gray-500 min-w-[80px]">
                                     Experience:
                                   </span>
                                   <span className="text-sm text-muted-foreground">
                                     {job.experience || "—"}
                                   </span>
                                 </div>
+                              </div>
                             </div>
+                            <Button
+                              onClick={() =>
+                                setSelectedJobIds((ids) =>
+                                  ids.filter((id) => id !== job._id),
+                                )
+                              }
+                              variant="ghost"
+                              size="icon"
+                              className="text-red-500 hover:text-red-700 ml-2"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
                           </div>
-                          <Button
-                            onClick={() =>
-                              setSelectedJobIds((ids) =>
-                                ids.filter((id) => id !== job._id),
-                              )
-                            }
-                            variant="ghost"
-                            size="icon"
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </>
