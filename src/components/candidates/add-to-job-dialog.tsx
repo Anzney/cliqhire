@@ -20,9 +20,10 @@ import {
   MultiSelectorItem,
 } from "@/components/ui/multi-select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, Briefcase, Building } from "lucide-react";
-import { getJobs, Job } from "@/services/jobService";
+import { Loader2, Search, Briefcase, Building, MapPin, DollarSign, Calendar, X } from "lucide-react";
+import { getJobs, Job, ClientRef } from "@/services/jobService";
 import { candidateService } from "@/services/candidateService";
+import { getClientById } from "@/services/clientService";
 import { toast } from "sonner";
 
 interface AddToJobDialogProps {
@@ -38,6 +39,7 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
   const [loading, setLoading] = useState(false);
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [clientNames, setClientNames] = useState<Record<string, string>>({});
 
   // Fetch jobs when dialog opens
   useEffect(() => {
@@ -58,12 +60,25 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
     setLoading(true);
     try {
       const response = await getJobs(); // Fetch up to 100 jobs
+      console.log('Jobs API response:', response);
+      
+      let jobsData: Job[] = [];
       if (response.jobs) {
-        setJobs(response.jobs);
+        console.log('Setting jobs from response.jobs:', response.jobs);
+        jobsData = response.jobs;
       } else if (response.data && Array.isArray(response.data)) {
-        setJobs(response.data);
+        console.log('Setting jobs from response.data:', response.data);
+        jobsData = response.data;
       } else {
-        setJobs([]);
+        console.log('No jobs found in response');
+        jobsData = [];
+      }
+      
+      setJobs(jobsData);
+      
+      // Fetch client names for all jobs
+      if (jobsData.length > 0) {
+        await fetchClientNames(jobsData);
       }
     } catch (error) {
       console.error("Error fetching jobs:", error);
@@ -115,11 +130,70 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
     return `${job.jobTitle} - ${clientName}`;
   };
 
-  const getClientName = (job: Job) => {
-    if (job.client && typeof job.client === 'object' && job.client.name) {
-      return job.client.name;
+  const fetchClientNames = async (jobs: Job[]) => {
+    const newClientNames: Record<string, string> = {};
+    
+    for (const job of jobs) {
+      const jobId = job._id;
+      if (clientNames[jobId]) {
+        newClientNames[jobId] = clientNames[jobId];
+        continue;
+      }
+      
+      let clientName = 'Unknown Client';
+      
+      if (job.client && typeof job.client === 'object') {
+        if ('name' in job.client && job.client.name) {
+          clientName = job.client.name;
+        } else if ('_id' in job.client && job.client._id) {
+          try {
+            const clientData = await getClientById(job.client._id);
+            clientName = clientData.name || 'Unknown Client';
+          } catch (error) {
+            console.error("Error fetching client name:", error);
+            clientName = 'Unknown Client';
+          }
+        }
+      } else if (typeof job.client === 'string') {
+        try {
+          const clientData = await getClientById(job.client);
+          clientName = clientData.name || 'Unknown Client';
+        } catch (error) {
+          console.error("Error fetching client name:", error);
+          clientName = job.client; // Return the ID as fallback
+        }
+      }
+      
+      newClientNames[jobId] = clientName;
     }
-    return 'Unknown Client';
+    
+    setClientNames(prev => ({ ...prev, ...newClientNames }));
+  };
+
+  const getClientName = (job: Job) => {
+    return clientNames[job._id] || 'Loading...';
+  };
+
+  const getSalaryRange = (job: Job) => {
+    if (job.minimumSalary && job.maximumSalary) {
+      return `${job.minimumSalary} - ${job.maximumSalary}`;
+    } else if (job.minimumSalary) {
+      return `${job.minimumSalary}+`;
+    } else if (job.maximumSalary) {
+      return `Up to ${job.maximumSalary}`;
+    }
+    return "—";
+  };
+
+  const getJobLocation = (job: Job) => {
+    if (Array.isArray(job.location)) {
+      return job.location.join(", ") || "Location not specified";
+    }
+    return job.location || "Location not specified";
+  };
+
+  const getJobType = (job: Job) => {
+    return job.jobType || "—";
   };
 
   return (
@@ -202,6 +276,90 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
                       ) : null;
                     })}
                   </div>
+                </div>
+              )}
+
+              {/* Detailed view of selected jobs */}
+              {selectedJobIds.length > 0 && (
+                <div className="mt-3">
+                  <h3 className="text-sm font-semibold mb-2">Job Details</h3>
+                  {selectedJobIds.map((jobId) => {
+                    const job = jobs.find(j => j._id === jobId);
+                    if (!job) return null;
+                    
+                    return (
+                      <div key={jobId} className="p-3 rounded-md border mb-2 bg-gray-50">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 flex gap-8">
+                            <div>
+                              <div>
+                                <span className="text-xs font-semibold text-gray-500 mr-1">
+                                  Job Title:
+                                </span>
+                                <span className="text-sm text-muted-foreground">
+                                  {job.jobTitle || "—"}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-xs font-semibold text-gray-500 mr-1">
+                                  Client:
+                                </span>
+                                <span className="text-sm text-muted-foreground">
+                                  {getClientName(job)}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-xs font-semibold text-gray-500 mr-1">
+                                  Location:
+                                </span>
+                                <span className="text-sm text-muted-foreground">
+                                  {getJobLocation(job)}
+                                </span>
+                              </div>
+                            </div>
+                            <div>
+                              <div>
+                                <span className="text-xs font-semibold text-gray-500 mr-1">
+                                  Salary Range:
+                                </span>
+                                <span className="text-sm text-muted-foreground">
+                                  {getSalaryRange(job)}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-xs font-semibold text-gray-500 mr-1">
+                                  Job Type:
+                                </span>
+                                <span className="text-sm text-muted-foreground">
+                                  {getJobType(job)}
+                                </span>
+                              </div>
+                                                              <div>
+                                  <span className="text-xs font-semibold text-gray-500 mr-1">
+                                    Experience:
+                                  </span>
+                                  <span className="text-sm text-muted-foreground">
+                                    {job.experience || "—"}
+                                  </span>
+                                </div>
+                            </div>
+                          </div>
+                          <Button
+                            onClick={() =>
+                              setSelectedJobIds((ids) =>
+                                ids.filter((id) => id !== job._id),
+                              )
+                            }
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </>
