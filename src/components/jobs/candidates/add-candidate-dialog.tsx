@@ -18,7 +18,7 @@ import {
   MultiSelectorItem,
 } from "@/components/ui/multi-select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, User, MapPin, Briefcase } from "lucide-react";
+import { Loader2, Search, User, MapPin, Briefcase, Mail, Phone, X } from "lucide-react";
 import { candidateService, Candidate } from "@/services/candidateService";
 import { toast } from "sonner";
 
@@ -232,6 +232,90 @@ export function AddCandidateDialog({ jobId, jobTitle, trigger, onCandidatesAdded
                         ) : null;
                       })}
                     </div>
+                  </div>
+                )}
+
+                {/* Detailed view of selected candidates */}
+                {selectedCandidateIds.length > 0 && (
+                  <div className="mt-3">
+                    <h3 className="text-sm font-semibold mb-2">Candidate Details</h3>
+                    {selectedCandidateIds.map((candidateId) => {
+                      const candidate = candidates.find((c) => c._id === candidateId);
+                      if (!candidate) return null;
+                      
+                      return (
+                        <div key={candidateId} className="p-3 rounded-md border mb-2 bg-gray-50">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1 flex gap-8">
+                              <div>
+                                <div>
+                                  <span className="text-xs font-semibold text-gray-500 mr-1">
+                                    Name:
+                                  </span>
+                                  <span className="text-sm text-muted-foreground">
+                                    {candidate.name || "Unnamed Candidate"}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-xs font-semibold text-gray-500 mr-1">
+                                    Current Position:
+                                  </span>
+                                  <span className="text-sm text-muted-foreground">
+                                    {candidate.currentJobTitle || "—"}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-xs font-semibold text-gray-500 mr-1">
+                                    Email:
+                                  </span>
+                                  <span className="text-sm text-muted-foreground">
+                                    {candidate.email || "—"}
+                                  </span>
+                                </div>
+                              </div>
+                              <div>
+                                <div>
+                                  <span className="text-xs font-semibold text-gray-500 mr-1">
+                                    Location:
+                                  </span>
+                                  <span className="text-sm text-muted-foreground">
+                                    {candidate.location || "—"}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-xs font-semibold text-gray-500 mr-1">
+                                    Phone:
+                                  </span>
+                                  <span className="text-sm text-muted-foreground">
+                                    {candidate.phone || "—"}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-xs font-semibold text-gray-500 mr-1">
+                                    Experience:
+                                  </span>
+                                  <span className="text-sm text-muted-foreground">
+                                    {candidate.experience ? `${candidate.experience} years` : "—"}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <Button
+                              onClick={() =>
+                                setSelectedCandidateIds((ids) =>
+                                  ids.filter((id) => id !== candidate._id),
+                                )
+                              }
+                              variant="ghost"
+                              size="icon"
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </>
