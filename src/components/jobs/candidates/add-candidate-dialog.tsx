@@ -147,7 +147,7 @@ export function AddCandidateDialog({ jobId, jobTitle, trigger, onCandidatesAdded
     <>
       {enhancedTrigger}
       <Dialog open={currentOpen} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[800px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
@@ -158,7 +158,7 @@ export function AddCandidateDialog({ jobId, jobTitle, trigger, onCandidatesAdded
             </DialogDescription>
           </DialogHeader>
 
-          <div className="max-h-[80vh] h-[400px]">
+          <div className="max-h-[70vh] h-[500px] overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin" />
@@ -237,85 +237,87 @@ export function AddCandidateDialog({ jobId, jobTitle, trigger, onCandidatesAdded
 
                 {/* Detailed view of selected candidates */}
                 {selectedCandidateIds.length > 0 && (
-                  <div className="mt-3">
-                    <h3 className="text-sm font-semibold mb-2">Candidate Details</h3>
-                    {selectedCandidateIds.map((candidateId) => {
-                      const candidate = candidates.find((c) => c._id === candidateId);
-                      if (!candidate) return null;
-                      
-                      return (
-                        <div key={candidateId} className="p-3 rounded-md border mb-2 bg-gray-50">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1 flex gap-8">
-                              <div>
-                                <div>
-                                  <span className="text-xs font-semibold text-gray-500 mr-1">
-                                    Name:
-                                  </span>
-                                  <span className="text-sm text-muted-foreground">
-                                    {candidate.name || "Unnamed Candidate"}
-                                  </span>
+                  <div className="mt-4 border-t pt-4">
+                    <h3 className="text-sm font-semibold mb-3">Selected Candidate Details</h3>
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                      {selectedCandidateIds.map((candidateId) => {
+                        const candidate = candidates.find((c) => c._id === candidateId);
+                        if (!candidate) return null;
+                        
+                        return (
+                          <div key={candidateId} className="p-4 rounded-lg border bg-gray-50/50">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1 grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold text-gray-500 min-w-[80px]">
+                                      Name:
+                                    </span>
+                                    <span className="text-sm font-medium">
+                                      {candidate.name || "Unnamed Candidate"}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold text-gray-500 min-w-[80px]">
+                                      Current Position:
+                                    </span>
+                                    <span className="text-sm text-muted-foreground">
+                                      {candidate.currentJobTitle || "—"}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold text-gray-500 min-w-[80px]">
+                                      Email:
+                                    </span>
+                                    <span className="text-sm text-muted-foreground">
+                                      {candidate.email || "—"}
+                                    </span>
+                                  </div>
                                 </div>
-                                <div>
-                                  <span className="text-xs font-semibold text-gray-500 mr-1">
-                                    Current Position:
-                                  </span>
-                                  <span className="text-sm text-muted-foreground">
-                                    {candidate.currentJobTitle || "—"}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="text-xs font-semibold text-gray-500 mr-1">
-                                    Email:
-                                  </span>
-                                  <span className="text-sm text-muted-foreground">
-                                    {candidate.email || "—"}
-                                  </span>
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold text-gray-500 min-w-[80px]">
+                                      Location:
+                                    </span>
+                                    <span className="text-sm text-muted-foreground">
+                                      {candidate.location || "—"}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold text-gray-500 min-w-[80px]">
+                                      Phone:
+                                    </span>
+                                    <span className="text-sm text-muted-foreground">
+                                      {candidate.phone || "—"}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold text-gray-500 min-w-[80px]">
+                                      Experience:
+                                    </span>
+                                    <span className="text-sm text-muted-foreground">
+                                      {candidate.experience ? `${candidate.experience} years` : "—"}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
-                              <div>
-                                <div>
-                                  <span className="text-xs font-semibold text-gray-500 mr-1">
-                                    Location:
-                                  </span>
-                                  <span className="text-sm text-muted-foreground">
-                                    {candidate.location || "—"}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="text-xs font-semibold text-gray-500 mr-1">
-                                    Phone:
-                                  </span>
-                                  <span className="text-sm text-muted-foreground">
-                                    {candidate.phone || "—"}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="text-xs font-semibold text-gray-500 mr-1">
-                                    Experience:
-                                  </span>
-                                  <span className="text-sm text-muted-foreground">
-                                    {candidate.experience ? `${candidate.experience} years` : "—"}
-                                  </span>
-                                </div>
-                              </div>
+                              <Button
+                                onClick={() =>
+                                  setSelectedCandidateIds((ids) =>
+                                    ids.filter((id) => id !== candidate._id),
+                                  )
+                                }
+                                variant="ghost"
+                                size="icon"
+                                className="text-red-500 hover:text-red-700 ml-2"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
                             </div>
-                            <Button
-                              onClick={() =>
-                                setSelectedCandidateIds((ids) =>
-                                  ids.filter((id) => id !== candidate._id),
-                                )
-                              }
-                              variant="ghost"
-                              size="icon"
-                              className="text-red-500 hover:text-red-700"
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </>
