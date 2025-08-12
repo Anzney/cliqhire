@@ -69,8 +69,6 @@ export function RegisterForm({
         confirmPassword: values.confirmPassword,
       }
 
-      console.log("Submitting registration with plain text passwords (will be hashed by service)")
-
       // Call the auth service
       const response = await authService.register(userData)
       

@@ -53,7 +53,6 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
         password: values.password,
       };
 
-      console.log("Submitting login with plain text password (will be hashed by service)");
 
       // Call the auth service
       const response = await authService.login(userData);
