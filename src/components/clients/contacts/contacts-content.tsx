@@ -6,11 +6,10 @@ import { useState, useEffect } from "react";
 import { AddContactModal } from "../modals/add-contact-modal";
 import {
   getClientById,
-  PrimaryContact,
-  ClientResponse,
   updateClient,
-  updatePrimaryContact, // <-- add this import
-  addPrimaryContact, // <-- add this import
+  updatePrimaryContact,
+  addPrimaryContact,
+  deletePrimaryContact,
 } from "@/services/clientService";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import EditContactDetailsModal from "./EditContactDetailsModal";
@@ -31,12 +30,14 @@ interface ContactsContentProps {
 
 interface ExtendedPrimaryContact {
   _id?: string;
+  client_id?: string; // Backend expects this field to link contact to client
   firstName?: string;
   lastName?: string;
   email?: string;
   phone?: string;
   countryCode?: string;
   position?: string;
+  designation?: string; // Backend returns this field
   linkedin?: string;
   gender?: string;
 }
@@ -99,8 +100,6 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
     }
   }, [clientId, clientData]);
 
-  console.log(primaryContacts);
-
   const countryCodes = [
     { code: "+966", label: "+966 (Saudi Arabia)" },
     { code: "+1", label: "+1 (USA)" },
@@ -131,24 +130,40 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
     countryCode: string;
     position: string;
     linkedin: string;
+    gender?: string;
   }) => {
     setError("");
     try {
-      // Prepare the contact data for backend - map to PrimaryContact interface
+      // Prepare the contact data for backend - create a name field from firstName and lastName
+      // Handle phone number - remove country code from phone if it's included
+      let phoneNumber = contact.phone;
+      let countryCode = contact.countryCode;
+      
+      // If phone number starts with the country code, remove it
+      if (phoneNumber && countryCode && phoneNumber.startsWith(countryCode.replace('+', ''))) {
+        phoneNumber = phoneNumber.substring(countryCode.replace('+', '').length);
+      }
+      
       const contactData = {
+        client_id: clientId, // Backend expects this field to link contact to client
+        name: `${contact.firstName} ${contact.lastName}`.trim(),
         firstName: contact.firstName,
         lastName: contact.lastName,
         email: contact.email,
-        phone: contact.phone,
-        countryCode: contact.countryCode,
+        phone: phoneNumber,
+        countryCode: countryCode,
         position: contact.position,
         linkedin: contact.linkedin,
-      } as any; // Use type assertion to bypass the _id requirement for new contacts
+        gender: contact.gender || "",
+      };
+      
       // Use the POST API to add a new primary contact
-      await addPrimaryContact(clientId, contactData);
+      await addPrimaryContact(clientId, contactData as any);
+      
       // Fetch updated client data
       const updatedClient = await getClientById(clientId);
       setPrimaryContacts(updatedClient.primaryContacts || []);
+      
       toast.success("Contact added successfully!");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to add contact";
@@ -194,23 +209,22 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
   const handleDeleteContact = async (index: number) => {
     setError("");
     try {
-      // Get current client data
-      // const clientData: ClientResponse = await getClientById(clientId);
-      const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
-
-      // Remove the contact at the specified index
-      const updatedPrimaryContacts = (clientData.primaryContacts || []).filter((_: any, i: number) => i !== index);
-
-      // Update the client with the updated primary contacts
-      const updatedClient = await updateClient(clientId, {
-        ...updatePayload,
-        primaryContacts: updatedPrimaryContacts,
-      });
-
-      // Update local state with the response from backend
-      setPrimaryContacts(updatedClient?.primaryContacts || updatedPrimaryContacts || []);
-      setDeleteContactIndex(null);
-      toast.success("Contact deleted successfully!");
+      const contactList = clientData.primaryContacts || [];
+      const contactToDelete = contactList[index];
+      
+      if (contactToDelete && contactToDelete._id) {
+        // Use the DELETE API to remove the specific contact
+        await deletePrimaryContact(clientId, contactToDelete._id);
+        
+        // Fetch updated client data to refresh the contacts list
+        const updatedClient = await getClientById(clientId);
+        setPrimaryContacts(updatedClient.primaryContacts || []);
+        
+        setDeleteContactIndex(null);
+        toast.success("Contact deleted successfully!");
+      } else {
+        throw new Error("Contact to delete not found or missing ID");
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to delete contact";
       setError(errorMessage);
@@ -222,20 +236,30 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
   const handleAddOrEditContact = async (contact: any) => {
     setError("");
     try {
+      // Handle phone number - remove country code from phone if it's included
+      let phoneNumber = contact.phone;
+      let countryCode = contact.countryCode;
+      
+      // If phone number starts with the country code, remove it
+      if (phoneNumber && countryCode && phoneNumber.startsWith(countryCode.replace('+', ''))) {
+        phoneNumber = phoneNumber.substring(countryCode.replace('+', '').length);
+      }
+      
       const contactData = {
+        client_id: clientId, // Backend expects this field to link contact to client
         firstName: contact.firstName,
         lastName: contact.lastName,
+        name: `${contact.firstName} ${contact.lastName}`.trim(), // Add name field for backend
         email: contact.email,
-        phone: contact.phone,
-        countryCode: contact.countryCode,
+        phone: phoneNumber,
+        countryCode: countryCode,
         position: contact.position,
         linkedin: contact.linkedin,
         gender: contact.gender, // ensure gender is included
       };
-      const { _id, createdAt, updatedAt, ...updatePayload } = clientData;
-      let updatedPrimaryContacts;
+      
       if (editContactIndex !== null) {
-        // Edit mode
+        // Edit mode - use PATCH API
         const contactList = clientData.primaryContacts || [];
         const contactToEdit = contactList[editContactIndex];
         if (contactToEdit && contactToEdit._id) {
@@ -243,6 +267,7 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
           const patchData: any = {};
           if (contactData.firstName && contactData.firstName !== contactToEdit.firstName) patchData.firstName = contactData.firstName;
           if (contactData.lastName && contactData.lastName !== contactToEdit.lastName) patchData.lastName = contactData.lastName;
+          if (contactData.name && contactData.name !== `${contactToEdit.firstName} ${contactToEdit.lastName}`.trim()) patchData.name = contactData.name;
           if (contactData.email && contactData.email !== contactToEdit.email) patchData.email = contactData.email;
           if (contactData.phone && contactData.phone !== contactToEdit.phone) patchData.phone = contactData.phone;
           if (contactData.countryCode && contactData.countryCode !== contactToEdit.countryCode) patchData.countryCode = contactData.countryCode;
@@ -257,28 +282,21 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
           const updatedClient = await getClientById(clientId);
           setPrimaryContacts(updatedClient.primaryContacts || []);
         } else {
-          // Fallback: update the whole client (legacy logic)
-          updatedPrimaryContacts = contactList.map((c: any, i: number) =>
-            i === editContactIndex ? contactData : c
-          );
-          const updatedClient = await updateClient(clientId, {
-            ...updatePayload,
-            primaryContacts: updatedPrimaryContacts,
-          });
-          setPrimaryContacts(updatedClient?.primaryContacts || updatedPrimaryContacts || []);
+          throw new Error("Contact to edit not found or missing ID");
         }
       } else {
-        // Add mode
-        updatedPrimaryContacts = [contactData, ...(clientData.primaryContacts || [])];
-        const updatedClient = await updateClient(clientId, {
-          ...updatePayload,
-          primaryContacts: updatedPrimaryContacts,
-        });
-        setPrimaryContacts(updatedClient?.primaryContacts || updatedPrimaryContacts || []);
+        // Add mode - use POST API
+        await addPrimaryContact(clientId, contactData as any);
+        
+        // Fetch updated client data
+        const updatedClient = await getClientById(clientId);
+        setPrimaryContacts(updatedClient.primaryContacts || []);
+        
+        toast.success("Contact added successfully!");
       }
+      
       setAddEditModalOpen(false);
       setEditContactIndex(null);
-      toast.success(editContactIndex !== null ? "Contact updated successfully!" : "Contact added successfully!");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to add/edit contact";
       setError(errorMessage);
@@ -296,7 +314,7 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
           email: primaryContacts[editContactIndex].email || "",
           phone: primaryContacts[editContactIndex].phone || "",
           countryCode: primaryContacts[editContactIndex].countryCode || "+966",
-          position: primaryContacts[editContactIndex].position || "",
+          position: primaryContacts[editContactIndex].position || primaryContacts[editContactIndex].designation || "",
           linkedin: primaryContacts[editContactIndex].linkedin || "",
         }
       : {
@@ -470,17 +488,19 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
             <div className="bg-white rounded-lg border shadow-sm p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-semibold">Primary Contacts</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setEditContactIndex(null);
-                    setAddEditModalOpen(true);
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setEditContactIndex(null);
+                      setAddEditModalOpen(true);
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add
+                  </Button>
+                </div>
               </div>
               {(primaryContacts || []).length === 0 ? (
                 <div className="text-sm text-muted-foreground text-center py-4">
@@ -489,7 +509,6 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
               ) : (
                 <div className="space-y-3">
                   {(primaryContacts || []).map((contact, index) => (
-                    console.log(contact),
                     <div key={index} className="p-3 rounded-md border">
                       {/* Name row with right-aligned buttons */}
                       <div className="flex mb-1">
@@ -508,12 +527,12 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
                             </p>
                           )}
                           {/* Position */}
-                          {contact.position && (
+                          {(contact.position || contact.designation) && (
                             <p className="text-sm text-muted-foreground">
                               <span className="text-xs font-semibold text-gray-500 mr-1">
                                 Position:
                               </span>
-                              {contact.position}
+                              {contact.position || contact.designation}
                             </p>
                           )}
                           {/* Email */}
@@ -634,10 +653,12 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
         do not have access to any information in your Manatal account, unless you invite them to
         collaborate as guests.
       </p>
-      <Button className="gap-2" onClick={() => setIsDialogOpen(true)}>
-        <Plus className="h-4 w-4" />
-        Create contact
-      </Button>
+      <div className="flex gap-2">
+        <Button className="gap-2" onClick={() => setIsDialogOpen(true)}>
+          <Plus className="h-4 w-4" />
+          Create contact
+        </Button>
+      </div>
 
       <AddContactModal
         open={isDialogOpen}

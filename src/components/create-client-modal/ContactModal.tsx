@@ -62,10 +62,19 @@ export function ContactModal({
     },
   });
 
+
+
   // Update form when newContact changes
   useEffect(() => {
     form.reset(newContact);
   }, [newContact, form]);
+
+  // Initialize form with default values when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      form.reset(newContact);
+    }
+  }, [isOpen, newContact, form]);
 
   const onSubmit = (data: PrimaryContactFormData) => {
     handleAddContact(data);
@@ -142,21 +151,21 @@ export function ContactModal({
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Email<span className="text-red-700">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input {...field} type="email" placeholder="example@gmail.com" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                             <FormField
+                 control={form.control}
+                 name="email"
+                 render={({ field }) => (
+                   <FormItem>
+                     <FormLabel>
+                       Email<span className="text-red-700">*</span>
+                     </FormLabel>
+                     <FormControl>
+                       <Input {...field} type="email" placeholder="example@gmail.com" />
+                     </FormControl>
+                     <FormMessage />
+                   </FormItem>
+                 )}
+               />
               <FormField
                 control={form.control}
                 name="phone"
@@ -166,13 +175,22 @@ export function ContactModal({
                       Phone<span className="text-red-700">*</span>
                     </FormLabel>
                     <FormControl>
-                      <PhoneInput
-                        country={"sa"}
-                        value={field.value || "966"}
-                        onChange={(value) => field.onChange(value || "")}
-                        inputClass="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm w-full"
-                        enableSearch={true}
-                      />
+                                             <PhoneInput
+                         country={"sa"}
+                         value={field.value || ""}
+                         onChange={(value, country) => {
+                           field.onChange(value || "");
+                           // Update country code when country changes
+                           if (country && typeof country === 'object' && 'dialCode' in country) {
+                             form.setValue("countryCode", `+${country.dialCode}`);
+                           }
+                         }}
+                         inputClass="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm w-full"
+                         enableSearch={true}
+                         preferredCountries={["sa", "us", "gb", "in"]}
+                         countryCodeEditable={false}
+                         autoFormat={true}
+                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
