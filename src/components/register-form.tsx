@@ -24,11 +24,13 @@ import { Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
+import { authService, RegisterUserData } from "@/services/authService"
+import { toast } from "sonner"
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").nonempty("Name is required"),
   email: z.string().email("Please enter a valid email address").nonempty("Email is required"),
-  password: z.string().min(8, "Password must be at least 8 characters").nonempty("Password is required"),
+  password: z.string().min(6, "Password must be at least 6 characters").nonempty("Password is required"),
   confirmPassword: z.string().nonempty("Please confirm your password"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -43,6 +45,7 @@ export function RegisterForm({
 }: React.ComponentPropsWithoutRef<"div">) {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -54,10 +57,39 @@ export function RegisterForm({
     },
   })
 
-  function onSubmit(values: RegisterFormValues) {
-    // Handle form submission here
-    console.log(values)
-    // You can add your registration logic here
+  async function onSubmit(values: RegisterFormValues) {
+    try {
+      setIsSubmitting(true)
+      
+      // Prepare data for the service
+      const userData: RegisterUserData = {
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        confirmPassword: values.confirmPassword,
+      }
+
+      // Call the auth service
+      const response = await authService.register(userData)
+      
+      if (response.success) {
+        toast.success(response.message || "Registration successful!")
+        
+        // Reset form after successful registration
+        form.reset()
+        
+        // You can redirect to login page or dashboard here
+        // Example: router.push('/login')
+        console.log("Registration successful:", response.user)
+      } else {
+        toast.error(response.message || "Registration failed")
+      }
+    } catch (error) {
+      console.error("Registration error:", error)
+      toast.error(error instanceof Error ? error.message : "Registration failed")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -133,7 +165,7 @@ export function RegisterForm({
                       </div>
                     </FormControl>
                     <FormDescription>
-                      Password must be at least 8 characters long
+                      Password must be at least 6 characters long
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -173,13 +205,18 @@ export function RegisterForm({
                 )}
               />
 
-              <Button type="submit" className="w-full">
-                Register
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Registering..." : "Register"}
               </Button>
               
               <Button variant="outline" className="w-full" type="button">
                 Register with Google
               </Button>
+              
             </form>
           </Form>
           
