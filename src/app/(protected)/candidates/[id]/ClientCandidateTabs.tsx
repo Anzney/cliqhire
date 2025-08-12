@@ -250,13 +250,13 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
             Jobs
           </TabsTrigger>
 
-          <TabsTrigger
+          {/* <TabsTrigger
             value="Activities"
             className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
           >
             <Activity className="h-4 w-4" />
             Activities
-          </TabsTrigger>
+          </TabsTrigger> */}
 
           <TabsTrigger
             value="Notes"
@@ -290,13 +290,13 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
             Contacts
           </TabsTrigger> */}
 
-          <TabsTrigger
+          {/* <TabsTrigger
             value="History"
             className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
           >
             <Clock className="h-4 w-4" />
             History
-          </TabsTrigger>
+          </TabsTrigger> */}
         </TabsList>
 
         <TabsContent value="Summary" className="p-4">

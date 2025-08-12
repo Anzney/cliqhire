@@ -181,13 +181,13 @@ export default function ClientPage({ params }: PageProps) {
             <Paperclip className="h-4 w-4" />
             Attachments
           </TabsTrigger>
-          <TabsTrigger
+          {/* <TabsTrigger
             value="ClientTeam"
             className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
           >
             <Users className="h-4 w-4" />
             Client Team
-          </TabsTrigger>
+          </TabsTrigger> */}
           <TabsTrigger
             value="Contacts"
             className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"

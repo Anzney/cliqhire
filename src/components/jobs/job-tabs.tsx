@@ -41,15 +41,15 @@ export function JobTabs({ jobId, jobData, reloadToken, activeTab = "summary", on
         <TeamContent jobId={jobId} jobData={jobData} />
       </JobTabContent>
 
-      <JobTabContent value="recommendations">
+      {/* <JobTabContent value="recommendations">
       
         <RecommendationsContent jobId={jobId} />
-      </JobTabContent>
+      </JobTabContent> */}
       
-      <JobTabContent value="activities">
+      {/* <JobTabContent value="activities">
       
         <ActivitiesContent jobId={jobId} />
-      </JobTabContent>
+      </JobTabContent> */}
       
       <JobTabContent value="notes">
       
@@ -61,15 +61,15 @@ export function JobTabs({ jobId, jobData, reloadToken, activeTab = "summary", on
         <AttachmentsContent jobId={jobId} />
       </JobTabContent>
 
-      <JobTabContent value="sourcing">
+      {/* <JobTabContent value="sourcing">
       
         <SourcingContent jobId={jobId} />
-      </JobTabContent>
+      </JobTabContent> */}
 
-      <JobTabContent value="reports">
+      {/* <JobTabContent value="reports">
       
         <ReportsContent jobId={jobId} />
-      </JobTabContent>
+      </JobTabContent> */}
     </Tabs>
   )
 }

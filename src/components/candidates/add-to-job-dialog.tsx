@@ -11,6 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+
 import {
   MultiSelector,
   MultiSelectorTrigger,
@@ -20,7 +21,7 @@ import {
   MultiSelectorItem,
 } from "@/components/ui/multi-select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, Briefcase, Building, MapPin, DollarSign, Calendar, X } from "lucide-react";
+import { Loader2, Search, Briefcase, Building, MapPin, DollarSign, Calendar, X, Check } from "lucide-react";
 import { getJobs, Job, ClientRef } from "@/services/jobService";
 import { candidateService } from "@/services/candidateService";
 import { getClientById } from "@/services/clientService";
@@ -40,6 +41,37 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [clientNames, setClientNames] = useState<Record<string, string>>({});
+
+  // Helper functions - defined first to avoid reference errors
+  const getClientName = (job: Job) => {
+    return clientNames[job._id] || 'Loading...';
+  };
+
+  const getJobDisplayName = (job: Job) => {
+    const clientName = getClientName(job);
+    return `${job.jobTitle} - ${clientName}`;
+  };
+  
+  // Create a mapping from job display name to job ID
+  const getJobIdFromDisplayName = (displayName: string) => {
+    const job = jobs.find(job => getJobDisplayName(job) === displayName);
+    return job?._id;
+  };
+  
+  // Create a mapping from job ID to job display name
+  const getDisplayNameFromJobId = (jobId: string) => {
+    const job = jobs.find(job => job._id === jobId);
+    return job ? getJobDisplayName(job) : '';
+  };
+  
+  // Convert selected job IDs to display names for the MultiSelector
+  const selectedJobDisplayNames = selectedJobIds.map(id => getDisplayNameFromJobId(id)).filter(Boolean);
+  
+  // Handle selection changes from MultiSelector (display names)
+  const handleSelectionChange = (displayNames: string[]) => {
+    const jobIds = displayNames.map(name => getJobIdFromDisplayName(name)).filter(Boolean) as string[];
+    setSelectedJobIds(jobIds);
+  };
 
   // Fetch jobs when dialog opens
   useEffect(() => {
@@ -122,11 +154,6 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
     (job.client && typeof job.client === 'object' && job.client.name && job.client.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const getJobDisplayName = (job: Job) => {
-    const clientName = getClientName(job);
-    return `${job.jobTitle} - ${clientName}`;
-  };
-
   const fetchClientNames = async (jobs: Job[]) => {
     const newClientNames: Record<string, string> = {};
     
@@ -165,10 +192,6 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
     }
     
     setClientNames(prev => ({ ...prev, ...newClientNames }));
-  };
-
-  const getClientName = (job: Job) => {
-    return clientNames[job._id] || 'Loading...';
   };
 
   const getSalaryRange = (job: Job) => {
@@ -217,64 +240,49 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
             </div>
           ) : (
             <>
-              <div className="">
-                <label className="text-sm font-medium">Search and select jobs</label>
-                <MultiSelector
-                  values={selectedJobIds}
-                  onValuesChange={setSelectedJobIds}
-                  className="w-full"
-                >
-                  <MultiSelectorTrigger className="min-h-10">
-                    <MultiSelectorInput 
-                      placeholder="Search jobs..." 
-                      value={searchTerm}
-                      onValueChange={setSearchTerm}
-                    />
-                  </MultiSelectorTrigger>
-                  <MultiSelectorContent>
-                    <MultiSelectorList>
-                      {filteredJobs.length > 0 ? (
-                        filteredJobs.map((job) => (
-                          <MultiSelectorItem
-                            key={job._id}
-                            value={job._id}
-                            className="flex items-center gap-2"
-                          >
-                            <div className="flex flex-col items-start">
-                              <span className="font-medium">{job.jobTitle}</span>
-                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <Building className="h-3 w-3" />
-                                {getClientName(job)}
-                              </div>
-                            </div>
-                          </MultiSelectorItem>
-                        ))
-                      ) : (
-                        <div className="p-4 text-center text-muted-foreground">
-                          {searchTerm ? "No jobs found matching your search" : "No jobs available"}
-                        </div>
-                      )}
-                    </MultiSelectorList>
-                  </MultiSelectorContent>
-                </MultiSelector>
-              </div>
+                             <div className="">
+                 <label className="text-sm font-medium">Search and select jobs</label>
+                 <MultiSelector
+                   values={selectedJobDisplayNames}
+                   onValuesChange={handleSelectionChange}
+                   className="w-full"
+                 >
+                   <MultiSelectorTrigger className="min-h-10">
+                     <MultiSelectorInput 
+                       placeholder="Search jobs..." 
+                       value={searchTerm}
+                       onValueChange={setSearchTerm}
+                     />
+                   </MultiSelectorTrigger>
+                   <MultiSelectorContent>
+                     <MultiSelectorList>
+                       {filteredJobs.length > 0 ? (
+                         filteredJobs.map((job) => (
+                           <MultiSelectorItem
+                             key={job._id}
+                             value={getJobDisplayName(job)}
+                             className="flex items-center gap-2"
+                           >
+                             <div className="flex flex-col items-start">
+                               <span className="font-medium">{job.jobTitle}</span>
+                               <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                 <Building className="h-3 w-3" />
+                                 {getClientName(job)}
+                               </div>
+                             </div>
+                           </MultiSelectorItem>
+                         ))
+                       ) : (
+                         <div className="p-4 text-center text-muted-foreground">
+                           {searchTerm ? "No jobs found matching your search" : "No jobs available"}
+                         </div>
+                       )}
+                     </MultiSelectorList>
+                   </MultiSelectorContent>
+                 </MultiSelector>
+               </div>
 
-              {selectedJobIds.length > 0 && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Selected Jobs ({selectedJobIds.length})</label>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedJobIds.map((jobId) => {
-                      const job = jobs.find(j => j._id === jobId);
-                      return job ? (
-                        <Badge key={jobId} variant="secondary" className="flex items-center gap-1">
-                          <Briefcase className="h-3 w-3" />
-                          {getJobDisplayName(job)}
-                        </Badge>
-                      ) : null;
-                    })}
-                  </div>
-                </div>
-              )}
+              
 
               {/* Detailed view of selected jobs */}
               {selectedJobIds.length > 0 && (
