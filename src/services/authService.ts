@@ -1,4 +1,5 @@
 import axios, { AxiosError } from "axios";
+import bcrypt from "bcryptjs";
 
 // Types for authentication data
 export interface RegisterUserData {
@@ -50,6 +51,26 @@ export interface LoginResponse {
   token?: string;
 }
 
+/**
+ * Hash a password using bcrypt with salt
+ * @param password - Plain text password
+ * @returns Promise<string> - Hashed password
+ */
+async function hashPassword(password: string): Promise<string> {
+  const saltRounds = 12; // Recommended for production
+  return await bcrypt.hash(password, saltRounds);
+}
+
+/**
+ * Compare a plain text password with a hashed password
+ * @param password - Plain text password
+ * @param hashedPassword - Hashed password to compare against
+ * @returns Promise<boolean> - True if passwords match
+ */
+async function comparePassword(password: string, hashedPassword: string): Promise<boolean> {
+  return await bcrypt.compare(password, hashedPassword);
+}
+
 class AuthService {
   private baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -60,8 +81,22 @@ class AuthService {
     try {
       console.log('Registering user with data:', userData);
       
+      // Hash the passwords before sending
+      const hashedPassword = await hashPassword(userData.password);
+      const hashedConfirmPassword = await hashPassword(userData.confirmPassword);
+      
+      // Create payload with hashed passwords
+      const payload = {
+        name: userData.name,
+        email: userData.email,
+        password: hashedPassword,
+        confirmPassword: hashedConfirmPassword,
+      };
+      
+      console.log('Sending bcrypt hashed password data to API');
+      
       // Make real API call
-      const response = await axios.post(`${this.baseURL}/api/auth/register`, userData, {
+      const response = await axios.post(`${this.baseURL}/api/auth/register`, payload, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -94,8 +129,19 @@ class AuthService {
     try {
       console.log('Logging in user with data:', userData);
       
+      // Hash the password before sending
+      const hashedPassword = await hashPassword(userData.password);
+      
+      // Create payload with hashed password
+      const payload = {
+        email: userData.email,
+        password: hashedPassword,
+      };
+      
+      console.log('Sending bcrypt hashed password data to API');
+      
       // Make real API call
-      const response = await axios.post(`${this.baseURL}/api/auth/login`, userData, {
+      const response = await axios.post(`${this.baseURL}/api/auth/login`, payload, {
         headers: {
           'Content-Type': 'application/json',
         },
