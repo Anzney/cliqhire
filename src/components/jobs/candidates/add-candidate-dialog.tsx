@@ -180,7 +180,7 @@ export function AddCandidateDialog({ jobId, jobTitle, trigger, onCandidatesAdded
             </DialogDescription>
           </DialogHeader>
 
-          <div className="max-h-[70vh] h-[500px] overflow-y-auto">
+          <div className="max-h-[70vh] h-[500px] ">
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin" />

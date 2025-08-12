@@ -228,7 +228,7 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
           </DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[70vh]  h-[500px] overflow-y-auto">
+        <div className="max-h-[70vh]  h-[500px] ">
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin" />
