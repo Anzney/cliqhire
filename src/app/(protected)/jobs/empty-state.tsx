@@ -48,13 +48,6 @@ export function JobsEmptyState() {
           </Link>
         </div>
       </div>
-      {/* <CreateJobModal 
-        open={open} 
-        onOpenChange={() => setOpen(false)}
-        clientId={"your-client-id"} 
-        clientName={"Your Client Name"}
-        onJobCreated={(open)=>console.log("job created")}
-      /> */}
       <CreateJobRequirementForm open={open} onOpenChange={setOpen} />
     </>
   )

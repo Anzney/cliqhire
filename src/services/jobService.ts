@@ -310,7 +310,6 @@ const updateJobPrimaryContacts = async (
       newContact: newContacts || [],
       clientId: clientId || "",
     };
-    console.log("Request payload:", payload);
 
     // Send the request
     const response = await axios.patch<JobResponse>(
@@ -323,7 +322,6 @@ const updateJobPrimaryContacts = async (
       },
     );
 
-    console.log("Response from server:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error updating primary contacts:", error);

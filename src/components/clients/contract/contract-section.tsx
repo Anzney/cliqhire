@@ -239,7 +239,6 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
       const promises = addContractFormData.lineOfBusiness.map(async (businessType: string) => {
         // Use businessType as key to access form data (stored by ContractInformationTab)
         const contractFormData = addContractFormData.contractForms[businessType];
-        console.log(contractFormData);
         if (contractFormData) {
           await addContract(
             clientId,

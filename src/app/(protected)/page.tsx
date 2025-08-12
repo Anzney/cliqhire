@@ -159,14 +159,6 @@ export default function Home() {
                 </Card>
             </div>
 
-            {/* <CreateJobModal
-                open={openJobModal}
-                onOpenChange={setJobModal}
-                clientId={""} // TODO: Replace with actual clientId
-                clientName={""} // TODO: Replace with actual clientName
-                onJobCreated={() => console.log("")}
-            /> */}
-
 
             <CreateClientModal
                 open={open}

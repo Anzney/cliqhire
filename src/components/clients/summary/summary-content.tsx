@@ -149,8 +149,6 @@ export function SummaryContent({
     };
   });
 
-  console.log(clientData);
-
   const [teamMembers, setTeamMembers] = useState<TeamMemberType[]>([
     { name: "Shaswat singh", role: "Admin", email: "shaswat@example.com", isActive: true },
   ]);

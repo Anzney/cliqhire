@@ -363,8 +363,6 @@ export function CreateClientModal({
     }
 
     try {
-      console.log(formData)
-      console.log(submissionFormData)
       const result = await createClient(submissionFormData);
       if (result.data.data._id) {
         router.push(`/clients/${result.data.data._id}`);
