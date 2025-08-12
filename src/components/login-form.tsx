@@ -17,6 +17,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import * as z from "zod";
+import { authService, LoginUserData } from "@/services/authService";
+import { toast } from "sonner";
 
 const loginSchema = z.object({
   email: z.string().email({
@@ -31,6 +33,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -42,12 +45,36 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
-      console.log("Login form submitted:", values);
-      // TODO: Implement login logic here
-      // Example: await signIn(values.email, values.password)
+      setIsSubmitting(true);
+      
+      // Prepare data for the service
+      const userData: LoginUserData = {
+        email: values.email,
+        password: values.password,
+      };
+
+      console.log("Submitting login with plain text password (will be hashed by service)");
+
+      // Call the auth service
+      const response = await authService.login(userData);
+      
+      if (response.success) {
+        toast.success(response.message || "Login successful!");
+        
+        // Reset form after successful login
+        form.reset();
+        
+        // You can redirect to dashboard here
+        // Example: router.push('/dashboard')
+        console.log("Login successful:", response.user);
+      } else {
+        toast.error(response.message || "Login failed");
+      }
     } catch (error) {
       console.error("Login error:", error);
-      // TODO: Handle login errors here
+      toast.error(error instanceof Error ? error.message : "Login failed");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -121,8 +148,12 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Logging in..." : "Login"}
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Logging in..." : "Login"}
               </Button>
               <Button variant="outline" className="w-full" type="button">
                 Login with Google
