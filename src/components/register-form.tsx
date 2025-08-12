@@ -56,9 +56,9 @@ export function RegisterForm({
   }
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("flex flex-col gap-4", className)} {...props}>
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <CardTitle className="text-2xl">Register</CardTitle>
           <CardDescription>
             Enter your name, email and password below to register your account
@@ -66,7 +66,7 @@ export function RegisterForm({
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="name"
