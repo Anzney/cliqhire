@@ -91,18 +91,14 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const response = await getJobs(); // Fetch up to 100 jobs
-      console.log('Jobs API response:', response);
+      const response = await getJobs();
       
       let jobsData: Job[] = [];
       if (response.jobs) {
-        console.log('Setting jobs from response.jobs:', response.jobs);
         jobsData = response.jobs;
       } else if (response.data && Array.isArray(response.data)) {
-        console.log('Setting jobs from response.data:', response.data);
         jobsData = response.data;
       } else {
-        console.log('No jobs found in response');
         jobsData = [];
       }
       

@@ -295,7 +295,7 @@ export function AddCandidateDialog({ jobId, jobTitle, trigger, onCandidatesAdded
                                       Experience:
                                     </span>
                                     <span className="text-sm text-muted-foreground">
-                                      {candidate.experience ? `${candidate.experience} years` : "—"}
+                                      {candidate.experience ? `${candidate.experience}` : "—"}
                                     </span>
                                   </div>
                                 </div>

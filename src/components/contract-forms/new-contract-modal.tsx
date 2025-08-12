@@ -214,8 +214,6 @@ export function ContractInformationTab({ formData, setFormData }: ContractInform
     setConfirmationConfig(null);
   };
 
-  // console.log(formData);
-
   const businessOptions = [
     "Recruitment",
     "HR Consulting",

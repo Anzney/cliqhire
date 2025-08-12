@@ -72,8 +72,7 @@ export default function RecruiterPage() {
   };
 
   const handleEditRecruiter = (recruiterId: string) => {
-    // console.log("Edit recruiter:", recruiterId);
-    // Open edit modal
+    
   };
 
   const handleDeleteRecruiter = async (recruiterId: string) => {

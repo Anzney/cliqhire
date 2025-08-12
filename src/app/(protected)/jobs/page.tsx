@@ -101,7 +101,6 @@ export default function JobsPage() {
           throw new Error("Failed to fetch jobs");
         }
         const data = await response.json();
-        console.log("API jobs data:", data.data);
 
         if (data.success && Array.isArray(data.data)) {
           setJobs(data.data);
