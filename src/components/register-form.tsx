@@ -26,10 +26,10 @@ import { useForm } from "react-hook-form"
 import * as z from "zod"
 
 const registerSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string(),
+  name: z.string().min(2, "Name must be at least 2 characters").nonempty("Name is required"),
+  email: z.string().email("Please enter a valid email address").nonempty("Email is required"),
+  password: z.string().min(8, "Password must be at least 8 characters").nonempty("Password is required"),
+  confirmPassword: z.string().nonempty("Please confirm your password"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -77,9 +77,9 @@ export function RegisterForm({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>Name <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
-                      <Input placeholder="John Doe" {...field} />
+                      <Input placeholder="Enter Your Name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -91,11 +91,11 @@ export function RegisterForm({
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Input 
                         type="email" 
-                        placeholder="m@example.com" 
+                        placeholder="example@example.com" 
                         {...field} 
                       />
                     </FormControl>
@@ -109,7 +109,7 @@ export function RegisterForm({
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>Password <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input 
@@ -145,7 +145,7 @@ export function RegisterForm({
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
+                    <FormLabel>Confirm Password <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input 
