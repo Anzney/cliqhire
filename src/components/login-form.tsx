@@ -14,7 +14,11 @@ import {
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 import * as z from "zod";
+import { authService, LoginUserData } from "@/services/authService";
+import { toast } from "sonner";
 
 const loginSchema = z.object({
   email: z.string().email({
@@ -28,6 +32,9 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -38,12 +45,35 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
-      console.log("Login form submitted:", values);
-      // TODO: Implement login logic here
-      // Example: await signIn(values.email, values.password)
+      setIsSubmitting(true);
+      
+      // Prepare data for the service
+      const userData: LoginUserData = {
+        email: values.email,
+        password: values.password,
+      };
+
+
+      // Call the auth service
+      const response = await authService.login(userData);
+      
+      if (response.success) {
+        toast.success(response.message || "Login successful!");
+        
+        // Reset form after successful login
+        form.reset();
+        
+        // You can redirect to dashboard here
+        // Example: router.push('/dashboard')
+        console.log("Login successful:", response.user);
+      } else {
+        toast.error(response.message || "Login failed");
+      }
     } catch (error) {
       console.error("Login error:", error);
-      // TODO: Handle login errors here
+      toast.error(error instanceof Error ? error.message : "Login failed");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -92,14 +122,37 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                       </a>
                     </div>
                     <FormControl>
-                      <Input type="password" className="w-80" {...field} />
+                      <div className="relative">
+                        <Input 
+                          type={showPassword ? "text" : "password"} 
+                          className="w-80" 
+                          {...field} 
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Logging in..." : "Login"}
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Logging in..." : "Login"}
               </Button>
               <Button variant="outline" className="w-full" type="button">
                 Login with Google
