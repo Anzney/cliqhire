@@ -1,13 +1,13 @@
 "use client";
-import React, { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import React, { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,41 +17,45 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { ChevronDown, RefreshCcw } from 'lucide-react';
-import { RecruiterStatus } from '@/types/recruiter';
-import { updateRecruiterStatus } from '@/services/recruiterService';
+} from "@/components/ui/alert-dialog";
+import { ChevronDown, RefreshCcw } from "lucide-react";
+import { TeamMemberStatus } from "@/types/teamMember";
+import { updateTeamMemberStatus } from "@/services/teamMembersService";
 
-interface RecruiterStatusBadgeProps {
+interface TeamMemberStatusBadgeProps {
   id: string;
-  status: RecruiterStatus;
-  onStatusChange?: (id: string, status: RecruiterStatus) => void;
+  status: TeamMemberStatus;
+  onStatusChange?: (id: string, status: TeamMemberStatus) => void;
   disabled?: boolean;
 }
 
-const statusOptions: { value: RecruiterStatus; label: string; variant: "default" | "secondary" | "outline" | "destructive" }[] = [
+const statusOptions: {
+  value: TeamMemberStatus;
+  label: string;
+  variant: "default" | "secondary" | "outline" | "destructive";
+}[] = [
   { value: "Active", label: "Active", variant: "default" },
   { value: "Inactive", label: "Inactive", variant: "secondary" },
   { value: "On Leave", label: "On Leave", variant: "outline" },
   { value: "Terminated", label: "Terminated", variant: "destructive" },
 ];
 
-export function RecruiterStatusBadge({ 
-  id, 
-  status, 
-  onStatusChange, 
-  disabled = false 
-}: RecruiterStatusBadgeProps) {
+export function TeamMemberStatusBadge({
+  id,
+  status,
+  onStatusChange,
+  disabled = false,
+}: TeamMemberStatusBadgeProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [pendingStatus, setPendingStatus] = useState<RecruiterStatus | null>(null);
+  const [pendingStatus, setPendingStatus] = useState<TeamMemberStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const currentStatus = statusOptions.find(option => option.value === status);
+  const currentStatus = statusOptions.find((option) => option.value === status);
 
-  const handleStatusChange = (newStatus: RecruiterStatus) => {
+  const handleStatusChange = (newStatus: TeamMemberStatus) => {
     if (newStatus === status) return;
-    
+
     setPendingStatus(newStatus);
     setError(null);
     setShowConfirmDialog(true);
@@ -64,17 +68,17 @@ export function RecruiterStatusBadge({
     setError(null);
 
     try {
-      const updatedRecruiter = await updateRecruiterStatus(id, pendingStatus);
-      
+      const updatedTeamMember = await updateTeamMemberStatus(id, pendingStatus);
+
       if (onStatusChange) {
-        onStatusChange(id, updatedRecruiter.status);
+        onStatusChange(id, updatedTeamMember.status);
       }
-      
+
       setShowConfirmDialog(false);
       setPendingStatus(null);
     } catch (err: any) {
-      console.error('Error updating recruiter status:', err);
-      setError(err.message || 'Failed to update recruiter status');
+      console.error("Error updating team member status:", err);
+      setError(err.message || "Failed to update team member status");
     } finally {
       setIsUpdating(false);
     }
@@ -88,9 +92,7 @@ export function RecruiterStatusBadge({
 
   if (disabled) {
     return (
-      <Badge variant={currentStatus?.variant || "default"}>
-        {currentStatus?.label || status}
-      </Badge>
+      <Badge variant={currentStatus?.variant || "default"}>{currentStatus?.label || status}</Badge>
     );
   }
 
@@ -98,12 +100,8 @@ export function RecruiterStatusBadge({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="h-auto p-0 hover:bg-transparent"
-            disabled={isUpdating}
-          >
-            <Badge 
+          <Button variant="ghost" className="h-auto p-0 hover:bg-transparent" disabled={isUpdating}>
+            <Badge
               variant={currentStatus?.variant || "default"}
               className="cursor-pointer hover:opacity-80"
             >
@@ -131,20 +129,18 @@ export function RecruiterStatusBadge({
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Update Recruiter Status</AlertDialogTitle>
+            <AlertDialogTitle>Update Team Member Status</AlertDialogTitle>
             <AlertDialogDescription>
               {error ? (
-                <div className="text-red-600 mb-4 p-3 bg-red-50 rounded-md">
-                  {error}
-                </div>
+                <div className="text-red-600 mb-4 p-3 bg-red-50 rounded-md">{error}</div>
               ) : (
-                `Are you sure you want to change the recruiter status from "${status}" to "${pendingStatus}"?`
+                `Are you sure you want to change the team member status from "${status}" to "${pendingStatus}"?`
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={handleCancelStatusChange}>
-              {error ? 'Close' : 'Cancel'}
+              {error ? "Close" : "Cancel"}
             </AlertDialogCancel>
             {!error && (
               <AlertDialogAction onClick={handleConfirmStatusChange} disabled={isUpdating}>
@@ -154,7 +150,7 @@ export function RecruiterStatusBadge({
                     Updating...
                   </>
                 ) : (
-                  'Confirm'
+                  "Confirm"
                 )}
               </AlertDialogAction>
             )}
@@ -163,4 +159,4 @@ export function RecruiterStatusBadge({
       </AlertDialog>
     </>
   );
-} 
+}

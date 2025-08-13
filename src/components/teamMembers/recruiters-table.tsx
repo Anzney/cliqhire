@@ -1,6 +1,6 @@
 "use client";
-import React from 'react';
-import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
+import React from "react";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MoreVertical, Download, Eye, Edit, Trash2 } from "lucide-react";
@@ -10,41 +10,41 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { RecruiterStatusBadge } from "./recruiter-status-badge";
-import { Recruiter, RecruiterStatus } from "@/types/recruiter";
+import { TeamMemberStatusBadge } from "./team-status-badge";
+import { TeamMember, TeamMemberStatus } from "@/types/recruiter";
 import Tableheader from "@/components/table-header";
 
-interface RecruitersTableProps {
-  recruiters: Recruiter[];
+interface TeamMembersTableProps {
+  teamMembers: TeamMember[];
   loading: boolean;
-  onStatusChange: (recruiterId: string, status: RecruiterStatus) => void;
-  onViewRecruiter: (recruiterId: string) => void;
-  onEditRecruiter: (recruiterId: string) => void;
-  onDeleteRecruiter: (recruiterId: string) => void;
-  onDownloadResume: (resumeUrl: string, recruiterName: string) => void;
+  onStatusChange: (teamMemberId: string, status: TeamMemberStatus) => void;
+  onViewTeamMember: (teamMemberId: string) => void;
+  onEditTeamMember: (teamMemberId: string) => void;
+  onDeleteTeamMember: (teamMemberId: string) => void;
+  onDownloadResume: (resumeUrl: string, teamMemberName: string) => void;
 }
 
 const headerArr = [
-  "Recruiter Name",
-  "Recruiter Email",
-  "Recruiter Phone", 
-  "Recruiter Location",
-  "Recruiter Experience",
-  "Recruiter Skills",
-  "Recruiter Resume",
-  "Recruiter Status",
-  "Actions"
+  "Team Member Name",
+  "Team Member Email",
+  "Team Member Phone",
+  "Team Member Location",
+  "Team Member Experience",
+  "Team Member Skills",
+  "Team Member Resume",
+  "Team Member Status",
+  "Actions",
 ];
 
-export function RecruitersTable({
-  recruiters,
+export function TeamMembersTable({
+  teamMembers,
   loading,
   onStatusChange,
-  onViewRecruiter,
-  onEditRecruiter,
-  onDeleteRecruiter,
-  onDownloadResume
-}: RecruitersTableProps) {
+  onViewTeamMember,
+  onEditTeamMember,
+  onDeleteTeamMember,
+  onDownloadResume,
+}: TeamMembersTableProps) {
   return (
     <Table>
       <TableHeader>
@@ -55,39 +55,36 @@ export function RecruitersTable({
           <TableRow>
             <TableCell colSpan={9} className="h-[calc(100vh-240px)] text-center">
               <div className="py-24">
-                <div className="text-center">Loading recruiters...</div>
+                <div className="text-center">Loading team members...</div>
               </div>
             </TableCell>
           </TableRow>
-        ) : recruiters.length === 0 ? (
+        ) : teamMembers.length === 0 ? (
           <TableRow>
             <TableCell colSpan={9} className="h-[calc(100vh-240px)] text-center">
               <div className="py-24">
-                <div className="text-center">No recruiters found</div>
+                <div className="text-center">No team members found</div>
               </div>
             </TableCell>
           </TableRow>
         ) : (
-          recruiters.map((recruiter) => (
-            <TableRow
-              key={recruiter._id}
-              className="hover:bg-muted/50 cursor-pointer"
-            >
-              <TableCell className="text-sm font-medium">{recruiter.name}</TableCell>
-              <TableCell className="text-sm">{recruiter.email}</TableCell>
-              <TableCell className="text-sm">{recruiter.phone}</TableCell>
-              <TableCell className="text-sm">{recruiter.location}</TableCell>
-              <TableCell className="text-sm">{recruiter.experience}</TableCell>
+          teamMembers.map((teamMember) => (
+            <TableRow key={teamMember._id} className="hover:bg-muted/50 cursor-pointer">
+              <TableCell className="text-sm font-medium">{teamMember.name}</TableCell>
+              <TableCell className="text-sm">{teamMember.email}</TableCell>
+              <TableCell className="text-sm">{teamMember.phone}</TableCell>
+              <TableCell className="text-sm">{teamMember.location}</TableCell>
+              <TableCell className="text-sm">{teamMember.experience}</TableCell>
               <TableCell className="text-sm">
                 <div className="flex flex-wrap gap-1">
-                  {recruiter.skills.slice(0, 2).map((skill, index) => (
+                  {teamMember.skills.slice(0, 2).map((skill, index) => (
                     <Badge key={index} variant="outline" className="text-xs">
                       {skill}
                     </Badge>
                   ))}
-                  {recruiter.skills.length > 2 && (
+                  {teamMember.skills.length > 2 && (
                     <Badge variant="outline" className="text-xs">
-                      +{recruiter.skills.length - 2} more
+                      +{teamMember.skills.length - 2} more
                     </Badge>
                   )}
                 </div>
@@ -98,7 +95,7 @@ export function RecruitersTable({
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onDownloadResume(recruiter.resume, recruiter.name);
+                    onDownloadResume(teamMember.resume, teamMember.name);
                   }}
                   className="h-6 px-2 text-xs"
                 >
@@ -107,9 +104,9 @@ export function RecruitersTable({
                 </Button>
               </TableCell>
               <TableCell className="text-sm">
-                <RecruiterStatusBadge
-                  id={recruiter._id}
-                  status={recruiter.status}
+                <TeamMemberStatusBadge
+                  id={teamMember._id}
+                  status={teamMember.status}
                   onStatusChange={onStatusChange}
                 />
               </TableCell>
@@ -125,20 +122,16 @@ export function RecruitersTable({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => onViewRecruiter(recruiter._id)}
-                    >
+                    <DropdownMenuItem onClick={() => onViewTeamMember(teamMember._id)}>
                       <Eye className="mr-2 h-4 w-4" />
                       View Details
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => onEditRecruiter(recruiter._id)}
-                    >
+                    <DropdownMenuItem onClick={() => onEditTeamMember(teamMember._id)}>
                       <Edit className="mr-2 h-4 w-4" />
                       Edit
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() => onDeleteRecruiter(recruiter._id)}
+                      onClick={() => onDeleteTeamMember(teamMember._id)}
                       className="text-red-600"
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
@@ -153,4 +146,4 @@ export function RecruitersTable({
       </TableBody>
     </Table>
   );
-} 
+}

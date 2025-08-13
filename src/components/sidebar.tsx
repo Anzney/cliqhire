@@ -23,7 +23,7 @@ const menuItems = [
   { name: "Home", icon: Home, href: "/" },
   { name: "Clients", icon: Building2, href: "/clients" },
   { name: "Jobs", icon: Briefcase, href: "/jobs" },
-  { name: "Team Members", icon: Users, href: "/recruiter" },
+  { name: "Team Members", icon: Users, href: "/teammembers" },
   { name: "Candidates", icon: Users, href: "/candidates" }, // Line after "Candidates"
   { name: "Recruitment Pipeline", icon: Route, href: "/reactruterpipeline" },
   // { name: "Placements", icon: UserCheck, href: "/placements" },

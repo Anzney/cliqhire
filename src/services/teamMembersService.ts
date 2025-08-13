@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { 
-  Recruiter, 
-  RecruiterResponse, 
-  RecruiterFilters, 
-  CreateRecruiterData, 
-  UpdateRecruiterData 
+  TeamMember, 
+  TeamMemberResponse, 
+  TeamMemberFilters, 
+  CreateTeamMemberData, 
+  UpdateTeamMemberData 
 } from '@/types/recruiter';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ;
@@ -12,7 +12,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ;
 // ========================================
 // DUMMY DATA - REMOVE WHEN API IS WORKING
 // ========================================
-const dummyRecruiters: Recruiter[] = [
+const dummyTeamMembers: TeamMember[] = [
   {
     _id: "1",
     name: "John Smith",
@@ -114,8 +114,8 @@ const dummyRecruiters: Recruiter[] = [
 // END DUMMY DATA
 // ========================================
 
-// Get all recruiters with optional filters
-export const getRecruiters = async (filters?: RecruiterFilters): Promise<{ recruiters: Recruiter[] }> => {
+// Get all team members with optional filters
+export const getTeamMembers = async (filters?: TeamMemberFilters): Promise<{ teamMembers: TeamMember[] }> => {
   // ========================================
   // DUMMY DATA RESPONSE - REMOVE WHEN API IS WORKING
   // ========================================
@@ -124,38 +124,38 @@ export const getRecruiters = async (filters?: RecruiterFilters): Promise<{ recru
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 800));
   
-  let filteredRecruiters = [...dummyRecruiters];
+  let filteredTeamMembers = [...dummyTeamMembers];
   
   // Apply filters to dummy data
   if (filters) {
     if (filters.name) {
-      filteredRecruiters = filteredRecruiters.filter(recruiter =>
-        recruiter.name.toLowerCase().includes(filters.name!.toLowerCase())
+      filteredTeamMembers = filteredTeamMembers.filter(teamMember =>
+        teamMember.name.toLowerCase().includes(filters.name!.toLowerCase())
       );
     }
     if (filters.status) {
-      filteredRecruiters = filteredRecruiters.filter(recruiter =>
-        recruiter.status === filters.status
+      filteredTeamMembers = filteredTeamMembers.filter(teamMember =>
+        teamMember.status === filters.status
       );
     }
     if (filters.location) {
-      filteredRecruiters = filteredRecruiters.filter(recruiter =>
-        recruiter.location.toLowerCase().includes(filters.location!.toLowerCase())
+      filteredTeamMembers = filteredTeamMembers.filter(teamMember =>
+        teamMember.location.toLowerCase().includes(filters.location!.toLowerCase())
       );
     }
     if (filters.department) {
-      filteredRecruiters = filteredRecruiters.filter(recruiter =>
-        recruiter.department?.toLowerCase().includes(filters.department!.toLowerCase())
+      filteredTeamMembers = filteredTeamMembers.filter(teamMember =>
+        teamMember.department?.toLowerCase().includes(filters.department!.toLowerCase())
       );
     }
     if (filters.experience) {
-      filteredRecruiters = filteredRecruiters.filter(recruiter =>
-        recruiter.experience.toLowerCase().includes(filters.experience!.toLowerCase())
+      filteredTeamMembers = filteredTeamMembers.filter(teamMember =>
+        teamMember.experience.toLowerCase().includes(filters.experience!.toLowerCase())
       );
     }
   }
   
-  return { recruiters: filteredRecruiters };
+  return { teamMembers: filteredTeamMembers };
   // ========================================
   // END DUMMY DATA RESPONSE
   // ========================================
@@ -185,8 +185,8 @@ export const getRecruiters = async (filters?: RecruiterFilters): Promise<{ recru
   // ========================================
 };
 
-// Get a single recruiter by ID
-export const getRecruiterById = async (id: string): Promise<Recruiter> => {
+// Get a single team member by ID
+export const getTeamMemberById = async (id: string): Promise<TeamMember> => {
   // ========================================
   // DUMMY DATA RESPONSE - REMOVE WHEN API IS WORKING
   // ========================================
@@ -194,12 +194,12 @@ export const getRecruiterById = async (id: string): Promise<Recruiter> => {
   
   await new Promise(resolve => setTimeout(resolve, 500));
   
-  const recruiter = dummyRecruiters.find(r => r._id === id);
-  if (!recruiter) {
-    throw new Error('Recruiter not found');
+  const teamMember = dummyTeamMembers.find(r => r._id === id);
+  if (!teamMember) {
+    throw new Error('Team member not found');
   }
   
-  return recruiter;
+  return teamMember;
   // ========================================
   // END DUMMY DATA RESPONSE
   // ========================================
@@ -225,8 +225,8 @@ export const getRecruiterById = async (id: string): Promise<Recruiter> => {
   // ========================================
 };
 
-// Create a new recruiter
-export const createRecruiter = async (recruiterData: CreateRecruiterData): Promise<Recruiter> => {
+// Create a new team member
+export const createTeamMember = async (teamMemberData: CreateTeamMemberData): Promise<TeamMember> => {
   // ========================================
   // DUMMY DATA RESPONSE - REMOVE WHEN API IS WORKING
   // ========================================
@@ -234,10 +234,10 @@ export const createRecruiter = async (recruiterData: CreateRecruiterData): Promi
   
   await new Promise(resolve => setTimeout(resolve, 1000));
   
-  const newRecruiter: Recruiter = {
+  const newTeamMember: TeamMember = {
     _id: Date.now().toString(),
-    ...recruiterData,
-    resume: recruiterData.resume || "",
+    ...teamMemberData,
+    resume: teamMemberData.resume || "",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     performanceRating: 0,
@@ -246,9 +246,9 @@ export const createRecruiter = async (recruiterData: CreateRecruiterData): Promi
   };
   
   // Add to dummy data array
-  dummyRecruiters.push(newRecruiter);
+  dummyTeamMembers.push(newTeamMember);
   
-  return newRecruiter;
+  return newTeamMember;
   // ========================================
   // END DUMMY DATA RESPONSE
   // ========================================
@@ -274,8 +274,8 @@ export const createRecruiter = async (recruiterData: CreateRecruiterData): Promi
   // ========================================
 };
 
-// Update a recruiter
-export const updateRecruiter = async (recruiterData: UpdateRecruiterData): Promise<Recruiter> => {
+// Update a team member
+export const updateTeamMember = async (teamMemberData: UpdateTeamMemberData): Promise<TeamMember> => {
   // ========================================
   // DUMMY DATA RESPONSE - REMOVE WHEN API IS WORKING
   // ========================================
@@ -283,20 +283,20 @@ export const updateRecruiter = async (recruiterData: UpdateRecruiterData): Promi
   
   await new Promise(resolve => setTimeout(resolve, 800));
   
-  const index = dummyRecruiters.findIndex(r => r._id === recruiterData._id);
+  const index = dummyTeamMembers.findIndex(r => r._id === teamMemberData._id);
   if (index === -1) {
-    throw new Error('Recruiter not found');
+    throw new Error('Team member not found');
   }
   
-  const updatedRecruiter = {
-    ...dummyRecruiters[index],
-    ...recruiterData,
+  const updatedTeamMember = {
+    ...dummyTeamMembers[index],
+    ...teamMemberData,
     updatedAt: new Date().toISOString()
   };
   
-  dummyRecruiters[index] = updatedRecruiter;
+  dummyTeamMembers[index] = updatedTeamMember;
   
-  return updatedRecruiter;
+  return updatedTeamMember;
   // ========================================
   // END DUMMY DATA RESPONSE
   // ========================================
@@ -323,8 +323,8 @@ export const updateRecruiter = async (recruiterData: UpdateRecruiterData): Promi
   // ========================================
 };
 
-// Delete a recruiter
-export const deleteRecruiter = async (id: string): Promise<void> => {
+// Delete a team member
+export const deleteTeamMember = async (id: string): Promise<void> => {
   // ========================================
   // DUMMY DATA RESPONSE - REMOVE WHEN API IS WORKING
   // ========================================
@@ -332,12 +332,12 @@ export const deleteRecruiter = async (id: string): Promise<void> => {
   
   await new Promise(resolve => setTimeout(resolve, 600));
   
-  const index = dummyRecruiters.findIndex(r => r._id === id);
+  const index = dummyTeamMembers.findIndex(r => r._id === id);
   if (index === -1) {
-    throw new Error('Recruiter not found');
+    throw new Error('Team member not found');
   }
   
-  dummyRecruiters.splice(index, 1);
+  dummyTeamMembers.splice(index, 1);
   // ========================================
   // END DUMMY DATA RESPONSE
   // ========================================
@@ -362,8 +362,8 @@ export const deleteRecruiter = async (id: string): Promise<void> => {
   // ========================================
 };
 
-// Update recruiter status
-export const updateRecruiterStatus = async (id: string, status: string): Promise<Recruiter> => {
+// Update team member status
+export const updateTeamMemberStatus = async (id: string, status: string): Promise<TeamMember> => {
   // ========================================
   // DUMMY DATA RESPONSE - REMOVE WHEN API IS WORKING
   // ========================================
@@ -371,15 +371,15 @@ export const updateRecruiterStatus = async (id: string, status: string): Promise
   
   await new Promise(resolve => setTimeout(resolve, 500));
   
-  const recruiter = dummyRecruiters.find(r => r._id === id);
-  if (!recruiter) {
-    throw new Error('Recruiter not found');
+  const teamMember = dummyTeamMembers.find(r => r._id === id);
+  if (!teamMember) {
+    throw new Error('Team member not found');
   }
   
-  recruiter.status = status as any;
-  recruiter.updatedAt = new Date().toISOString();
+  teamMember.status = status as any;
+  teamMember.updatedAt = new Date().toISOString();
   
-  return recruiter;
+  return teamMember;
   // ========================================
   // END DUMMY DATA RESPONSE
   // ========================================
@@ -405,7 +405,7 @@ export const updateRecruiterStatus = async (id: string, status: string): Promise
   // ========================================
 };
 
-// Upload recruiter resume
+// Upload team member resume
 export const uploadResume = async (id: string, file: File): Promise<{ resumeUrl: string }> => {
   // ========================================
   // DUMMY DATA RESPONSE - REMOVE WHEN API IS WORKING
@@ -414,14 +414,14 @@ export const uploadResume = async (id: string, file: File): Promise<{ resumeUrl:
   
   await new Promise(resolve => setTimeout(resolve, 1500));
   
-  const recruiter = dummyRecruiters.find(r => r._id === id);
-  if (!recruiter) {
-    throw new Error('Recruiter not found');
+  const teamMember = dummyTeamMembers.find(r => r._id === id);
+  if (!teamMember) {
+    throw new Error('Team member not found');
   }
   
   const resumeUrl = `https://example.com/resumes/${file.name}`;
-  recruiter.resume = resumeUrl;
-  recruiter.updatedAt = new Date().toISOString();
+  teamMember.resume = resumeUrl;
+  teamMember.updatedAt = new Date().toISOString();
   
   return { resumeUrl };
   // ========================================
@@ -456,8 +456,8 @@ export const uploadResume = async (id: string, file: File): Promise<{ resumeUrl:
   // ========================================
 };
 
-// Get recruiter statistics
-export const getRecruiterStats = async (id: string): Promise<{
+// Get team member statistics
+export const getTeamMemberStats = async (id: string): Promise<{
   activeJobs: number;
   completedPlacements: number;
   performanceRating: number;
@@ -469,15 +469,15 @@ export const getRecruiterStats = async (id: string): Promise<{
   
   await new Promise(resolve => setTimeout(resolve, 400));
   
-  const recruiter = dummyRecruiters.find(r => r._id === id);
-  if (!recruiter) {
-    throw new Error('Recruiter not found');
+  const teamMember = dummyTeamMembers.find(r => r._id === id);
+  if (!teamMember) {
+    throw new Error('Team member not found');
   }
   
   return {
-    activeJobs: recruiter.activeJobs || 0,
-    completedPlacements: recruiter.completedPlacements || 0,
-    performanceRating: recruiter.performanceRating || 0
+    activeJobs: teamMember.activeJobs || 0,
+    completedPlacements: teamMember.completedPlacements || 0,
+    performanceRating: teamMember.performanceRating || 0
   };
   // ========================================
   // END DUMMY DATA RESPONSE

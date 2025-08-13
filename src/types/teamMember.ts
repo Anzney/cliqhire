@@ -1,4 +1,4 @@
-export interface Recruiter {
+export interface TeamMember {
   _id: string;
   name: string;
   email: string;
@@ -7,10 +7,10 @@ export interface Recruiter {
   experience: string;
   skills: string[];
   resume: string;
-  status: RecruiterStatus;
+  status: TeamMemberStatus;
   createdAt: string;
   updatedAt: string;
-  recruiterId?: string;
+  teamMemberId?: string;
   department?: string;
   specialization?: string;
   hireDate?: string;
@@ -20,23 +20,23 @@ export interface Recruiter {
   completedPlacements?: number;
 }
 
-export type RecruiterStatus = "Active" | "Inactive" | "On Leave" | "Terminated";
+export type TeamMemberStatus = "Active" | "Inactive" | "On Leave" | "Terminated";
 
-export interface RecruiterResponse {
+export interface TeamMemberResponse {
   success: boolean;
-  data: Recruiter | Recruiter[];
+  data: TeamMember | TeamMember[];
   message?: string;
 }
 
-export interface RecruiterFilters {
+export interface TeamMemberFilters {
   name?: string;
-  status?: RecruiterStatus;
+  status?: TeamMemberStatus;
   location?: string;
   department?: string;
   experience?: string;
 }
 
-export interface CreateRecruiterData {
+export interface CreateTeamMemberData {
   name: string;
   email: string;
   phone: string;
@@ -44,12 +44,12 @@ export interface CreateRecruiterData {
   experience: string;
   skills: string[];
   resume?: string;
-  status: RecruiterStatus;
+  status: TeamMemberStatus;
   department?: string;
   specialization?: string;
   manager?: string;
 }
 
-export interface UpdateRecruiterData extends Partial<CreateRecruiterData> {
+export interface UpdateTeamMemberData extends Partial<CreateTeamMemberData> {
   _id: string;
 } 

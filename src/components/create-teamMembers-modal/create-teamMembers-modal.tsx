@@ -1,6 +1,6 @@
 "use client";
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,31 +8,35 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { RefreshCcw } from 'lucide-react';
-import { CreateRecruiterData, RecruiterStatus } from '@/types/recruiter';
-import { createRecruiter } from '@/services/recruiterService';
-import { PersonalInformationTab } from './PersonalInformationTab';
-import { SkillsAndStatusTab } from './SkillsAndStatusTab';
+} from "@/components/ui/dialog";
+import { RefreshCcw } from "lucide-react";
+import { CreateTeamMemberData, TeamMemberStatus } from "@/types/recruiter";
+import { createTeamMember } from "@/services/teamMembersService";
+import { PersonalInformationTab } from "./PersonalInformationTab";
+import { SkillsAndStatusTab } from "./SkillsAndStatusTab";
 
-interface CreateRecruiterModalProps {
+interface CreateTeamMemberModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
 }
 
-export function CreateRecruiterModal({ open, onOpenChange, onSuccess }: CreateRecruiterModalProps) {
-  const [formData, setFormData] = useState<CreateRecruiterData>({
-    name: '',
-    email: '',
-    phone: '',
-    location: '',
-    experience: '',
+export function CreateTeamMemberModal({
+  open,
+  onOpenChange,
+  onSuccess,
+}: CreateTeamMemberModalProps) {
+  const [formData, setFormData] = useState<CreateTeamMemberData>({
+    name: "",
+    email: "",
+    phone: "",
+    location: "",
+    experience: "",
     skills: [],
-    status: 'Active',
-    department: '',
-    specialization: '',
-    manager: ''
+    status: "Active",
+    department: "",
+    specialization: "",
+    manager: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,29 +47,29 @@ export function CreateRecruiterModal({ open, onOpenChange, onSuccess }: CreateRe
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = "Name is required";
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = "Please enter a valid email address";
     }
 
     if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
+      newErrors.phone = "Phone number is required";
     }
 
     if (!formData.location.trim()) {
-      newErrors.location = 'Location is required';
+      newErrors.location = "Location is required";
     }
 
     if (!formData.experience.trim()) {
-      newErrors.experience = 'Experience is required';
+      newErrors.experience = "Experience is required";
     }
 
     if (formData.skills.length === 0) {
-      newErrors.skills = 'At least one skill is required';
+      newErrors.skills = "At least one skill is required";
     }
 
     setErrors(newErrors);
@@ -77,31 +81,31 @@ export function CreateRecruiterModal({ open, onOpenChange, onSuccess }: CreateRe
 
     setIsSubmitting(true);
     try {
-      const createdRecruiter = await createRecruiter(formData);
-            
+      const createdTeamMember = await createTeamMember(formData);
+
       // Reset form
       setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        location: '',
-        experience: '',
+        name: "",
+        email: "",
+        phone: "",
+        location: "",
+        experience: "",
         skills: [],
-        status: 'Active',
-        department: '',
-        specialization: '',
-        manager: ''
+        status: "Active",
+        department: "",
+        specialization: "",
+        manager: "",
       });
       setErrors({});
       setCurrentTab(0);
-      
+
       onOpenChange(false);
       if (onSuccess) {
         onSuccess();
       }
     } catch (error: any) {
-      console.error('Error creating recruiter:', error);
-      alert(error.message || 'Failed to create recruiter');
+      console.error("Error creating team member:", error);
+      alert(error.message || "Failed to create team member");
     } finally {
       setIsSubmitting(false);
     }
@@ -110,16 +114,16 @@ export function CreateRecruiterModal({ open, onOpenChange, onSuccess }: CreateRe
   const handleClose = () => {
     if (!isSubmitting) {
       setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        location: '',
-        experience: '',
+        name: "",
+        email: "",
+        phone: "",
+        location: "",
+        experience: "",
         skills: [],
-        status: 'Active',
-        department: '',
-        specialization: '',
-        manager: ''
+        status: "Active",
+        department: "",
+        specialization: "",
+        manager: "",
       });
       setErrors({});
       setCurrentTab(0);
@@ -131,18 +135,18 @@ export function CreateRecruiterModal({ open, onOpenChange, onSuccess }: CreateRe
     // Validate current tab before proceeding
     if (currentTab === 0) {
       const tabErrors: Record<string, string> = {};
-      if (!formData.name.trim()) tabErrors.name = 'Name is required';
-      if (!formData.email.trim()) tabErrors.email = 'Email is required';
-      if (!formData.phone.trim()) tabErrors.phone = 'Phone number is required';
-      if (!formData.location.trim()) tabErrors.location = 'Location is required';
-      if (!formData.experience.trim()) tabErrors.experience = 'Experience is required';
-      
+      if (!formData.name.trim()) tabErrors.name = "Name is required";
+      if (!formData.email.trim()) tabErrors.email = "Email is required";
+      if (!formData.phone.trim()) tabErrors.phone = "Phone number is required";
+      if (!formData.location.trim()) tabErrors.location = "Location is required";
+      if (!formData.experience.trim()) tabErrors.experience = "Experience is required";
+
       if (Object.keys(tabErrors).length > 0) {
         setErrors(tabErrors);
         return;
       }
     }
-    
+
     setCurrentTab(1);
     setErrors({}); // Clear errors when moving to next tab
   };
@@ -156,9 +160,9 @@ export function CreateRecruiterModal({ open, onOpenChange, onSuccess }: CreateRe
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Recruiter</DialogTitle>
+          <DialogTitle>Create New Team Member</DialogTitle>
           <DialogDescription>
-            Fill in the recruiter details below. Required fields are marked with an asterisk (*).
+            Fill in the team member details below. Required fields are marked with an asterisk (*).
           </DialogDescription>
         </DialogHeader>
 
@@ -168,8 +172,8 @@ export function CreateRecruiterModal({ open, onOpenChange, onSuccess }: CreateRe
             <button
               key={tab}
               className={`flex-1 px-4 py-2 text-center text-sm ${
-                currentTab === index 
-                  ? "border-b-2 border-blue-500 text-blue-500" 
+                currentTab === index
+                  ? "border-b-2 border-blue-500 text-blue-500"
                   : "text-gray-500 hover:text-gray-700"
               }`}
               onClick={() => setCurrentTab(index)}
@@ -193,19 +197,11 @@ export function CreateRecruiterModal({ open, onOpenChange, onSuccess }: CreateRe
 
         {/* Tab Content */}
         {currentTab === 0 && (
-          <PersonalInformationTab
-            formData={formData}
-            setFormData={setFormData}
-            errors={errors}
-          />
+          <PersonalInformationTab formData={formData} setFormData={setFormData} errors={errors} />
         )}
-        
+
         {currentTab === 1 && (
-          <SkillsAndStatusTab
-            formData={formData}
-            setFormData={setFormData}
-            errors={errors}
-          />
+          <SkillsAndStatusTab formData={formData} setFormData={setFormData} errors={errors} />
         )}
 
         {/* Footer */}
@@ -237,10 +233,10 @@ export function CreateRecruiterModal({ open, onOpenChange, onSuccess }: CreateRe
                 </Button>
               )}
               {currentTab < 1 ? (
-                <Button 
-                  type="button" 
-                  onClick={handleNext} 
-                  disabled={isSubmitting} 
+                <Button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={isSubmitting}
                   className="w-full sm:w-auto"
                 >
                   Next
@@ -256,8 +252,8 @@ export function CreateRecruiterModal({ open, onOpenChange, onSuccess }: CreateRe
                   >
                     Cancel
                   </Button>
-                  <Button 
-                    onClick={handleSubmit} 
+                  <Button
+                    onClick={handleSubmit}
                     disabled={isSubmitting}
                     className="w-full sm:w-auto"
                   >
@@ -267,7 +263,7 @@ export function CreateRecruiterModal({ open, onOpenChange, onSuccess }: CreateRe
                         Creating...
                       </>
                     ) : (
-                      'Create Recruiter'
+                      "Create Team Member"
                     )}
                   </Button>
                 </>
@@ -278,4 +274,4 @@ export function CreateRecruiterModal({ open, onOpenChange, onSuccess }: CreateRe
       </DialogContent>
     </Dialog>
   );
-} 
+}

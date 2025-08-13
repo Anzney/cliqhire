@@ -1,36 +1,36 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import Dashboardheader from '@/components/dashboard-header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download, Mail, Phone, MapPin, Briefcase } from 'lucide-react';
-import { getRecruiterById } from '@/services/recruiterService';
-import { Recruiter } from '@/types/recruiter';
+import React, { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import Dashboardheader from "@/components/dashboard-header";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Download, Mail, Phone, MapPin, Briefcase } from "lucide-react";
+import { getTeamMemberById } from "@/services/teamMembersService";
+import { TeamMember } from "@/types/teamMember";
 
-export default function RecruiterDetailPage() {
+export default function TeamMemberDetailPage() {
   const params = useParams();
-  const recruiterId = params?.id as string;
-  const [recruiter, setRecruiter] = useState<Recruiter | null>(null);
+  const teamMemberId = params?.id as string;
+  const [teamMember, setTeamMember] = useState<TeamMember | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchRecruiter = async () => {
+    const fetchTeamMember = async () => {
       try {
-        const recruiterData = await getRecruiterById(recruiterId);
-        setRecruiter(recruiterData);
+        const teamMemberData = await getTeamMemberById(teamMemberId);
+        setTeamMember(teamMemberData);
       } catch (error) {
-        console.error('Error fetching recruiter:', error);
+        console.error("Error fetching team member:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    if (recruiterId) {
-      fetchRecruiter();
+    if (teamMemberId) {
+      fetchTeamMember();
     }
-  }, [recruiterId]);
+  }, [teamMemberId]);
 
   const handleBack = () => {
     window.history.back();
@@ -38,41 +38,41 @@ export default function RecruiterDetailPage() {
 
   const handleDownloadResume = (resumeUrl: string) => {
     if (resumeUrl) {
-      window.open(resumeUrl, '_blank');
+      window.open(resumeUrl, "_blank");
     } else {
-      alert('No resume available for download');
+      alert("No resume available for download");
     }
   };
 
   if (loading) {
     return (
       <div className="flex flex-col h-full">
-        <Dashboardheader 
+        <Dashboardheader
           setOpen={() => {}}
           setFilterOpen={() => {}}
           initialLoading={loading}
-          heading="Recruiter Details"
+          heading="Team Member Details"
           buttonText=""
         />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">Loading recruiter details...</div>
+          <div className="text-center">Loading team member details...</div>
         </div>
       </div>
     );
   }
 
-  if (!recruiter) {
+  if (!teamMember) {
     return (
       <div className="flex flex-col h-full">
-        <Dashboardheader 
+        <Dashboardheader
           setOpen={() => {}}
           setFilterOpen={() => {}}
           initialLoading={false}
-          heading="Recruiter Details"
+          heading="Team Member Details"
           buttonText=""
         />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">Recruiter not found</div>
+          <div className="text-center">Team member not found</div>
         </div>
       </div>
     );
@@ -80,23 +80,19 @@ export default function RecruiterDetailPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <Dashboardheader 
+      <Dashboardheader
         setOpen={() => {}}
         setFilterOpen={() => {}}
         initialLoading={false}
-        heading="Recruiter Details"
+        heading="Team Member Details"
         buttonText=""
       />
-      
+
       <div className="flex-1 p-6">
         <div className="mb-6">
-          <Button
-            variant="ghost"
-            onClick={handleBack}
-            className="mb-4"
-          >
+          <Button variant="ghost" onClick={handleBack} className="mb-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Recruiters
+            Back to Team Members
           </Button>
         </div>
 
@@ -113,38 +109,38 @@ export default function RecruiterDetailPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Name</label>
-                  <p className="text-lg font-semibold">{recruiter.name}</p>
+                  <p className="text-lg font-semibold">{teamMember.name}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Email</label>
                   <p className="text-lg flex items-center gap-2">
                     <Mail className="h-4 w-4" />
-                    {recruiter.email}
+                    {teamMember.email}
                   </p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Phone</label>
                   <p className="text-lg flex items-center gap-2">
                     <Phone className="h-4 w-4" />
-                    {recruiter.phone}
+                    {teamMember.phone}
                   </p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Location</label>
                   <p className="text-lg flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
-                    {recruiter.location}
+                    {teamMember.location}
                   </p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Experience</label>
-                  <p className="text-lg">{recruiter.experience}</p>
+                  <p className="text-lg">{teamMember.experience}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Status</label>
                   <div className="mt-1">
-                    <Badge variant={recruiter.status === 'Active' ? 'default' : 'secondary'}>
-                      {recruiter.status}
+                    <Badge variant={teamMember.status === "Active" ? "default" : "secondary"}>
+                      {teamMember.status}
                     </Badge>
                   </div>
                 </div>
@@ -159,7 +155,7 @@ export default function RecruiterDetailPage() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {recruiter.skills.map((skill, index) => (
+                {teamMember.skills.map((skill, index) => (
                   <Badge key={index} variant="outline">
                     {skill}
                   </Badge>
@@ -174,9 +170,9 @@ export default function RecruiterDetailPage() {
               <CardTitle>Resume</CardTitle>
             </CardHeader>
             <CardContent>
-              {recruiter.resume ? (
+              {teamMember.resume ? (
                 <Button
-                  onClick={() => handleDownloadResume(recruiter.resume)}
+                  onClick={() => handleDownloadResume(teamMember.resume)}
                   className="flex items-center gap-2"
                 >
                   <Download className="h-4 w-4" />

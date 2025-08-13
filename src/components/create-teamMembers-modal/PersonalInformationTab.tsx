@@ -3,11 +3,11 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CreateRecruiterData } from '@/types/recruiter';
+import { CreateTeamMemberData } from '@/types/recruiter';
 
 interface PersonalInformationTabProps {
-  formData: CreateRecruiterData;
-  setFormData: React.Dispatch<React.SetStateAction<CreateRecruiterData>>;
+  formData: CreateTeamMemberData;
+  setFormData: React.Dispatch<React.SetStateAction<CreateTeamMemberData>>;
   errors: Record<string, string>;
 }
 
@@ -22,7 +22,7 @@ const departmentOptions = [
 ];
 
 export function PersonalInformationTab({ formData, setFormData, errors }: PersonalInformationTabProps) {
-  const handleInputChange = (field: keyof CreateRecruiterData, value: string) => {
+  const handleInputChange = (field: keyof CreateTeamMemberData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 

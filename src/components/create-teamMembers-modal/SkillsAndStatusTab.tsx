@@ -6,15 +6,15 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { X, Plus, Upload } from 'lucide-react';
-import { CreateRecruiterData, RecruiterStatus } from '@/types/recruiter';
+import { CreateTeamMemberData, TeamMemberStatus } from '@/types/recruiter';
 
 interface SkillsAndStatusTabProps {
-  formData: CreateRecruiterData;
-  setFormData: React.Dispatch<React.SetStateAction<CreateRecruiterData>>;
+  formData: CreateTeamMemberData;
+  setFormData: React.Dispatch<React.SetStateAction<CreateTeamMemberData>>;
   errors: Record<string, string>;
 }
 
-const statusOptions: { value: RecruiterStatus; label: string }[] = [
+const statusOptions: { value: TeamMemberStatus; label: string }[] = [
   { value: "Active", label: "Active" },
   { value: "Inactive", label: "Inactive" },
   { value: "On Leave", label: "On Leave" },
@@ -37,7 +37,7 @@ const commonSkills = [
 export function SkillsAndStatusTab({ formData, setFormData, errors }: SkillsAndStatusTabProps) {
   const [newSkill, setNewSkill] = useState('');
 
-  const handleInputChange = (field: keyof CreateRecruiterData, value: string) => {
+  const handleInputChange = (field: keyof CreateTeamMemberData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -95,7 +95,7 @@ export function SkillsAndStatusTab({ formData, setFormData, errors }: SkillsAndS
       {/* Status */}
       <div>
         <Label htmlFor="status">Status *</Label>
-        <Select value={formData.status} onValueChange={(value: RecruiterStatus) => handleInputChange('status', value)}>
+        <Select value={formData.status} onValueChange={(value: TeamMemberStatus) => handleInputChange('status', value)}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
