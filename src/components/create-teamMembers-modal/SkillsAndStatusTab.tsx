@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ interface SkillsAndStatusTabProps {
 
 export function SkillsAndStatusTab({ formData, setFormData, errors }: SkillsAndStatusTabProps) {
   const [skillsInput, setSkillsInput] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (field: keyof CreateTeamMemberData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -49,6 +50,17 @@ export function SkillsAndStatusTab({ formData, setFormData, errors }: SkillsAndS
     }
   };
 
+  const handleFileClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleRemoveFile = () => {
+    setFormData(prev => ({ ...prev, resume: undefined }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   // Initialize skillsInput when component mounts or formData changes
   React.useEffect(() => {
     if (formData.skills.length > 0 && skillsInput === '') {
@@ -59,7 +71,7 @@ export function SkillsAndStatusTab({ formData, setFormData, errors }: SkillsAndS
   return (
     <div className="space-y-6">
       {/* Specialization */}
-      <div>
+      <div className="ml-2 mr-2">
         <Label htmlFor="specialization">Specialization</Label>
         <Input
           id="specialization"
@@ -70,7 +82,7 @@ export function SkillsAndStatusTab({ formData, setFormData, errors }: SkillsAndS
       </div>
 
       {/* Skills as textarea */}
-      <div>
+      <div className='ml-2 mr-2'>
         <Label htmlFor="skills">Skills</Label>
         <Textarea
           id="skills"
@@ -82,39 +94,45 @@ export function SkillsAndStatusTab({ formData, setFormData, errors }: SkillsAndS
       </div>
 
       {/* Resume Upload */}
-      <div className="space-y-2">
-        <Label htmlFor="resume">Resume</Label>
-        <div className="flex items-center gap-2">
-          <Input
-            id="resume"
+      <div className="space-y-2 ml-2 mr-2 ">
+        <Label htmlFor="resume">Upload Resume</Label>
+        <div 
+          className="relative border-2 border-dashed border-gray-300 rounded-md p-6 text-center cursor-pointer hover:border-gray-400 transition-colors"
+          onClick={handleFileClick}
+        >
+          <input
+            ref={fileInputRef}
             type="file"
+            id="resume"
             accept=".pdf,.doc,.docx"
             onChange={handleFileChange}
             className="hidden"
           />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => document.getElementById('resume')?.click()}
-            className="flex items-center gap-2"
-          >
-            <Upload className="h-4 w-4" />
-            {formData.resume ? formData.resume : 'Upload Resume'}
-          </Button>
-          {formData.resume && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setFormData(prev => ({ ...prev, resume: undefined }))}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
+          <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+          <div className="text-sm text-gray-600">
+            {formData.resume ? (
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-green-600 font-medium">{formData.resume}</span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveFile();
+                  }}
+                  className="p-1 rounded hover:bg-red-100 text-red-600"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <>
+                <span className="font-medium text-gray-900">Click to upload</span>
+                <br />
+                <span className="text-gray-500">PDF, DOC, DOCX (max 5MB)</span>
+              </>
+            )}
+          </div>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Accepted formats: PDF, DOC, DOCX (Max 5MB)
-        </p>
       </div>
     </div>
   );
