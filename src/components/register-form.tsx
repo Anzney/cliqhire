@@ -95,7 +95,7 @@ export function RegisterForm({
   return (
     <div className={cn("flex flex-col gap-4", className)} {...props}>
       <Card>
-        <CardHeader className="pb-4">
+        <CardHeader className="pb-4 text-center">
           <CardTitle className="text-2xl">Register</CardTitle>
           <CardDescription>
             Enter your name, email and password below to register your account
