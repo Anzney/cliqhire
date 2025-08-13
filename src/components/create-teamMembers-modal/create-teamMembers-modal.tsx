@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { RefreshCcw } from "lucide-react";
-import { CreateTeamMemberData, TeamMemberStatus } from "@/types/recruiter";
+import { CreateTeamMemberData, TeamMemberStatus } from "@/types/teamMember";
 import { createTeamMember } from "@/services/teamMembersService";
 import { PersonalInformationTab } from "./PersonalInformationTab";
 import { SkillsAndStatusTab } from "./SkillsAndStatusTab";
@@ -37,6 +37,7 @@ export function CreateTeamMemberModal({
     department: "",
     specialization: "",
     manager: "",
+    teamRole: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,6 +55,10 @@ export function CreateTeamMemberModal({
       newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Please enter a valid email address";
+    }
+
+    if (!formData.teamRole.trim()) {
+      newErrors.teamRole = "Team role is required";
     }
 
     if (!formData.phone.trim()) {
@@ -95,6 +100,7 @@ export function CreateTeamMemberModal({
         department: "",
         specialization: "",
         manager: "",
+        teamRole: "",
       });
       setErrors({});
       setCurrentTab(0);
@@ -124,6 +130,7 @@ export function CreateTeamMemberModal({
         department: "",
         specialization: "",
         manager: "",
+        teamRole: "",
       });
       setErrors({});
       setCurrentTab(0);
@@ -137,6 +144,7 @@ export function CreateTeamMemberModal({
       const tabErrors: Record<string, string> = {};
       if (!formData.name.trim()) tabErrors.name = "Name is required";
       if (!formData.email.trim()) tabErrors.email = "Email is required";
+      if (!formData.teamRole.trim()) tabErrors.teamRole = "Team role is required";
       if (!formData.phone.trim()) tabErrors.phone = "Phone number is required";
       if (!formData.location.trim()) tabErrors.location = "Location is required";
       if (!formData.experience.trim()) tabErrors.experience = "Experience is required";

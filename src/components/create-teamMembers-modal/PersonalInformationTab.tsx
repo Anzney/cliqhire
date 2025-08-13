@@ -3,7 +3,7 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CreateTeamMemberData } from '@/types/recruiter';
+import { CreateTeamMemberData } from '@/types/teamMember';
 
 interface PersonalInformationTabProps {
   formData: CreateTeamMemberData;
@@ -19,6 +19,13 @@ const departmentOptions = [
   "Sales",
   "Marketing",
   "Operations"
+];
+
+const teamRoleOptions = [
+  "Hiring Manager",
+  "Team Lead",
+  "Recruiters",
+  "Head Enter"
 ];
 
 export function PersonalInformationTab({ formData, setFormData, errors }: PersonalInformationTabProps) {
@@ -52,6 +59,23 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
             className={errors.email ? 'border-red-500' : ''}
           />
           {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+        </div>
+
+        <div>
+          <Label htmlFor="teamRole">Team Role *</Label>
+          <Select value={formData.teamRole} onValueChange={(value) => handleInputChange('teamRole', value)}>
+            <SelectTrigger className={errors.teamRole ? 'border-red-500' : ''}>
+              <SelectValue placeholder="Select team role" />
+            </SelectTrigger>
+            <SelectContent>
+              {teamRoleOptions.map((role) => (
+                <SelectItem key={role} value={role}>
+                  {role}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.teamRole && <p className="text-red-500 text-sm mt-1">{errors.teamRole}</p>}
         </div>
 
         <div>
@@ -104,16 +128,6 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
               ))}
             </SelectContent>
           </Select>
-        </div>
-
-        <div>
-          <Label htmlFor="specialization">Specialization</Label>
-          <Input
-            id="specialization"
-            value={formData.specialization}
-            onChange={(e) => handleInputChange('specialization', e.target.value)}
-            placeholder="e.g., Technical Recruiting"
-          />
         </div>
 
         <div>

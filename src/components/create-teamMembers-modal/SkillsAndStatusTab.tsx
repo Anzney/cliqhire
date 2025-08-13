@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { X, Plus, Upload } from 'lucide-react';
-import { CreateTeamMemberData, TeamMemberStatus } from '@/types/recruiter';
+import { CreateTeamMemberData, TeamMemberStatus } from '@/types/teamMember';
 
 interface SkillsAndStatusTabProps {
   formData: CreateTeamMemberData;
@@ -107,6 +107,17 @@ export function SkillsAndStatusTab({ formData, setFormData, errors }: SkillsAndS
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Specialization */}
+      <div>
+        <Label htmlFor="specialization">Specialization</Label>
+        <Input
+          id="specialization"
+          value={formData.specialization}
+          onChange={(e) => handleInputChange('specialization', e.target.value)}
+          placeholder="e.g., Technical Recruiting"
+        />
       </div>
 
       {/* Skills */}

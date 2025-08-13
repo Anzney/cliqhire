@@ -49,6 +49,7 @@ export interface CreateTeamMemberData {
   department?: string;
   specialization?: string;
   manager?: string;
+  teamRole: string;
 }
 
 export interface UpdateTeamMemberData extends Partial<CreateTeamMemberData> {
