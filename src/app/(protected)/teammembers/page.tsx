@@ -12,29 +12,11 @@ export default function TeamMembersPage() {
   const [open, setOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const router = useRouter();
 
-  // Fetch team members from API
-  const fetchTeamMembers = async () => {
-    setInitialLoading(true);
-    try {
-      const response = await getTeamMembers();
-      setTeamMembers(response.teamMembers);
-    } catch (error) {
-      console.error("Error fetching team members:", error);
-      setTeamMembers([]);
-    } finally {
-      setInitialLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchTeamMembers();
-  }, []);
-
   const handleCreateSuccess = () => {
-    fetchTeamMembers(); // Refresh the list
+    setRefreshTrigger(prev => prev + 1); // Trigger refresh
   };
 
   const handleTeamMemberClick = (teamMemberId: string) => {
@@ -53,7 +35,7 @@ export default function TeamMembersPage() {
 
       {/* Tabbed Interface */}
       <div className="flex-1">
-        <TeamMembersTabs onTeamMemberClick={handleTeamMemberClick} />
+        <TeamMembersTabs onTeamMemberClick={handleTeamMemberClick} refreshTrigger={refreshTrigger} />
       </div>
 
       <CreateTeamMemberModal open={open} onOpenChange={setOpen} onSuccess={handleCreateSuccess} />

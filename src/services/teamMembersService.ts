@@ -5,7 +5,7 @@ import {
   TeamMemberFilters, 
   CreateTeamMemberData, 
   UpdateTeamMemberData 
-} from '@/types/recruiter';
+} from '@/types/teamMember';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ;
 
@@ -25,7 +25,7 @@ const dummyTeamMembers: TeamMember[] = [
     status: "Active",
     createdAt: "2023-01-15T10:00:00Z",
     updatedAt: "2023-12-01T15:30:00Z",
-    department: "Technical Recruiting",
+    department: "Hiring Manager",
     specialization: "Engineering & IT",
     manager: "Sarah Johnson",
     performanceRating: 4.5,
@@ -44,7 +44,7 @@ const dummyTeamMembers: TeamMember[] = [
     status: "Active",
     createdAt: "2023-03-20T09:15:00Z",
     updatedAt: "2023-12-01T14:20:00Z",
-    department: "Executive Search",
+    department: "Team Lead",
     specialization: "C-Level & VP Positions",
     manager: "Mike Davis",
     performanceRating: 4.8,
@@ -63,7 +63,7 @@ const dummyTeamMembers: TeamMember[] = [
     status: "On Leave",
     createdAt: "2022-11-10T11:30:00Z",
     updatedAt: "2023-11-15T16:45:00Z",
-    department: "Technical Recruiting",
+    department: "Recruiters",
     specialization: "Senior Engineering",
     manager: "Emily Wilson",
     performanceRating: 4.2,
@@ -82,7 +82,7 @@ const dummyTeamMembers: TeamMember[] = [
     status: "Inactive",
     createdAt: "2023-06-05T13:20:00Z",
     updatedAt: "2023-10-20T10:10:00Z",
-    department: "Talent Acquisition",
+    department: "Head Enter",
     specialization: "Startup & Scale-up",
     manager: "John Smith",
     performanceRating: 3.9,
@@ -101,12 +101,31 @@ const dummyTeamMembers: TeamMember[] = [
     status: "Active",
     createdAt: "2023-02-12T08:45:00Z",
     updatedAt: "2023-12-01T12:15:00Z",
-    department: "Technical Recruiting",
+    department: "Recruiters",
     specialization: "Data Science & AI",
     manager: "Sarah Johnson",
     performanceRating: 4.6,
     activeJobs: 6,
     completedPlacements: 52
+  },
+  {
+    _id: "6",
+    name: "Lisa Garcia",
+    email: "lisa.garcia@company.com",
+    phone: "+1 (555) 678-9012",
+    location: "Miami, FL",
+    experience: "6 years",
+    skills: ["Senior Recruitment", "Client Relations", "Market Analysis", "Strategic Planning"],
+    resume: "https://example.com/resumes/lisa_garcia_resume.pdf",
+    status: "Active",
+    createdAt: "2023-04-10T14:30:00Z",
+    updatedAt: "2023-12-01T11:45:00Z",
+    department: "Hiring Manager",
+    specialization: "Executive & Senior Level",
+    manager: "Emily Wilson",
+    performanceRating: 4.7,
+    activeJobs: 4,
+    completedPlacements: 67
   }
 ];
 

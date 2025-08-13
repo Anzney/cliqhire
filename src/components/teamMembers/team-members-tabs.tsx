@@ -26,6 +26,7 @@ import { TeamMember, TeamMemberStatus } from "@/types/teamMember";
 
 interface TeamMembersTabsProps {
   onTeamMemberClick?: (teamMemberId: string) => void;
+  refreshTrigger?: number; // Add this to trigger refresh from parent
 }
 
 const headerArr = [
@@ -40,7 +41,7 @@ const headerArr = [
   "Actions",
 ];
 
-export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
+export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembersTabsProps) {
   const [activeTab, setActiveTab] = useState("hiring-manager");
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +63,7 @@ export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
 
   useEffect(() => {
     fetchTeamMembers();
-  }, []);
+  }, [refreshTrigger]);
 
   const handleStatusChange = (teamMemberId: string, newStatus: TeamMemberStatus) => {
     setTeamMembers((prevTeamMembers) =>
@@ -166,20 +167,11 @@ export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
         <TableCell className="text-sm">{teamMember.phone}</TableCell>
         <TableCell className="text-sm">{teamMember.location}</TableCell>
         <TableCell className="text-sm">{teamMember.experience}</TableCell>
-        <TableCell className="text-sm">
-          <div className="flex flex-wrap gap-1">
-            {teamMember.skills.slice(0, 2).map((skill: string, index: number) => (
-              <Badge key={index} variant="outline" className="text-xs">
-                {skill}
-              </Badge>
-            ))}
-            {teamMember.skills.length > 2 && (
-              <Badge variant="outline" className="text-xs">
-                +{teamMember.skills.length - 2} more
-              </Badge>
-            )}
-          </div>
-        </TableCell>
+                 <TableCell className="text-sm">
+           <Badge variant="outline" className="text-xs">
+             {teamMember.department || "Not Assigned"}
+           </Badge>
+         </TableCell>
         <TableCell className="text-sm">
           <Button
             variant="ghost"
