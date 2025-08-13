@@ -81,9 +81,9 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
     }
   };
 
-  const handleEditTeamMember = (teamMemberId: string) => {
-    // Handle edit functionality
-    console.log("Edit team member:", teamMemberId);
+  const handleRegisterUser = (teamMemberId: string) => {
+    // Handle register user functionality
+    console.log("Register user:", teamMemberId);
   };
 
   const handleDeleteTeamMember = async (teamMemberId: string) => {
@@ -205,13 +205,9 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleViewTeamMember(teamMember._id)}>
-                <Eye className="mr-2 h-4 w-4" />
-                View Details
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleEditTeamMember(teamMember._id)}>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit
+              <DropdownMenuItem onClick={() => handleRegisterUser(teamMember._id)}>
+                <UserCheck className="mr-2 h-4 w-4" />
+                Register User
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => handleDeleteTeamMember(teamMember._id)}
