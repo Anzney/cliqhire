@@ -36,7 +36,6 @@ export function CreateTeamMemberModal({
     status: "Active",
     department: "",
     specialization: "",
-    manager: "",
     teamRole: "",
   });
 
@@ -61,22 +60,6 @@ export function CreateTeamMemberModal({
       newErrors.teamRole = "Team role is required";
     }
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
-    }
-
-    if (!formData.location.trim()) {
-      newErrors.location = "Location is required";
-    }
-
-    if (!formData.experience.trim()) {
-      newErrors.experience = "Experience is required";
-    }
-
-    if (formData.skills.length === 0) {
-      newErrors.skills = "At least one skill is required";
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -99,7 +82,6 @@ export function CreateTeamMemberModal({
         status: "Active",
         department: "",
         specialization: "",
-        manager: "",
         teamRole: "",
       });
       setErrors({});
@@ -129,7 +111,6 @@ export function CreateTeamMemberModal({
         status: "Active",
         department: "",
         specialization: "",
-        manager: "",
         teamRole: "",
       });
       setErrors({});
@@ -145,9 +126,6 @@ export function CreateTeamMemberModal({
       if (!formData.name.trim()) tabErrors.name = "Name is required";
       if (!formData.email.trim()) tabErrors.email = "Email is required";
       if (!formData.teamRole.trim()) tabErrors.teamRole = "Team role is required";
-      if (!formData.phone.trim()) tabErrors.phone = "Phone number is required";
-      if (!formData.location.trim()) tabErrors.location = "Location is required";
-      if (!formData.experience.trim()) tabErrors.experience = "Experience is required";
 
       if (Object.keys(tabErrors).length > 0) {
         setErrors(tabErrors);
@@ -190,18 +168,6 @@ export function CreateTeamMemberModal({
             </button>
           ))}
         </div>
-
-        {/* Error Display */}
-        {Object.keys(errors).length > 0 && (
-          <div className="bg-red-50 text-red-500 p-3 rounded-md mb-4 text-sm">
-            Please fix the following errors:
-            <ul className="list-disc list-inside mt-1">
-              {Object.values(errors).map((error, index) => (
-                <li key={index}>{error}</li>
-              ))}
-            </ul>
-          </div>
-        )}
 
         {/* Tab Content */}
         {currentTab === 0 && (

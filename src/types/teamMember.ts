@@ -48,7 +48,6 @@ export interface CreateTeamMemberData {
   status: TeamMemberStatus;
   department?: string;
   specialization?: string;
-  manager?: string;
   teamRole: string;
 }
 

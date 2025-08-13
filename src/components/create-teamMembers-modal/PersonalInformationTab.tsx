@@ -3,7 +3,7 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CreateTeamMemberData } from '@/types/teamMember';
+import { CreateTeamMemberData, TeamMemberStatus } from '@/types/teamMember';
 
 interface PersonalInformationTabProps {
   formData: CreateTeamMemberData;
@@ -28,6 +28,13 @@ const teamRoleOptions = [
   "Head Enter"
 ];
 
+const statusOptions: { value: TeamMemberStatus; label: string }[] = [
+  { value: "Active", label: "Active" },
+  { value: "Inactive", label: "Inactive" },
+  { value: "On Leave", label: "On Leave" },
+  { value: "Terminated", label: "Terminated" },
+];
+
 export function PersonalInformationTab({ formData, setFormData, errors }: PersonalInformationTabProps) {
   const handleInputChange = (field: keyof CreateTeamMemberData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -37,7 +44,7 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="name">Full Name *</Label>
+          <Label htmlFor="name">Full Name <span className="text-red-500">*</span></Label>
           <Input
             id="name"
             value={formData.name}
@@ -49,7 +56,7 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
         </div>
 
         <div>
-          <Label htmlFor="email">Email *</Label>
+          <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
           <Input
             id="email"
             type="email"
@@ -62,7 +69,7 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
         </div>
 
         <div>
-          <Label htmlFor="teamRole">Team Role *</Label>
+          <Label htmlFor="teamRole">Team Role <span className="text-red-500">*</span></Label>
           <Select value={formData.teamRole} onValueChange={(value) => handleInputChange('teamRole', value)}>
             <SelectTrigger className={errors.teamRole ? 'border-red-500' : ''}>
               <SelectValue placeholder="Select team role" />
@@ -79,39 +86,49 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
         </div>
 
         <div>
-          <Label htmlFor="phone">Phone Number *</Label>
+          <Label htmlFor="phone">Phone Number</Label>
           <Input
             id="phone"
             value={formData.phone}
             onChange={(e) => handleInputChange('phone', e.target.value)}
             placeholder="Enter phone number"
-            className={errors.phone ? 'border-red-500' : ''}
           />
-          {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
         </div>
 
         <div>
-          <Label htmlFor="location">Location *</Label>
+          <Label htmlFor="status">Status</Label>
+          <Select value={formData.status} onValueChange={(value: TeamMemberStatus) => handleInputChange('status', value)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {statusOptions.map((status) => (
+                <SelectItem key={status.value} value={status.value}>
+                  {status.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label htmlFor="location">Location</Label>
           <Input
             id="location"
             value={formData.location}
             onChange={(e) => handleInputChange('location', e.target.value)}
             placeholder="Enter location"
-            className={errors.location ? 'border-red-500' : ''}
           />
-          {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location}</p>}
         </div>
 
         <div>
-          <Label htmlFor="experience">Experience *</Label>
+          <Label htmlFor="experience">Experience</Label>
           <Input
             id="experience"
             value={formData.experience}
             onChange={(e) => handleInputChange('experience', e.target.value)}
             placeholder="e.g., 5 years"
-            className={errors.experience ? 'border-red-500' : ''}
           />
-          {errors.experience && <p className="text-red-500 text-sm mt-1">{errors.experience}</p>}
         </div>
 
         <div>
@@ -128,16 +145,6 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
               ))}
             </SelectContent>
           </Select>
-        </div>
-
-        <div>
-          <Label htmlFor="manager">Manager</Label>
-          <Input
-            id="manager"
-            value={formData.manager}
-            onChange={(e) => handleInputChange('manager', e.target.value)}
-            placeholder="Enter manager name"
-          />
         </div>
       </div>
     </div>

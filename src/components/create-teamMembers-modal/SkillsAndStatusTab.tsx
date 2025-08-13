@@ -2,24 +2,16 @@
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Upload, X } from 'lucide-react';
-import { CreateTeamMemberData, TeamMemberStatus } from '@/types/teamMember';
+import { CreateTeamMemberData } from '@/types/teamMember';
 
 interface SkillsAndStatusTabProps {
   formData: CreateTeamMemberData;
   setFormData: React.Dispatch<React.SetStateAction<CreateTeamMemberData>>;
   errors: Record<string, string>;
 }
-
-const statusOptions: { value: TeamMemberStatus; label: string }[] = [
-  { value: "Active", label: "Active" },
-  { value: "Inactive", label: "Inactive" },
-  { value: "On Leave", label: "On Leave" },
-  { value: "Terminated", label: "Terminated" },
-];
 
 export function SkillsAndStatusTab({ formData, setFormData, errors }: SkillsAndStatusTabProps) {
   const [skillsInput, setSkillsInput] = useState('');
@@ -66,47 +58,27 @@ export function SkillsAndStatusTab({ formData, setFormData, errors }: SkillsAndS
 
   return (
     <div className="space-y-6">
-      {/* Status and Specialization in same row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="status">Status *</Label>
-          <Select value={formData.status} onValueChange={(value: TeamMemberStatus) => handleInputChange('status', value)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {statusOptions.map((status) => (
-                <SelectItem key={status.value} value={status.value}>
-                  {status.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label htmlFor="specialization">Specialization</Label>
-          <Input
-            id="specialization"
-            value={formData.specialization}
-            onChange={(e) => handleInputChange('specialization', e.target.value)}
-            placeholder="e.g., Technical Recruiting"
-          />
-        </div>
+      {/* Specialization */}
+      <div>
+        <Label htmlFor="specialization">Specialization</Label>
+        <Input
+          id="specialization"
+          value={formData.specialization}
+          onChange={(e) => handleInputChange('specialization', e.target.value)}
+          placeholder="e.g., Technical Recruiting"
+        />
       </div>
 
       {/* Skills as textarea */}
       <div>
-        <Label htmlFor="skills">Skills *</Label>
+        <Label htmlFor="skills">Skills</Label>
         <Textarea
           id="skills"
           value={skillsInput}
           onChange={(e) => handleSkillsChange(e.target.value)}
           placeholder="Enter skills separated by commas or press Enter for new lines (e.g., Technical Recruiting, ATS Management, LinkedIn Recruiter)"
-          className={`min-h-[120px] ${errors.skills ? 'border-red-500' : ''}`}
+          className="min-h-[120px]"
         />
-        {errors.skills && <p className="text-red-500 text-sm mt-1">{errors.skills}</p>}
-       
       </div>
 
       {/* Resume Upload */}
