@@ -13,7 +13,7 @@ export default function TeamMemberDetailPage() {
   const params = useParams();
   const teamMemberId = params?.id as string;
   const [teamMember, setTeamMember] = useState<TeamMember | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchTeamMember = async () => {

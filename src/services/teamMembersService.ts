@@ -256,7 +256,9 @@ export const createTeamMember = async (teamMemberData: CreateTeamMemberData): Pr
   // DUMMY DATA RESPONSE - REMOVE WHEN API IS WORKING
   // ========================================
   console.log("🔴 USING DUMMY DATA - Replace with real API call when ready");
+  console.log("📝 Creating team member with data:", teamMemberData);
   
+  // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 1000));
   
   const newTeamMember: TeamMember = {
@@ -273,30 +275,21 @@ export const createTeamMember = async (teamMemberData: CreateTeamMemberData): Pr
   // Add to dummy data array
   dummyTeamMembers.push(newTeamMember);
   
+  console.log("✅ Team member created successfully:", newTeamMember);
   return newTeamMember;
-  // ========================================
-  // END DUMMY DATA RESPONSE
-  // ========================================
-
-  // ========================================
-  // REAL API CALL - UNCOMMENT WHEN API IS WORKING
-  // ========================================
-  /*
   try {
-    const response = await axios.post(`${API_URL}/api/recruiters`, recruiterData);
+    console.log("Making API call to create team member:", teamMemberData);
+    const response = await axios.post(`${API_URL}/api/team-members`, teamMemberData);
     
     if (response.data && response.data.success) {
+      console.log("API call successful:", response.data.data);
       return response.data.data;
     }
-    throw new Error(response.data?.message || 'Failed to create recruiter');
+    throw new Error(response.data?.message || 'Failed to create team member');
   } catch (error: any) {
-    console.error('Error creating recruiter:', error);
-    throw new Error(error.response?.data?.message || 'Failed to create recruiter');
+    console.error('Error creating team member:', error);
+    throw new Error(error.response?.data?.message || 'Failed to create team member');
   }
-  */
-  // ========================================
-  // END REAL API CALL
-  // ========================================
 };
 
 // Update a team member

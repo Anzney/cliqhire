@@ -69,7 +69,9 @@ export function CreateTeamMemberModal({
 
     setIsSubmitting(true);
     try {
+      console.log("🚀 Submitting team member data:", formData);
       const createdTeamMember = await createTeamMember(formData);
+      console.log("✅ Team member created successfully:", createdTeamMember);
 
       // Reset form
       setFormData({
@@ -88,12 +90,14 @@ export function CreateTeamMemberModal({
       setCurrentTab(0);
 
       onOpenChange(false);
+      
       if (onSuccess) {
         onSuccess();
       }
     } catch (error: any) {
-      console.error("Error creating team member:", error);
-      alert(error.message || "Failed to create team member");
+      console.error("❌ Error creating team member:", error);
+      const errorMessage = error.message || "Failed to create team member";
+      alert(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
