@@ -144,7 +144,7 @@ export function CreateTeamMemberModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl h-[600px] flex flex-col">
         <DialogHeader>
           <DialogTitle>Create New Team Member</DialogTitle>
           <DialogDescription>
@@ -170,16 +170,18 @@ export function CreateTeamMemberModal({
         </div>
 
         {/* Tab Content */}
-        {currentTab === 0 && (
-          <PersonalInformationTab formData={formData} setFormData={setFormData} errors={errors} />
-        )}
+        <div className="flex-1 overflow-y-auto">
+          {currentTab === 0 && (
+            <PersonalInformationTab formData={formData} setFormData={setFormData} errors={errors} />
+          )}
 
-        {currentTab === 1 && (
-          <SkillsAndStatusTab formData={formData} setFormData={setFormData} errors={errors} />
-        )}
+          {currentTab === 1 && (
+            <SkillsAndStatusTab formData={formData} setFormData={setFormData} errors={errors} />
+          )}
+        </div>
 
         {/* Footer */}
-        <DialogFooter>
+        <DialogFooter className="mt-6">
           <div className="flex flex-col sm:flex-row justify-between w-full gap-2">
             <div>
               {currentTab > 0 && (
