@@ -11,6 +11,7 @@ export interface TeamMember {
   createdAt: string;
   updatedAt: string;
   teamMemberId?: string;
+  role?: string;
   department?: string;
   specialization?: string;
   hireDate?: string;
