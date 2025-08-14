@@ -43,7 +43,7 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
+        <div className='ml-2'>
           <Label htmlFor="name">Full Name <span className="text-red-500">*</span></Label>
           <Input
             id="name"
@@ -55,7 +55,7 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
           {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
         </div>
 
-        <div>
+        <div className='mr-2'>
           <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
           <Input
             id="email"
@@ -68,7 +68,7 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
           {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
         </div>
 
-        <div>
+        <div className='ml-2'>
           <Label htmlFor="teamRole">Team Role <span className="text-red-500">*</span></Label>
           <Select value={formData.teamRole} onValueChange={(value) => handleInputChange('teamRole', value)}>
             <SelectTrigger className={errors.teamRole ? 'border-red-500' : ''}>
@@ -85,7 +85,7 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
           {errors.teamRole && <p className="text-red-500 text-sm mt-1">{errors.teamRole}</p>}
         </div>
 
-        <div>
+        <div className='mr-2'>
           <Label htmlFor="phone">Phone Number</Label>
           <Input
             id="phone"
@@ -95,7 +95,7 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
           />
         </div>
 
-        <div>
+        <div className='ml-2'>
           <Label htmlFor="status">Status</Label>
           <Select value={formData.status} onValueChange={(value: TeamMemberStatus) => handleInputChange('status', value)}>
             <SelectTrigger>
@@ -111,7 +111,7 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
           </Select>
         </div>
 
-        <div>
+        <div className='mr-2'>
           <Label htmlFor="location">Location</Label>
           <Input
             id="location"
@@ -121,7 +121,7 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
           />
         </div>
 
-        <div>
+        <div className='ml-2'>
           <Label htmlFor="experience">Experience</Label>
           <Input
             id="experience"
@@ -131,7 +131,7 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
           />
         </div>
 
-        <div>
+        <div className='mr-2'>
           <Label htmlFor="department">Department</Label>
           <Select value={formData.department} onValueChange={(value) => handleInputChange('department', value)}>
             <SelectTrigger>
