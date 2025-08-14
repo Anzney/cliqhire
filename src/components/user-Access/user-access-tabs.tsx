@@ -12,7 +12,15 @@ import {
   TableHead,
   TableRow,
 } from "@/components/ui/table";
-import { Users, Shield, MoreVertical, Edit, Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Users, Shield, MoreVertical, Eye, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AddTeamMembersDialog } from "./add-team-members-dialog";
+import { UserPermissionTab } from "./user-permission-tab";
 import { TeamMember } from "@/types/teamMember";
 import { getTeamMembers } from "@/services/teamMembersService";
 
@@ -51,6 +60,8 @@ export function UserAccessTabs({
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loadingTeamMembers, setLoadingTeamMembers] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
 
   // Use external dialog state if provided, otherwise use internal state
   const dialogOpen = addTeamDialogOpen !== undefined ? addTeamDialogOpen : internalDialogOpen;
@@ -110,10 +121,22 @@ export function UserAccessTabs({
     }
   };
 
-  const handleDeleteTeam = (teamId: string) => {
-    if (confirm("Are you sure you want to delete this team?")) {
-      setTeams(prev => prev.filter(team => team.id !== teamId));
+  const handleDeleteTeam = (team: Team) => {
+    setTeamToDelete(team);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteTeam = () => {
+    if (teamToDelete) {
+      setTeams(prev => prev.filter(team => team.id !== teamToDelete.id));
+      setDeleteDialogOpen(false);
+      setTeamToDelete(null);
     }
+  };
+
+  const cancelDeleteTeam = () => {
+    setDeleteDialogOpen(false);
+    setTeamToDelete(null);
   };
 
   const renderTeamsTable = () => {
@@ -164,11 +187,11 @@ export function UserAccessTabs({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit
+                <Eye className="mr-2 h-4 w-4" />
+                View
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => handleDeleteTeam(team.id)}
+                onClick={() => handleDeleteTeam(team)}
                 className="text-red-600"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
@@ -228,13 +251,7 @@ export function UserAccessTabs({
 
         <TabsContent value="user-permission" className="p-0 mt-0">
           <div className="flex-1">
-            <div className="h-[calc(100vh-240px)] flex items-center justify-center">
-              <div className="text-center">
-                <Shield className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">User Permissions</h3>
-                <p className="text-gray-500">Configure user access levels and permissions here.</p>
-              </div>
-            </div>
+            <UserPermissionTab refreshTrigger={refreshTrigger} />
           </div>
         </TabsContent>
       </Tabs>
@@ -244,6 +261,26 @@ export function UserAccessTabs({
         onOpenChange={setDialogOpen}
         onSuccess={handleAddTeamSuccess}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Delete Team</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete the team "{teamToDelete?.teamName}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={cancelDeleteTeam}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDeleteTeam}>
+              Delete Team
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
