@@ -27,7 +27,7 @@ import { TeamMember } from "@/types/teamMember";
 interface AddTeamMembersDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
+  onSuccess?: (formData: any) => void;
 }
 
 export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamMembersDialogProps) {
@@ -104,6 +104,12 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      // Close dialog and trigger success callback with form data
+      onOpenChange(false);
+      if (onSuccess) {
+        onSuccess(formData);
+      }
+      
       // Reset form
       setFormData({
         teamName: "",
@@ -112,12 +118,6 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
         recruiters: [],
         teamStatus: "",
       });
-
-      // Close dialog and trigger success callback
-      onOpenChange(false);
-      if (onSuccess) {
-        onSuccess();
-      }
     } catch (error) {
       console.error("Error creating team:", error);
     } finally {

@@ -26,7 +26,12 @@ const UserAccess = () => {
 
       {/* Tabbed Interface */}
       <div className="flex-1">
-        <UserAccessTabs refreshTrigger={refreshTrigger} />
+        <UserAccessTabs 
+          refreshTrigger={refreshTrigger} 
+          addTeamDialogOpen={open}
+          setAddTeamDialogOpen={setOpen}
+          onTeamCreated={handleCreateSuccess}
+        />
       </div>
     </div>
   );
