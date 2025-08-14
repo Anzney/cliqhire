@@ -21,6 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TeamMemberStatusBadge } from "@/components/teamMembers/team-status-badge";
+import { RegisterUserDialog } from "@/components/teamMembers/register-user-dialog";
 import { getTeamMembers, deleteTeamMember } from "@/services/teamMembersService";
 import { TeamMember, TeamMemberStatus } from "@/types/teamMember";
 
@@ -45,6 +46,8 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
   const [activeTab, setActiveTab] = useState("hiring-manager");
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [registerDialogOpen, setRegisterDialogOpen] = useState(false);
+  const [selectedTeamMember, setSelectedTeamMember] = useState<TeamMember | null>(null);
   const router = useRouter();
 
   // Fetch team members from API
@@ -81,9 +84,14 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
     }
   };
 
-  const handleRegisterUser = (teamMemberId: string) => {
-    // Handle register user functionality
-    console.log("Register user:", teamMemberId);
+  const handleRegisterUser = (teamMember: TeamMember) => {
+    setSelectedTeamMember(teamMember);
+    setRegisterDialogOpen(true);
+  };
+
+  const handleCloseRegisterDialog = () => {
+    setRegisterDialogOpen(false);
+    setSelectedTeamMember(null);
   };
 
   const handleDeleteTeamMember = async (teamMemberId: string) => {
@@ -193,32 +201,38 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
             onStatusChange={handleStatusChange}
           />
         </TableCell>
-        <TableCell className="text-sm">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="h-8 w-8 p-0"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleRegisterUser(teamMember._id)}>
-                <UserCheck className="mr-2 h-4 w-4" />
-                Register User
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleDeleteTeamMember(teamMember._id)}
-                className="text-red-600"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </TableCell>
+                 <TableCell className="text-sm">
+           <DropdownMenu>
+             <DropdownMenuTrigger asChild>
+               <Button
+                 variant="ghost"
+                 className="h-8 w-8 p-0"
+                 onClick={(e) => e.stopPropagation()}
+               >
+                 <MoreVertical className="h-4 w-4" />
+               </Button>
+             </DropdownMenuTrigger>
+             <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+               <DropdownMenuItem onClick={(e) => {
+                 e.stopPropagation();
+                 handleRegisterUser(teamMember);
+               }}>
+                 <UserCheck className="mr-2 h-4 w-4" />
+                 Register User
+               </DropdownMenuItem>
+               <DropdownMenuItem
+                 onClick={(e) => {
+                   e.stopPropagation();
+                   handleDeleteTeamMember(teamMember._id);
+                 }}
+                 className="text-red-600"
+               >
+                 <Trash2 className="mr-2 h-4 w-4" />
+                 Delete
+               </DropdownMenuItem>
+             </DropdownMenuContent>
+           </DropdownMenu>
+         </TableCell>
       </TableRow>
     ));
   };
@@ -343,8 +357,18 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
               </TableBody>
             </Table>
           </div>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-}
+                 </TabsContent>
+       </Tabs>
+       
+               {selectedTeamMember && (
+          <RegisterUserDialog
+            isOpen={registerDialogOpen}
+            onClose={handleCloseRegisterDialog}
+            teamMemberId={selectedTeamMember._id}
+            teamMemberName={selectedTeamMember.name}
+            teamMemberEmail={selectedTeamMember.email}
+          />
+        )}
+     </div>
+   );
+ }
