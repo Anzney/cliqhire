@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AddTeamMembersDialog } from "./add-team-members-dialog";
 import { UserPermissionTab } from "./user-permission-tab";
+import { ViewTeamDialog } from "./view-team-dialog";
 import { TeamMember } from "@/types/teamMember";
 import { getTeamMembers } from "@/services/teamMembersService";
 
@@ -62,6 +63,8 @@ export function UserAccessTabs({
   const [loadingTeamMembers, setLoadingTeamMembers] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [teamToView, setTeamToView] = useState<Team | null>(null);
 
   // Use external dialog state if provided, otherwise use internal state
   const dialogOpen = addTeamDialogOpen !== undefined ? addTeamDialogOpen : internalDialogOpen;
@@ -119,6 +122,11 @@ export function UserAccessTabs({
     if (onTeamCreated) {
       onTeamCreated();
     }
+  };
+
+  const handleViewTeam = (team: Team) => {
+    setTeamToView(team);
+    setViewDialogOpen(true);
   };
 
   const handleDeleteTeam = (team: Team) => {
@@ -186,7 +194,7 @@ export function UserAccessTabs({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleViewTeam(team)}>
                 <Eye className="mr-2 h-4 w-4" />
                 View
               </DropdownMenuItem>
@@ -260,6 +268,13 @@ export function UserAccessTabs({
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onSuccess={handleAddTeamSuccess}
+      />
+
+      <ViewTeamDialog
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        team={teamToView}
+        getTeamMemberName={getTeamMemberName}
       />
 
       {/* Delete Confirmation Dialog */}
