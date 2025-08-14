@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Users, Shield } from "lucide-react";
+import { AddTeamMembersDialog } from "./add-team-members-dialog";
 
 interface UserAccessTabsProps {
   refreshTrigger?: number;
@@ -20,6 +21,7 @@ interface UserAccessTabsProps {
 
 export function UserAccessTabs({ refreshTrigger }: UserAccessTabsProps) {
   const [activeTab, setActiveTab] = useState("teams");
+  const [addTeamDialogOpen, setAddTeamDialogOpen] = useState(false);
 
   // Mock data - replace with actual data from your services
   const teamsCount = 5; // Replace with actual count
@@ -33,6 +35,11 @@ export function UserAccessTabs({ refreshTrigger }: UserAccessTabsProps) {
     "Team Status",
     "Action",
   ];
+
+  const handleAddTeamSuccess = () => {
+    // TODO: Refresh teams data
+    console.log("Team added successfully");
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -79,9 +86,12 @@ export function UserAccessTabs({ refreshTrigger }: UserAccessTabsProps) {
                       <div className="text-center">
                         <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                         <div className="p-4">
-                            <Button className="mb-4">
+                            <Button 
+                              className="mb-4"
+                              onClick={() => setAddTeamDialogOpen(true)}
+                            >
                               Add Team Members
-                           </Button>
+                            </Button>
                         </div>
                         <h3 className="text-lg font-medium text-gray-900 mb-2">Teams Management</h3>
                         <p className="text-gray-500">Manage team structures and assignments here.</p>
@@ -106,6 +116,12 @@ export function UserAccessTabs({ refreshTrigger }: UserAccessTabsProps) {
           </div>
         </TabsContent>
       </Tabs>
+
+      <AddTeamMembersDialog
+        open={addTeamDialogOpen}
+        onOpenChange={setAddTeamDialogOpen}
+        onSuccess={handleAddTeamSuccess}
+      />
     </div>
   );
 }
