@@ -11,13 +11,14 @@ import {
   TableHead,
   TableRow,
 } from "@/components/ui/table";
-import { MoreVertical, Eye, Trash2 } from "lucide-react";
+import { MoreVertical, Shield, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { UserPermissionDialog } from "./user-permission-dialog";
 import { TeamMember } from "@/types/teamMember";
 import { getTeamMembers } from "@/services/teamMembersService";
 
@@ -28,6 +29,8 @@ interface UserPermissionTabProps {
 export function UserPermissionTab({ refreshTrigger }: UserPermissionTabProps) {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(false);
+  const [permissionDialogOpen, setPermissionDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<TeamMember | null>(null);
 
   const userPermissionHeaderArr = [
     "Name",
@@ -52,6 +55,11 @@ export function UserPermissionTab({ refreshTrigger }: UserPermissionTabProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleUserPermission = (user: TeamMember) => {
+    setSelectedUser(user);
+    setPermissionDialogOpen(true);
   };
 
   const renderUserPermissionTable = () => {
@@ -100,9 +108,9 @@ export function UserPermissionTab({ refreshTrigger }: UserPermissionTabProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                <Eye className="mr-2 h-4 w-4" />
-                View
+              <DropdownMenuItem onClick={() => handleUserPermission(member)}>
+                <Shield className="mr-2 h-4 w-4" />
+                User Permission
               </DropdownMenuItem>
               <DropdownMenuItem className="text-red-600">
                 <Trash2 className="mr-2 h-4 w-4" />
@@ -131,6 +139,12 @@ export function UserPermissionTab({ refreshTrigger }: UserPermissionTabProps) {
           {renderUserPermissionTable()}
         </TableBody>
       </Table>
+      
+      <UserPermissionDialog
+        open={permissionDialogOpen}
+        onOpenChange={setPermissionDialogOpen}
+        user={selectedUser}
+      />
     </div>
   );
 }
