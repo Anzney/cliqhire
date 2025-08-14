@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,7 +19,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
+import { getTeamMembers } from "@/services/teamMembersService";
+import { TeamMember } from "@/types/teamMember";
 
 interface AddTeamMembersDialogProps {
   open: boolean;
@@ -32,17 +35,62 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
     teamName: "",
     hiringManager: "",
     teamLead: "",
-    recruiters: "",
+    recruiters: [] as string[],
     teamStatus: "",
   });
 
   const [loading, setLoading] = useState(false);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [loadingTeamMembers, setLoadingTeamMembers] = useState(false);
 
-  const handleInputChange = (field: string, value: string) => {
+  // Fetch team members when dialog opens
+  useEffect(() => {
+    if (open) {
+      fetchTeamMembers();
+    }
+  }, [open]);
+
+  const fetchTeamMembers = async () => {
+    setLoadingTeamMembers(true);
+    try {
+      const response = await getTeamMembers();
+      setTeamMembers(response.teamMembers);
+    } catch (error) {
+      console.error("Error fetching team members:", error);
+    } finally {
+      setLoadingTeamMembers(false);
+    }
+  };
+
+  const handleInputChange = (field: string, value: string | string[]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleRecruiterToggle = (recruiterId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      recruiters: prev.recruiters.includes(recruiterId)
+        ? prev.recruiters.filter(id => id !== recruiterId)
+        : [...prev.recruiters, recruiterId]
+    }));
+  };
+
+  const removeRecruiter = (recruiterId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      recruiters: prev.recruiters.filter(id => id !== recruiterId)
+    }));
+  };
+
+  const getTeamMemberById = (id: string) => {
+    return teamMembers.find(member => member._id === id);
+  };
+
+  const getTeamMembersByRole = (role: string) => {
+    return teamMembers.filter(member => member.role === role && member.status === "Active");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,7 +98,7 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
     setLoading(true);
 
     try {
-      // TODO: Add API call to create team member
+      // TODO: Add API call to create team
       console.log("Form data:", formData);
       
       // Simulate API call
@@ -61,7 +109,7 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
         teamName: "",
         hiringManager: "",
         teamLead: "",
-        recruiters: "",
+        recruiters: [],
         teamStatus: "",
       });
 
@@ -71,7 +119,7 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
         onSuccess();
       }
     } catch (error) {
-      console.error("Error creating team member:", error);
+      console.error("Error creating team:", error);
     } finally {
       setLoading(false);
     }
@@ -82,7 +130,7 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
       teamName: "",
       hiringManager: "",
       teamLead: "",
-      recruiters: "",
+      recruiters: [],
       teamStatus: "",
     });
     onOpenChange(false);
@@ -112,35 +160,81 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
 
           <div className="space-y-2">
             <Label htmlFor="hiringManager">Hiring Manager</Label>
-            <Input
-              id="hiringManager"
+            <Select
               value={formData.hiringManager}
-              onChange={(e) => handleInputChange("hiringManager", e.target.value)}
-              placeholder="Enter hiring manager name"
+              onValueChange={(value) => handleInputChange("hiringManager", value)}
               required
-            />
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select hiring manager" />
+              </SelectTrigger>
+              <SelectContent>
+                {getTeamMembersByRole("Hiring Manager").map((member) => (
+                  <SelectItem key={member._id} value={member._id}>
+                    {member.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="teamLead">Team Lead</Label>
-            <Input
-              id="teamLead"
+            <Select
               value={formData.teamLead}
-              onChange={(e) => handleInputChange("teamLead", e.target.value)}
-              placeholder="Enter team lead name"
+              onValueChange={(value) => handleInputChange("teamLead", value)}
               required
-            />
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select team lead" />
+              </SelectTrigger>
+              <SelectContent>
+                {getTeamMembersByRole("Team Lead").map((member) => (
+                  <SelectItem key={member._id} value={member._id}>
+                    {member.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="recruiters">Recruiters</Label>
-            <Textarea
-              id="recruiters"
-              value={formData.recruiters}
-              onChange={(e) => handleInputChange("recruiters", e.target.value)}
-              placeholder="Enter recruiter names (separate with commas)"
-              required
-            />
+            <div className="space-y-2">
+              <Select
+                onValueChange={(value) => handleRecruiterToggle(value)}
+                value=""
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select recruiters" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getTeamMembersByRole("Recruiters").map((member) => (
+                    <SelectItem key={member._id} value={member._id}>
+                      {member.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {/* Selected Recruiters */}
+              {formData.recruiters.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.recruiters.map((recruiterId) => {
+                    const recruiter = getTeamMemberById(recruiterId);
+                    return recruiter ? (
+                      <Badge key={recruiterId} variant="secondary" className="flex items-center gap-1">
+                        {recruiter.name}
+                        <X
+                          className="h-3 w-3 cursor-pointer"
+                          onClick={() => removeRecruiter(recruiterId)}
+                        />
+                      </Badge>
+                    ) : null;
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">
