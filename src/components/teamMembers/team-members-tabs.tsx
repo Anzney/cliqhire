@@ -43,7 +43,7 @@ const headerArr = [
 ];
 
 export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembersTabsProps) {
-  const [activeTab, setActiveTab] = useState("hiring-manager");
+  const [activeTab, setActiveTab] = useState("all");
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [registerDialogOpen, setRegisterDialogOpen] = useState(false);
@@ -118,20 +118,41 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
 
   // Get counts for each role
   const getCountByRole = (role: string) => {
-    return teamMembers.filter(member => member.role === role).length;
+    return teamMembers.filter(member => 
+      member.teamRole === role || 
+      member.role === role
+    ).length;
   };
 
   // Filter team members based on active tab
   const getFilteredTeamMembers = () => {
     switch (activeTab) {
+      case "all":
+        return teamMembers;
       case "hiring-manager":
-        return teamMembers.filter(member => member.role === "Hiring Manager");
+        return teamMembers.filter(member => 
+          member.teamRole === "HIRING_MANAGER" || 
+          member.teamRole === "Hiring Manager" ||
+          member.role === "Hiring Manager"
+        );
       case "team-lead":
-        return teamMembers.filter(member => member.role === "Team Lead");
+        return teamMembers.filter(member => 
+          member.teamRole === "TEAM_LEAD" || 
+          member.teamRole === "Team Lead" ||
+          member.role === "Team Lead"
+        );
       case "recruiters":
-        return teamMembers.filter(member => member.role === "Recruiters");
+        return teamMembers.filter(member => 
+          member.teamRole === "RECRUITER" || 
+          member.teamRole === "Recruiters" ||
+          member.role === "Recruiters"
+        );
       case "head-enter":
-        return teamMembers.filter(member => member.role === "Head Enter");
+        return teamMembers.filter(member => 
+          member.teamRole === "HEAD_HUNTER" || 
+          member.teamRole === "Head Enter" ||
+          member.role === "Head Enter"
+        );
       default:
         return teamMembers;
     }
@@ -177,7 +198,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
         <TableCell className="text-sm">{teamMember.experience}</TableCell>
                  <TableCell className="text-sm">
            <Badge variant="outline" className="text-xs">
-             {teamMember.role || "Not Assigned"}
+             {teamMember.teamRole || "Not Assigned"}
            </Badge>
          </TableCell>
         <TableCell className="text-sm">
@@ -242,13 +263,23 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="flex border-b w-full rounded-none justify-start h-12 bg-transparent p-0">
           <TabsTrigger
+            value="all"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+          >
+            <Users className="h-4 w-4" />
+            All
+            <Badge variant="secondary" className="ml-1 text-xs">
+              {teamMembers.length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger
             value="hiring-manager"
             className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
           >
             <UserCheck className="h-4 w-4" />
             Hiring Manager
             <Badge variant="secondary" className="ml-1 text-xs">
-              {getCountByRole("Hiring Manager")}
+              {getCountByRole("HIRING_MANAGER")}
             </Badge>
           </TabsTrigger>
           <TabsTrigger
@@ -258,7 +289,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
             <UserCog className="h-4 w-4" />
             Team Lead
             <Badge variant="secondary" className="ml-1 text-xs">
-              {getCountByRole("Team Lead")}
+              {getCountByRole("TEAM_LEAD")}
             </Badge>
           </TabsTrigger>
           <TabsTrigger
@@ -268,7 +299,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
             <Users className="h-4 w-4" />
             Recruiters
             <Badge variant="secondary" className="ml-1 text-xs">
-              {getCountByRole("Recruiters")}
+              {getCountByRole("RECRUITER")}
             </Badge>
           </TabsTrigger>
           <TabsTrigger
@@ -278,10 +309,29 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
             <Crown className="h-4 w-4" />
             Head Henter
             <Badge variant="secondary" className="ml-1 text-xs">
-              {getCountByRole("Head Enter")}
+              {getCountByRole("HEAD_HUNTER")}
             </Badge>
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="all" className="p-0 mt-0">
+          <div className="flex-1">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {headerArr.map((header, index) => (
+                    <TableHead key={index} className="text-sm font-medium">
+                      {header}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {renderTeamMembersTable(filteredTeamMembers)}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
 
         <TabsContent value="hiring-manager" className="p-0 mt-0">
           <div className="flex-1">

@@ -61,10 +61,12 @@ export function UserPermissionDialog({
   ];
 
   const roles = [
-    "Hiring Manager",
-    "Team Lead", 
-    "Recruiters",
-    "Head Hunter"
+    "ADMIN",
+    "HIRING_MANAGER",
+    "TEAM_LEAD",
+    "RECRUITER",
+    "HEAD_HUNTER",
+    "SALES_TEAM"
   ];
 
   const handlePermissionToggle = (permissionId: string) => {

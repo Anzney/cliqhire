@@ -22,10 +22,12 @@ const departmentOptions = [
 ];
 
 const teamRoleOptions = [
-  "Hiring Manager",
-  "Team Lead",
-  "Recruiters",
-  "Head Enter"
+  "ADMIN",
+  "HIRING_MANAGER",
+  "TEAM_LEAD",
+  "RECRUITER",
+  "HEAD_HUNTER",
+  "SALES_TEAM"
 ];
 
 const statusOptions: { value: TeamMemberStatus; label: string }[] = [
