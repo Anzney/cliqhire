@@ -70,7 +70,7 @@ class AuthService {
         confirmPassword: userData.confirmPassword,
       };
       
-      console.log('Sending plain password data to API');
+      console.log('Sending registration request to API');
       
       // Make real API call
       const response = await axios.post(`${this.baseURL}/api/auth/register`, payload, {
@@ -79,7 +79,24 @@ class AuthService {
         },
       });
 
-      return response.data;
+      // Extract data from response
+      const { token, user } = response.data.data;
+      
+      // Store token in axios defaults for future requests
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // Store in localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('authToken', token);
+        localStorage.setItem('userData', JSON.stringify(user));
+      }
+
+      return {
+        success: true,
+        message: 'Registration successful',
+        user: user,
+        token: token
+      };
     } catch (error) {
       console.error('Error registering user:', error);
       
@@ -87,15 +104,18 @@ class AuthService {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError;
         const errorData = axiosError.response?.data as any;
-        throw new Error(
-          errorData?.message || 
-          axiosError.message || 
-          'Registration failed'
-        );
+        
+        return {
+          success: false,
+          message: errorData?.message || axiosError.message || 'Registration failed'
+        };
       }
       
       // Handle other errors
-      throw new Error(error instanceof Error ? error.message : 'Registration failed');
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Registration failed'
+      };
     }
   }
 
@@ -112,7 +132,7 @@ class AuthService {
         password: userData.password,
       };
       
-      console.log('Sending plain password data to API');
+      console.log('Sending login request to API');
       
       // Make real API call
       const response = await axios.post(`${this.baseURL}/api/auth/login`, payload, {
@@ -121,7 +141,24 @@ class AuthService {
         },
       });
 
-      return response.data;
+      // Extract data from response
+      const { token, user } = response.data.data;
+      
+      // Store token in axios defaults for future requests
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // Store in localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('authToken', token);
+        localStorage.setItem('userData', JSON.stringify(user));
+      }
+
+      return {
+        success: true,
+        message: 'Login successful',
+        user: user,
+        token: token
+      };
     } catch (error) {
       console.error('Error logging in user:', error);
       
@@ -129,15 +166,18 @@ class AuthService {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError;
         const errorData = axiosError.response?.data as any;
-        throw new Error(
-          errorData?.message || 
-          axiosError.message || 
-          'Login failed'
-        );
+        
+        return {
+          success: false,
+          message: errorData?.message || axiosError.message || 'Login failed'
+        };
       }
       
       // Handle other errors
-      throw new Error(error instanceof Error ? error.message : 'Login failed');
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Login failed'
+      };
     }
   }
 
@@ -146,31 +186,24 @@ class AuthService {
    */
   async logout(): Promise<{ success: boolean; message: string }> {
     try {
-      // Simulate API call with dummy data
       console.log('Logging out user');
       
-      // Simulate network delay
+      // Clear token from axios defaults
+      delete axios.defaults.headers.common['Authorization'];
+      
+      // Clear from localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
+      }
+      
+      // Simulate API call with dummy data
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Simulate successful logout
-      const mockResponse = {
+      return {
         success: true,
         message: 'User logged out successfully',
       };
-
-      // Simulate API call using axios (commented out for dummy implementation)
-      /*
-      const response = await axios.post(`${this.baseURL}/api/auth/logout`, {}, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, // Add token from localStorage or context
-        },
-      });
-
-      return response.data;
-      */
-
-      return mockResponse;
     } catch (error) {
       console.error('Error logging out user:', error);
       
@@ -187,6 +220,52 @@ class AuthService {
       
       // Handle other errors
       throw new Error(error instanceof Error ? error.message : 'Logout failed');
+    }
+  }
+
+  /**
+   * Get stored authentication token
+   */
+  getToken(): string | null {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('authToken');
+    }
+    return null;
+  }
+
+  /**
+   * Get stored user data
+   */
+  getUserData(): User | null {
+    if (typeof window !== 'undefined') {
+      const userData = localStorage.getItem('userData');
+      if (userData) {
+        try {
+          return JSON.parse(userData);
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+          return null;
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Check if user is authenticated
+   */
+  isAuthenticated(): boolean {
+    const token = this.getToken();
+    return token !== null;
+  }
+
+  /**
+   * Initialize authentication state (call this on app startup)
+   */
+  initializeAuth(): void {
+    const token = this.getToken();
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     }
   }
 
