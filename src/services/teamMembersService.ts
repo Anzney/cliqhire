@@ -7,14 +7,24 @@ import {
   UpdateTeamMemberData 
 } from '@/types/teamMember';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://aems-backend.onrender.com/api";
+console.log('Team Members Service - API_URL:', API_URL);
 
 // Get all team members with optional filters
 export const getTeamMembers = async (filters?: TeamMemberFilters): Promise<{ teamMembers: TeamMember[] }> => {
   try {
-    const response = await axios.get(`${API_URL}/api/users`, {
-      params: filters
-    });
+    console.log('Making API call to:', `${API_URL}/api/users`);
+    
+    // Get token from localStorage if available
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    
+    const config = {
+      params: filters,
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    };
+    
+    const response = await axios.get(`${API_URL}/api/users`, config);
+    console.log('API response for team members list:', response.data);
 
     if (response.data && response.data.status === 'success') {
       return {
@@ -31,14 +41,35 @@ export const getTeamMembers = async (filters?: TeamMemberFilters): Promise<{ tea
 // Get a single team member by ID
 export const getTeamMemberById = async (id: string): Promise<TeamMember> => {
   try {
-    const response = await axios.get(`${API_URL}/api/users/${id}`);
+    console.log('Making API call to:', `${API_URL}/api/users/${id}`);
+    
+    // Get token from localStorage if available
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    
+    const config = {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    };
+    
+    const response = await axios.get(`${API_URL}/api/users/${id}`, config);
+    console.log('API response:', response.data);
     
     if (response.data && response.data.status === 'success') {
-      return response.data.data.user || response.data.data;
+      const teamMember = response.data.data.user || response.data.data || response.data;
+      console.log('Extracted team member:', teamMember);
+      return teamMember;
     }
+    
+    // If the response doesn't have a status field, try to extract data directly
+    if (response.data) {
+      const teamMember = response.data.user || response.data;
+      console.log('Extracted team member (no status):', teamMember);
+      return teamMember;
+    }
+    
     throw new Error(response.data?.message || 'Failed to fetch team member');
   } catch (error: any) {
     console.error('Error fetching team member:', error);
+    console.error('Error response:', error.response?.data);
     throw new Error(error.response?.data?.message || 'Failed to fetch team member');
   }
 };

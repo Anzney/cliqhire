@@ -5,7 +5,7 @@ import Dashboardheader from "@/components/dashboard-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Mail, Phone, MapPin, Briefcase } from "lucide-react";
+import { ArrowLeft, Download, Mail, Phone, MapPin, Briefcase, RefreshCw } from "lucide-react";
 import { getTeamMemberById } from "@/services/teamMembersService";
 import { TeamMember } from "@/types/teamMember";
 
@@ -13,35 +13,50 @@ export default function TeamMemberDetailPage() {
   const params = useParams();
   const teamMemberId = params?.id as string;
   const [teamMember, setTeamMember] = useState<TeamMember | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchTeamMember = async () => {
+    if (!teamMemberId) {
+      setError("No team member ID provided");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      console.log("Fetching team member with ID:", teamMemberId);
+      const teamMemberData = await getTeamMemberById(teamMemberId);
+      console.log("Team member data received:", teamMemberData);
+      setTeamMember(teamMemberData);
+    } catch (error: any) {
+      console.error("Error fetching team member:", error);
+      const errorMessage = error.message || "Failed to load team member details";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchTeamMember = async () => {
-      try {
-        const teamMemberData = await getTeamMemberById(teamMemberId);
-        setTeamMember(teamMemberData);
-      } catch (error) {
-        console.error("Error fetching team member:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (teamMemberId) {
-      fetchTeamMember();
-    }
+    fetchTeamMember();
   }, [teamMemberId]);
 
   const handleBack = () => {
     window.history.back();
   };
 
-  const handleDownloadResume = (resumeUrl: string) => {
+  const handleDownloadResume = (resumeUrl: string | undefined) => {
     if (resumeUrl) {
       window.open(resumeUrl, "_blank");
     } else {
       alert("No resume available for download");
     }
+  };
+
+  const handleRetry = () => {
+    fetchTeamMember();
   };
 
   if (loading) {
@@ -61,6 +76,29 @@ export default function TeamMemberDetailPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex flex-col h-full">
+        <Dashboardheader
+          setOpen={() => {}}
+          setFilterOpen={() => {}}
+          initialLoading={false}
+          heading="Team Member Details"
+          buttonText=""
+        />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-red-600 mb-4">{error}</div>
+            <Button onClick={handleRetry} className="flex items-center gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!teamMember) {
     return (
       <div className="flex flex-col h-full">
@@ -72,7 +110,13 @@ export default function TeamMemberDetailPage() {
           buttonText=""
         />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">Team member not found</div>
+          <div className="text-center">
+            <div className="mb-4">Team member not found</div>
+            <Button onClick={handleRetry} className="flex items-center gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Retry
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -144,6 +188,18 @@ export default function TeamMemberDetailPage() {
                     </Badge>
                   </div>
                 </div>
+                {teamMember.teamRole && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Team Role</label>
+                    <p className="text-lg">{teamMember.teamRole}</p>
+                  </div>
+                )}
+                {teamMember.department && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Department</label>
+                    <p className="text-lg">{teamMember.department}</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -155,11 +211,15 @@ export default function TeamMemberDetailPage() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {teamMember.skills.map((skill, index) => (
-                  <Badge key={index} variant="outline">
-                    {skill}
-                  </Badge>
-                ))}
+                {teamMember.skills && teamMember.skills.length > 0 ? (
+                  teamMember.skills.map((skill, index) => (
+                    <Badge key={index} variant="outline">
+                      {skill}
+                    </Badge>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground">No skills listed</p>
+                )}
               </div>
             </CardContent>
           </Card>

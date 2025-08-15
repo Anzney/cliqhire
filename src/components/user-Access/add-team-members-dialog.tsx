@@ -54,6 +54,22 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
     setLoadingTeamMembers(true);
     try {
       const response = await getTeamMembers();
+      console.log('API Response:', response);
+      console.log('Team members from API:', response.teamMembers);
+      
+      // Log each team member's structure
+      response.teamMembers.forEach((member, index) => {
+        console.log(`Team member ${index + 1}:`, {
+          id: member._id,
+          name: member.name,
+          role: member.role,
+          teamRole: member.teamRole,
+          department: member.department,
+          status: member.status,
+          isActive: member.isActive
+        });
+      });
+      
       setTeamMembers(response.teamMembers);
     } catch (error) {
       console.error("Error fetching team members:", error);
@@ -90,7 +106,42 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
   };
 
   const getTeamMembersByRole = (role: string) => {
-    return teamMembers.filter(member => member.role === role && member.status === "Active");
+    // Debug: Log all team members and their roles
+    console.log('All team members:', teamMembers);
+    console.log('Looking for role:', role);
+    
+    // More flexible role matching
+    const roleMappings: { [key: string]: string[] } = {
+      "Hiring Manager": ["Hiring Manager", "Recruitment Manager", "Manager", "Hiring", "Recruitment"],
+      "Team Lead": ["Team Lead", "Lead", "Team Leader", "Senior Recruiter"],
+      "Recruiters": ["Recruiter", "Recruiters", "Recruitment Specialist", "Talent Acquisition"]
+    };
+    
+    const validRoles = roleMappings[role] || [role];
+    
+    const filteredMembers = teamMembers.filter(member => {
+      const memberRole = member.role || member.teamRole || member.department || '';
+      const isActive = member.status === "Active" || member.isActive === "Active";
+      const matchesRole = validRoles.some(validRole => 
+        memberRole.toLowerCase().includes(validRole.toLowerCase())
+      );
+      
+      console.log(`Member: ${member.name}, Role: ${memberRole}, Status: ${member.status}, Matches: ${matchesRole}`);
+      
+      return matchesRole && isActive;
+    });
+    
+    console.log(`Found ${filteredMembers.length} members for role "${role}"`);
+    
+    // If no members found with specific role, return all active members as fallback
+    if (filteredMembers.length === 0) {
+      console.log('No members found with specific role, showing all active members as fallback');
+      return teamMembers.filter(member => 
+        member.status === "Active" || member.isActive === "Active"
+      );
+    }
+    
+    return filteredMembers;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -164,16 +215,23 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
               value={formData.hiringManager}
               onValueChange={(value) => handleInputChange("hiringManager", value)}
               required
+              disabled={loadingTeamMembers}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select hiring manager" />
+                <SelectValue placeholder={loadingTeamMembers ? "Loading..." : "Select hiring manager"} />
               </SelectTrigger>
               <SelectContent>
-                {getTeamMembersByRole("Hiring Manager").map((member) => (
-                  <SelectItem key={member._id} value={member._id}>
-                    {member.name}
-                  </SelectItem>
-                ))}
+                {loadingTeamMembers ? (
+                  <SelectItem value="loading" disabled>Loading team members...</SelectItem>
+                ) : getTeamMembersByRole("Hiring Manager").length === 0 ? (
+                  <SelectItem value="no-results" disabled>No hiring managers found</SelectItem>
+                ) : (
+                  getTeamMembersByRole("Hiring Manager").map((member) => (
+                    <SelectItem key={member._id} value={member._id}>
+                      {member.name}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -184,16 +242,23 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
               value={formData.teamLead}
               onValueChange={(value) => handleInputChange("teamLead", value)}
               required
+              disabled={loadingTeamMembers}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select team lead" />
+                <SelectValue placeholder={loadingTeamMembers ? "Loading..." : "Select team lead"} />
               </SelectTrigger>
               <SelectContent>
-                {getTeamMembersByRole("Team Lead").map((member) => (
-                  <SelectItem key={member._id} value={member._id}>
-                    {member.name}
-                  </SelectItem>
-                ))}
+                {loadingTeamMembers ? (
+                  <SelectItem value="loading" disabled>Loading team members...</SelectItem>
+                ) : getTeamMembersByRole("Team Lead").length === 0 ? (
+                  <SelectItem value="no-results" disabled>No team leads found</SelectItem>
+                ) : (
+                  getTeamMembersByRole("Team Lead").map((member) => (
+                    <SelectItem key={member._id} value={member._id}>
+                      {member.name}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -204,16 +269,23 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
               <Select
                 onValueChange={(value) => handleRecruiterToggle(value)}
                 value=""
+                disabled={loadingTeamMembers}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select recruiters" />
+                  <SelectValue placeholder={loadingTeamMembers ? "Loading..." : "Select recruiters"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {getTeamMembersByRole("Recruiters").map((member) => (
-                    <SelectItem key={member._id} value={member._id}>
-                      {member.name}
-                    </SelectItem>
-                  ))}
+                  {loadingTeamMembers ? (
+                    <SelectItem value="loading" disabled>Loading team members...</SelectItem>
+                  ) : getTeamMembersByRole("Recruiters").length === 0 ? (
+                    <SelectItem value="no-results" disabled>No recruiters found</SelectItem>
+                  ) : (
+                    getTeamMembersByRole("Recruiters").map((member) => (
+                      <SelectItem key={member._id} value={member._id}>
+                        {member.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
               

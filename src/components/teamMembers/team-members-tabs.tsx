@@ -108,7 +108,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
     }
   };
 
-  const handleDownloadResume = (resumeUrl: string, teamMemberName: string) => {
+  const handleDownloadResume = (resumeUrl: string | undefined, teamMemberName: string) => {
     if (resumeUrl) {
       window.open(resumeUrl, "_blank");
     } else {
