@@ -7,12 +7,13 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { UserProfileDialog } from "@/components/user-profile/user-profile-dialog";
-import { authService } from "@/services/authService";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const { user } = useAuth();
 
   // Check if we're on an ID page (contains /[id] pattern)
   const isOnIdPage = pathname ? /\/[^\/]+\/[^\/]+$/.test(pathname) : false;
@@ -45,11 +46,10 @@ export function Header() {
   };
 
   const getUserInitials = () => {
-    const user = authService.getUserData();
     if (user?.name) {
       return user.name
         .split(' ')
-        .map(word => word.charAt(0))
+        .map((word: string) => word.charAt(0))
         .join('')
         .toUpperCase()
         .slice(0, 2);

@@ -17,8 +17,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import * as z from "zod";
-import { authService, LoginUserData } from "@/services/authService";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 const loginSchema = z.object({
   email: z.string().email({
@@ -34,6 +35,8 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login } = useAuth();
+  const router = useRouter();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -46,31 +49,32 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   const onSubmit = async (values: LoginFormValues) => {
     try {
       setIsSubmitting(true);
+      console.log('LoginForm: Starting login submission');
       
-      // Prepare data for the service
-      const userData: LoginUserData = {
-        email: values.email,
-        password: values.password,
-      };
-
-
-      // Call the auth service
-      const response = await authService.login(userData);
+      const success = await login(values.email, values.password);
+      console.log('LoginForm: Login result:', success);
       
-      if (response.success) {
-        toast.success(response.message || "Login successful!");
+      if (success) {
+        console.log('LoginForm: Login successful, showing success message');
+        toast.success("Login successful!");
         
         // Reset form after successful login
         form.reset();
         
-        // You can redirect to dashboard here
-        // Example: router.push('/dashboard')
-        console.log("Login successful:", response.user);
+        // Add a small delay to ensure state is updated
+        setTimeout(() => {
+          console.log('LoginForm: Redirecting after successful login');
+          // Redirect to the stored path or dashboard
+          const redirectPath = sessionStorage.getItem('redirectAfterLogin') || '/dashboard';
+          sessionStorage.removeItem('redirectAfterLogin');
+          router.push(redirectPath);
+        }, 100);
       } else {
-        toast.error(response.message || "Login failed");
+        console.log('LoginForm: Login failed, showing error message');
+        toast.error("Invalid email or password");
       }
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("LoginForm: Login error:", error);
       toast.error(error instanceof Error ? error.message : "Login failed");
     } finally {
       setIsSubmitting(false);

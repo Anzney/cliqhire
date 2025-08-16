@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { LogOut, User as UserIcon, Mail, Calendar } from "lucide-react";
 import { authService, User } from "@/services/authService";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UserProfileDialogProps {
   open: boolean;
@@ -21,22 +22,19 @@ interface UserProfileDialogProps {
 }
 
 export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps) {
-  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
-    if (open) {
-      // Get user data from localStorage
-      const userData = authService.getUserData();
-      setUser(userData);
-    }
+    // User data is now managed by the auth context
+    // No need to manually set user data here
   }, [open]);
 
   const handleLogout = async () => {
     setLoading(true);
     try {
-      await authService.logout();
+      await logout();
       onOpenChange(false);
       // Redirect to login page
       router.push('/login');
