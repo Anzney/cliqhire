@@ -42,6 +42,66 @@ const headerArr = [
   "Actions",
 ];
 
+// Team role color mapping
+const getTeamRoleBadgeVariant = (role: string): "default" | "secondary" | "destructive" | "outline" => {
+  const normalizedRole = role?.toLowerCase() || "";
+  
+  switch (normalizedRole) {
+    case "admin":
+    case "administrator":
+      return "destructive"; // Red
+    case "hiring manager":
+    case "hiring_manager":
+    case "hir":
+      return "default"; // Blue
+    case "team lead":
+    case "team_lead":
+    case "lead":
+      return "secondary"; // Gray
+    case "recruiter":
+    case "recruiters":
+    case "rec":
+      return "outline"; // Border only
+    case "head hunter":
+    case "head_hunter":
+    case "head enter":
+    case "headenter":
+      return "destructive"; // Red
+    default:
+      return "outline"; // Default for unknown roles
+  }
+};
+
+// Team role color classes for custom styling
+const getTeamRoleColorClass = (role: string): string => {
+  const normalizedRole = role?.toLowerCase() || "";
+  
+  switch (normalizedRole) {
+    case "admin":
+    case "administrator":
+      return "bg-red-100 text-red-800 border-red-200";
+    case "hiring manager":
+    case "hiring_manager":
+    case "hir":
+      return "bg-blue-100 text-blue-800 border-blue-200";
+    case "team lead":
+    case "team_lead":
+    case "lead":
+      return "bg-gray-100 text-gray-800 border-gray-200";
+    case "recruiter":
+    case "recruiters":
+    case "rec":
+      return "bg-green-100 text-green-800 border-green-200";
+    case "head hunter":
+    case "head_hunter":
+    case "head enter":
+    case "headenter":
+      return "bg-purple-100 text-purple-800 border-purple-200";
+    default:
+      return "bg-gray-100 text-gray-600 border-gray-200";
+  }
+};
+
 export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembersTabsProps) {
   const [activeTab, setActiveTab] = useState("all");
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -151,7 +211,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
         return teamMembers.filter(member => 
           member.teamRole === "HEAD_HUNTER" || 
           member.teamRole === "Head Enter" ||
-          member.role === "Head Enter"
+          member.role === "HEAD_HUNTER"
         );
       default:
         return teamMembers;
@@ -197,9 +257,15 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
         <TableCell className="text-sm">{teamMember.location}</TableCell>
         <TableCell className="text-sm">{teamMember.experience}</TableCell>
                  <TableCell className="text-sm">
-           <Badge variant="outline" className="text-xs">
+           <span 
+             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getTeamRoleColorClass(teamMember.teamRole || "")}`}
+             style={{ 
+               transition: 'none',
+               pointerEvents: 'none'
+             }}
+           >
              {teamMember.teamRole || "Not Assigned"}
-           </Badge>
+           </span>
          </TableCell>
         <TableCell className="text-sm">
           <Button
