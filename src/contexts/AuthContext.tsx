@@ -11,6 +11,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
+  refreshAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,41 +25,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkAuth = async () => {
     try {
       setIsLoading(true);
+      console.log('AuthContext: Starting authentication check');
+      
+      // Initialize auth service (sets up axios headers)
+      authService.initializeAuth();
+      
       const token = authService.getToken();
+      console.log('AuthContext: Token found:', !!token);
       
       if (token) {
-        // First check if we have user data in localStorage
+        // Get user data from localStorage
         const userData = authService.getUserData();
+        console.log('AuthContext: User data from localStorage:', !!userData);
+        
         if (userData) {
           // We have user data, validate token
-          const isValid = await authService.validateToken(token);
-          if (isValid) {
-            setUser(userData);
-            setIsAuthenticated(true);
-            return; // Exit early if we have valid data
+          try {
+            const isValid = await authService.validateToken(token);
+            console.log('AuthContext: Token validation result:', isValid);
+            
+            if (isValid) {
+              setUser(userData);
+              setIsAuthenticated(true);
+              console.log('AuthContext: Authentication successful with stored data');
+            } else {
+              setUser(null);
+              setIsAuthenticated(false);
+              console.log('AuthContext: Token validation failed');
+            }
+          } catch (error) {
+            console.error('AuthContext: Token validation failed:', error);
+            setUser(null);
+            setIsAuthenticated(false);
           }
-        }
-        
-        // If we don't have user data or token is invalid, try to fetch current user
-        try {
-          const currentUser = await authService.getCurrentUser();
-          setUser(currentUser);
-          setIsAuthenticated(true);
-        } catch (error) {
-          console.error('Error fetching current user:', error);
+        } else {
+          console.log('AuthContext: No user data found');
           setUser(null);
           setIsAuthenticated(false);
         }
       } else {
+        console.log('AuthContext: No token found');
         setUser(null);
         setIsAuthenticated(false);
       }
     } catch (error) {
-      console.error('Error checking authentication:', error);
+      console.error('AuthContext: Error checking authentication:', error);
       setUser(null);
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
+      console.log('AuthContext: Authentication check completed');
     }
   };
 
@@ -94,9 +110,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshAuth = async () => {
+    try {
+      setIsLoading(true);
+      const isRefreshed = await authService.refreshAuth();
+      
+      if (isRefreshed) {
+        const userData = authService.getUserData();
+        if (userData) {
+          setUser(userData);
+          setIsAuthenticated(true);
+        }
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    } catch (error) {
+      console.error('Error refreshing authentication:', error);
+      setUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     checkAuth();
   }, []);
+
+  // Note: Removed window focus event listener since /auth/me endpoint is not available
+  // This was causing authentication to fail on page refresh
 
   const value: AuthContextType = {
     user,
@@ -105,6 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     logout,
     checkAuth,
+    refreshAuth,
   };
 
   return (
