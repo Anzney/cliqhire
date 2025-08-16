@@ -15,7 +15,8 @@ import {
   BarChart,
   Search,
   DollarSign,
-  Route
+  Route,
+  LockKeyhole
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,9 +24,11 @@ const menuItems = [
   { name: "Home", icon: Home, href: "/" },
   { name: "Clients", icon: Building2, href: "/clients" },
   { name: "Jobs", icon: Briefcase, href: "/jobs" },
-  { name: "Recruiters", icon: Users, href: "/recruiter" },
   { name: "Candidates", icon: Users, href: "/candidates" }, // Line after "Candidates"
+  { name: "Team Members", icon: Users, href: "/teammembers" },
   { name: "Recruitment Pipeline", icon: Route, href: "/reactruterpipeline" },
+  { name: "User Access", icon:   LockKeyhole, href: "/user-access" },
+
   // { name: "Placements", icon: UserCheck, href: "/placements" },
   // { name: "Activities", icon: Calendar, href: "/activities" },
 

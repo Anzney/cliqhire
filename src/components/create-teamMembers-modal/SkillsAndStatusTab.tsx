@@ -1,0 +1,139 @@
+"use client";
+import React, { useState, useRef } from 'react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Upload, X } from 'lucide-react';
+import { CreateTeamMemberData } from '@/types/teamMember';
+
+interface SkillsAndStatusTabProps {
+  formData: CreateTeamMemberData;
+  setFormData: React.Dispatch<React.SetStateAction<CreateTeamMemberData>>;
+  errors: Record<string, string>;
+}
+
+export function SkillsAndStatusTab({ formData, setFormData, errors }: SkillsAndStatusTabProps) {
+  const [skillsInput, setSkillsInput] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleInputChange = (field: keyof CreateTeamMemberData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSkillsChange = (value: string) => {
+    setSkillsInput(value);
+    
+    // Convert comma-separated or newline-separated string to array of strings
+    const skillsArray = value
+      .split(/[,\n]/)
+      .map(skill => skill.trim())
+      .filter(skill => skill.length > 0);
+    
+    setFormData(prev => ({ ...prev, skills: skillsArray }));
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        alert('File size must be less than 5MB');
+        return;
+      }
+      if (!file.type.includes('pdf') && !file.type.includes('doc') && !file.type.includes('docx')) {
+        alert('Please upload a PDF, DOC, or DOCX file');
+        return;
+      }
+      // For now, we'll just store the file name as a string
+      // In a real implementation, you'd handle file upload
+      setFormData(prev => ({ ...prev, resume: file.name }));
+    }
+  };
+
+  const handleFileClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleRemoveFile = () => {
+    setFormData(prev => ({ ...prev, resume: undefined }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Initialize skillsInput when component mounts or formData changes
+  React.useEffect(() => {
+    if (formData.skills.length > 0 && skillsInput === '') {
+      setSkillsInput(formData.skills.join(', '));
+    }
+  }, [formData.skills]);
+
+  return (
+    <div className="space-y-6">
+      {/* Specialization */}
+      <div className="ml-2 mr-2">
+        <Label htmlFor="specialization">Specialization</Label>
+        <Input
+          id="specialization"
+          value={formData.specialization}
+          onChange={(e) => handleInputChange('specialization', e.target.value)}
+          placeholder="e.g., Technical Recruiting"
+        />
+      </div>
+
+      {/* Skills as textarea */}
+      <div className='ml-2 mr-2'>
+        <Label htmlFor="skills">Skills</Label>
+        <Textarea
+          id="skills"
+          value={skillsInput}
+          onChange={(e) => handleSkillsChange(e.target.value)}
+          placeholder="Enter skills separated by commas or press Enter for new lines (e.g., Technical Recruiting, ATS Management, LinkedIn Recruiter)"
+          className="min-h-[120px]"
+        />
+      </div>
+
+      {/* Resume Upload */}
+      <div className="space-y-2 ml-2 mr-2 ">
+        <Label htmlFor="resume">Upload Resume</Label>
+        <div 
+          className="relative border-2 border-dashed border-gray-300 rounded-md p-6 text-center cursor-pointer hover:border-gray-400 transition-colors"
+          onClick={handleFileClick}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            id="resume"
+            accept=".pdf,.doc,.docx"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+          <div className="text-sm text-gray-600">
+            {formData.resume ? (
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-green-600 font-medium">{formData.resume}</span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveFile();
+                  }}
+                  className="p-1 rounded hover:bg-red-100 text-red-600"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <>
+                <span className="font-medium text-gray-900">Click to upload</span>
+                <br />
+                <span className="text-gray-500">PDF, DOC, DOCX (max 5MB)</span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+} 
