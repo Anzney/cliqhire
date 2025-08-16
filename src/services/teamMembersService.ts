@@ -16,7 +16,7 @@ export const getTeamMembers = async (filters?: TeamMemberFilters): Promise<{ tea
     console.log('Making API call to:', `${API_URL}/api/users`);
     
     // Get token from localStorage if available
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
     
     const config = {
       params: filters,
@@ -44,7 +44,7 @@ export const getTeamMemberById = async (id: string): Promise<TeamMember> => {
     console.log('Making API call to:', `${API_URL}/api/users/${id}`);
     
     // Get token from localStorage if available
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
     
     const config = {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
@@ -108,13 +108,36 @@ export const updateTeamMember = async (teamMemberData: UpdateTeamMemberData): Pr
 // Delete a team member
 export const deleteTeamMember = async (id: string): Promise<void> => {
   try {
-    const response = await axios.delete(`${API_URL}/api/users/${id}`);
+    console.log('Making DELETE API call to:', `${API_URL}/api/users/${id}`);
+    
+    // Get token from localStorage if available
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+    
+    if (!token) {
+      throw new Error('Authentication token not found. Please log in again.');
+    }
+    
+    const config = {
+      headers: { Authorization: `Bearer ${token}` }
+    };
+    
+    const response = await axios.delete(`${API_URL}/api/users/${id}`, config);
+    console.log('Delete API response:', response.data);
     
     if (!response.data || response.data.status !== 'success') {
       throw new Error(response.data?.message || 'Failed to delete team member');
     }
   } catch (error: any) {
     console.error('Error deleting team member:', error);
+    
+    if (error.response?.status === 403) {
+      throw new Error('Access denied. Admin privileges required.');
+    }
+    
+    if (error.response?.status === 404) {
+      throw new Error('Team member not found');
+    }
+    
     throw new Error(error.response?.data?.message || 'Failed to delete team member');
   }
 };
@@ -172,5 +195,71 @@ export const getTeamMemberStats = async (id: string): Promise<{
   } catch (error: any) {
     console.error('Error fetching team member stats:', error);
     throw new Error(error.response?.data?.message || 'Failed to fetch team member stats');
+  }
+}; 
+
+// Register team member with authentication credentials (Admin only)
+export const registerTeamMember = async (registrationData: {
+  teamMemberId: string;
+  teamMemberName: string;
+  email: string;
+  password: string;
+}): Promise<{
+  success: boolean;
+  message: string;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    teamMemberId: string;
+    isActive: boolean;
+    createdAt: string;
+  };
+}> => {
+  try {
+    // Get token from localStorage
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+    
+    if (!token) {
+      throw new Error('Authentication token not found. Please log in again.');
+    }
+
+    const response = await axios.post(`${API_URL}/api/auth/register-member`, registrationData, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (response.data && response.data.success) {
+      return {
+        success: true,
+        message: response.data.message || 'Team member registered successfully',
+        user: response.data.data?.user
+      };
+    }
+
+    throw new Error(response.data?.message || 'Failed to register team member');
+  } catch (error: any) {
+    console.error('Error registering team member:', error);
+    
+    if (error.response?.status === 403) {
+      throw new Error('Access denied. Admin privileges required.');
+    }
+    
+    if (error.response?.status === 404) {
+      throw new Error('Team member not found');
+    }
+    
+    if (error.response?.status === 409) {
+      throw new Error('User with this email already exists');
+    }
+    
+    if (error.response?.status === 400) {
+      throw new Error(error.response.data?.message || 'Invalid request data');
+    }
+
+    throw new Error(error.response?.data?.message || error.message || 'Failed to register team member');
   }
 }; 
