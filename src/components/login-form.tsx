@@ -102,7 +102,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder="jhon@example.com"
+                        placeholder="Enter your email"
                         className="w-80"
                         {...field}
                       />
@@ -131,6 +131,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                           type={showPassword ? "text" : "password"} 
                           className="w-80" 
                           {...field} 
+                          placeholder="Enter your password"
                         />
                         <Button
                           type="button"

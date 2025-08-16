@@ -307,7 +307,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
             className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
           >
             <Crown className="h-4 w-4" />
-            Head Henter
+            Head Hunter
             <Badge variant="secondary" className="ml-1 text-xs">
               {getCountByRole("HEAD_HUNTER")}
             </Badge>

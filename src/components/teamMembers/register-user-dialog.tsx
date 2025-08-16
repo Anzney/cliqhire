@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UserCheck, Eye, EyeOff } from "lucide-react";
 import { registerTeamMember } from "@/services/teamMembersService";
+import { toast } from "sonner";
 
 interface RegisterUserDialogProps {
   isOpen: boolean;
@@ -97,23 +98,17 @@ export function RegisterUserDialog({
       const result = await registerTeamMember(registrationData);
 
       if (result.success) {
-        // Reset form
-        setEmail(teamMemberEmail);
-        setPassword("");
-        setConfirmPassword("");
-        setErrors({});
+        // Show success toast message
+        toast.success("User registered successfully!");
         
-        // Close dialog
-        onClose();
-        
-        // Show success message (you can replace this with a toast notification)
-        alert("User registered successfully!");
+        // Close dialog with success handler
+        handleSuccessClose();
       } else {
         throw new Error(result.message || 'Registration failed');
       }
     } catch (error) {
       console.error("Error registering user:", error);
-      alert(error instanceof Error ? error.message : "Failed to register user. Please try again.");
+      toast.error(error instanceof Error ? error.message : "Failed to register user. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -129,6 +124,17 @@ export function RegisterUserDialog({
       setErrors({});
       onClose();
     }
+  };
+
+  const handleSuccessClose = () => {
+    setEmail(teamMemberEmail);
+    setPassword("");
+    setConfirmPassword("");
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    setErrors({});
+    setLoading(false);
+    onClose();
   };
 
   return (
