@@ -99,7 +99,7 @@ export function UserPermissionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
@@ -110,8 +110,8 @@ export function UserPermissionDialog({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-6 mt-6">
-          {/* User Information */}
+        {/* User Information - Fixed */}
+        <div className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-muted-foreground" />
@@ -139,41 +139,44 @@ export function UserPermissionDialog({
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Permissions Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              <Label className="text-sm font-medium">Permissions</Label>
-            </div>
-            
-            <div className="space-y-3">
-              {permissions.map((permission) => (
-                <div key={permission.id} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-muted/50">
-                  <Checkbox
-                    id={permission.id}
-                    checked={selectedPermissions.includes(permission.id)}
-                    onCheckedChange={() => handlePermissionToggle(permission.id)}
-                    className="mt-1"
-                  />
-                  <div className="flex-1">
-                    <Label 
-                      htmlFor={permission.id} 
-                      className="text-sm font-medium cursor-pointer"
-                    >
-                      {permission.name}
-                    </Label>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {permission.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+        {/* Permissions Section - Fixed Header */}
+        <div className="mt-6">
+          <div className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            <Label className="text-sm font-medium">Permissions</Label>
           </div>
         </div>
 
-        <DialogFooter className="mt-6">
+        {/* Permissions List - Scrollable */}
+        <div className="flex-1 overflow-y-auto mt-3">
+          <div className="space-y-3">
+            {permissions.map((permission) => (
+              <div key={permission.id} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-muted/50">
+                <Checkbox
+                  id={permission.id}
+                  checked={selectedPermissions.includes(permission.id)}
+                  onCheckedChange={() => handlePermissionToggle(permission.id)}
+                  className="mt-1"
+                />
+                <div className="flex-1">
+                  <Label 
+                    htmlFor={permission.id} 
+                    className="text-sm font-medium cursor-pointer"
+                  >
+                    {permission.name}
+                  </Label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {permission.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <DialogFooter className="mt-6 flex-shrink-0">
           <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
