@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UserCheck, Eye, EyeOff } from "lucide-react";
+import { registerTeamMember } from "@/services/teamMembersService";
 
 interface RegisterUserDialogProps {
   isOpen: boolean;
@@ -82,31 +83,37 @@ export function RegisterUserDialog({
 
     setLoading(true);
     try {
-      // TODO: Implement the actual registration API call here
-      console.log("Registering user:", {
+      // Prepare the registration data
+      const registrationData = {
         teamMemberId,
         teamMemberName,
         email,
         password,
-      });
+      };
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log("Registering user:", registrationData);
 
-             // Reset form
-       setEmail(teamMemberEmail);
-       setPassword("");
-       setConfirmPassword("");
-       setErrors({});
-      
-      // Close dialog
-      onClose();
-      
-      // Show success message (you can replace this with a toast notification)
-      alert("User registered successfully!");
+      // Use the service function to register the team member
+      const result = await registerTeamMember(registrationData);
+
+      if (result.success) {
+        // Reset form
+        setEmail(teamMemberEmail);
+        setPassword("");
+        setConfirmPassword("");
+        setErrors({});
+        
+        // Close dialog
+        onClose();
+        
+        // Show success message (you can replace this with a toast notification)
+        alert("User registered successfully!");
+      } else {
+        throw new Error(result.message || 'Registration failed');
+      }
     } catch (error) {
       console.error("Error registering user:", error);
-      alert("Failed to register user. Please try again.");
+      alert(error instanceof Error ? error.message : "Failed to register user. Please try again.");
     } finally {
       setLoading(false);
     }
