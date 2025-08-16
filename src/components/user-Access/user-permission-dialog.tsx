@@ -35,7 +35,7 @@ export function UserPermissionDialog({
   user 
 }: UserPermissionDialogProps) {
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
-  const [selectedRole, setSelectedRole] = useState<string>(user?.role || "");
+  const [selectedRole, setSelectedRole] = useState<string>(user?.teamRole || "");
 
   const permissions: Permission[] = [
     {
@@ -86,13 +86,13 @@ export function UserPermissionDialog({
 
   const handleCancel = () => {
     setSelectedPermissions([]);
-    setSelectedRole(user?.role || "");
+    setSelectedRole(user?.teamRole || "");
     onOpenChange(false);
   };
 
   // Update selectedRole when user changes
   React.useEffect(() => {
-    setSelectedRole(user?.role || "");
+    setSelectedRole(user?.teamRole || "");
   }, [user]);
 
   if (!user) return null;
