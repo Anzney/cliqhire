@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { authService, User } from '@/services/authService';
 import { useRouter } from 'next/navigation';
+import { Loader } from 'lucide-react';
 
 interface AuthContextType {
   user: User | null;
@@ -19,12 +20,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // Start with true to show loading state
   const router = useRouter();
 
   const checkAuth = async () => {
     try {
-      setIsLoading(true);
+      setIsLoading(true); // Set loading to true when starting auth check
       console.log('AuthContext: Starting authentication check');
       
       // Initialize auth service (sets up axios headers)
@@ -39,19 +40,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('AuthContext: User data from localStorage:', !!userData);
         
         if (userData) {
-          // We have user data, validate token
+          // Set user immediately for faster UI response
+          setUser(userData);
+          setIsAuthenticated(true);
+          console.log('AuthContext: Authentication successful with stored data');
+          
+          // Validate token in background (non-blocking)
           try {
             const isValid = await authService.validateToken(token);
             console.log('AuthContext: Token validation result:', isValid);
             
-            if (isValid) {
-              setUser(userData);
-              setIsAuthenticated(true);
-              console.log('AuthContext: Authentication successful with stored data');
-            } else {
+            if (!isValid) {
               setUser(null);
               setIsAuthenticated(false);
-              console.log('AuthContext: Token validation failed');
+              console.log('AuthContext: Token validation failed, logged out');
             }
           } catch (error) {
             console.error('AuthContext: Token validation failed:', error);
@@ -73,13 +75,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setIsAuthenticated(false);
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Set loading to false when auth check completes
       console.log('AuthContext: Authentication check completed');
     }
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      setIsLoading(true); // Show loading during login
       console.log('AuthContext: Starting login process');
       const response = await authService.login({ email, password });
       console.log('AuthContext: Login response:', response);
@@ -96,23 +99,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('AuthContext: Login error:', error);
       return false;
+    } finally {
+      setIsLoading(false); // Hide loading after login attempt
     }
   };
 
   const logout = async () => {
     try {
+      setIsLoading(true); // Show loading during logout
       await authService.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
       setUser(null);
       setIsAuthenticated(false);
+      setIsLoading(false); // Hide loading after logout
     }
   };
 
   const refreshAuth = async () => {
     try {
-      setIsLoading(true);
+      setIsLoading(true); // Show loading during refresh
       const isRefreshed = await authService.refreshAuth();
       
       if (isRefreshed) {
@@ -130,11 +137,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setIsAuthenticated(false);
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Hide loading after refresh
     }
   };
 
   useEffect(() => {
+    // Remove the delay since we now have proper loading state
     checkAuth();
   }, []);
 
@@ -150,6 +158,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuth,
     refreshAuth,
   };
+
+  // Show loading spinner while authentication is being checked
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center gap-2 flex-col">
+          <Loader className="size-6 animate-spin" />
+          <div className="text-center">Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={value}>
