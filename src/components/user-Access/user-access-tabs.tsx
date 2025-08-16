@@ -283,7 +283,7 @@ export function UserAccessTabs({
           <DialogHeader>
             <DialogTitle>Delete Team</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete the team "{teamToDelete?.teamName}"? This action cannot be undone.
+              Are you sure you want to delete the team {teamToDelete?.teamName}? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
