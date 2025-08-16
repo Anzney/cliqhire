@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { TeamMemberStatusBadge } from "@/components/teamMembers/team-status-badge";
 import { RegisterUserDialog } from "@/components/teamMembers/register-user-dialog";
+import { DeleteTeamMemberDialog } from "@/components/teamMembers/delete-team-member-dialog";
 import { getTeamMembers, deleteTeamMember } from "@/services/teamMembersService";
 import { TeamMember, TeamMemberStatus } from "@/types/teamMember";
 
@@ -108,6 +109,9 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
   const [loading, setLoading] = useState(true);
   const [registerDialogOpen, setRegisterDialogOpen] = useState(false);
   const [selectedTeamMember, setSelectedTeamMember] = useState<TeamMember | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [teamMemberToDelete, setTeamMemberToDelete] = useState<TeamMember | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
 
   // Fetch team members from API
@@ -154,18 +158,39 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
     setSelectedTeamMember(null);
   };
 
-  const handleDeleteTeamMember = async (teamMemberId: string) => {
-    if (confirm("Are you sure you want to delete this team member?")) {
-      try {
-        await deleteTeamMember(teamMemberId);
-        setTeamMembers((prevTeamMembers) =>
-          prevTeamMembers.filter((teamMember) => teamMember._id !== teamMemberId),
-        );
-      } catch (error) {
-        console.error("Error deleting team member:", error);
-        alert("Failed to delete team member");
-      }
+  const handleDeleteTeamMember = (teamMember: TeamMember) => {
+    setTeamMemberToDelete(teamMember);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteTeamMember = async () => {
+    console.log('confirmDeleteTeamMember called');
+    if (!teamMemberToDelete) {
+      console.log('No team member to delete');
+      return;
     }
+    
+    console.log('Deleting team member:', teamMemberToDelete.name, teamMemberToDelete._id);
+    setIsDeleting(true);
+    try {
+      await deleteTeamMember(teamMemberToDelete._id);
+      console.log('Team member deleted successfully');
+      setTeamMembers((prevTeamMembers) =>
+        prevTeamMembers.filter((teamMember) => teamMember._id !== teamMemberToDelete._id),
+      );
+      setDeleteDialogOpen(false);
+      setTeamMemberToDelete(null);
+    } catch (error) {
+      console.error("Error deleting team member:", error);
+      // You might want to show a toast notification here instead of alert
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const cancelDeleteTeamMember = () => {
+    setDeleteDialogOpen(false);
+    setTeamMemberToDelete(null);
   };
 
   const handleDownloadResume = (resumeUrl: string | undefined, teamMemberName: string) => {
@@ -310,7 +335,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
                <DropdownMenuItem
                  onClick={(e) => {
                    e.stopPropagation();
-                   handleDeleteTeamMember(teamMember._id);
+                   handleDeleteTeamMember(teamMember);
                  }}
                  className="text-red-600"
                >
@@ -485,6 +510,14 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
             teamMemberEmail={selectedTeamMember.email}
           />
         )}
+
+        <DeleteTeamMemberDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          teamMemberName={teamMemberToDelete?.name || ""}
+          onConfirm={confirmDeleteTeamMember}
+          isLoading={isDeleting}
+        />
      </div>
    );
  }

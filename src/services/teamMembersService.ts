@@ -16,7 +16,7 @@ export const getTeamMembers = async (filters?: TeamMemberFilters): Promise<{ tea
     console.log('Making API call to:', `${API_URL}/api/users`);
     
     // Get token from localStorage if available
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
     
     const config = {
       params: filters,
@@ -44,7 +44,7 @@ export const getTeamMemberById = async (id: string): Promise<TeamMember> => {
     console.log('Making API call to:', `${API_URL}/api/users/${id}`);
     
     // Get token from localStorage if available
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
     
     const config = {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
@@ -108,13 +108,36 @@ export const updateTeamMember = async (teamMemberData: UpdateTeamMemberData): Pr
 // Delete a team member
 export const deleteTeamMember = async (id: string): Promise<void> => {
   try {
-    const response = await axios.delete(`${API_URL}/api/users/${id}`);
+    console.log('Making DELETE API call to:', `${API_URL}/api/users/${id}`);
+    
+    // Get token from localStorage if available
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+    
+    if (!token) {
+      throw new Error('Authentication token not found. Please log in again.');
+    }
+    
+    const config = {
+      headers: { Authorization: `Bearer ${token}` }
+    };
+    
+    const response = await axios.delete(`${API_URL}/api/users/${id}`, config);
+    console.log('Delete API response:', response.data);
     
     if (!response.data || response.data.status !== 'success') {
       throw new Error(response.data?.message || 'Failed to delete team member');
     }
   } catch (error: any) {
     console.error('Error deleting team member:', error);
+    
+    if (error.response?.status === 403) {
+      throw new Error('Access denied. Admin privileges required.');
+    }
+    
+    if (error.response?.status === 404) {
+      throw new Error('Team member not found');
+    }
+    
     throw new Error(error.response?.data?.message || 'Failed to delete team member');
   }
 };
