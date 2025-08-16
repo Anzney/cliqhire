@@ -22,6 +22,36 @@ import { UserPermissionDialog } from "./user-permission-dialog";
 import { TeamMember } from "@/types/teamMember";
 import { getTeamMembers } from "@/services/teamMembersService";
 
+// Team role color classes for custom styling (same as team-members-tabs.tsx)
+const getTeamRoleColorClass = (role: string): string => {
+  const normalizedRole = role?.toLowerCase() || "";
+  
+  switch (normalizedRole) {
+    case "admin":
+    case "administrator":
+      return "bg-red-100 text-red-800 border-red-200";
+    case "hiring manager":
+    case "hiring_manager":
+    case "hir":
+      return "bg-blue-100 text-blue-800 border-blue-200";
+    case "team lead":
+    case "team_lead":
+    case "lead":
+      return "bg-gray-100 text-gray-800 border-gray-200";
+    case "recruiter":
+    case "recruiters":
+    case "rec":
+      return "bg-green-100 text-green-800 border-green-200";
+    case "head hunter":
+    case "head_hunter":
+    case "head enter":
+    case "headenter":
+      return "bg-purple-100 text-purple-800 border-purple-200";
+    default:
+      return "bg-gray-100 text-gray-600 border-gray-200";
+  }
+};
+
 interface UserPermissionTabProps {
   refreshTrigger?: number;
 }
@@ -96,9 +126,15 @@ export function UserPermissionTab({ refreshTrigger }: UserPermissionTabProps) {
         <TableCell className="text-sm">{member.email}</TableCell>
         <TableCell className="text-sm">{member.phone}</TableCell>
         <TableCell className="text-sm">
-          <Badge variant="outline" className="text-xs">
-            {member.role || "Not Assigned"}
-          </Badge>
+          <span 
+            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getTeamRoleColorClass(member.teamRole || "")}`}
+            style={{ 
+              transition: 'none',
+              pointerEvents: 'none'
+            }}
+          >
+            {member.teamRole || "Not Assigned"}
+          </span>
         </TableCell>
         <TableCell className="text-sm">
           <DropdownMenu>
