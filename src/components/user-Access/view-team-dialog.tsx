@@ -41,52 +41,43 @@ export function ViewTeamDialog({
     {
       title: "Team Information",
       icon: Users,
-      items: [
-        { label: "Team Name", value: team.teamName },
-        { label: "Team Status", value: team.teamStatus, isBadge: true },
-        { label: "Created", value: new Date(team.createdAt).toLocaleDateString() },
+      rows: [
+        [
+          { label: "Team Name", value: team.teamName, isBadge: false },
+          { label: "Team Status", value: team.teamStatus, isBadge: true },
+          { label: "Created", value: new Date(team.createdAt).toLocaleDateString(), isBadge: false },
+        ],
+        [
+          { label: "Hiring Manager", value: getTeamMemberName(team.hiringManager), isBadge: false },
+          { label: "Team Lead", value: getTeamMemberName(team.teamLead), isBadge: false },
+        ],
+        [
+          { label: "Recruiters", value: team.recruiters.map(recruiterId => getTeamMemberName(recruiterId)).join(", "), isBadge: false },
+        ]
       ]
-    },
-    {
-      title: "Team Leadership",
-      icon: UserCheck,
-      items: [
-        { label: "Hiring Manager", value: getTeamMemberName(team.hiringManager) },
-        { label: "Team Lead", value: getTeamMemberName(team.teamLead) },
-      ]
-    },
-    {
-      title: "Recruiters",
-      icon: UserPlus,
-      items: team.recruiters.map(recruiterId => ({
-        label: getTeamMemberName(recruiterId),
-        value: "Recruiter"
-      }))
     },
     {
       title: "Clients",
       icon: Building,
       items: [
-        { label: "Active Clients", value: "0" },
-        { label: "Total Clients", value: "0" },
+        { label: "Active Clients", value: "0", isBadge: false },
+        { label: "Total Clients", value: "0", isBadge: false },
       ]
     },
     {
       title: "Jobs",
       icon: Briefcase,
       items: [
-        { label: "Active Jobs", value: "0" },
-        { label: "Completed Jobs", value: "0" },
-        { label: "Total Jobs", value: "0" },
+        { label: "Active Jobs", value: "0", isBadge: false },
+        { label: "Completed Jobs", value: "0", isBadge: false },
       ]
     },
     {
       title: "Candidates",
       icon: User,
       items: [
-        { label: "Active Candidates", value: "0" },
-        { label: "Placed Candidates", value: "0" },
-        { label: "Total Candidates", value: "0" },
+        { label: "Active Candidates", value: "0", isBadge: false },
+        { label: "Placed Candidates", value: "0", isBadge: false },
       ]
     }
   ];
@@ -106,7 +97,7 @@ export function ViewTeamDialog({
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
           {sections.map((section, sectionIndex) => (
-            <Card key={sectionIndex} className="h-fit">
+            <Card key={sectionIndex} className={`h-fit ${section.title === "Team Information" ? "col-span-full" : ""}`}>
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-sm font-medium">
                   <section.icon className="h-4 w-4" />
@@ -114,23 +105,51 @@ export function ViewTeamDialog({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {section.items.map((item, itemIndex) => (
-                  <div key={itemIndex} className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">{item.label}:</span>
-                    <span className="font-medium">
-                      {item.isBadge ? (
-                        <Badge 
-                          variant={item.value === "Active" ? "default" : item.value === "Working" ? "secondary" : "outline"}
-                          className="text-xs"
-                        >
-                          {item.value}
-                        </Badge>
-                      ) : (
-                        item.value
-                      )}
-                    </span>
-                  </div>
-                ))}
+                {section.rows ? (
+                                     // Handle Team Information section with rows
+                   section.rows.map((row, rowIndex) => (
+                     <div key={rowIndex} className="flex gap-4">
+                       {row.map((item, itemIndex) => (
+                         <div key={itemIndex} className="flex-1">
+                           <div className="flex items-center gap-2 text-sm">
+                             <span className="text-muted-foreground">{item.label}:</span>
+                             <span className="font-medium">
+                               {item.isBadge ? (
+                                 <Badge 
+                                   variant={item.value === "Active" ? "default" : item.value === "Working" ? "secondary" : "outline"}
+                                   className="text-xs"
+                                 >
+                                   {item.value}
+                                 </Badge>
+                               ) : (
+                                 item.value
+                               )}
+                             </span>
+                           </div>
+                         </div>
+                       ))}
+                     </div>
+                   ))
+                ) : (
+                  // Handle other sections with items
+                  section.items.map((item, itemIndex) => (
+                    <div key={itemIndex} className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">{item.label}:</span>
+                      <span className="font-medium">
+                        {item.isBadge ? (
+                          <Badge 
+                            variant={item.value === "Active" ? "default" : item.value === "Working" ? "secondary" : "outline"}
+                            className="text-xs"
+                          >
+                            {item.value}
+                          </Badge>
+                        ) : (
+                          item.value
+                        )}
+                      </span>
+                    </div>
+                  ))
+                )}
               </CardContent>
             </Card>
           ))}
