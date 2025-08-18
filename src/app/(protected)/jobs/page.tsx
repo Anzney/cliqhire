@@ -29,6 +29,8 @@ import Dashboardheader from "@/components/dashboard-header";
 import Tableheader from "@/components/table-header";
 import { CreateJobRequirementForm } from "@/components/new-jobs/create-jobs-form";
 import ClientPaginationControls from "@/components/clients/ClientPaginationControls";
+import { getJobs, updateJobStage } from "@/services/jobService";
+import { getClientNames } from "@/services/clientService";
 
 const columsArr = [
   "Position Name",
@@ -91,21 +93,14 @@ export default function JobsPage() {
 
   const router = useRouter();
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
   useEffect(() => {
     const loadJobs = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/jobs`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch jobs");
-        }
-        const data = await response.json();
-
-        if (data.success && Array.isArray(data.data)) {
-          setJobs(data.data);
-          setTotalJobs(data.length);
-          setTotalPages(Math.ceil(data.length / pageSize) || 1);
+        const response = await getJobs();
+        if (response.success && response.data && Array.isArray(response.data)) {
+          setJobs(response.data);
+          setTotalJobs(response.data.length);
+          setTotalPages(Math.ceil(response.data.length / pageSize) || 1);
         }
       } catch (error) {
         console.error("Error fetching jobs:", error);
@@ -116,12 +111,18 @@ export default function JobsPage() {
 
     const loadClients = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/clients/names`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch clients");
-        }
-        const data = await response.json();
-        setClientList(data.data); // Update to data.data
+        // For now, let's use a simple approach - we'll get client names
+        // and create a mapping. In a real scenario, you might want to get full client objects
+        const clientNames = await getClientNames();
+        console.log('Client names received:', clientNames);
+        
+        // Since we only have names, we'll create a simple mapping
+        // In a production app, you'd want to get full client objects with IDs
+        const clients = clientNames.map((name, index) => ({
+          _id: `temp-${index}`, // Temporary ID since we only have names
+          name: name
+        }));
+        setClientList(clients);
       } catch (error) {
         console.error("Error fetching clients:", error);
       }
@@ -167,14 +168,10 @@ export default function JobsPage() {
       // Update local state immediately for better UX
       setJobs((prev) => prev.map((job) => (job._id === jobId ? { ...job, stage: newStage } : job)));
 
-      // Make API call to update the stage
-      const response = await fetch(`${API_URL}/api/jobs/${jobId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stage: newStage }),
-      });
+      // Make API call to update the stage using jobService
+      const response = await updateJobStage(jobId, newStage);
 
-      if (!response.ok) {
+      if (!response.success) {
         throw new Error("Failed to update job stage");
       }
     } catch (error) {

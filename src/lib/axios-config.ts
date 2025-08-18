@@ -8,6 +8,9 @@ const api = axios.create({
   withCredentials: true, // Important: This allows cookies to be sent
 });
 
+// Store access token in memory (not localStorage for security)
+let accessToken: string | null = null;
+
 // Flag to prevent multiple refresh attempts
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -38,23 +41,18 @@ export const refreshToken = async (): Promise<string | null> => {
   isRefreshing = true;
 
   try {
-    console.log('Attempting to refresh token...');
-    
     // Call refresh token endpoint - refresh token is automatically sent via HTTP-only cookie
     const response = await api.post('/api/auth/refresh', {});
 
     if (response.data && response.data.success) {
       const newToken = response.data.data.accessToken;
       
-      // Store new access token in localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('authToken', newToken);
-      }
+      // Store new access token in memory only
+      accessToken = newToken;
       
       // Update axios default headers
       axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
       
-      console.log('Token refreshed successfully');
       processQueue(null, newToken);
       return newToken;
     } else {
@@ -64,9 +62,7 @@ export const refreshToken = async (): Promise<string | null> => {
     console.error('Error refreshing token:', error);
     
     // Clear access token on refresh failure
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('authToken');
-    }
+    accessToken = null;
     delete axios.defaults.headers.common['Authorization'];
     
     processQueue(error, null);
@@ -76,14 +72,41 @@ export const refreshToken = async (): Promise<string | null> => {
   }
 };
 
+// Function to set access token (called after login)
+export const setAccessToken = (token: string) => {
+  accessToken = token;
+  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+};
+
+// Function to get current access token
+export const getAccessToken = (): string | null => {
+  return accessToken;
+};
+
+// Function to clear access token (called on logout)
+export const clearAccessToken = () => {
+  accessToken = null;
+  delete axios.defaults.headers.common['Authorization'];
+};
+
+// Function to manually trigger token refresh (for debugging)
+export const forceTokenRefresh = async () => {
+  try {
+    const newToken = await refreshToken();
+    return newToken;
+  } catch (error) {
+    console.error('Manual token refresh failed:', error);
+    return null;
+  }
+};
+
 // Initialize axios interceptors for global token refresh
 export const initializeAxiosInterceptors = () => {
   // Request interceptor to add auth token
   api.interceptors.request.use(
     (config) => {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      if (accessToken) {
+        config.headers.Authorization = `Bearer ${accessToken}`;
       }
       return config;
     },
@@ -106,17 +129,15 @@ export const initializeAxiosInterceptors = () => {
         try {
           await refreshToken();
           // Retry the original request with new token
-          const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-          if (token) {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
+          if (accessToken) {
+            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
             return api(originalRequest);
           }
         } catch (refreshError) {
           console.error('Failed to refresh token:', refreshError);
           // Redirect to login on refresh failure
           if (typeof window !== 'undefined') {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('userData');
+            clearAccessToken();
             window.location.href = '/login';
           }
           return Promise.reject(refreshError);
@@ -130,9 +151,8 @@ export const initializeAxiosInterceptors = () => {
   // Also set up interceptors for the default axios instance
   axios.interceptors.request.use(
     (config) => {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      if (accessToken) {
+        config.headers.Authorization = `Bearer ${accessToken}`;
       }
       return config;
     },
@@ -154,17 +174,15 @@ export const initializeAxiosInterceptors = () => {
         try {
           await refreshToken();
           // Retry the original request with new token
-          const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-          if (token) {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
+          if (accessToken) {
+            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
             return axios(originalRequest);
           }
         } catch (refreshError) {
           console.error('Failed to refresh token:', refreshError);
           // Redirect to login on refresh failure
           if (typeof window !== 'undefined') {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('userData');
+            clearAccessToken();
             window.location.href = '/login';
           }
           return Promise.reject(refreshError);
@@ -179,14 +197,11 @@ export const initializeAxiosInterceptors = () => {
 // Function to initialize authentication state (call this on app startup)
 export const initializeAuth = async (): Promise<boolean> => {
   try {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-    
-    if (token) {
-      console.log('Access token exists, setting up axios headers');
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    // Check if we have an access token in memory
+    if (accessToken) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
       return true;
     } else {
-      console.log('No access token found');
       return false;
     }
   } catch (error) {

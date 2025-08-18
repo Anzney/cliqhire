@@ -29,27 +29,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true); // Set loading to true when starting auth check
       console.log('AuthContext: Starting authentication check');
       
-      // Use the new initializeAuth function that handles token refresh
-      const authInitialized = await initializeAuth();
-      console.log('AuthContext: Auth initialization result:', authInitialized);
+      // Check if we have user data in localStorage (this indicates previous login)
+      const userData = authService.getUserData();
+      console.log('AuthContext: User data from localStorage:', !!userData);
       
-      if (authInitialized) {
-        // Get user data from localStorage after potential token refresh
-        const userData = authService.getUserData();
-        console.log('AuthContext: User data from localStorage:', !!userData);
-        
-        if (userData) {
-          // Set user immediately for faster UI response
-          setUser(userData);
-          setIsAuthenticated(true);
-          console.log('AuthContext: Authentication successful with stored data');
-        } else {
-          console.log('AuthContext: No user data found after auth initialization');
-          setUser(null);
-          setIsAuthenticated(false);
-        }
+      if (userData) {
+        // Set user immediately for faster UI response
+        setUser(userData);
+        setIsAuthenticated(true);
+        console.log('AuthContext: Authentication successful with stored data');
       } else {
-        console.log('AuthContext: Auth initialization failed');
+        console.log('AuthContext: No user data found');
         setUser(null);
         setIsAuthenticated(false);
       }
@@ -103,17 +93,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshAuth = async () => {
     try {
       setIsLoading(true); // Show loading during refresh
-      const authInitialized = await initializeAuth();
       
-      if (authInitialized) {
-        const userData = authService.getUserData();
-        if (userData) {
-          setUser(userData);
-          setIsAuthenticated(true);
-        } else {
-          setUser(null);
-          setIsAuthenticated(false);
-        }
+      // Check if we have user data in localStorage
+      const userData = authService.getUserData();
+      if (userData) {
+        setUser(userData);
+        setIsAuthenticated(true);
       } else {
         setUser(null);
         setIsAuthenticated(false);
@@ -128,12 +113,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // Remove the delay since we now have proper loading state
+    // Check authentication on component mount
     checkAuth();
   }, []);
-
-  // Note: Removed window focus event listener since /auth/me endpoint is not available
-  // This was causing authentication to fail on page refresh
 
   const value: AuthContextType = {
     user,
