@@ -1,4 +1,5 @@
 import axios, { AxiosError } from "axios";
+import { api } from "@/lib/axios-config";
 
 // Types for authentication data
 export interface RegisterUserData {
@@ -79,12 +80,8 @@ class AuthService {
       
       console.log('Sending registration request to API');
       
-      // Make real API call to Express backend
-      const response = await axios.post(`${this.baseURL}/auth/register`, payload, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      // Make real API call to Express backend using the configured api instance
+      const response = await api.post('/auth/register', payload);
 
       // Extract data from response - your API returns accessToken and user
       const { accessToken, user } = response.data.data;
@@ -142,12 +139,8 @@ class AuthService {
       
       console.log('AuthService: Login payload:', { email: userData.email, password: '***' });
       
-      // Make real API call to Express backend
-      const response = await axios.post(`${this.baseURL}/api/auth/login`, payload, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      // Make real API call to Express backend using the configured api instance
+      const response = await api.post('/api/auth/login', payload);
 
       console.log('AuthService: API Response:', response.data);
 
@@ -202,22 +195,9 @@ class AuthService {
     try {
       console.log('Logging out user');
       
-      // Get current token for logout request
-      const token = this.getToken();
-      
-      // Make logout request to Express backend if token exists
-      if (token) {
-        try {
-          await axios.post(`${this.baseURL}/auth/logout`, {}, {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            },
-          });
-        } catch (error) {
-          console.warn('Logout API call failed, but continuing with local cleanup:', error);
-        }
-      }
+      // Make logout request to Express backend using the configured api instance
+      // This will clear the refresh token cookie on the server
+      await api.post('/api/auth/logout');
       
       // Clear token from axios defaults
       delete axios.defaults.headers.common['Authorization'];
@@ -234,6 +214,13 @@ class AuthService {
       };
     } catch (error) {
       console.error('Error logging out user:', error);
+      
+      // Even if logout API fails, clear local data
+      delete axios.defaults.headers.common['Authorization'];
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
+      }
       
       // Handle axios errors
       if (axios.isAxiosError(error)) {
@@ -305,6 +292,46 @@ class AuthService {
   }
 
   /**
+   * Refresh authentication token
+   */
+  async refreshToken(): Promise<boolean> {
+    try {
+      console.log('AuthService: Attempting to refresh token...');
+      
+      const response = await api.post('/api/auth/refresh', {});
+
+      if (response.data && response.data.success) {
+        const { accessToken } = response.data.data;
+        
+        // Store new access token in localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('authToken', accessToken);
+        }
+        
+        // Update axios default headers
+        axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+        
+        console.log('AuthService: Token refreshed successfully');
+        return true;
+      } else {
+        console.log('AuthService: Refresh failed - invalid response');
+        return false;
+      }
+    } catch (error) {
+      console.error('AuthService: Error refreshing token:', error);
+      
+      // Clear tokens on refresh failure
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
+      }
+      delete axios.defaults.headers.common['Authorization'];
+      
+      return false;
+    }
+  }
+
+  /**
    * Refresh authentication state
    */
   async refreshAuth(): Promise<boolean> {
@@ -347,13 +374,8 @@ class AuthService {
       
       console.log('AuthService: Using token for current user request:', !!token);
       
-      // Make API call to Express backend
-      const response = await axios.get(`${this.baseURL}/auth/me`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      // Make API call to Express backend using the configured api instance
+      const response = await api.get('/auth/me');
 
       console.log('AuthService: Current user response:', response.data);
       return response.data.user || response.data.data || response.data;

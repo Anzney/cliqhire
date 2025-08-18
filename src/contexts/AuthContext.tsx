@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { authService, User } from '@/services/authService';
+import { initializeAuth } from '@/lib/axios-config';
 import { useRouter } from 'next/navigation';
 import { Loader } from 'lucide-react';
 
@@ -28,14 +29,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true); // Set loading to true when starting auth check
       console.log('AuthContext: Starting authentication check');
       
-      // Initialize auth service (sets up axios headers)
-      authService.initializeAuth();
+      // Use the new initializeAuth function that handles token refresh
+      const authInitialized = await initializeAuth();
+      console.log('AuthContext: Auth initialization result:', authInitialized);
       
-      const token = authService.getToken();
-      console.log('AuthContext: Token found:', !!token);
-      
-      if (token) {
-        // Get user data from localStorage
+      if (authInitialized) {
+        // Get user data from localStorage after potential token refresh
         const userData = authService.getUserData();
         console.log('AuthContext: User data from localStorage:', !!userData);
         
@@ -44,29 +43,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(userData);
           setIsAuthenticated(true);
           console.log('AuthContext: Authentication successful with stored data');
-          
-          // Validate token in background (non-blocking)
-          try {
-            const isValid = await authService.validateToken(token);
-            console.log('AuthContext: Token validation result:', isValid);
-            
-            if (!isValid) {
-              setUser(null);
-              setIsAuthenticated(false);
-              console.log('AuthContext: Token validation failed, logged out');
-            }
-          } catch (error) {
-            console.error('AuthContext: Token validation failed:', error);
-            setUser(null);
-            setIsAuthenticated(false);
-          }
         } else {
-          console.log('AuthContext: No user data found');
+          console.log('AuthContext: No user data found after auth initialization');
           setUser(null);
           setIsAuthenticated(false);
         }
       } else {
-        console.log('AuthContext: No token found');
+        console.log('AuthContext: Auth initialization failed');
         setUser(null);
         setIsAuthenticated(false);
       }
@@ -120,13 +103,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshAuth = async () => {
     try {
       setIsLoading(true); // Show loading during refresh
-      const isRefreshed = await authService.refreshAuth();
+      const authInitialized = await initializeAuth();
       
-      if (isRefreshed) {
+      if (authInitialized) {
         const userData = authService.getUserData();
         if (userData) {
           setUser(userData);
           setIsAuthenticated(true);
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
         }
       } else {
         setUser(null);

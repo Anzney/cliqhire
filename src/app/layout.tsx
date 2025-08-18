@@ -6,6 +6,7 @@ import { Header } from "@/components/header"
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes"
 import { AuthProvider } from "@/contexts/AuthContext"
+import '@/lib/axios-config'; // Initialize global axios interceptors
 
 const inter = Inter({ subsets: ["latin"] })
 
