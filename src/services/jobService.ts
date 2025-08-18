@@ -61,6 +61,7 @@ export interface Job extends JobData {
   createdAt: string;
   updatedAt: string;
   isActive?: boolean;
+  status?: string; // Add status property to match the Job type in types/job.ts
   jobDescriptionInternal?: string; // <-- Added for internal job description
 }
 
@@ -283,7 +284,7 @@ export async function deleteJobNote(id: string) {
 
 const updateJobStage = async (id: string, stage: string): Promise<JobResponse> => {
   try {
-    const response = await api.patch<JobResponse>(`/api/jobs/${id}/stage`, { stage });
+    const response = await api.patch<JobResponse>(`/api/jobs/${id}`, { stage });
     return response.data;
   } catch (error) {
     handleApiError(error, "job stage update");
