@@ -105,8 +105,12 @@ export const initializeAxiosInterceptors = () => {
   // Request interceptor to add auth token
   api.interceptors.request.use(
     (config) => {
+      console.log('Request interceptor - accessToken:', !!accessToken);
       if (accessToken) {
         config.headers.Authorization = `Bearer ${accessToken}`;
+        console.log('Added Authorization header to request');
+      } else {
+        console.log('No accessToken available for request');
       }
       return config;
     },
@@ -197,13 +201,29 @@ export const initializeAxiosInterceptors = () => {
 // Function to initialize authentication state (call this on app startup)
 export const initializeAuth = async (): Promise<boolean> => {
   try {
+    console.log('Initializing auth...');
+    console.log('Current accessToken in memory:', !!accessToken);
+    
     // Check if we have an access token in memory
     if (accessToken) {
+      console.log('Using token from memory');
       axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
       return true;
-    } else {
-      return false;
     }
+    
+    // If no token in memory, check localStorage (for development/testing)
+    if (typeof window !== 'undefined') {
+      const storedToken = localStorage.getItem('authToken');
+      console.log('Stored token in localStorage:', !!storedToken);
+      if (storedToken) {
+        console.log('Setting token from localStorage');
+        setAccessToken(storedToken);
+        return true;
+      }
+    }
+    
+    console.log('No token found');
+    return false;
   } catch (error) {
     console.error('Error initializing auth:', error);
     return false;
@@ -215,3 +235,8 @@ export { api };
 
 // Initialize the interceptors immediately
 initializeAxiosInterceptors();
+
+// Initialize authentication state
+if (typeof window !== 'undefined') {
+  initializeAuth().catch(console.error);
+}
