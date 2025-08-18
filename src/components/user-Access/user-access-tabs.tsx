@@ -233,7 +233,7 @@ export function UserAccessTabs({
             <Shield className="h-4 w-4" />
             User Permission
             <Badge variant="secondary" className="ml-1 text-xs">
-              12
+              {teamMembers.length}
             </Badge>
           </TabsTrigger>
         </TabsList>
