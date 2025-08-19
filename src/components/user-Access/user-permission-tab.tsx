@@ -145,10 +145,10 @@ export function UserPermissionTab({
                 <Shield className="mr-2 h-4 w-4" />
                 User Permission
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600">
+              {/* <DropdownMenuItem className="text-red-600">
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
             </DropdownMenuContent>
           </DropdownMenu>
         </TableCell>

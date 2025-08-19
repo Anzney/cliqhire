@@ -25,8 +25,8 @@ const menuItems = [
   { name: "Clients", icon: Building2, href: "/clients" },
   { name: "Jobs", icon: Briefcase, href: "/jobs" },
   { name: "Candidates", icon: Users, href: "/candidates" }, // Line after "Candidates"
-  { name: "Team Members", icon: Users, href: "/teammembers" },
   { name: "Recruitment Pipeline", icon: Route, href: "/reactruterpipeline" },
+  { name: "Team Members", icon: Users, href: "/teammembers" },
   { name: "User Access", icon:   LockKeyhole, href: "/user-access" },
 
   // { name: "Placements", icon: UserCheck, href: "/placements" },
