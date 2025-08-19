@@ -80,7 +80,7 @@ const getTeamRoleColorClass = (role: string): string => {
   switch (normalizedRole) {
     case "admin":
     case "administrator":
-      return "bg-red-100 text-red-800 border-red-200";
+      return "bg-green-100 text-black-800 border-red-200";
     case "hiring manager":
     case "hiring_manager":
     case "hir":

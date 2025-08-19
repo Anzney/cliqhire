@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { api } from '@/lib/axios-config';
 import { 
   TeamMember, 
   TeamMemberResponse, 
@@ -15,15 +16,7 @@ export const getTeamMembers = async (filters?: TeamMemberFilters): Promise<{ tea
   try {
     console.log('Making API call to:', `${API_URL}/api/users`);
     
-    // Get token from localStorage if available
-    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-    
-    const config = {
-      params: filters,
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
-    };
-    
-    const response = await axios.get(`${API_URL}/api/users`, config);
+    const response = await api.get('/api/users', { params: filters });
     console.log('API response for team members list:', response.data);
 
     if (response.data && response.data.status === 'success') {
@@ -43,14 +36,7 @@ export const getTeamMemberById = async (id: string): Promise<TeamMember> => {
   try {
     console.log('Making API call to:', `${API_URL}/api/users/${id}`);
     
-    // Get token from localStorage if available
-    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-    
-    const config = {
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
-    };
-    
-    const response = await axios.get(`${API_URL}/api/users/${id}`, config);
+    const response = await api.get(`/api/users/${id}`);
     console.log('API response:', response.data);
     
     if (response.data && response.data.status === 'success') {
@@ -77,7 +63,7 @@ export const getTeamMemberById = async (id: string): Promise<TeamMember> => {
 // Create a new team member
 export const createTeamMember = async (teamMemberData: CreateTeamMemberData): Promise<TeamMember> => {
   try {
-    const response = await axios.post(`${API_URL}/api/users/add-member`, teamMemberData);
+    const response = await api.post('/api/users/add-member', teamMemberData);
     
     if (response.data && response.data.status === 'success') {
       return response.data.data.user || response.data.data;
@@ -93,7 +79,7 @@ export const createTeamMember = async (teamMemberData: CreateTeamMemberData): Pr
 export const updateTeamMember = async (teamMemberData: UpdateTeamMemberData): Promise<TeamMember> => {
   try {
     const { _id, ...updateData } = teamMemberData;
-    const response = await axios.put(`${API_URL}/api/users/${_id}`, updateData);
+    const response = await api.put(`/api/users/${_id}`, updateData);
     
     if (response.data && response.data.status === 'success') {
       return response.data.data.user || response.data.data;
@@ -110,18 +96,7 @@ export const deleteTeamMember = async (id: string): Promise<void> => {
   try {
     console.log('Making DELETE API call to:', `${API_URL}/api/users/${id}`);
     
-    // Get token from localStorage if available
-    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-    
-    if (!token) {
-      throw new Error('Authentication token not found. Please log in again.');
-    }
-    
-    const config = {
-      headers: { Authorization: `Bearer ${token}` }
-    };
-    
-    const response = await axios.delete(`${API_URL}/api/users/${id}`, config);
+    const response = await api.delete(`/api/users/${id}`);
     console.log('Delete API response:', response.data);
     
     if (!response.data || response.data.status !== 'success') {
@@ -145,7 +120,7 @@ export const deleteTeamMember = async (id: string): Promise<void> => {
 // Update team member status
 export const updateTeamMemberStatus = async (id: string, status: string): Promise<TeamMember> => {
   try {
-    const response = await axios.patch(`${API_URL}/api/users/${id}/status`, { status });
+    const response = await api.patch(`/api/users/${id}/status`, { status });
     
     if (response.data && response.data.status === 'success') {
       return response.data.data.user || response.data.data;
@@ -163,7 +138,7 @@ export const uploadResume = async (id: string, file: File): Promise<{ resumeUrl:
     const formData = new FormData();
     formData.append('resume', file);
     
-    const response = await axios.post(`${API_URL}/api/users/${id}/resume`, formData, {
+    const response = await api.post(`/api/users/${id}/resume`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -186,7 +161,7 @@ export const getTeamMemberStats = async (id: string): Promise<{
   performanceRating: number;
 }> => {
   try {
-    const response = await axios.get(`${API_URL}/api/users/${id}/stats`);
+    const response = await api.get(`/api/users/${id}/stats`);
     
     if (response.data && response.data.status === 'success') {
       return response.data.data;
@@ -197,6 +172,72 @@ export const getTeamMemberStats = async (id: string): Promise<{
     throw new Error(error.response?.data?.message || 'Failed to fetch team member stats');
   }
 }; 
+
+// Register team member with authentication credentials (Admin only)
+// export const registerTeamMember = async (registrationData: {
+//   teamMemberId: string;
+//   teamMemberName: string;
+//   email: string;
+//   password: string;
+// }): Promise<{
+//   success: boolean;
+//   message: string;
+//   user?: {
+//     id: string;
+//     name: string;
+//     email: string;
+//     role: string;
+//     teamMemberId: string;
+//     isActive: boolean;
+//     createdAt: string;
+//   };
+// }> => {
+//   try {
+//     // Get token from localStorage
+//     const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+    
+//     if (!token) {
+//       throw new Error('Authentication token not found. Please log in again.');
+//     }
+
+//     const response = await axios.post(`${API_URL}/api/auth/register-member`, registrationData, {
+//       headers: {
+//         'Content-Type': 'application/json',
+//         'Authorization': `Bearer ${token}`,
+//       },
+//     });
+
+//     if (response.data && response.data.success) {
+//       return {
+//         success: true,
+//         message: response.data.message || 'Team member registered successfully',
+//         user: response.data.data?.user
+//       };
+//     }
+
+//     throw new Error(response.data?.message || 'Failed to register team member');
+//   } catch (error: any) {
+//     console.error('Error registering team member:', error);
+    
+//     if (error.response?.status === 403) {
+//       throw new Error('Access denied. Admin privileges required.');
+//     }
+    
+//     if (error.response?.status === 404) {
+//       throw new Error('Team member not found');
+//     }
+    
+//     if (error.response?.status === 409) {
+//       throw new Error('User with this email already exists');
+//     }
+    
+//     if (error.response?.status === 400) {
+//       throw new Error(error.response.data?.message || 'Invalid request data');
+//     }
+
+//     throw new Error(error.response?.data?.message || error.message || 'Failed to register team member');
+//   }
+// }; 
 
 // Register team member with authentication credentials (Admin only)
 export const registerTeamMember = async (registrationData: {
@@ -218,19 +259,7 @@ export const registerTeamMember = async (registrationData: {
   };
 }> => {
   try {
-    // Get token from localStorage
-    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-    
-    if (!token) {
-      throw new Error('Authentication token not found. Please log in again.');
-    }
-
-    const response = await axios.post(`${API_URL}/api/auth/register-member`, registrationData, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+    const response = await api.post('/api/auth/register-member', registrationData);
 
     if (response.data && response.data.success) {
       return {
