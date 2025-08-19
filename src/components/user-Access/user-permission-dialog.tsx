@@ -65,24 +65,6 @@ export function UserPermissionDialog({
       setPermissionsInfo(response.data);
     } catch (error) {
       console.error('Error fetching permissions info:', error);
-      // Set fallback permissions info if API fails
-      setPermissionsInfo({
-        availablePermissions: ['RECRUITMENT_PIPELINE', 'JOBS', 'CANDIDATE'],
-        availableRoles: ['ADMIN', 'HIRING_MANAGER', 'TEAM_LEAD', 'RECRUITER', 'HEAD_HUNTER', 'SALES_TEAM'],
-        roleDefaultPermissions: {
-          'ADMIN': ['RECRUITMENT_PIPELINE', 'JOBS', 'CANDIDATE'],
-          'HIRING_MANAGER': ['RECRUITMENT_PIPELINE', 'JOBS', 'CANDIDATE'],
-          'TEAM_LEAD': ['RECRUITMENT_PIPELINE', 'JOBS', 'CANDIDATE'],
-          'RECRUITER': ['RECRUITMENT_PIPELINE', 'JOBS', 'CANDIDATE'],
-          'HEAD_HUNTER': ['RECRUITMENT_PIPELINE', 'JOBS', 'CANDIDATE'],
-          'SALES_TEAM': []
-        },
-        permissionsDescription: {
-          'RECRUITMENT_PIPELINE': 'Access to view and manage recruitment pipeline',
-          'JOBS': 'Access to view and manage job postings',
-          'CANDIDATE': 'Access to view and manage candidate information'
-        }
-      });
       toast.error('Failed to load permissions information');
     } finally {
       setLoading(false);
@@ -107,7 +89,7 @@ export function UserPermissionDialog({
         email: user.email,
         role: user.teamRole || "RECRUITER",
         isActive: true,
-        permissions: [],
+        permissions: ['RECRUITMENT_PIPELINE', 'JOBS', 'CANDIDATE'], // Default permissions
         profile: {
           name: user.name,
           email: user.email,
@@ -119,7 +101,7 @@ export function UserPermissionDialog({
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       });
-      setSelectedPermissions([]);
+      setSelectedPermissions(['RECRUITMENT_PIPELINE', 'JOBS', 'CANDIDATE']); // Default permissions
       setSelectedRole(user.teamRole || "RECRUITER");
       // Don't show error toast for new users who don't exist in permission system yet
       if (error instanceof Error && !error.message.includes('User not found')) {
@@ -144,6 +126,9 @@ export function UserPermissionDialog({
     // If permissions info is available, set default permissions for the new role
     if (permissionsInfo?.roleDefaultPermissions[newRole]) {
       setSelectedPermissions(permissionsInfo.roleDefaultPermissions[newRole]);
+    } else {
+      // Default to the three main permissions if backend doesn't provide defaults
+      setSelectedPermissions(['RECRUITMENT_PIPELINE', 'JOBS', 'CANDIDATE']);
     }
   };
 
@@ -194,15 +179,32 @@ export function UserPermissionDialog({
     onOpenChange(false);
   };
 
-  // Create permissions list from API data
-  const permissions: Permission[] = permissionsInfo ? 
-    permissionsInfo.availablePermissions.map(permissionId => ({
-      id: permissionId,
-      name: permissionId.replace(/_/g, ' '),
-      description: permissionsInfo.permissionsDescription[permissionId] || `Access to ${permissionId.toLowerCase().replace(/_/g, ' ')}`
-    })) : [];
+  // Create permissions list from API data and always include CLIENTS as additional option
+  const permissions: Permission[] = [];
+  
+  if (permissionsInfo) {
+    // Add permissions from backend
+    permissionsInfo.availablePermissions.forEach(permissionId => {
+      permissions.push({
+        id: permissionId,
+        name: permissionId.replace(/_/g, ' '),
+        description: permissionsInfo.permissionsDescription[permissionId] || `Access to ${permissionId.toLowerCase().replace(/_/g, ' ')}`
+      });
+    });
+  }
+  
+  // Always add CLIENTS as an additional option if it's not already included
+  if (!permissions.find(p => p.id === 'CLIENTS')) {
+    permissions.push({
+      id: 'CLIENTS',
+      name: 'CLIENTS',
+      description: 'Access to view and manage client information (Admin can grant additional access)'
+    });
+  }
 
-  const roles = permissionsInfo?.availableRoles || [];
+
+
+  const roles = permissionsInfo?.availableRoles || ['ADMIN', 'HIRING_MANAGER', 'TEAM_LEAD', 'RECRUITER', 'HEAD_HUNTER', 'SALES_TEAM'];
 
   if (!user) return null;
 
@@ -265,6 +267,11 @@ export function UserPermissionDialog({
         {/* Permissions List - Scrollable */}
         <div className="flex-1 overflow-y-auto mt-3">
           <div className="space-y-3">
+            {permissions.length === 0 && (
+              <div className="text-center text-muted-foreground py-4">
+                No permissions available
+              </div>
+            )}
             {permissions.map((permission) => (
               <div key={permission.id} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-muted/50">
                 <Checkbox
@@ -275,12 +282,19 @@ export function UserPermissionDialog({
                   className="mt-1"
                 />
                 <div className="flex-1">
-                  <Label 
-                    htmlFor={permission.id} 
-                    className="text-sm font-medium cursor-pointer"
-                  >
-                    {permission.name}
-                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Label 
+                      htmlFor={permission.id} 
+                      className="text-sm font-medium cursor-pointer"
+                    >
+                      {permission.name}
+                    </Label>
+                    {permission.id === 'CLIENTS' && (
+                      <Badge variant="secondary" className="text-xs">
+                        Additional Access
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     {permission.description}
                   </p>
