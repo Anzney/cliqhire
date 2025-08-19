@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -111,7 +110,6 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [teamMemberToDelete, setTeamMemberToDelete] = useState<TeamMember | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const router = useRouter();
 
   // Fetch team members from API
   const fetchTeamMembers = async () => {
@@ -140,11 +138,8 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
   };
 
   const handleViewTeamMember = (teamMemberId: string) => {
-    if (onTeamMemberClick) {
-      onTeamMemberClick(teamMemberId);
-    } else {
-      router.push(`/teammembers/${teamMemberId}`);
-    }
+    // Temporarily disabled: no navigation or callbacks
+    return;
   };
 
   const handleRegisterUser = (teamMember: TeamMember) => {
@@ -266,8 +261,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
     return members.map((teamMember) => (
       <TableRow
         key={teamMember._id}
-        className="hover:bg-muted/50 cursor-pointer"
-        onClick={() => handleViewTeamMember(teamMember._id)}
+        className="hover:bg-muted/50 cursor-default"
       >
         <TableCell className="text-sm font-medium">{teamMember.name}</TableCell>
         <TableCell className="text-sm">{teamMember.email}</TableCell>
