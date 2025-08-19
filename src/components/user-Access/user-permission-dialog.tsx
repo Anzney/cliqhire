@@ -266,9 +266,9 @@ export function UserPermissionDialog({
 
         {/* Permissions List - Scrollable */}
         <div className="flex-1 overflow-y-auto mt-3">
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {permissions.length === 0 && (
-              <div className="text-center text-muted-foreground py-4">
+              <div className="text-center text-muted-foreground py-4 col-span-1 sm:col-span-2">
                 No permissions available
               </div>
             )}
