@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MoreVertical, Download, Eye, Edit, Trash2, Users, UserCheck, UserCog, Crown } from "lucide-react";
+import { MoreVertical, Trash2, Users, UserCheck, UserCog, Crown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,7 +38,6 @@ const headerArr = [
   "Location",
   "Experience",
   "Team Role",
-  "Resume",
   "Status",
   "Actions",
 ];
@@ -193,13 +192,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
     setTeamMemberToDelete(null);
   };
 
-  const handleDownloadResume = (resumeUrl: string | undefined, teamMemberName: string) => {
-    if (resumeUrl) {
-      window.open(resumeUrl, "_blank");
-    } else {
-      alert("No resume available for download");
-    }
-  };
+  
 
   // Get counts for each role
   const getCountByRole = (role: string) => {
@@ -249,7 +242,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
     if (loading) {
       return (
         <TableRow>
-          <TableCell colSpan={9} className="h-[calc(100vh-240px)] text-center">
+          <TableCell colSpan={headerArr.length} className="h-[calc(100vh-240px)] text-center">
             <div className="py-24">
               <div className="text-center">Loading team members...</div>
             </div>
@@ -261,7 +254,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
     if (members.length === 0) {
       return (
         <TableRow>
-          <TableCell colSpan={9} className="h-[calc(100vh-240px)] text-center">
+          <TableCell colSpan={headerArr.length} className="h-[calc(100vh-240px)] text-center">
             <div className="py-24">
               <div className="text-center">No team members found in this category</div>
             </div>
@@ -292,20 +285,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
              {teamMember.teamRole || "Not Assigned"}
            </span>
          </TableCell>
-        <TableCell className="text-sm">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDownloadResume(teamMember.resume, teamMember.name);
-            }}
-            className="h-6 px-2 text-xs"
-          >
-            <Download className="h-3 w-3 mr-1" />
-            Download
-          </Button>
-        </TableCell>
+        
         <TableCell className="text-sm">
           <TeamMemberStatusBadge
             id={teamMember._id}
