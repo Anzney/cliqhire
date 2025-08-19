@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MoreVertical, Trash2, Users, UserCheck, UserCog, Crown } from "lucide-react";
+import { MoreVertical, Trash2, Users, UserCheck, UserCog, Crown, Eye } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -305,6 +305,13 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
                </Button>
              </DropdownMenuTrigger>
              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+               <DropdownMenuItem onClick={(e) => {
+                 e.stopPropagation();
+                 handleViewTeamMember(teamMember._id);
+               }}>
+                 <Eye className="mr-2 h-4 w-4" />
+                 View
+               </DropdownMenuItem>
                <DropdownMenuItem onClick={(e) => {
                  e.stopPropagation();
                  handleRegisterUser(teamMember);
