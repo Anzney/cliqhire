@@ -73,7 +73,7 @@ export function UserAccessTabs({
   // Fetch team members when component mounts
   useEffect(() => {
     fetchTeamMembers();
-  }, []);
+  }, [refreshTrigger]);
 
   const fetchTeamMembers = async () => {
     setLoadingTeamMembers(true);
@@ -259,7 +259,12 @@ export function UserAccessTabs({
 
         <TabsContent value="user-permission" className="p-0 mt-0">
           <div className="flex-1">
-            <UserPermissionTab refreshTrigger={refreshTrigger} />
+            <UserPermissionTab 
+              refreshTrigger={refreshTrigger} 
+              teamMembers={teamMembers}
+              loading={loadingTeamMembers}
+              onRefresh={fetchTeamMembers}
+            />
           </div>
         </TabsContent>
       </Tabs>
