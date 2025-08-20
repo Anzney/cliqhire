@@ -11,7 +11,7 @@ import { TeamMember } from "@/types/teamMember";
 export default function TeamMembersPage() {
   const [open, setOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const router = useRouter();
 

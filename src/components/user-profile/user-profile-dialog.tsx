@@ -67,11 +67,11 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[360px]">
         <DialogHeader>
           <DialogTitle>User Profile</DialogTitle>
           <DialogDescription>
-            Your account information and settings
+            Your account information
           </DialogDescription>
         </DialogHeader>
 
@@ -92,8 +92,8 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
           <div className="border-t border-gray-200"></div>
 
           {/* User Details */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3">
+          <div className="space-y-2">
+            {/* <div className="flex items-center space-x-3">
               <UserIcon className="h-4 w-4 text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium">Full Name</p>
@@ -106,6 +106,14 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
               <div>
                 <p className="text-sm font-medium">Email Address</p>
                 <p className="text-sm text-muted-foreground">{user?.email || 'Not provided'}</p>
+              </div>
+            </div> */}
+
+            <div className="flex items-center space-x-3">
+              <UserIcon className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">Team Role</p>
+                <p className="text-sm text-muted-foreground">{user?.role || 'Not provided'}</p>
               </div>
             </div>
 

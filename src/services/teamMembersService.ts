@@ -79,7 +79,7 @@ export const createTeamMember = async (teamMemberData: CreateTeamMemberData): Pr
 export const updateTeamMember = async (teamMemberData: UpdateTeamMemberData): Promise<TeamMember> => {
   try {
     const { _id, ...updateData } = teamMemberData;
-    const response = await api.put(`/api/users/${_id}`, updateData);
+    const response = await api.patch(`/api/users/${_id}`, updateData);
     
     if (response.data && response.data.status === 'success') {
       return response.data.data.user || response.data.data;
@@ -120,7 +120,7 @@ export const deleteTeamMember = async (id: string): Promise<void> => {
 // Update team member status
 export const updateTeamMemberStatus = async (id: string, status: string): Promise<TeamMember> => {
   try {
-    const response = await api.patch(`/api/users/${id}/status`, { status });
+    const response = await api.patch(`/api/users/${id}`, { status });
     
     if (response.data && response.data.status === 'success') {
       return response.data.data.user || response.data.data;

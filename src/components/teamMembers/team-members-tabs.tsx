@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/table";
 import { TeamMemberStatusBadge } from "@/components/teamMembers/team-status-badge";
 import { RegisterUserDialog } from "@/components/teamMembers/register-user-dialog";
+import ViewEditTeamMemberDialog from "@/components/teamMembers/ViewEditTeamMemberDialog";
 import { DeleteTeamMemberDialog } from "@/components/teamMembers/delete-team-member-dialog";
 import { getTeamMembers, deleteTeamMember } from "@/services/teamMembersService";
 import { TeamMember, TeamMemberStatus } from "@/types/teamMember";
@@ -78,24 +79,24 @@ const getTeamRoleColorClass = (role: string): string => {
   switch (normalizedRole) {
     case "admin":
     case "administrator":
-      return "bg-green-100 text-black-800 border-red-200";
+      return "bg-blue-600 text-white border-blue-800";
     case "hiring manager":
     case "hiring_manager":
     case "hir":
-      return "bg-blue-100 text-blue-800 border-blue-200";
+      return "bg-sky-400 text-white border-sky-500";
     case "team lead":
     case "team_lead":
     case "lead":
-      return "bg-gray-100 text-gray-800 border-gray-200";
+      return "bg-emerald-500 text-white border-emerald-600";
     case "recruiter":
     case "recruiters":
     case "rec":
-      return "bg-green-100 text-green-800 border-green-200";
+      return "bg-teal-500 text-white border-teal-600";
     case "head hunter":
     case "head_hunter":
     case "head enter":
     case "headenter":
-      return "bg-purple-100 text-purple-800 border-purple-200";
+      return "bg-purple-500 text-white border-purple-600";
     default:
       return "bg-gray-100 text-gray-600 border-gray-200";
   }
@@ -110,6 +111,8 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [teamMemberToDelete, setTeamMemberToDelete] = useState<TeamMember | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [teamMemberToView, setTeamMemberToView] = useState<TeamMember | null>(null);
 
   // Fetch team members from API
   const fetchTeamMembers = async () => {
@@ -138,8 +141,9 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
   };
 
   const handleViewTeamMember = (teamMemberId: string) => {
-    // Temporarily disabled: no navigation or callbacks
-    return;
+    const member = teamMembers.find((tm) => tm._id === teamMemberId) || null;
+    setTeamMemberToView(member);
+    setViewDialogOpen(true);
   };
 
   const handleRegisterUser = (teamMember: TeamMember) => {
@@ -498,6 +502,14 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
           teamMemberName={teamMemberToDelete?.name || ""}
           onConfirm={confirmDeleteTeamMember}
           isLoading={isDeleting}
+        />
+        <ViewEditTeamMemberDialog
+          open={viewDialogOpen}
+          onOpenChange={setViewDialogOpen}
+          teamMember={teamMemberToView}
+          onUpdated={(updated) => {
+            setTeamMembers(prev => prev.map(tm => tm._id === updated._id ? updated : tm));
+          }}
         />
      </div>
    );
