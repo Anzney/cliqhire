@@ -16,6 +16,7 @@ export interface LoginUserData {
 
 export interface User {
   id?: string;
+  _id?: string;
   name: string;
   email: string;
   role?: string;
@@ -23,6 +24,8 @@ export interface User {
   lastLogin?: string;
   createdAt?: string;
   updatedAt?: string;
+  permissions?: string[];
+  defaultPermissions?: string[];
 }
 
 // API Response interfaces
