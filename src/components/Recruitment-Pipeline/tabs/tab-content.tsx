@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Eye, Edit, Trash2 } from "lucide-react";
+import { MoreVertical, Eye, CheckCircle, Users, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -77,10 +77,17 @@ export const TabContent: React.FC<TabContentProps> = ({ value }) => {
               </DropdownMenuItem>
               <DropdownMenuItem onClick={(e) => {
                 e.stopPropagation();
-                console.log("Edit candidate:", candidate.candidateName);
+                console.log("Move to next round:", candidate.candidateName);
               }}>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Move To Next Round
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => {
+                e.stopPropagation();
+                console.log("Assign new recruiter:", candidate.candidateName);
+              }}>
+                <Users className="mr-2 h-4 w-4" />
+                Assign New Recruiter
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={(e) => {
