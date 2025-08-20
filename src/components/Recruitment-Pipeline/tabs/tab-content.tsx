@@ -9,6 +9,15 @@ import {
   TableHead,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { MoreVertical, Eye, Edit, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { getCandidatesByStage, RecruitmentCandidate } from "@/components/dummy/recruitment-pipeline-data";
 
 interface TabContentProps {
   value: string;
@@ -23,6 +32,73 @@ const headerArr = [
 ];
 
 export const TabContent: React.FC<TabContentProps> = ({ value }) => {
+  const candidates = getCandidatesByStage(value);
+
+  const renderCandidatesTable = (candidates: RecruitmentCandidate[]) => {
+    if (candidates.length === 0) {
+      return (
+        <TableRow>
+          <TableCell colSpan={headerArr.length} className="h-[calc(100vh-240px)] text-center">
+            <div className="py-24">
+              <div className="text-center">No candidates found in this stage</div>
+            </div>
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    return candidates.map((candidate) => (
+      <TableRow
+        key={candidate.id}
+        className="hover:bg-muted/50 cursor-default"
+      >
+        <TableCell className="text-sm font-medium">{candidate.candidateName}</TableCell>
+        <TableCell className="text-sm">{candidate.jobPosition}</TableCell>
+        <TableCell className="text-sm">{candidate.clientName}</TableCell>
+        <TableCell className="text-sm">{candidate.hiringManager}</TableCell>
+        <TableCell className="text-sm">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="h-8 w-8 p-0"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem onClick={(e) => {
+                e.stopPropagation();
+                console.log("View candidate:", candidate.candidateName);
+              }}>
+                <Eye className="mr-2 h-4 w-4" />
+                View
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => {
+                e.stopPropagation();
+                console.log("Edit candidate:", candidate.candidateName);
+              }}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  console.log("Delete candidate:", candidate.candidateName);
+                }}
+                className="text-red-600"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </TableCell>
+      </TableRow>
+    ));
+  };
+
   return (
     <TabsContent value={value} className="p-0 mt-0">
       <div className="flex-1">
@@ -37,13 +113,7 @@ export const TabContent: React.FC<TabContentProps> = ({ value }) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow>
-              <TableCell colSpan={headerArr.length} className="h-[calc(100vh-240px)] text-center">
-                <div className="py-24">
-                  <div className="text-center">No candidates found in this stage</div>
-                </div>
-              </TableCell>
-            </TableRow>
+            {renderCandidatesTable(candidates)}
           </TableBody>
         </Table>
       </div>
