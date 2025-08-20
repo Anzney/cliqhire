@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import {
   Table,
@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getCandidatesByStage, RecruitmentCandidate } from "@/components/dummy/recruitment-pipeline-data";
+import { ViewCandidateDialog } from "@/components/Recruitment-Pipeline/view-candidate-dialog";
 
 interface TabContentProps {
   value: string;
@@ -33,6 +34,13 @@ const headerArr = [
 
 export const TabContent: React.FC<TabContentProps> = ({ value }) => {
   const candidates = getCandidatesByStage(value);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState<RecruitmentCandidate | null>(null);
+
+  const handleViewCandidate = (candidate: RecruitmentCandidate) => {
+    setSelectedCandidate(candidate);
+    setViewDialogOpen(true);
+  };
 
   const renderCandidatesTable = (candidates: RecruitmentCandidate[]) => {
     if (candidates.length === 0) {
@@ -70,7 +78,7 @@ export const TabContent: React.FC<TabContentProps> = ({ value }) => {
             <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
               <DropdownMenuItem onClick={(e) => {
                 e.stopPropagation();
-                console.log("View candidate:", candidate.candidateName);
+                handleViewCandidate(candidate);
               }}>
                 <Eye className="mr-2 h-4 w-4" />
                 View
@@ -107,23 +115,31 @@ export const TabContent: React.FC<TabContentProps> = ({ value }) => {
   };
 
   return (
-    <TabsContent value={value} className="p-0 mt-0">
-      <div className="flex-1">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {headerArr.map((header, index) => (
-                <TableHead key={index} className="text-sm font-medium">
-                  {header}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {renderCandidatesTable(candidates)}
-          </TableBody>
-        </Table>
-      </div>
-    </TabsContent>
+    <>
+      <TabsContent value={value} className="p-0 mt-0">
+        <div className="flex-1">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {headerArr.map((header, index) => (
+                  <TableHead key={index} className="text-sm font-medium">
+                    {header}
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {renderCandidatesTable(candidates)}
+            </TableBody>
+          </Table>
+        </div>
+      </TabsContent>
+
+      <ViewCandidateDialog
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        candidate={selectedCandidate}
+      />
+    </>
   );
 };
