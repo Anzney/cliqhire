@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { UserCog, Pencil, Check, Upload, Link as LinkIcon } from "lucide-react";
+import { ConfirmFieldUpdateDialog } from "@/components/ui/ConfirmFieldUpdateDialog";
 
 
 interface ViewEditTeamMemberDialogProps {
@@ -53,6 +54,19 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
   const [editing, setEditing] = useState<Record<string, boolean>>({});
   const [uploadingResume, setUploadingResume] = useState(false);
   const [initialForm, setInitialForm] = useState<EditableForm | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    fieldName: string;
+    fieldKey: keyof EditableForm;
+    oldValue: string | string[];
+    newValue: string | string[];
+  }>({
+    open: false,
+    fieldName: "",
+    fieldKey: "name",
+    oldValue: "",
+    newValue: "",
+  });
 
   useEffect(() => {
     if (open && teamMember) {
@@ -80,49 +94,86 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
   };
 
   const toggleEdit = (key: keyof EditableForm, toState?: boolean) => {
-    setEditing(prev => ({ ...prev, [key]: typeof toState === 'boolean' ? toState : !prev[key] }));
-  };
-
-
-
-  const isDirty = (): boolean => {
-    if (!initialForm) return false;
-    try {
-      return JSON.stringify(form) !== JSON.stringify(initialForm);
-    } catch {
-      return true;
+    const newState = typeof toState === 'boolean' ? toState : !editing[key];
+    
+    if (editing[key] && !newState) {
+      // User is clicking the check mark to save changes
+      const oldValue = initialForm?.[key] ?? (Array.isArray(form[key]) ? [] : "");
+      const newValue = form[key] as string | string[];
+      
+      // Check if there are actual changes
+      if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
+        setConfirmDialog({
+          open: true,
+          fieldName: getFieldLabel(key),
+          fieldKey: key,
+          oldValue,
+          newValue,
+        });
+        return;
+      }
     }
+    
+    setEditing(prev => ({ ...prev, [key]: newState }));
   };
 
-  const handleReset = () => {
-    if (initialForm) setForm(initialForm);
-    setEditing({});
+  const getFieldLabel = (key: keyof EditableForm): string => {
+    const labels: Record<keyof EditableForm, string> = {
+      name: "Name",
+      email: "Email",
+      phone: "Phone",
+      location: "Location",
+      experience: "Experience",
+      status: "Status",
+      department: "Department",
+      specialization: "Specialization",
+      teamRole: "Team Role",
+      skills: "Skills",
+      resume: "Resume",
+    };
+    return labels[key];
   };
 
-  const handleSave = async () => {
+
+
+
+
+
+
+  const handleConfirmUpdate = async () => {
     if (!teamMember?._id) return;
+    
     try {
       setSaving(true);
       const payload = {
         _id: teamMember._id,
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-        location: form.location,
-        experience: form.experience,
-        status: form.status,
-        department: form.department,
-        specialization: form.specialization,
-        teamRole: form.teamRole || undefined,
-        skills: form.skills.filter(skill => skill.trim() !== ""), // Filter empty skills only when saving
-        resume: form.resume,
+        [confirmDialog.fieldKey]: confirmDialog.fieldKey === 'skills' 
+          ? (confirmDialog.newValue as string[]).filter(skill => skill.trim() !== "")
+          : confirmDialog.newValue,
       };
+      
       const updated = await updateTeamMember(payload);
       onUpdated?.(updated);
-      onOpenChange(false);
+      
+      // Update the form and initial form with the new value
+      setForm(prev => ({ ...prev, [confirmDialog.fieldKey]: confirmDialog.newValue }));
+      setInitialForm(prev => prev ? { ...prev, [confirmDialog.fieldKey]: confirmDialog.newValue } : null);
+      
+      // Close the confirmation dialog and stop editing
+      setConfirmDialog(prev => ({ ...prev, open: false }));
+      setEditing(prev => ({ ...prev, [confirmDialog.fieldKey]: false }));
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCancelUpdate = () => {
+    // Reset the form value to the original value
+    setForm(prev => ({ ...prev, [confirmDialog.fieldKey]: confirmDialog.oldValue }));
+    
+    // Close the confirmation dialog and stop editing
+    setConfirmDialog(prev => ({ ...prev, open: false }));
+    setEditing(prev => ({ ...prev, [confirmDialog.fieldKey]: false }));
   };
 
   const renderField = (key: keyof EditableForm, label: string, value: any, type: 'text' | 'select' | 'textarea' | 'resume' = 'text', options?: { value: string; label: string }[]) => {
@@ -386,10 +437,16 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
           )}
         </div>
 
-        <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Close</Button>
-          <Button onClick={handleSave} disabled={saving || !isDirty()}>{saving ? 'Saving...' : 'Save Changes'}</Button>
-        </DialogFooter>
+        <ConfirmFieldUpdateDialog
+          open={confirmDialog.open}
+          onOpenChange={(open) => setConfirmDialog(prev => ({ ...prev, open }))}
+          fieldName={confirmDialog.fieldName}
+          oldValue={confirmDialog.oldValue}
+          newValue={confirmDialog.newValue}
+          onConfirm={handleConfirmUpdate}
+          onCancel={handleCancelUpdate}
+          isLoading={saving}
+        />
       </DialogContent>
     </Dialog>
   );
