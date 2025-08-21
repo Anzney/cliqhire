@@ -32,6 +32,7 @@ import { UserPermissionTab } from "./user-permission-tab";
 import { ViewTeamDialog } from "./view-team-dialog";
 import { TeamMember } from "@/types/teamMember";
 import { getTeamMembers } from "@/services/teamMembersService";
+import { getTeams, Team } from "@/services/teamService";
 
 interface UserAccessTabsProps {
   refreshTrigger?: number;
@@ -40,15 +41,7 @@ interface UserAccessTabsProps {
   onTeamCreated?: () => void;
 }
 
-interface Team {
-  id: string;
-  teamName: string;
-  hiringManager: string;
-  teamLead: string;
-  recruiters: string[];
-  teamStatus: string;
-  createdAt: string;
-}
+
 
 export function UserAccessTabs({ 
   refreshTrigger, 
@@ -61,6 +54,7 @@ export function UserAccessTabs({
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loadingTeamMembers, setLoadingTeamMembers] = useState(false);
+  const [loadingTeams, setLoadingTeams] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -70,9 +64,10 @@ export function UserAccessTabs({
   const dialogOpen = addTeamDialogOpen !== undefined ? addTeamDialogOpen : internalDialogOpen;
   const setDialogOpen = setAddTeamDialogOpen || setInternalDialogOpen;
 
-  // Fetch team members when component mounts
+  // Fetch team members and teams when component mounts
   useEffect(() => {
     fetchTeamMembers();
+    fetchTeams();
   }, [refreshTrigger]);
 
   const fetchTeamMembers = async () => {
@@ -84,6 +79,18 @@ export function UserAccessTabs({
       console.error("Error fetching team members:", error);
     } finally {
       setLoadingTeamMembers(false);
+    }
+  };
+
+  const fetchTeams = async () => {
+    setLoadingTeams(true);
+    try {
+      const response = await getTeams();
+      setTeams(response.teams);
+    } catch (error) {
+      console.error("Error fetching teams:", error);
+    } finally {
+      setLoadingTeams(false);
     }
   };
 
@@ -106,17 +113,8 @@ export function UserAccessTabs({
   };
 
   const handleAddTeamSuccess = (teamData: any) => {
-    const newTeam: Team = {
-      id: Date.now().toString(),
-      teamName: teamData.teamName,
-      hiringManager: teamData.hiringManager,
-      teamLead: teamData.teamLead,
-      recruiters: teamData.recruiters,
-      teamStatus: teamData.teamStatus,
-      createdAt: new Date().toISOString(),
-    };
-    
-    setTeams(prev => [...prev, newTeam]);
+    // The teamData should already be in the correct format from the API
+    setTeams(prev => [...prev, teamData]);
     
     // Call the parent callback if provided
     if (onTeamCreated) {
@@ -136,7 +134,7 @@ export function UserAccessTabs({
 
   const confirmDeleteTeam = () => {
     if (teamToDelete) {
-      setTeams(prev => prev.filter(team => team.id !== teamToDelete.id));
+      setTeams(prev => prev.filter(team => team._id !== teamToDelete._id));
       setDeleteDialogOpen(false);
       setTeamToDelete(null);
     }
@@ -173,17 +171,17 @@ export function UserAccessTabs({
     }
 
     return teams.map((team) => (
-      <TableRow key={team.id} className="hover:bg-muted/50">
+      <TableRow key={team._id} className="hover:bg-muted/50">
         <TableCell className="text-sm font-medium">{team.teamName}</TableCell>
-        <TableCell className="text-sm">{getTeamMemberName(team.hiringManager)}</TableCell>
-        <TableCell className="text-sm">{getTeamMemberName(team.teamLead)}</TableCell>
-        <TableCell className="text-sm">{team.recruiters.length}</TableCell>
+        <TableCell className="text-sm">{team.hiringManagerId.name}</TableCell>
+        <TableCell className="text-sm">{team.teamLeadId.name}</TableCell>
+        <TableCell className="text-sm">{team.recruiterCount}</TableCell>
         <TableCell className="text-sm">
           <Badge 
-            variant={team.teamStatus === "Active" ? "default" : team.teamStatus === "Working" ? "secondary" : "outline"}
+            variant={team.isActive ? "default" : "secondary"}
             className="text-xs"
           >
-            {team.teamStatus}
+            {team.isActive ? "Active" : "Inactive"}
           </Badge>
         </TableCell>
         <TableCell className="text-sm">
@@ -279,7 +277,6 @@ export function UserAccessTabs({
         open={viewDialogOpen}
         onOpenChange={setViewDialogOpen}
         team={teamToView}
-        getTeamMemberName={getTeamMemberName}
       />
 
       {/* Delete Confirmation Dialog */}

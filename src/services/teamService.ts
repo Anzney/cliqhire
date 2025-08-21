@@ -1,6 +1,9 @@
 import axios from 'axios';
 import { api } from '@/lib/axios-config';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+console.log('Team Service - API_URL:', API_URL);
+
 export interface CreateTeamData {
   teamName: string;
   hiringManagerId: string;
@@ -8,24 +11,36 @@ export interface CreateTeamData {
   recruiterIds: string[];
 }
 
+export interface TeamMember {
+  _id: string;
+  name: string;
+  email: string;
+  teamRole: string;
+  department: string;
+  phone: string;
+  location: string;
+  experience: string;
+  status: string;
+}
+
 export interface Team {
   _id: string;
   teamName: string;
-  hiringManagerId: string;
-  teamLeadId: string;
-  recruiterIds: string[];
-  status: string;
+  hiringManagerId: TeamMember;
+  teamLeadId: TeamMember;
+  recruiters: TeamMember[];
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  totalMembers: number;
+  recruiterCount: number;
 }
 
 export interface TeamResponse {
   status: string;
-  data: {
-    team?: Team;
-    teams?: Team[];
-  };
   message?: string;
+  count?: number;
+  data: Team[] | Team;
 }
 
 // Create a new team
@@ -62,14 +77,14 @@ export const createTeam = async (teamData: CreateTeamData): Promise<Team> => {
 // Get all teams
 export const getTeams = async (): Promise<{ teams: Team[] }> => {
   try {
-    console.log('Making API call to: /api/teams');
+    console.log('Making API call to:', `${API_URL}/api/teams`);
     
     const response = await api.get('/api/teams');
     console.log('API response for teams list:', response.data);
 
     if (response.data && response.data.status === 'success') {
       return {
-        teams: response.data.data.teams || []
+        teams: Array.isArray(response.data.data) ? response.data.data : []
       };
     }
     throw new Error(response.data?.message || 'Failed to fetch teams');
@@ -88,15 +103,8 @@ export const getTeamById = async (id: string): Promise<Team> => {
     console.log('API response:', response.data);
     
     if (response.data && response.data.status === 'success') {
-      const team = response.data.data.team || response.data.data || response.data;
+      const team = response.data.data;
       console.log('Extracted team:', team);
-      return team;
-    }
-    
-    // If the response doesn't have a status field, try to extract data directly
-    if (response.data) {
-      const team = response.data.team || response.data;
-      console.log('Extracted team (no status):', team);
       return team;
     }
     

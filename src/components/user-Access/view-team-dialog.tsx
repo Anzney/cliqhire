@@ -11,29 +11,18 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, User, UserCheck, Building, Briefcase, UserPlus } from "lucide-react";
-
-interface Team {
-  id: string;
-  teamName: string;
-  hiringManager: string;
-  teamLead: string;
-  recruiters: string[];
-  teamStatus: string;
-  createdAt: string;
-}
+import { Team } from "@/services/teamService";
 
 interface ViewTeamDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   team: Team | null;
-  getTeamMemberName: (id: string) => string;
 }
 
 export function ViewTeamDialog({ 
   open, 
   onOpenChange, 
-  team, 
-  getTeamMemberName 
+  team
 }: ViewTeamDialogProps) {
   if (!team) return null;
 
@@ -44,15 +33,15 @@ export function ViewTeamDialog({
       rows: [
         [
           { label: "Team Name", value: team.teamName, isBadge: false },
-          { label: "Team Status", value: team.teamStatus, isBadge: true },
+          { label: "Team Status", value: team.isActive ? "Active" : "Inactive", isBadge: true },
           { label: "Created", value: new Date(team.createdAt).toLocaleDateString(), isBadge: false },
         ],
         [
-          { label: "Hiring Manager", value: getTeamMemberName(team.hiringManager), isBadge: false },
-          { label: "Team Lead", value: getTeamMemberName(team.teamLead), isBadge: false },
+          { label: "Hiring Manager", value: team.hiringManagerId.name, isBadge: false },
+          { label: "Team Lead", value: team.teamLeadId.name, isBadge: false },
         ],
         [
-          { label: "Recruiters", value: team.recruiters.map(recruiterId => getTeamMemberName(recruiterId)).join(", "), isBadge: false },
+          { label: "Recruiters", value: team.recruiters.map(recruiter => recruiter.name).join(", "), isBadge: false },
         ]
       ]
     },
