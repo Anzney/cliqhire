@@ -54,6 +54,7 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState<Record<string, boolean>>({});
   const [uploadingResume, setUploadingResume] = useState(false);
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [initialForm, setInitialForm] = useState<EditableForm | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -102,14 +103,17 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
       const oldValue = initialForm?.[key] ?? (Array.isArray(form[key]) ? [] : "");
       const newValue = form[key] as string | string[];
       
-      // Check if there are actual changes
-      if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
+      // Check if there are actual changes or if there's a resume file selected
+      const hasChanges = JSON.stringify(oldValue) !== JSON.stringify(newValue);
+      const hasResumeFile = key === 'resume' && resumeFile;
+      
+      if (hasChanges || hasResumeFile) {
         setConfirmDialog({
           open: true,
           fieldName: getFieldLabel(key),
           fieldKey: key,
           oldValue,
-          newValue,
+          newValue: hasResumeFile ? `File: ${resumeFile.name}` : newValue,
         });
         return;
       }
@@ -147,17 +151,29 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
     try {
       setSaving(true);
       
-      // Prepare the payload with only the field being updated
-      const fieldValue = confirmDialog.fieldKey === 'skills' 
-        ? (confirmDialog.newValue as string[]).filter(skill => skill.trim() !== "")
-        : confirmDialog.newValue;
+      let updated: TeamMember;
       
-      const payload = {
-        _id: teamMember._id,
-        [confirmDialog.fieldKey]: fieldValue,
-      };
-      
-      const updated = await updateTeamMember(payload);
+      // Handle resume file upload separately
+      if (confirmDialog.fieldKey === 'resume' && resumeFile) {
+        const { resumeUrl } = await uploadResume(teamMember._id, resumeFile);
+        updated = await updateTeamMember({
+          _id: teamMember._id,
+          resume: resumeUrl
+        });
+        setResumeFile(null); // Clear the file after successful upload
+      } else {
+        // Prepare the payload with only the field being updated
+        const fieldValue = confirmDialog.fieldKey === 'skills' 
+          ? (confirmDialog.newValue as string[]).filter(skill => skill.trim() !== "")
+          : confirmDialog.newValue;
+        
+        const payload = {
+          _id: teamMember._id,
+          [confirmDialog.fieldKey]: fieldValue,
+        };
+        
+        updated = await updateTeamMember(payload);
+      }
       
       // Update the form and initial form with the new value
       setForm(prev => ({ ...prev, [confirmDialog.fieldKey]: confirmDialog.newValue }));
@@ -193,6 +209,11 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
   const handleCancelUpdate = () => {
     // Reset the form value to the original value
     setForm(prev => ({ ...prev, [confirmDialog.fieldKey]: confirmDialog.oldValue }));
+    
+    // Clear resume file if canceling resume update
+    if (confirmDialog.fieldKey === 'resume') {
+      setResumeFile(null);
+    }
     
     // Close the confirmation dialog and stop editing
     setConfirmDialog(prev => ({ ...prev, open: false }));
@@ -261,20 +282,12 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
                     type="file"
                     accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                     className="hidden"
-                    onChange={async (e) => {
+                    onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if (!file || !teamMember?._id) return;
-                      try {
-                        setUploadingResume(true);
-                        const { resumeUrl } = await uploadResume(teamMember._id, file);
-                        handleChange(key, resumeUrl);
-                        toast.success('Resume uploaded successfully');
-                      } catch (error: any) {
-                        console.error('Error uploading resume:', error);
-                        const errorMessage = error instanceof Error ? error.message : 'Failed to upload resume';
-                        toast.error(errorMessage);
-                      } finally {
-                        setUploadingResume(false);
+                      if (file) {
+                        setResumeFile(file);
+                        // Set a temporary value to show the file is selected
+                        handleChange(key, `File: ${file.name}`);
                       }
                     }}
                   />
@@ -286,17 +299,27 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
                     onClick={() => document.getElementById("resume-file-input")?.click()}
                     className="h-8"
                   >
-                    <Upload className="h-4 w-4 mr-2" /> {uploadingResume ? "Uploading..." : "Upload"}
+                    <Upload className="h-4 w-4 mr-2" /> 
+                    {uploadingResume ? "Uploading..." : resumeFile ? "Change File" : "Upload"}
                   </Button>
+                  {resumeFile && (
+                    <div className="text-xs text-green-600">
+                      File selected: {resumeFile.name}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           ) : (
             <span className="text-sm text-gray-600 flex-1 break-words">
               {type === 'resume' && value ? (
-                <a href={value} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-blue-600 hover:underline">
-                  <LinkIcon className="h-4 w-4" /> View Resume
-                </a>
+                value.startsWith('File:') ? (
+                  <span className="text-green-600">{value}</span>
+                ) : (
+                  <a href={value} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-blue-600 hover:underline">
+                    <LinkIcon className="h-4 w-4" /> View Resume
+                  </a>
+                )
               ) : type === 'textarea' && Array.isArray(value) && value.length > 0 ? (
                 <div className="flex flex-wrap gap-1">
                   {value.filter(item => item.trim() !== "").map((item, idx) => (
