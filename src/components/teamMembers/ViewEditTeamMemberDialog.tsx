@@ -52,7 +52,6 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState<Record<string, boolean>>({});
   const [uploadingResume, setUploadingResume] = useState(false);
-  const [editAll, setEditAll] = useState(false);
   const [initialForm, setInitialForm] = useState<EditableForm | null>(null);
 
   useEffect(() => {
@@ -73,7 +72,6 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
       setForm(next);
       setInitialForm(next);
       setEditing({});
-      setEditAll(false);
     }
   }, [open, teamMember]);
 
@@ -85,14 +83,7 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
     setEditing(prev => ({ ...prev, [key]: typeof toState === 'boolean' ? toState : !prev[key] }));
   };
 
-  const setAllEditing = (toState: boolean) => {
-    const keys: (keyof EditableForm)[] = [
-      "name","email","phone","location","experience","status","teamRole","department","specialization","resume","skills"
-    ];
-    const next: Record<string, boolean> = {};
-    keys.forEach(k => { next[k] = toState; });
-    setEditing(next);
-  };
+
 
   const isDirty = (): boolean => {
     if (!initialForm) return false;
@@ -106,7 +97,6 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
   const handleReset = () => {
     if (initialForm) setForm(initialForm);
     setEditing({});
-    setEditAll(false);
   };
 
   const handleSave = async () => {
@@ -136,7 +126,7 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
   };
 
   const renderField = (key: keyof EditableForm, label: string, value: any, type: 'text' | 'select' | 'textarea' | 'resume' = 'text', options?: { value: string; label: string }[]) => {
-    const isEditing = editing[key] || editAll;
+    const isEditing = editing[key];
     
     return (
       <div className="flex items-center justify-between py-2">
@@ -277,12 +267,7 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
                 </DialogDescription>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant={editAll ? "secondary" : "outline"} size="sm" onClick={() => { setEditAll(!editAll); setAllEditing(!editAll); }}>
-                {editAll ? "Stop Editing" : "Edit All"}
-              </Button>
-              <Button variant="ghost" size="sm" onClick={handleReset} disabled={!isDirty()}>Reset</Button>
-            </div>
+
           </div>
         </DialogHeader>
 
