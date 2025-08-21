@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { RefreshCcw } from "lucide-react";
 import { CreateTeamMemberData, TeamMemberStatus } from "@/types/teamMember";
-import { createTeamMember } from "@/services/teamMembersService";
+import { createTeamMember, uploadResume, updateTeamMember } from "@/services/teamMembersService";
 import { PersonalInformationTab } from "./PersonalInformationTab";
 import { SkillsAndStatusTab } from "./SkillsAndStatusTab";
 
@@ -42,6 +42,7 @@ export function CreateTeamMemberModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [currentTab, setCurrentTab] = useState(0);
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -70,7 +71,40 @@ export function CreateTeamMemberModal({
     setIsSubmitting(true);
     try {
       console.log("🚀 Submitting team member data:", formData);
-      const createdTeamMember = await createTeamMember(formData);
+      
+      let createdTeamMember;
+      
+      if (resumeFile) {
+        // Create FormData for file upload according to API specification
+        const formDataToSend = new FormData();
+        
+        // Required fields
+        formDataToSend.append('name', formData.name);
+        formDataToSend.append('email', formData.email);
+        formDataToSend.append('teamRole', formData.teamRole);
+        
+        // Optional fields
+        if (formData.phone) formDataToSend.append('phone', formData.phone);
+        if (formData.location) formDataToSend.append('location', formData.location);
+        if (formData.experience) formDataToSend.append('experience', formData.experience);
+        if (formData.status) formDataToSend.append('status', formData.status);
+        if (formData.department) formDataToSend.append('department', formData.department);
+        if (formData.specialization) formDataToSend.append('specialization', formData.specialization);
+        
+        // Handle skills array - convert to comma-separated string
+        if (formData.skills && formData.skills.length > 0) {
+          formDataToSend.append('skills', formData.skills.join(', '));
+        }
+        
+        // Add the resume file
+        formDataToSend.append('resume', resumeFile);
+        
+        createdTeamMember = await createTeamMember(formDataToSend);
+      } else {
+        // Send as regular JSON
+        createdTeamMember = await createTeamMember(formData);
+      }
+      
       console.log("✅ Team member created successfully:", createdTeamMember);
 
       // Reset form
@@ -86,6 +120,7 @@ export function CreateTeamMemberModal({
         specialization: "",
         teamRole: "",
       });
+      setResumeFile(null);
       setErrors({});
       setCurrentTab(0);
 
@@ -117,6 +152,7 @@ export function CreateTeamMemberModal({
         specialization: "",
         teamRole: "",
       });
+      setResumeFile(null);
       setErrors({});
       setCurrentTab(0);
       onOpenChange(false);
@@ -180,7 +216,12 @@ export function CreateTeamMemberModal({
           )}
 
           {currentTab === 1 && (
-            <SkillsAndStatusTab formData={formData} setFormData={setFormData} errors={errors} />
+            <SkillsAndStatusTab 
+              formData={formData} 
+              setFormData={setFormData} 
+              errors={errors} 
+              onResumeFileChange={setResumeFile}
+            />
           )}
         </div>
 

@@ -61,9 +61,18 @@ export const getTeamMemberById = async (id: string): Promise<TeamMember> => {
 };
 
 // Create a new team member
-export const createTeamMember = async (teamMemberData: CreateTeamMemberData): Promise<TeamMember> => {
+export const createTeamMember = async (teamMemberData: CreateTeamMemberData | FormData): Promise<TeamMember> => {
   try {
-    const response = await api.post('/api/users/add-member', teamMemberData);
+    let response;
+    
+    if (teamMemberData instanceof FormData) {
+      // FormData for file uploads - don't set Content-Type header
+      // Browser will automatically set it with the correct boundary
+      response = await api.post('/api/users/add-member', teamMemberData);
+    } else {
+      // JSON payload
+      response = await api.post('/api/users/add-member', teamMemberData);
+    }
     
     if (response.data && response.data.status === 'success') {
       return response.data.data.user || response.data.data;
