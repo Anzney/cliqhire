@@ -32,7 +32,7 @@ import { UserPermissionTab } from "./user-permission-tab";
 import { ViewTeamDialog } from "./view-team-dialog";
 import { TeamMember } from "@/types/teamMember";
 import { getTeamMembers } from "@/services/teamMembersService";
-import { getTeams, Team } from "@/services/teamService";
+import { getTeams, deleteTeam, Team } from "@/services/teamService";
 
 interface UserAccessTabsProps {
   refreshTrigger?: number;
@@ -132,11 +132,17 @@ export function UserAccessTabs({
     setDeleteDialogOpen(true);
   };
 
-  const confirmDeleteTeam = () => {
+  const confirmDeleteTeam = async () => {
     if (teamToDelete) {
-      setTeams(prev => prev.filter(team => team._id !== teamToDelete._id));
-      setDeleteDialogOpen(false);
-      setTeamToDelete(null);
+      try {
+        await deleteTeam(teamToDelete._id);
+        setTeams(prev => prev.filter(team => team._id !== teamToDelete._id));
+        setDeleteDialogOpen(false);
+        setTeamToDelete(null);
+      } catch (error) {
+        console.error('Error deleting team:', error);
+        alert('Failed to delete team. Please try again.');
+      }
     }
   };
 

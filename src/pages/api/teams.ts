@@ -78,6 +78,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         hiringManagerId,
         teamLeadId,
         recruiterIds,
+        status: 'Active',
       });
 
       return res.status(201).json({

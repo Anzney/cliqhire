@@ -138,7 +138,7 @@ export const updateTeam = async (id: string, teamData: Partial<CreateTeamData>):
 // Delete a team
 export const deleteTeam = async (id: string): Promise<void> => {
   try {
-    console.log('Making API call to delete team:', `/api/teams/${id}`);
+    console.log('Making API call to delete team:', `${API_URL}/api/teams/${id}`);
     
     const response = await api.delete(`/api/teams/${id}`);
     console.log('API response for team deletion:', response.data);
