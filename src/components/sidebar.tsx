@@ -29,13 +29,13 @@ const menuItems = [
   { name: "Recruitment Pipeline", icon: Route, href: "/reactruterpipeline", permission: "RECRUITMENT_PIPELINE" },
   { name: "Team Members", icon: Users, href: "/teammembers", permission: "TEAM_MEMBERS" },
   { name: "User Access", icon: LockKeyhole, href: "/user-access", permission: "USER_ACCESS" },
-  { name: "Placements", icon: UserCheck, href: "/placements", permission: "PLACEMENTS" },
-  { name: "Activities", icon: Calendar, href: "/activities", permission: "ACTIVITIES" },
-  { name: "Inbox", icon: MessageSquare, href: "/inbox", permission: "INBOX" },
-  { name: "Account & Finance", icon: DollarSign, href: "/finance", permission: "FINANCE" },
-  { name: "Reports", icon: BarChart, href: "/reports", permission: "REPORTS" },
-  { name: "Settings", icon: Settings, href: "/settings", permission: "SETTINGS" },
-  { name: "Administration", icon: Lock, href: "/admin", permission: "ADMIN" },
+  // { name: "Placements", icon: UserCheck, href: "/placements", permission: "PLACEMENTS" },
+  // { name: "Activities", icon: Calendar, href: "/activities", permission: "ACTIVITIES" },
+  // { name: "Inbox", icon: MessageSquare, href: "/inbox", permission: "INBOX" },
+  // { name: "Account & Finance", icon: DollarSign, href: "/finance", permission: "FINANCE" },
+  // { name: "Reports", icon: BarChart, href: "/reports", permission: "REPORTS" },
+  // { name: "Settings", icon: Settings, href: "/settings", permission: "SETTINGS" },
+  // { name: "Administration", icon: Lock, href: "/admin", permission: "ADMIN" },
 ];
 
 export function Sidebar() {
