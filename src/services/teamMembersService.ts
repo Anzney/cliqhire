@@ -79,14 +79,97 @@ export const createTeamMember = async (teamMemberData: CreateTeamMemberData): Pr
 export const updateTeamMember = async (teamMemberData: UpdateTeamMemberData): Promise<TeamMember> => {
   try {
     const { _id, ...updateData } = teamMemberData;
-    const response = await api.patch(`/api/users/${_id}`, updateData);
     
-    if (response.data && response.data.status === 'success') {
-      return response.data.data.user || response.data.data;
+    // Filter only allowed fields according to API specification
+    const allowedFields = [
+      'name', 'email', 'teamRole', 'phone', 'location', 'experience', 
+      'status', 'department', 'specialization', 'skills', 'resume', 
+      'avatar', 'gender'
+    ];
+    
+    const filteredUpdateData = Object.keys(updateData).reduce((acc, key) => {
+      if (allowedFields.includes(key)) {
+        acc[key] = updateData[key as keyof typeof updateData];
+      }
+      return acc;
+    }, {} as any);
+    
+    console.log('Making PATCH API call to:', `${API_URL}/api/users/${_id}`);
+    console.log('Update data:', filteredUpdateData);
+    
+    const response = await api.patch(`/api/users/${_id}`, filteredUpdateData);
+    console.log('Update API response:', response.data);
+    
+    // Handle different response formats
+    if (response.data) {
+      // If response has success field and it's true (new API format)
+      if (response.data.success === true) {
+        return response.data.data?.user || response.data.data || response.data;
+      }
+      
+      // If response has status field and it's success (old API format)
+      if (response.data.status === 'success') {
+        return response.data.data?.user || response.data.data || response.data;
+      }
+      
+      // If response doesn't have status field but has data (direct response)
+      if (response.data.data) {
+        return response.data.data.user || response.data.data;
+      }
+      
+      // If response is the user object directly
+      if (response.data._id) {
+        return response.data;
+      }
+      
+      // If response has a message indicating success
+      if (response.data.message && response.data.message.toLowerCase().includes('success')) {
+        return response.data.data?.user || response.data.data || response.data;
+      }
     }
+    
+    // If we get here, the response format is unexpected
+    console.warn('Unexpected response format:', response.data);
+    
+    // As a fallback, if we have any data and the status is 200, assume success
+    if (response.status === 200 && response.data) {
+      // Check for success field first
+      if (response.data.success === true) {
+        return response.data.data?.user || response.data.data || response.data;
+      }
+      // Fallback to other formats
+      return response.data.data?.user || response.data.data || response.data;
+    }
+    
     throw new Error(response.data?.message || 'Failed to update team member');
   } catch (error: any) {
     console.error('Error updating team member:', error);
+    
+    if (error.response?.status === 403) {
+      throw new Error('Access denied. Admin privileges required.');
+    }
+    
+    if (error.response?.status === 404) {
+      throw new Error('Team member not found');
+    }
+    
+    if (error.response?.status === 400) {
+      throw new Error(error.response.data?.message || 'Invalid request data');
+    }
+    
+    // If we get a 200 status but it's in the error object, something is wrong with the response parsing
+    if (error.response?.status === 200) {
+      const responseData = error.response.data;
+      if (responseData) {
+        // Check for success field first
+        if (responseData.success === true) {
+          return responseData.data?.user || responseData.data || responseData;
+        }
+        // Fallback to other formats
+        return responseData.data?.user || responseData.data || responseData;
+      }
+    }
+    
     throw new Error(error.response?.data?.message || 'Failed to update team member');
   }
 };
@@ -138,7 +221,9 @@ export const uploadResume = async (id: string, file: File): Promise<{ resumeUrl:
     const formData = new FormData();
     formData.append('resume', file);
     
-    const response = await api.post(`/api/users/${id}/resume`, formData, {
+   
+    
+    const response = await api.post(`/api/users/${id}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -150,6 +235,19 @@ export const uploadResume = async (id: string, file: File): Promise<{ resumeUrl:
     throw new Error(response.data?.message || 'Failed to upload resume');
   } catch (error: any) {
     console.error('Error uploading resume:', error);
+    
+    if (error.response?.status === 403) {
+      throw new Error('Access denied. Admin privileges required.');
+    }
+    
+    if (error.response?.status === 404) {
+      throw new Error('Team member not found');
+    }
+    
+    if (error.response?.status === 400) {
+      throw new Error(error.response.data?.message || 'Invalid file format or size');
+    }
+    
     throw new Error(error.response?.data?.message || 'Failed to upload resume');
   }
 };

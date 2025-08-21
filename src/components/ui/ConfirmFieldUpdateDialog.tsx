@@ -44,7 +44,13 @@ export function ConfirmFieldUpdateDialog({
   const newValueFormatted = formatValue(newValue);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      if (!newOpen && isLoading) {
+        // Don't allow closing while loading
+        return;
+      }
+      onOpenChange(newOpen);
+    }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

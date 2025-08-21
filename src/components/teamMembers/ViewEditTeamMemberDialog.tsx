@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { UserCog, Pencil, Check, Upload, Link as LinkIcon } from "lucide-react";
 import { ConfirmFieldUpdateDialog } from "@/components/ui/ConfirmFieldUpdateDialog";
+import { toast } from "sonner";
 
 
 interface ViewEditTeamMemberDialogProps {
@@ -145,21 +146,43 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
     
     try {
       setSaving(true);
+      
+      // Prepare the payload with only the field being updated
+      const fieldValue = confirmDialog.fieldKey === 'skills' 
+        ? (confirmDialog.newValue as string[]).filter(skill => skill.trim() !== "")
+        : confirmDialog.newValue;
+      
       const payload = {
         _id: teamMember._id,
-        [confirmDialog.fieldKey]: confirmDialog.fieldKey === 'skills' 
-          ? (confirmDialog.newValue as string[]).filter(skill => skill.trim() !== "")
-          : confirmDialog.newValue,
+        [confirmDialog.fieldKey]: fieldValue,
       };
       
       const updated = await updateTeamMember(payload);
-      onUpdated?.(updated);
       
       // Update the form and initial form with the new value
       setForm(prev => ({ ...prev, [confirmDialog.fieldKey]: confirmDialog.newValue }));
       setInitialForm(prev => prev ? { ...prev, [confirmDialog.fieldKey]: confirmDialog.newValue } : null);
       
+      // Call the onUpdated callback
+      onUpdated?.(updated);
+      
+      // Show success toast immediately
+      toast.success(`${confirmDialog.fieldName} updated successfully`);
+      
       // Close the confirmation dialog and stop editing
+      setConfirmDialog(prev => ({ ...prev, open: false }));
+      setEditing(prev => ({ ...prev, [confirmDialog.fieldKey]: false }));
+    } catch (error: any) {
+      console.error('Error updating team member:', error);
+      
+      // Show error toast with specific message
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update team member';
+      toast.error(errorMessage);
+      
+      // Reset the form value to the original value on error
+      setForm(prev => ({ ...prev, [confirmDialog.fieldKey]: confirmDialog.oldValue }));
+      
+      // Close the confirmation dialog on error as well
       setConfirmDialog(prev => ({ ...prev, open: false }));
       setEditing(prev => ({ ...prev, [confirmDialog.fieldKey]: false }));
     } finally {
@@ -245,6 +268,11 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
                         setUploadingResume(true);
                         const { resumeUrl } = await uploadResume(teamMember._id, file);
                         handleChange(key, resumeUrl);
+                        toast.success('Resume uploaded successfully');
+                      } catch (error: any) {
+                        console.error('Error uploading resume:', error);
+                        const errorMessage = error instanceof Error ? error.message : 'Failed to upload resume';
+                        toast.error(errorMessage);
                       } finally {
                         setUploadingResume(false);
                       }
@@ -439,7 +467,13 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
 
         <ConfirmFieldUpdateDialog
           open={confirmDialog.open}
-          onOpenChange={(open) => setConfirmDialog(prev => ({ ...prev, open }))}
+          onOpenChange={(open) => {
+            if (!open) {
+              // If dialog is being closed, also stop editing
+              setEditing(prev => ({ ...prev, [confirmDialog.fieldKey]: false }));
+            }
+            setConfirmDialog(prev => ({ ...prev, open }));
+          }}
           fieldName={confirmDialog.fieldName}
           oldValue={confirmDialog.oldValue}
           newValue={confirmDialog.newValue}
