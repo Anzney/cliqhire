@@ -75,7 +75,7 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
     }
   }, [open, teamMember]);
 
-  const handleChange = (key: keyof EditableForm, value: string) => {
+  const handleChange = (key: keyof EditableForm, value: string | string[]) => {
     setForm(prev => ({ ...prev, [key]: value }));
   };
 
@@ -114,7 +114,7 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
         department: form.department,
         specialization: form.specialization,
         teamRole: form.teamRole || undefined,
-        skills: form.skills,
+        skills: form.skills.filter(skill => skill.trim() !== ""), // Filter empty skills only when saving
         resume: form.resume,
       };
       const updated = await updateTeamMember(payload);
@@ -155,20 +155,25 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
                   </SelectContent>
                 </Select>
               )}
-              {type === 'textarea' && (
-                <Textarea
-                  placeholder={`Enter ${label.toLowerCase()}`}
-                  value={Array.isArray(value) ? value.join(", ") : value || ""}
-                  onChange={e => {
-                    if (Array.isArray(value)) {
-                      handleChange(key, e.target.value.split(",").map(s => s.trim()).filter(Boolean) as any);
-                    } else {
-                      handleChange(key, e.target.value);
-                    }
-                  }}
-                  className="min-h-[60px]"
-                />
-              )}
+               {type === 'textarea' && (
+                  <Textarea
+                    placeholder={`Enter ${label.toLowerCase()}`}
+                    value={key === 'skills' && Array.isArray(value) ? value.join("\n") : (Array.isArray(value) ? value.join(", ") : value || "")}
+                    onChange={e => {
+                      if (key === 'skills') {
+                        // For skills, split by newlines but don't filter empty lines to allow Enter key to work
+                        const skillsArray = e.target.value.split("\n").map(s => s.trim());
+                        handleChange(key, skillsArray);
+                      } else if (Array.isArray(value)) {
+                        handleChange(key, e.target.value.split(",").map(s => s.trim()).filter(Boolean));
+                      } else {
+                        handleChange(key, e.target.value);
+                      }
+                    }}
+                    className="min-h-[60px]"
+                    rows={3}
+                  />
+                )}
               {type === 'resume' && (
                 <div className="flex flex-col gap-2">
                   <Input
@@ -215,7 +220,7 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
                 </a>
               ) : type === 'textarea' && Array.isArray(value) && value.length > 0 ? (
                 <div className="flex flex-wrap gap-1">
-                  {value.map((item, idx) => (
+                  {value.filter(item => item.trim() !== "").map((item, idx) => (
                     <Badge key={`${item}-${idx}`} variant="secondary" className="text-xs">{item}</Badge>
                   ))}
                 </div>
@@ -306,7 +311,7 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
 
           {/* Specialization - Full Width */}
           <div className="mb-4">
-            {renderField("specialization", "Specialization", form.specialization)}
+            {renderField("specialization", "Specialization", form.specialization, "textarea")}
           </div>
 
           {/* Skills - Full Width */}
