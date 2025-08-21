@@ -22,6 +22,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { getTeamMembers } from "@/services/teamMembersService";
+import { createTeam } from "@/services/teamService";
 import { TeamMember } from "@/types/teamMember";
 
 interface AddTeamMembersDialogProps {
@@ -36,7 +37,6 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
     hiringManager: "",
     teamLead: "",
     recruiters: [] as string[],
-    teamStatus: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -69,6 +69,11 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
           isActive: member.isActive
         });
       });
+      
+      // Log all unique roles for debugging
+      const allRoles = response.teamMembers.map(member => member.role || member.teamRole || member.department).filter(Boolean);
+      const uniqueRoles = [...new Set(allRoles)];
+      console.log('All unique roles in team members:', uniqueRoles);
       
       setTeamMembers(response.teamMembers);
     } catch (error) {
@@ -110,11 +115,11 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
     console.log('All team members:', teamMembers);
     console.log('Looking for role:', role);
     
-    // More flexible role matching
+    // More specific role matching to avoid cross-contamination
     const roleMappings: { [key: string]: string[] } = {
-      "Hiring Manager": ["Hiring Manager", "Recruitment Manager", "Manager", "Hiring", "Recruitment"],
-      "Team Lead": ["Team Lead", "Lead", "Team Leader", "Senior Recruiter"],
-      "Recruiters": ["Recruiter", "Recruiters", "Recruitment Specialist", "Talent Acquisition"]
+      "Hiring Manager": ["Hiring Manager", "Recruitment Manager", "HR Manager", "Manager"],
+      "Team Lead": ["Team Lead", "Lead", "Team Leader", "Lead Recruiter"],
+      "Recruiters": ["Recruiter", "Recruiters", "Recruitment Specialist", "Talent Acquisition", "Recruiter Specialist"]
     };
     
     const validRoles = roleMappings[role] || [role];
@@ -122,24 +127,35 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
     const filteredMembers = teamMembers.filter(member => {
       const memberRole = member.role || member.teamRole || member.department || '';
       const isActive = member.status === "Active" || member.isActive === "Active";
-      const matchesRole = validRoles.some(validRole => 
-        memberRole.toLowerCase().includes(validRole.toLowerCase())
-      );
       
-      console.log(`Member: ${member.name}, Role: ${memberRole}, Status: ${member.status}, Matches: ${matchesRole}`);
+      // More strict matching to avoid false positives
+      let matchesRole = false;
+      if (role === "Recruiters") {
+        // For recruiters, be more specific - avoid matching "Recruitment Manager" or "Lead Recruiter"
+        matchesRole = validRoles.some(validRole => {
+          const roleLower = memberRole.toLowerCase();
+          const validRoleLower = validRole.toLowerCase();
+          
+          // Exact match or starts with the role (but not if it's a manager or lead)
+          return roleLower === validRoleLower || 
+                 (roleLower.startsWith(validRoleLower) && 
+                  !roleLower.includes('manager') && 
+                  !roleLower.includes('lead'));
+        });
+      } else {
+        // For other roles, use standard matching
+        matchesRole = validRoles.some(validRole => 
+          memberRole.toLowerCase().includes(validRole.toLowerCase())
+        );
+      }
+      
+      console.log(`Member: ${member.name}, Role: "${memberRole}", Status: ${member.status}, Matches ${role}: ${matchesRole}`);
       
       return matchesRole && isActive;
     });
     
-    console.log(`Found ${filteredMembers.length} members for role "${role}"`);
-    
-    // If no members found with specific role, return all active members as fallback
-    if (filteredMembers.length === 0) {
-      console.log('No members found with specific role, showing all active members as fallback');
-      return teamMembers.filter(member => 
-        member.status === "Active" || member.isActive === "Active"
-      );
-    }
+    console.log(`Found ${filteredMembers.length} members for role "${role}":`, 
+      filteredMembers.map(m => `${m.name} (${m.role || m.teamRole || m.department})`));
     
     return filteredMembers;
   };
@@ -149,16 +165,29 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
     setLoading(true);
 
     try {
-      // TODO: Add API call to create team
-      console.log("Form data:", formData);
+      // Validate required fields
+      if (!formData.teamName || !formData.hiringManager || !formData.teamLead || formData.recruiters.length === 0) {
+        throw new Error("Please fill in all required fields");
+      }
+
+      // Prepare team data according to API specification
+      const teamData = {
+        teamName: formData.teamName,
+        hiringManagerId: formData.hiringManager,
+        teamLeadId: formData.teamLead,
+        recruiterIds: formData.recruiters
+      };
+
+      console.log("Creating team with data:", teamData);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Call the API to create team
+      const createdTeam = await createTeam(teamData);
+      console.log("Team created successfully:", createdTeam);
       
-      // Close dialog and trigger success callback with form data
+      // Close dialog and trigger success callback with created team data
       onOpenChange(false);
       if (onSuccess) {
-        onSuccess(formData);
+        onSuccess(createdTeam);
       }
       
       // Reset form
@@ -167,10 +196,11 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
         hiringManager: "",
         teamLead: "",
         recruiters: [],
-        teamStatus: "",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating team:", error);
+      // You might want to show an error message to the user here
+      alert(error.message || "Failed to create team");
     } finally {
       setLoading(false);
     }
@@ -182,7 +212,6 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
       hiringManager: "",
       teamLead: "",
       recruiters: [],
-      teamStatus: "",
     });
     onOpenChange(false);
   };
@@ -282,7 +311,7 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
                   ) : (
                     getTeamMembersByRole("Recruiters").map((member) => (
                       <SelectItem key={member._id} value={member._id}>
-                        {member.name}
+                        {member.name} ({member.role || member.teamRole || member.department || 'No role'})
                       </SelectItem>
                     ))
                   )}
@@ -309,23 +338,7 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="teamStatus">Team Status</Label>
-            <Select
-              value={formData.teamStatus}
-              onValueChange={(value) => handleInputChange("teamStatus", value)}
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select team status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Active">Active</SelectItem>
-                <SelectItem value="Working">Working</SelectItem>
-                <SelectItem value="On Hold">On Hold</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={handleCancel}>
