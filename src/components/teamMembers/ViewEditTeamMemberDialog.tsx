@@ -81,7 +81,7 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
         status: teamMember.status || "Active",
         department: teamMember.department || "",
         specialization: teamMember.specialization || "",
-        teamRole: teamMember.teamRole || teamMember.role || "",
+        teamRole: teamMember.teamRole || "",
         skills: Array.isArray(teamMember.skills) ? teamMember.skills : [],
         resume: teamMember.resume || "",
       };
@@ -316,8 +316,14 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
                 value.startsWith('File:') ? (
                   <span className="text-green-600">{value}</span>
                 ) : (
-                  <a href={value} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-blue-600 hover:underline">
-                    <LinkIcon className="h-4 w-4" /> View Resume
+                  <a 
+                    href={value} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+                  >
+                    <LinkIcon className="h-4 w-4" /> 
+                    View Resume
                   </a>
                 )
               ) : type === 'textarea' && Array.isArray(value) && value.length > 0 ? (
@@ -326,6 +332,8 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
                     <Badge key={`${item}-${idx}`} variant="secondary" className="text-xs">{item}</Badge>
                   ))}
                 </div>
+              ) : type === 'textarea' && Array.isArray(value) && value.length === 0 ? (
+                "—"
               ) : (
                 value || "—"
               )}
@@ -398,8 +406,8 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
             ])}
           </div>
 
-          {/* Row 3: Team Role, Department, Resume */}
-          <div className="grid grid-cols-3 gap-4 mb-4">
+          {/* Row 3: Team Role, Department */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
             {renderField("teamRole", "Team Role", form.teamRole, "select", [
               { value: "ADMIN", label: "ADMIN" },
               { value: "HIRING_MANAGER", label: "HIRING_MANAGER" },
@@ -407,7 +415,19 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
               { value: "RECRUITER", label: "RECRUITER" },
               { value: "HEAD_HUNTER", label: "HEAD_HUNTER" }
             ])}
-            {renderField("department", "Department", form.department)}
+            {renderField("department", "Department", form.department, "select", [
+              { value: "Technical Recruiting", label: "Technical Recruiting" },
+              { value: "Executive Search", label: "Executive Search" },
+              { value: "Talent Acquisition", label: "Talent Acquisition" },
+              { value: "HR", label: "HR" },
+              { value: "Sales", label: "Sales" },
+              { value: "Marketing", label: "Marketing" },
+              { value: "Operations", label: "Operations" }
+            ])}
+          </div>
+
+          {/* Resume - Full Width */}
+          <div className="mb-4">
             {renderField("resume", "Resume", form.resume, "resume")}
           </div>
 
@@ -422,70 +442,6 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
           </div>
 
           {/* Read-only fields */}
-          {teamMember.teamMemberId && (
-            <div className="flex items-center justify-between py-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">Team Member ID:</span>
-                <span className="text-sm text-gray-600">{teamMember.teamMemberId}</span>
-              </div>
-            </div>
-          )}
-          {teamMember.gender && (
-            <div className="flex items-center justify-between py-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">Gender:</span>
-                <span className="text-sm text-gray-600">{teamMember.gender}</span>
-              </div>
-            </div>
-          )}
-          {teamMember.registrationStatus && (
-            <div className="flex items-center justify-between py-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">Registration Status:</span>
-                <span className="text-sm text-gray-600">{teamMember.registrationStatus}</span>
-              </div>
-            </div>
-          )}
-          {teamMember.hireDate && (
-            <div className="flex items-center justify-between py-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">Hire Date:</span>
-                <span className="text-sm text-gray-600">{teamMember.hireDate}</span>
-              </div>
-            </div>
-          )}
-          {teamMember.manager && (
-            <div className="flex items-center justify-between py-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">Manager:</span>
-                <span className="text-sm text-gray-600">{teamMember.manager}</span>
-              </div>
-            </div>
-          )}
-          {typeof teamMember.performanceRating !== 'undefined' && (
-            <div className="flex items-center justify-between py-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">Performance Rating:</span>
-                <span className="text-sm text-gray-600">{String(teamMember.performanceRating)}</span>
-              </div>
-            </div>
-          )}
-          {typeof teamMember.activeJobs !== 'undefined' && (
-            <div className="flex items-center justify-between py-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">Active Jobs:</span>
-                <span className="text-sm text-gray-600">{String(teamMember.activeJobs)}</span>
-              </div>
-            </div>
-          )}
-          {typeof teamMember.completedPlacements !== 'undefined' && (
-            <div className="flex items-center justify-between py-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">Completed Placements:</span>
-                <span className="text-sm text-gray-600">{String(teamMember.completedPlacements)}</span>
-              </div>
-            </div>
-          )}
         </div>
 
         <ConfirmFieldUpdateDialog
