@@ -20,7 +20,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Users, Shield, MoreVertical, Eye, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Users, Shield, MoreVertical, Eye, Trash2, Edit } from "lucide-react";
+import { createPortal } from "react-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +41,7 @@ import {
 import { AddTeamMembersDialog } from "./add-team-members-dialog";
 import { UserPermissionTab } from "./user-permission-tab";
 import { ViewTeamDialog } from "./view-team-dialog";
+import { TeamStatusBadge } from "./team-status-badge";
 import { TeamMember } from "@/types/teamMember";
 import { getTeamMembers } from "@/services/teamMembersService";
 import { getTeams, deleteTeam, Team } from "@/services/teamService";
@@ -59,6 +71,11 @@ export function UserAccessTabs({
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [teamToView, setTeamToView] = useState<Team | null>(null);
+  const [teamId, setTeamId] = useState<string>();
+  const [newStatus, setNewStatus] = useState<string>();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingChange, setPendingChange] = useState<{ teamId: string; status: string } | null>(null);
 
   // Use external dialog state if provided, otherwise use internal state
   const dialogOpen = addTeamDialogOpen !== undefined ? addTeamDialogOpen : internalDialogOpen;
@@ -122,6 +139,57 @@ export function UserAccessTabs({
     }
   };
 
+  const handleStatusChange = (teamId: string, newStatus: string) => {
+    setPendingChange({ teamId, status: newStatus });
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmChange = async () => {
+    if (!pendingChange) return;
+
+    setTeamId(pendingChange.teamId);
+    setNewStatus(pendingChange.status);
+    setTeams(prev => prev.map(team => 
+      team._id === pendingChange.teamId ? { ...team, teamStatus: pendingChange.status } : team
+    ));
+    setShowConfirmDialog(false);
+  };
+
+  const handleCancelChange = () => {
+    setPendingChange(null);
+    setShowConfirmDialog(false);
+  };
+
+  useEffect(() => {
+    const updateTeamStatus = async () => {
+      if (!teamId || !newStatus) return;
+  
+      try {
+        setIsLoading(true);
+  
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/teams/${teamId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ teamStatus: newStatus }),
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to update team status');
+        }
+
+      } catch (error) {
+        // Revert the local state if the API call fails
+        setTeams(prev => prev.map(team => 
+          team._id === teamId ? { ...team, teamStatus: team.teamStatus } : team
+        ))
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
+    updateTeamStatus();
+  }, [teamId, newStatus]);
+
   const handleViewTeam = (team: Team) => {
     setTeamToView(team);
     setViewDialogOpen(true);
@@ -151,6 +219,10 @@ export function UserAccessTabs({
   };
 
   const renderTeamsTable = () => {
+    if (isLoading) {
+      return <div>Loading...</div>;
+    }
+
     if (teams.length === 0) {
       return (
         <TableRow>
@@ -182,34 +254,43 @@ export function UserAccessTabs({
         <TableCell className="text-sm">{team.teamLeadId.name}</TableCell>
         <TableCell className="text-sm">{team.recruiterCount}</TableCell>
         <TableCell className="text-sm">
-          <Badge 
-            variant={team.teamStatus === "Active" ? "default" : "secondary"}
-            className="text-xs"
-          >
-            {team.teamStatus || "Inactive"}
-          </Badge>
+          <TeamStatusBadge 
+            status={team.teamStatus || "Inactive"} 
+            onStatusChange={(newStatus) => handleStatusChange(team._id, newStatus)}
+          />
         </TableCell>
         <TableCell className="text-sm">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleViewTeam(team)}>
-                <Eye className="mr-2 h-4 w-4" />
-                View
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleDeleteTeam(team)}
-                className="text-red-600"
+          <div className="relative">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-gray-100 border border-gray-200">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                align="end" 
+                side="bottom" 
+                className="z-[9999] min-w-[120px] bg-white border border-gray-200 shadow-lg"
+                style={{ position: 'absolute', zIndex: 9999 }}
               >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuItem onClick={() => handleViewTeam(team)}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  View
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleViewTeam(team)}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleDeleteTeam(team)}
+                  className="text-red-600"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </TableCell>
       </TableRow>
     ));
@@ -242,7 +323,7 @@ export function UserAccessTabs({
         </TabsList>
 
         <TabsContent value="teams" className="p-0 mt-0">
-          <div className="flex-1">
+          <div className="flex-1 relative overflow-visible">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -283,6 +364,22 @@ export function UserAccessTabs({
         onOpenChange={setViewDialogOpen}
         team={teamToView}
       />
+
+      {/* Status Change Confirmation Dialog */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Status Change</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to update the team status? This action will be saved immediately.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelChange}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmChange}>Confirm</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, User, UserCheck, Building, Briefcase, UserPlus } from "lucide-react";
 import { Team } from "@/services/teamService";
+import { TeamStatusBadge } from "./team-status-badge";
 
 interface ViewTeamDialogProps {
   open: boolean;
@@ -105,12 +106,7 @@ export function ViewTeamDialog({
                              <span className="text-muted-foreground">{item.label}:</span>
                              <span className="font-medium">
                                {item.isBadge ? (
-                                 <Badge 
-                                   variant={item.value === "Active" ? "default" : item.value === "Working" ? "secondary" : "outline"}
-                                   className="text-xs"
-                                 >
-                                   {item.value}
-                                 </Badge>
+                                 <TeamStatusBadge status={item.value} />
                                ) : (
                                  item.value
                                )}
@@ -127,12 +123,7 @@ export function ViewTeamDialog({
                       <span className="text-muted-foreground">{item.label}:</span>
                       <span className="font-medium">
                         {item.isBadge ? (
-                          <Badge 
-                            variant={item.value === "Active" ? "default" : item.value === "Working" ? "secondary" : "outline"}
-                            className="text-xs"
-                          >
-                            {item.value}
-                          </Badge>
+                          <TeamStatusBadge status={item.value} />
                         ) : (
                           item.value
                         )}
