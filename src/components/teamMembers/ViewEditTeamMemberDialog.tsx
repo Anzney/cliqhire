@@ -299,8 +299,8 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
             ])}
           </div>
 
-          {/* Row 3: Team Role, Department */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          {/* Row 3: Team Role, Department, Resume */}
+          <div className="grid grid-cols-3 gap-4 mb-4">
             {renderField("teamRole", "Team Role", form.teamRole, "select", [
               { value: "ADMIN", label: "ADMIN" },
               { value: "HIRING_MANAGER", label: "HIRING_MANAGER" },
@@ -317,14 +317,10 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
               { value: "Marketing", label: "Marketing" },
               { value: "Operations", label: "Operations" }
             ])}
-          </div>
-
-          {/* Resume, Specialization, Skills - Read Only with Individual Edit Buttons */}
-          <div className="space-y-4 mb-4">
             <div className="flex items-center justify-between py-2">
               <div className="flex items-center gap-2 flex-1">
                 <span className="text-sm font-medium text-muted-foreground">Resume:</span>
-                <div className="flex-1">
+                <div className="flex-1 border-b border-gray-300 pb-1">
                   <span className="text-sm text-black">
                     {teamMember?.resume ? (
                       <a 
@@ -349,7 +345,10 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
                 <Pencil className="h-4 w-4" />
               </Button>
             </div>
+          </div>
 
+          {/* Row 4: Specialization */}
+          <div className="mb-4">
             <div className="flex items-center justify-between py-2">
               <div className="flex items-center gap-2 flex-1">
                 <span className="text-sm font-medium text-muted-foreground">Specialization:</span>
@@ -368,7 +367,10 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
                 <Pencil className="h-4 w-4" />
               </Button>
             </div>
+          </div>
 
+          {/* Row 5: Skills */}
+          <div className="mb-4">
             <div className="flex items-center justify-between py-2">
               <div className="flex items-center gap-2 flex-1">
                 <span className="text-sm font-medium text-muted-foreground">Skills:</span>
