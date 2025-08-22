@@ -5,7 +5,6 @@ import { TeamMember } from "@/types/teamMember";
 import { updateTeamMember, uploadResume } from "@/services/teamMembersService";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -18,14 +17,12 @@ interface EditResumeDialogProps {
 }
 
 export function EditResumeDialog({ open, onOpenChange, teamMember, onUpdated }: EditResumeDialogProps) {
-  const [resume, setResume] = useState("");
   const [saving, setSaving] = useState(false);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [uploadingResume, setUploadingResume] = useState(false);
 
   React.useEffect(() => {
     if (open && teamMember) {
-      setResume(teamMember.resume || "");
       setResumeFile(null);
     }
   }, [open, teamMember]);
@@ -33,24 +30,20 @@ export function EditResumeDialog({ open, onOpenChange, teamMember, onUpdated }: 
   const handleSave = async () => {
     if (!teamMember?._id) return;
     
+    if (!resumeFile) {
+      toast.error("Please select a file to upload");
+      return;
+    }
+    
     try {
       setSaving(true);
       
-      let updated: TeamMember;
-      
-      // Handle resume file upload separately
-      if (resumeFile) {
-        const { resumeUrl } = await uploadResume(teamMember._id, resumeFile);
-        updated = await updateTeamMember({
-          _id: teamMember._id,
-          resume: resumeUrl
-        });
-      } else {
-        updated = await updateTeamMember({
-          _id: teamMember._id,
-          resume: resume
-        });
-      }
+      // Upload resume file
+      const { resumeUrl } = await uploadResume(teamMember._id, resumeFile);
+      const updated = await updateTeamMember({
+        _id: teamMember._id,
+        resume: resumeUrl
+      });
       
       // Call the onUpdated callback
       onUpdated?.(updated);
@@ -73,9 +66,6 @@ export function EditResumeDialog({ open, onOpenChange, teamMember, onUpdated }: 
 
   const handleCancel = () => {
     // Reset form to original values
-    if (teamMember) {
-      setResume(teamMember.resume || "");
-    }
     setResumeFile(null);
     onOpenChange(false);
   };
@@ -94,17 +84,7 @@ export function EditResumeDialog({ open, onOpenChange, teamMember, onUpdated }: 
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="resume">Resume URL</Label>
-            <Input
-              id="resume"
-              placeholder="Paste resume URL"
-              value={resume}
-              onChange={e => setResume(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Or Upload File</Label>
+            <Label>Upload Resume</Label>
             <input
               id="resume-file-input"
               type="file"
@@ -117,21 +97,19 @@ export function EditResumeDialog({ open, onOpenChange, teamMember, onUpdated }: 
                 }
               }}
             />
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              disabled={uploadingResume}
+            <div
+              className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-gray-400 transition-colors"
               onClick={() => document.getElementById("resume-file-input")?.click()}
             >
-              <Upload className="h-4 w-4 mr-2" /> 
-              {uploadingResume ? "Uploading..." : resumeFile ? "Change File" : "Upload File"}
-            </Button>
-            {resumeFile && (
-              <div className="text-xs text-green-600">
-                File selected: {resumeFile.name}
-              </div>
-            )}
+              <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+              <div className="text-sm font-medium text-gray-700 mb-1">Upload File</div>
+              <div className="text-xs text-gray-500">5MB max</div>
+              {resumeFile && (
+                <div className="text-xs text-green-600 mt-2">
+                  File selected: {resumeFile.name}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
