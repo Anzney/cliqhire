@@ -183,10 +183,10 @@ export function UserAccessTabs({
         <TableCell className="text-sm">{team.recruiterCount}</TableCell>
         <TableCell className="text-sm">
           <Badge 
-            variant={team.isActive ? "default" : "secondary"}
+            variant={team.teamStatus === "Active" ? "default" : "secondary"}
             className="text-xs"
           >
-            {team.isActive ? "Active" : "Inactive"}
+            {team.teamStatus || "Inactive"}
           </Badge>
         </TableCell>
         <TableCell className="text-sm">

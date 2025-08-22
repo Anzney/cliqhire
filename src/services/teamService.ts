@@ -33,6 +33,7 @@ export interface Team {
   updatedAt: string;
   totalMembers: number;
   recruiterCount: number;
+  teamStatus:string;
 }
 
 export interface TeamResponse {

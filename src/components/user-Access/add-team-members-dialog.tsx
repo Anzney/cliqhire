@@ -37,6 +37,7 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
     hiringManager: "",
     teamLead: "",
     recruiters: [] as string[],
+    teamStatus: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -136,7 +137,7 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
 
     try {
       // Validate required fields
-      if (!formData.teamName || !formData.hiringManager || !formData.teamLead || formData.recruiters.length === 0) {
+      if (!formData.teamName || !formData.hiringManager || !formData.teamLead || formData.recruiters.length === 0 || !formData.teamStatus) {
         throw new Error("Please fill in all required fields");
       }
 
@@ -145,7 +146,8 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
         teamName: formData.teamName,
         hiringManagerId: formData.hiringManager,
         teamLeadId: formData.teamLead,
-        recruiterIds: formData.recruiters
+        recruiterIds: formData.recruiters,
+        teamStatus: formData.teamStatus
       };
 
       // Call the API to create team
@@ -163,6 +165,7 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
         hiringManager: "",
         teamLead: "",
         recruiters: [],
+        teamStatus: "",
       });
     } catch (error: any) {
       // You might want to show an error message to the user here
@@ -178,6 +181,7 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
       hiringManager: "",
       teamLead: "",
       recruiters: [],
+      teamStatus: "",
     });
     onOpenChange(false);
   };
@@ -304,7 +308,23 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
             </div>
           </div>
 
-
+          <div className="space-y-2">
+            <Label htmlFor="teamStatus">Team Status</Label>
+            <Select
+              value={formData.teamStatus}
+              onValueChange={(value) => handleInputChange("teamStatus", value)}
+              required
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select team status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Active">Active</SelectItem>
+                <SelectItem value="Working">Working</SelectItem>
+                <SelectItem value="On Hold">On Hold</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={handleCancel}>

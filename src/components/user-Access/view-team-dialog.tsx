@@ -30,20 +30,21 @@ export function ViewTeamDialog({
     {
       title: "Team Information",
       icon: Users,
-      rows: [
-        [
-          { label: "Team Name", value: team.teamName, isBadge: false },
-          { label: "Team Status", value: team.isActive ? "Active" : "Inactive", isBadge: true },
-          { label: "Created", value: new Date(team.createdAt).toLocaleDateString(), isBadge: false },
-        ],
-        [
-          { label: "Hiring Manager", value: team.hiringManagerId.name, isBadge: false },
-          { label: "Team Lead", value: team.teamLeadId.name, isBadge: false },
-        ],
-        [
-          { label: "Recruiters", value: team.recruiters.map(recruiter => recruiter.name).join(", "), isBadge: false },
-        ]
-      ]
+             rows: [
+         [
+           { label: "Team Name", value: team.teamName, isBadge: false },
+           { label: "Team Status", value: team.teamStatus || "Inactive", isBadge: true },
+           { label: "Created", value: new Date(team.createdAt).toLocaleDateString(), isBadge: false },
+         ],
+         [
+           { label: "Hiring Manager", value: team.hiringManagerId.name, isBadge: false },
+           { label: "Team Lead", value: team.teamLeadId.name, isBadge: false },
+           { label: "", value: "", isBadge: false },
+         ],
+         [
+           { label: "Recruiters", value: team.recruiters.map(recruiter => recruiter.name).join(", "), isBadge: false },
+         ]
+       ]
     },
     {
       title: "Clients",
