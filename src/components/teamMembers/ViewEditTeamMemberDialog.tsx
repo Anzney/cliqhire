@@ -13,6 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { UserCog, Pencil, Check, Upload, Link as LinkIcon } from "lucide-react";
 import { ConfirmFieldUpdateDialog } from "@/components/ui/ConfirmFieldUpdateDialog";
+import { EditResumeDialog } from "@/components/teamMembers/EditResumeDialog";
+import { EditSpecializationDialog } from "@/components/teamMembers/EditSpecializationDialog";
+import { EditSkillsDialog } from "@/components/teamMembers/EditSkillsDialog";
 import { toast } from "sonner";
 
 
@@ -31,10 +34,7 @@ type EditableForm = {
   experience: string;
   status: TeamMemberStatus;
   department?: string;
-  specialization?: string;
   teamRole?: string;
-  skills: string[];
-  resume?: string;
 };
 
 export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpdated }: ViewEditTeamMemberDialogProps) {
@@ -46,10 +46,7 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
     experience: "",
     status: "Active",
     department: "",
-    specialization: "",
     teamRole: "",
-    skills: [],
-    resume: "",
   });
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState<Record<string, boolean>>({});
@@ -69,6 +66,9 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
     oldValue: "",
     newValue: "",
   });
+  const [editResumeDialogOpen, setEditResumeDialogOpen] = useState(false);
+  const [editSpecializationDialogOpen, setEditSpecializationDialogOpen] = useState(false);
+  const [editSkillsDialogOpen, setEditSkillsDialogOpen] = useState(false);
 
   useEffect(() => {
     if (open && teamMember) {
@@ -80,10 +80,7 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
         experience: teamMember.experience || "",
         status: teamMember.status || "Active",
         department: teamMember.department || "",
-        specialization: teamMember.specialization || "",
         teamRole: teamMember.teamRole || "",
-        skills: Array.isArray(teamMember.skills) ? teamMember.skills : [],
-        resume: teamMember.resume || "",
       };
       setForm(next);
       setInitialForm(next);
@@ -103,17 +100,16 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
       const oldValue = initialForm?.[key] ?? (Array.isArray(form[key]) ? [] : "");
       const newValue = form[key] as string | string[];
       
-      // Check if there are actual changes or if there's a resume file selected
+      // Check if there are actual changes
       const hasChanges = JSON.stringify(oldValue) !== JSON.stringify(newValue);
-      const hasResumeFile = key === 'resume' && resumeFile;
       
-      if (hasChanges || hasResumeFile) {
+      if (hasChanges) {
         setConfirmDialog({
           open: true,
           fieldName: getFieldLabel(key),
           fieldKey: key,
           oldValue,
-          newValue: hasResumeFile ? `File: ${resumeFile.name}` : newValue,
+          newValue,
         });
         return;
       }
@@ -131,10 +127,7 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
       experience: "Experience",
       status: "Status",
       department: "Department",
-      specialization: "Specialization",
       teamRole: "Team Role",
-      skills: "Skills",
-      resume: "Resume",
     };
     return labels[key];
   };
@@ -153,27 +146,13 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
       
       let updated: TeamMember;
       
-      // Handle resume file upload separately
-      if (confirmDialog.fieldKey === 'resume' && resumeFile) {
-        const { resumeUrl } = await uploadResume(teamMember._id, resumeFile);
-        updated = await updateTeamMember({
-          _id: teamMember._id,
-          resume: resumeUrl
-        });
-        setResumeFile(null); // Clear the file after successful upload
-      } else {
-        // Prepare the payload with only the field being updated
-        const fieldValue = confirmDialog.fieldKey === 'skills' 
-          ? (confirmDialog.newValue as string[]).filter(skill => skill.trim() !== "")
-          : confirmDialog.newValue;
-        
-        const payload = {
-          _id: teamMember._id,
-          [confirmDialog.fieldKey]: fieldValue,
-        };
-        
-        updated = await updateTeamMember(payload);
-      }
+      // Prepare the payload with only the field being updated
+      const payload = {
+        _id: teamMember._id,
+        [confirmDialog.fieldKey]: confirmDialog.newValue,
+      };
+      
+      updated = await updateTeamMember(payload);
       
       // Update the form and initial form with the new value
       setForm(prev => ({ ...prev, [confirmDialog.fieldKey]: confirmDialog.newValue }));
@@ -210,17 +189,12 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
     // Reset the form value to the original value
     setForm(prev => ({ ...prev, [confirmDialog.fieldKey]: confirmDialog.oldValue }));
     
-    // Clear resume file if canceling resume update
-    if (confirmDialog.fieldKey === 'resume') {
-      setResumeFile(null);
-    }
-    
     // Close the confirmation dialog and stop editing
     setConfirmDialog(prev => ({ ...prev, open: false }));
     setEditing(prev => ({ ...prev, [confirmDialog.fieldKey]: false }));
   };
 
-  const renderField = (key: keyof EditableForm, label: string, value: any, type: 'text' | 'select' | 'textarea' | 'resume' = 'text', options?: { value: string; label: string }[]) => {
+  const renderField = (key: keyof EditableForm, label: string, value: any, type: 'text' | 'select' = 'text', options?: { value: string; label: string }[]) => {
     const isEditing = editing[key];
     
     return (
@@ -250,94 +224,11 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
                   </SelectContent>
                 </Select>
               )}
-               {type === 'textarea' && (
-                  <Textarea
-                    placeholder={`Enter ${label.toLowerCase()}`}
-                    value={key === 'skills' && Array.isArray(value) ? value.join("\n") : (Array.isArray(value) ? value.join(", ") : value || "")}
-                    onChange={e => {
-                      if (key === 'skills') {
-                        // For skills, split by newlines but don't filter empty lines to allow Enter key to work
-                        const skillsArray = e.target.value.split("\n").map(s => s.trim());
-                        handleChange(key, skillsArray);
-                      } else if (Array.isArray(value)) {
-                        handleChange(key, e.target.value.split(",").map(s => s.trim()).filter(Boolean));
-                      } else {
-                        handleChange(key, e.target.value);
-                      }
-                    }}
-                    className="min-h-[60px]"
-                    rows={3}
-                  />
-                )}
-              {type === 'resume' && (
-                <div className="flex flex-col gap-2">
-                  <Input
-                    placeholder="Paste resume URL"
-                    value={value || ""}
-                    onChange={e => handleChange(key, e.target.value)}
-                    className="h-8"
-                  />
-                  <input
-                    id="resume-file-input"
-                    type="file"
-                    accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setResumeFile(file);
-                        // Set a temporary value to show the file is selected
-                        handleChange(key, `File: ${file.name}`);
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    disabled={uploadingResume}
-                    onClick={() => document.getElementById("resume-file-input")?.click()}
-                    className="h-8"
-                  >
-                    <Upload className="h-4 w-4 mr-2" /> 
-                    {uploadingResume ? "Uploading..." : resumeFile ? "Change File" : "Upload"}
-                  </Button>
-                  {resumeFile && (
-                    <div className="text-xs text-green-600">
-                      File selected: {resumeFile.name}
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           ) : (
             <div className="flex-1 border-b border-gray-300 pb-1">
               <span className="text-sm text-black break-words">
-                {type === 'resume' && value ? (
-                  value.startsWith('File:') ? (
-                    <span className="text-green-600">{value}</span>
-                  ) : (
-                    <a 
-                      href={value} 
-                      target="_blank" 
-                      rel="noreferrer" 
-                      className="inline-flex items-center gap-1 text-blue-600 hover:underline"
-                    >
-                      <LinkIcon className="h-4 w-4" /> 
-                      View Resume
-                    </a>
-                  )
-                ) : type === 'textarea' && Array.isArray(value) && value.length > 0 ? (
-                  <div className="flex flex-wrap gap-1">
-                    {value.filter(item => item.trim() !== "").map((item, idx) => (
-                      <Badge key={`${item}-${idx}`} variant="secondary" className="text-xs">{item}</Badge>
-                    ))}
-                  </div>
-                ) : type === 'textarea' && Array.isArray(value) && value.length === 0 ? (
-                  "—"
-                ) : (
-                  value || "—"
-                )}
+                {value || "—"}
               </span>
             </div>
           )}
@@ -408,8 +299,8 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
             ])}
           </div>
 
-          {/* Row 3: Team Role, Department, Resume */}
-          <div className="grid grid-cols-3 gap-4 mb-4">
+          {/* Row 3: Team Role, Department */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
             {renderField("teamRole", "Team Role", form.teamRole, "select", [
               { value: "ADMIN", label: "ADMIN" },
               { value: "HIRING_MANAGER", label: "HIRING_MANAGER" },
@@ -426,19 +317,82 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
               { value: "Marketing", label: "Marketing" },
               { value: "Operations", label: "Operations" }
             ])}
-            {renderField("resume", "Resume", form.resume, "resume")}
           </div>
 
-          {/* Row 4: Specialization - Full Width */}
-          <div className="mb-4">
-            {renderField("specialization", "Specialization", form.specialization, "textarea")}
-          </div>
+          {/* Resume, Specialization, Skills - Read Only with Individual Edit Buttons */}
+          <div className="space-y-4 mb-4">
+            <div className="flex items-center justify-between py-2">
+              <div className="flex items-center gap-2 flex-1">
+                <span className="text-sm font-medium text-muted-foreground">Resume:</span>
+                <div className="flex-1">
+                  <span className="text-sm text-black">
+                    {teamMember?.resume ? (
+                      <a 
+                        href={teamMember.resume} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+                      >
+                        <LinkIcon className="h-4 w-4" /> 
+                        View Resume
+                      </a>
+                    ) : "—"}
+                  </span>
+                </div>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setEditResumeDialogOpen(true)}
+                className="ml-2 h-8 w-8 p-0"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            </div>
 
+            <div className="flex items-center justify-between py-2">
+              <div className="flex items-center gap-2 flex-1">
+                <span className="text-sm font-medium text-muted-foreground">Specialization:</span>
+                <div className="flex-1">
+                  <span className="text-sm text-black">
+                    {teamMember?.specialization || "—"}
+                  </span>
+                </div>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setEditSpecializationDialogOpen(true)}
+                className="ml-2 h-8 w-8 p-0"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            </div>
 
-
-          {/* Skills - Full Width */}
-          <div className="mb-4">
-            {renderField("skills", "Skills", form.skills, "textarea")}
+            <div className="flex items-center justify-between py-2">
+              <div className="flex items-center gap-2 flex-1">
+                <span className="text-sm font-medium text-muted-foreground">Skills:</span>
+                <div className="flex-1">
+                  <span className="text-sm text-black">
+                    {Array.isArray(teamMember?.skills) && teamMember.skills.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {teamMember.skills.filter(item => item.trim() !== "").map((item, idx) => (
+                          <Badge key={`${item}-${idx}`} variant="secondary" className="text-xs">{item}</Badge>
+                        ))}
+                      </div>
+                    ) : "—"}
+                  </span>
+                </div>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setEditSkillsDialogOpen(true)}
+                className="ml-2 h-8 w-8 p-0"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Read-only fields */}
@@ -459,6 +413,27 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
           onConfirm={handleConfirmUpdate}
           onCancel={handleCancelUpdate}
           isLoading={saving}
+        />
+
+        <EditResumeDialog
+          open={editResumeDialogOpen}
+          onOpenChange={setEditResumeDialogOpen}
+          teamMember={teamMember}
+          onUpdated={onUpdated}
+        />
+
+        <EditSpecializationDialog
+          open={editSpecializationDialogOpen}
+          onOpenChange={setEditSpecializationDialogOpen}
+          teamMember={teamMember}
+          onUpdated={onUpdated}
+        />
+
+        <EditSkillsDialog
+          open={editSkillsDialogOpen}
+          onOpenChange={setEditSkillsDialogOpen}
+          teamMember={teamMember}
+          onUpdated={onUpdated}
         />
       </DialogContent>
     </Dialog>
