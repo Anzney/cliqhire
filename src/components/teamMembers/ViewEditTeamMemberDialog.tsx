@@ -226,7 +226,7 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
     return (
       <div className="flex items-center justify-between py-2">
         <div className="flex items-center gap-2 flex-1">
-          <span className="text-sm font-medium text-gray-700 min-w-0">{label}:</span>
+          <span className="text-sm font-medium text-muted-foreground min-w-0">{label}:</span>
           {isEditing ? (
             <div className="flex-1">
               {type === 'text' && (
@@ -311,33 +311,35 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
               )}
             </div>
           ) : (
-            <span className="text-sm text-gray-600 flex-1 break-words">
-              {type === 'resume' && value ? (
-                value.startsWith('File:') ? (
-                  <span className="text-green-600">{value}</span>
+            <div className="flex-1 border-b border-gray-300 pb-1">
+              <span className="text-sm text-black break-words">
+                {type === 'resume' && value ? (
+                  value.startsWith('File:') ? (
+                    <span className="text-green-600">{value}</span>
+                  ) : (
+                    <a 
+                      href={value} 
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+                    >
+                      <LinkIcon className="h-4 w-4" /> 
+                      View Resume
+                    </a>
+                  )
+                ) : type === 'textarea' && Array.isArray(value) && value.length > 0 ? (
+                  <div className="flex flex-wrap gap-1">
+                    {value.filter(item => item.trim() !== "").map((item, idx) => (
+                      <Badge key={`${item}-${idx}`} variant="secondary" className="text-xs">{item}</Badge>
+                    ))}
+                  </div>
+                ) : type === 'textarea' && Array.isArray(value) && value.length === 0 ? (
+                  "—"
                 ) : (
-                  <a 
-                    href={value} 
-                    target="_blank" 
-                    rel="noreferrer" 
-                    className="inline-flex items-center gap-1 text-blue-600 hover:underline"
-                  >
-                    <LinkIcon className="h-4 w-4" /> 
-                    View Resume
-                  </a>
-                )
-              ) : type === 'textarea' && Array.isArray(value) && value.length > 0 ? (
-                <div className="flex flex-wrap gap-1">
-                  {value.filter(item => item.trim() !== "").map((item, idx) => (
-                    <Badge key={`${item}-${idx}`} variant="secondary" className="text-xs">{item}</Badge>
-                  ))}
-                </div>
-              ) : type === 'textarea' && Array.isArray(value) && value.length === 0 ? (
-                "—"
-              ) : (
-                value || "—"
-              )}
-            </span>
+                  value || "—"
+                )}
+              </span>
+            </div>
           )}
         </div>
         <Button 
@@ -406,8 +408,8 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
             ])}
           </div>
 
-          {/* Row 3: Team Role, Department */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          {/* Row 3: Team Role, Department, Resume */}
+          <div className="grid grid-cols-3 gap-4 mb-4">
             {renderField("teamRole", "Team Role", form.teamRole, "select", [
               { value: "ADMIN", label: "ADMIN" },
               { value: "HIRING_MANAGER", label: "HIRING_MANAGER" },
@@ -424,17 +426,15 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
               { value: "Marketing", label: "Marketing" },
               { value: "Operations", label: "Operations" }
             ])}
-          </div>
-
-          {/* Resume - Full Width */}
-          <div className="mb-4">
             {renderField("resume", "Resume", form.resume, "resume")}
           </div>
 
-          {/* Specialization - Full Width */}
+          {/* Row 4: Specialization - Full Width */}
           <div className="mb-4">
             {renderField("specialization", "Specialization", form.specialization, "textarea")}
           </div>
+
+
 
           {/* Skills - Full Width */}
           <div className="mb-4">

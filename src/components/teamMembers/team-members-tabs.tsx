@@ -286,7 +286,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
                pointerEvents: 'none'
              }}
            >
-             {formatTeamRoleDisplay(teamMember.teamRole)}
+             {formatTeamRoleDisplay(teamMember.teamRole || "")}
            </span>
          </TableCell>
         
