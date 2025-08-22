@@ -54,27 +54,6 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
     setLoadingTeamMembers(true);
     try {
       const response = await getTeamMembers();
-      console.log('API Response:', response);
-      console.log('Team members from API:', response.teamMembers);
-      
-      // Log each team member's structure
-      response.teamMembers.forEach((member, index) => {
-        console.log(`Team member ${index + 1}:`, {
-          id: member._id,
-          name: member.name,
-          role: member.role,
-          teamRole: member.teamRole,
-          department: member.department,
-          status: member.status,
-          isActive: member.isActive
-        });
-      });
-      
-      // Log all unique roles for debugging
-      const allRoles = response.teamMembers.map(member => member.role || member.teamRole || member.department).filter(Boolean);
-      const uniqueRoles = [...new Set(allRoles)];
-      console.log('All unique roles in team members:', uniqueRoles);
-      
       setTeamMembers(response.teamMembers);
     } catch (error) {
       console.error("Error fetching team members:", error);
@@ -111,10 +90,6 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
   };
 
   const getTeamMembersByRole = (role: string) => {
-    // Debug: Log all team members and their roles
-    console.log('All team members:', teamMembers);
-    console.log('Looking for role:', role);
-    
     // More specific role matching to avoid cross-contamination
     const roleMappings: { [key: string]: string[] } = {
       "Hiring Manager": ["Hiring Manager", "Recruitment Manager", "HR Manager", "Manager"],
@@ -149,13 +124,8 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
         );
       }
       
-      console.log(`Member: ${member.name}, Role: "${memberRole}", Status: ${member.status}, Matches ${role}: ${matchesRole}`);
-      
       return matchesRole && isActive;
     });
-    
-    console.log(`Found ${filteredMembers.length} members for role "${role}":`, 
-      filteredMembers.map(m => `${m.name} (${m.role || m.teamRole || m.department})`));
     
     return filteredMembers;
   };
@@ -178,11 +148,8 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
         recruiterIds: formData.recruiters
       };
 
-      console.log("Creating team with data:", teamData);
-      
       // Call the API to create team
       const createdTeam = await createTeam(teamData);
-      console.log("Team created successfully:", createdTeam);
       
       // Close dialog and trigger success callback with created team data
       onOpenChange(false);
@@ -198,7 +165,6 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
         recruiters: [],
       });
     } catch (error: any) {
-      console.error("Error creating team:", error);
       // You might want to show an error message to the user here
       alert(error.message || "Failed to create team");
     } finally {
@@ -311,7 +277,7 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
                   ) : (
                     getTeamMembersByRole("Recruiters").map((member) => (
                       <SelectItem key={member._id} value={member._id}>
-                        {member.name} ({member.role || member.teamRole || member.department || 'No role'})
+                        {member.name}
                       </SelectItem>
                     ))
                   )}

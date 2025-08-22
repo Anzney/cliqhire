@@ -76,7 +76,7 @@ export function UserAccessTabs({
       const response = await getTeamMembers();
       setTeamMembers(response.teamMembers);
     } catch (error) {
-      console.error("Error fetching team members:", error);
+      // Handle error silently or show user feedback
     } finally {
       setLoadingTeamMembers(false);
     }
@@ -88,7 +88,7 @@ export function UserAccessTabs({
       const response = await getTeams();
       setTeams(response.teams);
     } catch (error) {
-      console.error("Error fetching teams:", error);
+      // Handle error silently or show user feedback
     } finally {
       setLoadingTeams(false);
     }
@@ -140,7 +140,6 @@ export function UserAccessTabs({
         setDeleteDialogOpen(false);
         setTeamToDelete(null);
       } catch (error) {
-        console.error('Error deleting team:', error);
         alert('Failed to delete team. Please try again.');
       }
     }
@@ -291,7 +290,7 @@ export function UserAccessTabs({
           <DialogHeader>
             <DialogTitle>Delete Team</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete the team "{teamToDelete?.teamName}"? This action cannot be undone.
+              Are you sure you want to delete the team &quot;{teamToDelete?.teamName}&quot;? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
