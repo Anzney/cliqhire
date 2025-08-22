@@ -23,33 +23,33 @@ import { TeamMember } from "@/types/teamMember";
 import { permissionService, UserPermissions } from "@/services/permissionService";
 import { toast } from "sonner";
 
-// Team role color classes for custom styling (same as team-members-tabs.tsx)
+// Team role color classes for custom styling - matching status badge style
 const getTeamRoleColorClass = (role: string): string => {
   const normalizedRole = role?.toLowerCase() || "";
   
   switch (normalizedRole) {
     case "admin":
     case "administrator":
-      return "bg-blue-600 text-white border-blue-800";
+      return "bg-blue-100 text-blue-800 border-blue-200";
     case "hiring manager":
     case "hiring_manager":
     case "hir":
-      return "bg-sky-400 text-white border-sky-500";
+      return "bg-sky-100 text-sky-800 border-sky-200";
     case "team lead":
     case "team_lead":
     case "lead":
-      return "bg-emerald-500 text-white border-emerald-600";
+      return "bg-emerald-100 text-emerald-800 border-emerald-200";
     case "recruiter":
     case "recruiters":
     case "rec":
-      return "bg-teal-500 text-white border-teal-600";
+      return "bg-teal-100 text-teal-800 border-teal-200";
     case "head hunter":
     case "head_hunter":
     case "head enter":
     case "headenter":
-      return "bg-purple-500 text-white border-purple-600";
+      return "bg-purple-100 text-purple-800 border-purple-200";
     default:
-      return "bg-gray-100 text-gray-600 border-gray-200";
+      return "bg-gray-100 text-gray-700 border-gray-200";
   }
 };
 
