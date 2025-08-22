@@ -102,6 +102,12 @@ const getTeamRoleColorClass = (role: string): string => {
   }
 };
 
+// Function to format team role display - replace underscores with spaces
+const formatTeamRoleDisplay = (role: string): string => {
+  if (!role) return "Not Assigned";
+  return role.replace(/_/g, " ");
+};
+
 export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembersTabsProps) {
   const [activeTab, setActiveTab] = useState("all");
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -280,7 +286,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
                pointerEvents: 'none'
              }}
            >
-             {teamMember.teamRole || "Not Assigned"}
+             {formatTeamRoleDisplay(teamMember.teamRole)}
            </span>
          </TableCell>
         

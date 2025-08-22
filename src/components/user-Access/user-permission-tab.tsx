@@ -53,6 +53,12 @@ const getTeamRoleColorClass = (role: string): string => {
   }
 };
 
+// Function to format team role display - replace underscores with spaces
+const formatTeamRoleDisplay = (role: string): string => {
+  if (!role) return "Not Assigned";
+  return role.replace(/_/g, " ");
+};
+
 interface UserPermissionTabProps {
   refreshTrigger?: number;
   teamMembers?: TeamMember[];
@@ -122,17 +128,17 @@ export function UserPermissionTab({
         <TableCell className="text-sm font-medium">{user.name}</TableCell>
         <TableCell className="text-sm">{user.email}</TableCell>
         <TableCell className="text-sm">{user.phone}</TableCell>
-        <TableCell className="text-sm">
-          <span 
-            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getTeamRoleColorClass(user.teamRole || "")}`}
-            style={{ 
-              transition: 'none',
-              pointerEvents: 'none'
-            }}
-          >
-            {user.teamRole || "Not Assigned"}
-          </span>
-        </TableCell>
+                 <TableCell className="text-sm">
+           <span 
+             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getTeamRoleColorClass(user.teamRole || "")}`}
+             style={{ 
+               transition: 'none',
+               pointerEvents: 'none'
+             }}
+           >
+             {formatTeamRoleDisplay(user.teamRole || "")}
+           </span>
+         </TableCell>
         <TableCell className="text-sm">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
