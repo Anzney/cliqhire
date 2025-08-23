@@ -87,11 +87,12 @@ class AuthService {
       // Extract data from response - your API returns accessToken and user
       const { accessToken, user } = response.data.data;
       
-      // Store token in memory (not localStorage for security)
+      // Store token in memory and localStorage for persistence
       setAccessToken(accessToken);
       
-      // Store user data in localStorage (this is okay as it doesn't contain sensitive info)
+      // Store token in localStorage for persistence (in development)
       if (typeof window !== 'undefined') {
+        localStorage.setItem('authToken', accessToken);
         localStorage.setItem('userData', JSON.stringify(user));
       }
 
@@ -150,13 +151,14 @@ class AuthService {
       console.log('AuthService: Extracted token:', !!accessToken);
       console.log('AuthService: Extracted user:', !!user);
       
-      // Store token in memory (not localStorage for security)
+      // Store token in memory and localStorage for persistence
       setAccessToken(accessToken);
       
-      // Store user data in localStorage (this is okay as it doesn't contain sensitive info)
+      // Store token in localStorage for persistence (in development)
       if (typeof window !== 'undefined') {
+        localStorage.setItem('authToken', accessToken);
         localStorage.setItem('userData', JSON.stringify(user));
-        console.log('AuthService: Stored user data in localStorage');
+        console.log('AuthService: Stored token and user data in localStorage');
       }
 
       return {
@@ -201,9 +203,10 @@ class AuthService {
       // Clear access token from memory
       clearAccessToken();
       
-      // Clear user data from localStorage
+      // Clear user data and token from localStorage
       if (typeof window !== 'undefined') {
         localStorage.removeItem('userData');
+        localStorage.removeItem('authToken');
       }
       
       console.log('Logout successful');

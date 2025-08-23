@@ -87,6 +87,11 @@ export const getAccessToken = (): string | null => {
 export const clearAccessToken = () => {
   accessToken = null;
   delete axios.defaults.headers.common['Authorization'];
+  
+  // Also clear from localStorage
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('authToken');
+  }
 };
 
 // Function to manually trigger token refresh (for debugging)
