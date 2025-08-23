@@ -191,15 +191,15 @@ export function TeamSelectionDialog({
             </Select>
           </div>
 
-          {/* Recruitment Manager Selection */}
+          {/* Hiring Manager Selection */}
           <div className="space-y-2">
-            <Label htmlFor="recruitment-manager">Recruitment Manager</Label>
+            <Label htmlFor="hiring-manager">Hiring Manager</Label>
             <Select
               value={selectedManagerId}
               onValueChange={(value) => setSelectedManagerId(value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a Recruitment Manager" />
+                <SelectValue placeholder="Select a Hiring Manager" />
               </SelectTrigger>
               <SelectContent>
                 {recruitmentManagers.map((manager) => (
@@ -222,7 +222,7 @@ export function TeamSelectionDialog({
               <SelectTrigger className={!selectedManagerId ? "opacity-50" : ""}>
                 <SelectValue
                   placeholder={
-                    !selectedManagerId ? "Select a Recruitment Manager first" : "Select a Team Lead"
+                    !selectedManagerId ? "Select a Hiring Manager first" : "Select a Team Lead"
                   }
                 />
               </SelectTrigger>

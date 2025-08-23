@@ -149,7 +149,7 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField }: JobInfoSec
             disableInternalEdit={true} // Disable edit button
           />
           <DetailRow
-            label="Recruitment Manager"
+            label="Hiring Manager"
             value={currentRecruitmentManager?.name || jobDetails.recruitmentManager}
             onUpdate={() => {}} // No edit functionality
             disableInternalEdit={true} // Disable edit button
