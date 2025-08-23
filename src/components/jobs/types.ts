@@ -34,6 +34,16 @@ export interface JobData {
   keySkills: string;
   jobDescriptionByInternalTeam: string;
   workVisa: { workVisa: string; visaCountries: string[] };
-  reportingTo: string
+  reportingTo: string;
+  // Team assignment fields
+  teamId?: string;
+  teamName?: string;
+  teamAssignment?: string; // JSON string containing team data
+  recruitmentManagerId?: string;
+  recruitmentManager?: string;
+  teamLeadId?: string;
+  teamLead?: string;
+  recruiterId?: string;
+  recruiter?: string;
   _id: string;
 }

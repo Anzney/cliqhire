@@ -24,16 +24,19 @@ import {
   type TeamLead,
   type Recruiter,
 } from "@/data/teamData";
+import { getTeams, type Team } from "@/services/teamService";
 
 interface TeamSelectionDialogProps {
   open: boolean;
   onClose: () => void;
   onSave: (selections: {
+    team?: { id: string; name: string };
     recruitmentManager?: RecruitmentManager;
     teamLead?: TeamLead;
     recruiter?: Recruiter;
   }) => void;
   initialSelections?: {
+    teamId?: string;
     recruitmentManagerId?: string;
     teamLeadId?: string;
     recruiterId?: string;
@@ -46,16 +49,39 @@ export function TeamSelectionDialog({
   onSave,
   initialSelections,
 }: TeamSelectionDialogProps) {
+  const [selectedTeamId, setSelectedTeamId] = useState<string>("");
   const [selectedManagerId, setSelectedManagerId] = useState<string>("");
   const [selectedTeamLeadId, setSelectedTeamLeadId] = useState<string>("");
   const [selectedRecruiterId, setSelectedRecruiterId] = useState<string>("");
 
+  const [teams, setTeams] = useState<Team[]>([]);
   const [availableTeamLeads, setAvailableTeamLeads] = useState<TeamLead[]>([]);
   const [availableRecruiters, setAvailableRecruiters] = useState<Recruiter[]>([]);
+  const [isLoadingTeams, setIsLoadingTeams] = useState(false);
+
+  // Fetch teams when dialog opens
+  useEffect(() => {
+    if (open) {
+      fetchTeams();
+    }
+  }, [open]);
+
+  const fetchTeams = async () => {
+    setIsLoadingTeams(true);
+    try {
+      const response = await getTeams();
+      setTeams(response.teams);
+    } catch (error) {
+      console.error("Error fetching teams:", error);
+    } finally {
+      setIsLoadingTeams(false);
+    }
+  };
 
   // Initialize with current selections
   useEffect(() => {
     if (initialSelections) {
+      setSelectedTeamId(initialSelections.teamId || "");
       setSelectedManagerId(initialSelections.recruitmentManagerId || "");
       setSelectedTeamLeadId(initialSelections.teamLeadId || "");
       setSelectedRecruiterId(initialSelections.recruiterId || "");
@@ -103,7 +129,10 @@ export function TeamSelectionDialog({
   }, [selectedTeamLeadId]);
 
   const handleSave = () => {
+    const selectedTeam = teams.find(team => team._id === selectedTeamId);
+    
     const selections = {
+      team: selectedTeam ? { id: selectedTeam._id, name: selectedTeam.teamName } : undefined,
       recruitmentManager: selectedManagerId
         ? getRecruitmentManagerById(selectedManagerId)
         : undefined,
@@ -118,10 +147,12 @@ export function TeamSelectionDialog({
   const handleCancel = () => {
     // Reset to initial values
     if (initialSelections) {
+      setSelectedTeamId(initialSelections.teamId || "");
       setSelectedManagerId(initialSelections.recruitmentManagerId || "");
       setSelectedTeamLeadId(initialSelections.teamLeadId || "");
       setSelectedRecruiterId(initialSelections.recruiterId || "");
     } else {
+      setSelectedTeamId("");
       setSelectedManagerId("");
       setSelectedTeamLeadId("");
       setSelectedRecruiterId("");
@@ -137,6 +168,29 @@ export function TeamSelectionDialog({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
+          {/* Team Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="team">Team Name</Label>
+            <Select
+              value={selectedTeamId}
+              onValueChange={(value) => setSelectedTeamId(value)}
+              disabled={isLoadingTeams}
+            >
+              <SelectTrigger>
+                <SelectValue 
+                  placeholder={isLoadingTeams ? "Loading teams..." : "Select a team"} 
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {teams.map((team) => (
+                  <SelectItem key={team._id} value={team._id}>
+                    {team.teamName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Recruitment Manager Selection */}
           <div className="space-y-2">
             <Label htmlFor="recruitment-manager">Recruitment Manager</Label>

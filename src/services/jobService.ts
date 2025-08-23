@@ -53,6 +53,16 @@ export interface JobData {
   keySkills?: string;
   numberOfPositions?: number;
   jobDescriptionInternal?: string; // <-- Added for internal job description
+  // Team assignment fields
+  teamId?: string;
+  teamName?: string;
+  teamAssignment?: string; // JSON string containing team data
+  recruitmentManagerId?: string;
+  recruitmentManager?: string;
+  teamLeadId?: string;
+  teamLead?: string;
+  recruiterId?: string;
+  recruiter?: string;
 }
 
 export interface Job extends JobData {

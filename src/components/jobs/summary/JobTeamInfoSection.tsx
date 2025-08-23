@@ -57,12 +57,19 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField }: JobInfoSec
       : null;
 
   const handleTeamSelectionSave = (selections: {
+    team?: { id: string; name: string };
     recruitmentManager?: RecruitmentManager;
     teamLead?: TeamLead;
     recruiter?: Recruiter;
   }) => {
     // Create a comprehensive team data object
     const teamData = {
+      team: selections.team
+        ? {
+            id: selections.team.id,
+            name: selections.team.name,
+          }
+        : null,
       recruitmentManager: selections.recruitmentManager
         ? {
             id: selections.recruitmentManager.id,
@@ -100,6 +107,10 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField }: JobInfoSec
 
     // Fallback: Update individual fields for backward compatibility (batched)
     startTransition(() => {
+      // Update team information
+      handleUpdateField("teamId")(teamData.team?.id || "");
+      handleUpdateField("teamName")(teamData.team?.name || "");
+
       // Update IDs for relationships
       handleUpdateField("recruitmentManagerId")(teamData.recruitmentManager?.id || "");
       handleUpdateField("teamLeadId")(teamData.teamLead?.id || "");
@@ -132,6 +143,12 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField }: JobInfoSec
         {/* Team Details - Read Only */}
         <div className="space-y-3 pt-1">
           <DetailRow
+            label="Team Name"
+            value={teamAssignmentData?.team?.name || jobDetails.teamName || "Not assigned"}
+            onUpdate={() => {}} // No edit functionality
+            disableInternalEdit={true} // Disable edit button
+          />
+          <DetailRow
             label="Recruitment Manager"
             value={currentRecruitmentManager?.name || jobDetails.recruitmentManager}
             onUpdate={() => {}} // No edit functionality
@@ -157,6 +174,7 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField }: JobInfoSec
         onClose={() => setIsTeamDialogOpen(false)}
         onSave={handleTeamSelectionSave}
         initialSelections={{
+          teamId: teamAssignmentData?.team?.id || jobDetails.teamId,
           recruitmentManagerId: currentRecruitmentManager?.id || jobDetails.recruitmentManagerId,
           teamLeadId: currentTeamLead?.id || jobDetails.teamLeadId,
           recruiterId: currentRecruiter?.id || jobDetails.recruiterId,
