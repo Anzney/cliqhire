@@ -38,10 +38,10 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField }: JobInfoSec
   const teamAssignmentData = getTeamAssignmentData();
 
   // Get current team member details (prefer JSON data, fallback to individual fields)
-  const currentRecruitmentManager = teamAssignmentData?.recruitmentManager
-    ? teamAssignmentData.recruitmentManager
-    : jobDetails.recruitmentManagerId
-      ? getRecruitmentManagerById(jobDetails.recruitmentManagerId)
+  const currentHiringManager = teamAssignmentData?.hiringManager
+    ? teamAssignmentData.hiringManager
+    : jobDetails.hiringManagerId
+      ? getRecruitmentManagerById(jobDetails.hiringManagerId)
       : null;
 
   const currentTeamLead = teamAssignmentData?.teamLead
@@ -50,17 +50,17 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField }: JobInfoSec
       ? getTeamLeadById(jobDetails.teamLeadId)
       : null;
 
-  const currentRecruiter = teamAssignmentData?.recruiter
-    ? teamAssignmentData.recruiter
-    : jobDetails.recruiterId
-      ? getRecruiterById(jobDetails.recruiterId)
-      : null;
+  const currentRecruiters = teamAssignmentData?.recruiters
+    ? teamAssignmentData.recruiters
+    : jobDetails.recruiterIds
+      ? JSON.parse(jobDetails.recruiters || "[]").map((id: string) => getRecruiterById(id)).filter(Boolean)
+      : [];
 
   const handleTeamSelectionSave = (selections: {
     team?: { id: string; name: string };
-    recruitmentManager?: RecruitmentManager;
-    teamLead?: TeamLead;
-    recruiter?: Recruiter;
+    hiringManager?: { id: string; name: string };
+    teamLead?: { id: string; name: string };
+    recruiters?: { id: string; name: string }[];
   }) => {
     // Create a comprehensive team data object
     const teamData = {
@@ -70,34 +70,19 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField }: JobInfoSec
             name: selections.team.name,
           }
         : null,
-      recruitmentManager: selections.recruitmentManager
+      hiringManager: selections.hiringManager
         ? {
-            id: selections.recruitmentManager.id,
-            name: selections.recruitmentManager.name,
-            email: selections.recruitmentManager.email,
-            phone: selections.recruitmentManager.phone,
-            teamSize: selections.recruitmentManager.teamSize,
+            id: selections.hiringManager.id,
+            name: selections.hiringManager.name,
           }
         : null,
       teamLead: selections.teamLead
         ? {
             id: selections.teamLead.id,
             name: selections.teamLead.name,
-            email: selections.teamLead.email,
-            phone: selections.teamLead.phone,
-            teamSize: selections.teamLead.teamSize,
-            managerId: selections.teamLead.managerId,
           }
         : null,
-      recruiter: selections.recruiter
-        ? {
-            id: selections.recruiter.id,
-            name: selections.recruiter.name,
-            email: selections.recruiter.email,
-            phone: selections.recruiter.phone,
-            teamLeadId: selections.recruiter.teamLeadId,
-          }
-        : null,
+      recruiters: selections.recruiters || [],
       lastUpdated: new Date().toISOString(),
     };
 
@@ -112,14 +97,14 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField }: JobInfoSec
       handleUpdateField("teamName")(teamData.team?.name || "");
 
       // Update IDs for relationships
-      handleUpdateField("recruitmentManagerId")(teamData.recruitmentManager?.id || "");
+      handleUpdateField("hiringManagerId")(teamData.hiringManager?.id || "");
       handleUpdateField("teamLeadId")(teamData.teamLead?.id || "");
-      handleUpdateField("recruiterId")(teamData.recruiter?.id || "");
+      handleUpdateField("recruiterIds")(JSON.stringify(teamData.recruiters.map(r => r.id)) || "");
 
       // Update names for display
-      handleUpdateField("recruitmentManager")(teamData.recruitmentManager?.name || "");
+      handleUpdateField("hiringManager")(teamData.hiringManager?.name || "");
       handleUpdateField("teamLead")(teamData.teamLead?.name || "");
-      handleUpdateField("recruiter")(teamData.recruiter?.name || "");
+      handleUpdateField("recruiters")(JSON.stringify(teamData.recruiters.map(r => r.name)) || "");
     });
   };
 
@@ -150,7 +135,7 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField }: JobInfoSec
           />
           <DetailRow
             label="Hiring Manager"
-            value={currentRecruitmentManager?.name || jobDetails.recruitmentManager}
+            value={currentHiringManager?.name || jobDetails.hiringManager}
             onUpdate={() => {}} // No edit functionality
             disableInternalEdit={true} // Disable edit button
           />
@@ -161,8 +146,8 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField }: JobInfoSec
             disableInternalEdit={true} // Disable edit button
           />
           <DetailRow
-            label="Recruiter"
-            value={currentRecruiter?.name || jobDetails.recruiter}
+            label="Recruiters"
+            value={currentRecruiters.length > 0 ? currentRecruiters.map((r: any) => r.name).join(", ") : jobDetails.recruiters || "Not assigned"}
             onUpdate={() => {}} // No edit functionality
             disableInternalEdit={true} // Disable edit button
           />
@@ -175,9 +160,9 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField }: JobInfoSec
         onSave={handleTeamSelectionSave}
         initialSelections={{
           teamId: teamAssignmentData?.team?.id || jobDetails.teamId,
-          recruitmentManagerId: currentRecruitmentManager?.id || jobDetails.recruitmentManagerId,
+          hiringManagerId: currentHiringManager?.id || jobDetails.hiringManagerId,
           teamLeadId: currentTeamLead?.id || jobDetails.teamLeadId,
-          recruiterId: currentRecruiter?.id || jobDetails.recruiterId,
+          recruiterIds: currentRecruiters.length > 0 ? currentRecruiters.map((r: any) => r.id) : jobDetails.recruiterIds ? JSON.parse(jobDetails.recruiterIds) : [],
         }}
       />
     </CollapsibleSection>

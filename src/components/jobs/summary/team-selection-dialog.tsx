@@ -226,7 +226,6 @@ export function TeamSelectionDialog({
                       <SelectItem 
                         key={recruiter._id} 
                         value={recruiter._id}
-                        className={selectedRecruiterIds.includes(recruiter._id) ? "bg-gray-100" : ""}
                       >
                         {recruiter.name}
                         {selectedRecruiterIds.includes(recruiter._id) && " ✓"}
