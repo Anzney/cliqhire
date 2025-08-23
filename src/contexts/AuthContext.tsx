@@ -27,19 +27,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkAuth = async () => {
     try {
       setIsLoading(true); // Set loading to true when starting auth check
-      console.log('AuthContext: Starting authentication check');
       
       // Check if we have user data in localStorage (this indicates previous login)
       const userData = authService.getUserData();
-      console.log('AuthContext: User data from localStorage:', !!userData);
       
       if (userData) {
         // Set user immediately for faster UI response
         setUser(userData);
         setIsAuthenticated(true);
-        console.log('AuthContext: Authentication successful with stored data');
+        
+        // Also initialize axios authentication
+        await initializeAuth();
       } else {
-        console.log('AuthContext: No user data found');
         setUser(null);
         setIsAuthenticated(false);
       }
@@ -49,24 +48,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false); // Set loading to false when auth check completes
-      console.log('AuthContext: Authentication check completed');
     }
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true); // Show loading during login
-      console.log('AuthContext: Starting login process');
       const response = await authService.login({ email, password });
-      console.log('AuthContext: Login response:', response);
       
       if (response.success && response.user && response.token) {
-        console.log('AuthContext: Login successful, setting state');
         setUser(response.user);
         setIsAuthenticated(true);
+        
+        // Initialize axios authentication after successful login
+        await initializeAuth();
+        
         return true;
       } else {
-        console.log('AuthContext: Login failed - missing data');
         return false;
       }
     } catch (error) {
@@ -99,6 +97,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (userData) {
         setUser(userData);
         setIsAuthenticated(true);
+        
+        // Also initialize axios authentication
+        await initializeAuth();
       } else {
         setUser(null);
         setIsAuthenticated(false);

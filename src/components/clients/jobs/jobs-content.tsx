@@ -15,6 +15,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
+import { Job } from "@/services/jobService";
+import { api } from "@/lib/axios-config";
+import { initializeAuth } from "@/lib/axios-config";
 
 interface JobsContentProps {
   clientId: string;
@@ -68,7 +71,7 @@ function ConfirmStageChangeDialog({
 }
 
 export function JobsContent({ clientId, clientName }: JobsContentProps) {
-  const [clientJobs, setClientJobs] = useState<any[]>([]);
+  const [clientJobs, setClientJobs] = useState<Job[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingStageChange, setPendingStageChange] = useState<{
     jobId: string;
@@ -78,11 +81,13 @@ export function JobsContent({ clientId, clientName }: JobsContentProps) {
 
   const fetchJobs = async () => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
-      const response = await fetch(`${API_URL}/api/jobs/client/${clientId}`);
-      if (!response.ok) throw new Error("Failed to fetch jobs");
-      const responseData = await response.json();
-      setClientJobs(responseData.data);
+      // Ensure authentication is initialized
+      await initializeAuth();
+      
+      const response = await api.get(`/api/jobs/client/${clientId}`);
+      if (response.data.status === "success") {
+        setClientJobs(response.data.data);
+      }
     } catch (error) {
       console.error("Error fetching jobs:", error);
     }
@@ -108,14 +113,15 @@ export function JobsContent({ clientId, clientName }: JobsContentProps) {
         prev.map((job) => (job._id === jobId ? { ...job, stage: newStage } : job)),
       );
 
+      // Ensure authentication is initialized
+      await initializeAuth();
+
       // Make API call to update the stage
-      const response = await fetch(`https://aems-backend.onrender.com/api/jobs/${jobId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stage: newStage }),
+      const response = await api.patch(`/api/jobs/${jobId}`, {
+        stage: newStage
       });
 
-      if (!response.ok) {
+      if (response.data.status !== "success") {
         throw new Error("Failed to update job stage");
       }
     } catch (error) {

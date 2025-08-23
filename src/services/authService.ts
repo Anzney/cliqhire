@@ -61,7 +61,7 @@ class AuthService {
   private baseURL = process.env.NEXT_PUBLIC_API_URL ;
   
   constructor() {
-    console.log('AuthService: Base URL:', this.baseURL);
+    // AuthService initialization
   }
 
   /**
@@ -69,8 +69,6 @@ class AuthService {
    */
   async register(userData: RegisterUserData): Promise<RegisterResponse> {
     try {
-      console.log('Registering user with data:', userData);
-      
       // Create payload with plain passwords
       const payload = {
         name: userData.name,
@@ -78,8 +76,6 @@ class AuthService {
         password: userData.password,
         confirmPassword: userData.confirmPassword,
       };
-      
-      console.log('Sending registration request to API');
       
       // Make real API call to Express backend using the configured api instance
       const response = await api.post('/auth/register', payload);
@@ -129,27 +125,17 @@ class AuthService {
    */
   async login(userData: LoginUserData): Promise<LoginResponse> {
     try {
-      console.log('AuthService: Starting login process');
-      console.log('AuthService: Login URL:', `${this.baseURL}/api/auth/login`);
-      
       // Create payload with plain password
       const payload = {
         email: userData.email,
         password: userData.password,
       };
       
-      console.log('AuthService: Login payload:', { email: userData.email, password: '***' });
-      
       // Make real API call to Express backend using the configured api instance
       const response = await api.post('/api/auth/login', payload);
 
-      console.log('AuthService: API Response:', response.data);
-
       // Extract data from response - your API returns accessToken and user
       const { accessToken, user } = response.data.data;
-      
-      console.log('AuthService: Extracted token:', !!accessToken);
-      console.log('AuthService: Extracted user:', !!user);
       
       // Store token in memory and localStorage for persistence
       setAccessToken(accessToken);
@@ -158,7 +144,6 @@ class AuthService {
       if (typeof window !== 'undefined') {
         localStorage.setItem('authToken', accessToken);
         localStorage.setItem('userData', JSON.stringify(user));
-        console.log('AuthService: Stored token and user data in localStorage');
       }
 
       return {
@@ -194,8 +179,6 @@ class AuthService {
    */
   async logout(): Promise<{ success: boolean; message: string }> {
     try {
-      console.log('Logging out user');
-      
       // Make logout request to Express backend using the configured api instance
       // This will clear the refresh token cookie on the server
       await api.post('/api/auth/logout');
@@ -209,7 +192,6 @@ class AuthService {
         localStorage.removeItem('authToken');
       }
       
-      console.log('Logout successful');
       return {
         success: true,
         message: 'Logout successful'
@@ -221,6 +203,7 @@ class AuthService {
       clearAccessToken();
       if (typeof window !== 'undefined') {
         localStorage.removeItem('userData');
+        localStorage.removeItem('authToken');
       }
       
       return {

@@ -6,6 +6,8 @@ import { Loader, Plus } from "lucide-react";
 import { Candidate } from "@/services/candidateService";
 import { Button } from "@/components/ui/button";
 import { AddCandidateDialog } from "./add-candidate-dialog";
+import { api } from "@/lib/axios-config";
+import { initializeAuth } from "@/lib/axios-config";
 
 export interface JobCandidatesListRef {
   refresh: () => Promise<void>;
@@ -33,13 +35,11 @@ export const JobCandidatesList = forwardRef<JobCandidatesListRef, JobCandidatesL
     const fetchCandidatesForJob = async () => {
       setLoading(true);
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
-        const res = await fetch(`${API_URL}/api/jobs/${jobId}/candidates`, { cache: "no-store" });
-        if (!res.ok) {
-          throw new Error(`Failed to fetch candidates for job ${jobId}`);
-        }
-        const json = await res.json();
-        const list: Candidate[] = Array.isArray(json?.data) ? json.data : [];
+        // Ensure authentication is initialized
+        await initializeAuth();
+        
+        const response = await api.get(`/api/jobs/${jobId}/candidates`);
+        const list: Candidate[] = Array.isArray(response.data?.data) ? response.data.data : [];
         setCandidates(list);
         onLoaded?.(list.length);
       } catch (err) {
