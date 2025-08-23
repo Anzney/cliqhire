@@ -114,6 +114,20 @@ export const updateTeam = async (id: string, teamData: Partial<CreateTeamData>):
   }
 };
 
+// Update team status
+export const updateTeamStatus = async (id: string, teamStatus: string): Promise<Team> => {
+  try {
+    const response = await api.put(`/api/teams/${id}`, { teamStatus });
+
+    if (response.data && response.data.status === 'success') {
+      return response.data.data.team || response.data.data;
+    }
+    throw new Error(response.data?.message || 'Failed to update team status');
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to update team status');
+  }
+};
+
 // Delete a team
 export const deleteTeam = async (id: string): Promise<void> => {
   try {

@@ -44,7 +44,7 @@ import { ViewTeamDialog } from "./view-team-dialog";
 import { TeamStatusBadge } from "./team-status-badge";
 import { TeamMember } from "@/types/teamMember";
 import { getTeamMembers } from "@/services/teamMembersService";
-import { getTeams, deleteTeam, Team } from "@/services/teamService";
+import { getTeams, deleteTeam, updateTeamStatus, Team } from "@/services/teamService";
 
 interface UserAccessTabsProps {
   refreshTrigger?: number;
@@ -161,33 +161,33 @@ export function UserAccessTabs({
   };
 
   useEffect(() => {
-    const updateTeamStatus = async () => {
+    const updateTeamStatusHandler = async () => {
       if (!teamId || !newStatus) return;
   
       try {
         setIsLoading(true);
   
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/teams/${teamId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ teamStatus: newStatus }),
-        });
-  
-        if (!response.ok) {
-          throw new Error('Failed to update team status');
-        }
+        const updatedTeam = await updateTeamStatus(teamId, newStatus);
+        
+        // Update the teams list with the updated team data
+        setTeams(prev => prev.map(team => 
+          team._id === teamId ? updatedTeam : team
+        ));
 
       } catch (error) {
+        console.error('Failed to update team status:', error);
         // Revert the local state if the API call fails
         setTeams(prev => prev.map(team => 
           team._id === teamId ? { ...team, teamStatus: team.teamStatus } : team
-        ))
+        ));
       } finally {
         setIsLoading(false);
+        setTeamId(undefined);
+        setNewStatus(undefined);
       }
     };
   
-    updateTeamStatus();
+    updateTeamStatusHandler();
   }, [teamId, newStatus]);
 
   const handleViewTeam = (team: Team) => {
