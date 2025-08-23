@@ -11,19 +11,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import {
-  recruitmentManagers,
-  teamLeads,
-  recruiters,
-  getTeamLeadsByManager,
-  getRecruitersByTeamLead,
-  getRecruitmentManagerById,
-  getTeamLeadById,
-  getRecruiterById,
-  type RecruitmentManager,
-  type TeamLead,
-  type Recruiter,
-} from "@/data/teamData";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
 import { getTeams, type Team } from "@/services/teamService";
 
 interface TeamSelectionDialogProps {
@@ -31,15 +20,15 @@ interface TeamSelectionDialogProps {
   onClose: () => void;
   onSave: (selections: {
     team?: { id: string; name: string };
-    recruitmentManager?: RecruitmentManager;
-    teamLead?: TeamLead;
-    recruiter?: Recruiter;
+    hiringManager?: { id: string; name: string };
+    teamLead?: { id: string; name: string };
+    recruiters?: { id: string; name: string }[];
   }) => void;
   initialSelections?: {
     teamId?: string;
-    recruitmentManagerId?: string;
+    hiringManagerId?: string;
     teamLeadId?: string;
-    recruiterId?: string;
+    recruiterIds?: string[];
   };
 }
 
@@ -50,14 +39,12 @@ export function TeamSelectionDialog({
   initialSelections,
 }: TeamSelectionDialogProps) {
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
-  const [selectedManagerId, setSelectedManagerId] = useState<string>("");
-  const [selectedTeamLeadId, setSelectedTeamLeadId] = useState<string>("");
-  const [selectedRecruiterId, setSelectedRecruiterId] = useState<string>("");
-
+  const [selectedRecruiterIds, setSelectedRecruiterIds] = useState<string[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
-  const [availableTeamLeads, setAvailableTeamLeads] = useState<TeamLead[]>([]);
-  const [availableRecruiters, setAvailableRecruiters] = useState<Recruiter[]>([]);
   const [isLoadingTeams, setIsLoadingTeams] = useState(false);
+
+  // Get the selected team object
+  const selectedTeam = teams.find(team => team._id === selectedTeamId);
 
   // Fetch teams when dialog opens
   useEffect(() => {
@@ -82,62 +69,54 @@ export function TeamSelectionDialog({
   useEffect(() => {
     if (initialSelections) {
       setSelectedTeamId(initialSelections.teamId || "");
-      setSelectedManagerId(initialSelections.recruitmentManagerId || "");
-      setSelectedTeamLeadId(initialSelections.teamLeadId || "");
-      setSelectedRecruiterId(initialSelections.recruiterId || "");
+      setSelectedRecruiterIds(initialSelections.recruiterIds || []);
     }
   }, [initialSelections, open]);
 
-  // Update available team leads when manager changes
+  // Reset recruiters when team changes
   useEffect(() => {
-    if (selectedManagerId) {
-      const teamLeadsForManager = getTeamLeadsByManager(selectedManagerId);
-      setAvailableTeamLeads(teamLeadsForManager);
-
-      // Reset team lead and recruiter if current selections are not valid
-      if (selectedTeamLeadId) {
-        const isValidTeamLead = teamLeadsForManager.some((tl) => tl.id === selectedTeamLeadId);
-        if (!isValidTeamLead) {
-          setSelectedTeamLeadId("");
-          setSelectedRecruiterId("");
-        }
-      }
-    } else {
-      setAvailableTeamLeads([]);
-      setSelectedTeamLeadId("");
-      setSelectedRecruiterId("");
+    if (selectedTeamId && !initialSelections?.recruiterIds) {
+      setSelectedRecruiterIds([]);
     }
-  }, [selectedManagerId]);
+  }, [selectedTeamId, initialSelections?.recruiterIds]);
 
-  // Update available recruiters when team lead changes
-  useEffect(() => {
-    if (selectedTeamLeadId) {
-      const recruitersForTeamLead = getRecruitersByTeamLead(selectedTeamLeadId);
-      setAvailableRecruiters(recruitersForTeamLead);
-
-      // Reset recruiter if current selection is not valid
-      if (selectedRecruiterId) {
-        const isValidRecruiter = recruitersForTeamLead.some((r) => r.id === selectedRecruiterId);
-        if (!isValidRecruiter) {
-          setSelectedRecruiterId("");
-        }
-      }
-    } else {
-      setAvailableRecruiters([]);
-      setSelectedRecruiterId("");
+  const handleTeamChange = (teamId: string) => {
+    setSelectedTeamId(teamId);
+    // Reset recruiter selections when team changes (unless it's initial load)
+    if (!initialSelections?.recruiterIds) {
+      setSelectedRecruiterIds([]);
     }
-  }, [selectedTeamLeadId]);
+  };
+
+  const handleRecruiterToggle = (recruiterId: string) => {
+    setSelectedRecruiterIds(prev => {
+      if (prev.includes(recruiterId)) {
+        return prev.filter(id => id !== recruiterId);
+      } else {
+        return [...prev, recruiterId];
+      }
+    });
+  };
+
+  const removeRecruiter = (recruiterId: string) => {
+    setSelectedRecruiterIds(prev => prev.filter(id => id !== recruiterId));
+  };
 
   const handleSave = () => {
-    const selectedTeam = teams.find(team => team._id === selectedTeamId);
-    
     const selections = {
       team: selectedTeam ? { id: selectedTeam._id, name: selectedTeam.teamName } : undefined,
-      recruitmentManager: selectedManagerId
-        ? getRecruitmentManagerById(selectedManagerId)
-        : undefined,
-      teamLead: selectedTeamLeadId ? getTeamLeadById(selectedTeamLeadId) : undefined,
-      recruiter: selectedRecruiterId ? getRecruiterById(selectedRecruiterId) : undefined,
+      hiringManager: selectedTeam?.hiringManagerId ? {
+        id: selectedTeam.hiringManagerId._id,
+        name: selectedTeam.hiringManagerId.name
+      } : undefined,
+      teamLead: selectedTeam?.teamLeadId ? {
+        id: selectedTeam.teamLeadId._id,
+        name: selectedTeam.teamLeadId.name
+      } : undefined,
+      recruiters: selectedRecruiterIds.map(recruiterId => {
+        const recruiter = selectedTeam?.recruiters.find(r => r._id === recruiterId);
+        return recruiter ? { id: recruiter._id, name: recruiter.name } : null;
+      }).filter(Boolean) as { id: string; name: string }[],
     };
 
     onSave(selections);
@@ -148,14 +127,10 @@ export function TeamSelectionDialog({
     // Reset to initial values
     if (initialSelections) {
       setSelectedTeamId(initialSelections.teamId || "");
-      setSelectedManagerId(initialSelections.recruitmentManagerId || "");
-      setSelectedTeamLeadId(initialSelections.teamLeadId || "");
-      setSelectedRecruiterId(initialSelections.recruiterId || "");
+      setSelectedRecruiterIds(initialSelections.recruiterIds || []);
     } else {
       setSelectedTeamId("");
-      setSelectedManagerId("");
-      setSelectedTeamLeadId("");
-      setSelectedRecruiterId("");
+      setSelectedRecruiterIds([]);
     }
     onClose();
   };
@@ -173,7 +148,7 @@ export function TeamSelectionDialog({
             <Label htmlFor="team">Team Name</Label>
             <Select
               value={selectedTeamId}
-              onValueChange={(value) => setSelectedTeamId(value)}
+              onValueChange={handleTeamChange}
               disabled={isLoadingTeams}
             >
               <SelectTrigger>
@@ -191,75 +166,77 @@ export function TeamSelectionDialog({
             </Select>
           </div>
 
-          {/* Hiring Manager Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="hiring-manager">Hiring Manager</Label>
-            <Select
-              value={selectedManagerId}
-              onValueChange={(value) => setSelectedManagerId(value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a Hiring Manager" />
-              </SelectTrigger>
-              <SelectContent>
-                {recruitmentManagers.map((manager) => (
-                  <SelectItem key={manager.id} value={manager.id}>
-                    {manager.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Hiring Manager Display (Auto-populated) */}
+          {selectedTeam && (
+            <div className="space-y-2">
+              <Label>Hiring Manager</Label>
+              <div className="p-3 bg-gray-50 rounded-md border">
+                <span className="text-sm font-medium">
+                  {selectedTeam.hiringManagerId.name}
+                </span>
+              </div>
+            </div>
+          )}
 
-          {/* Team Lead Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="team-lead">Team Lead</Label>
-            <Select
-              value={selectedTeamLeadId}
-              onValueChange={(value) => setSelectedTeamLeadId(value)}
-              disabled={!selectedManagerId}
-            >
-              <SelectTrigger className={!selectedManagerId ? "opacity-50" : ""}>
-                <SelectValue
-                  placeholder={
-                    !selectedManagerId ? "Select a Hiring Manager first" : "Select a Team Lead"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {availableTeamLeads.map((teamLead) => (
-                  <SelectItem key={teamLead.id} value={teamLead.id}>
-                    {teamLead.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Team Lead Display (Auto-populated) */}
+          {selectedTeam && (
+            <div className="space-y-2">
+              <Label>Team Lead</Label>
+              <div className="p-3 bg-gray-50 rounded-md border">
+                <span className="text-sm font-medium">
+                  {selectedTeam.teamLeadId.name}
+                </span>
+              </div>
+            </div>
+          )}
 
-          {/* Recruiter Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="recruiter">Recruiter</Label>
-            <Select
-              value={selectedRecruiterId}
-              onValueChange={(value) => setSelectedRecruiterId(value)}
-              disabled={!selectedTeamLeadId}
-            >
-              <SelectTrigger className={!selectedTeamLeadId ? "opacity-50" : ""}>
-                <SelectValue
-                  placeholder={
-                    !selectedTeamLeadId ? "Select a Team Lead first" : "Select a Recruiter"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {availableRecruiters.map((recruiter) => (
-                  <SelectItem key={recruiter.id} value={recruiter.id}>
-                    {recruiter.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Recruiter Selection (Multiple) */}
+          {selectedTeam && (
+            <div className="space-y-2">
+              <Label>Recruiters</Label>
+              <div className="space-y-3">
+                {/* Selected Recruiters Display */}
+                {selectedRecruiterIds.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedRecruiterIds.map(recruiterId => {
+                      const recruiter = selectedTeam.recruiters.find(r => r._id === recruiterId);
+                      return recruiter ? (
+                        <Badge key={recruiterId} variant="secondary" className="flex items-center gap-1">
+                          {recruiter.name}
+                          <X
+                            className="h-3 w-3 cursor-pointer"
+                            onClick={() => removeRecruiter(recruiterId)}
+                          />
+                        </Badge>
+                      ) : null;
+                    })}
+                  </div>
+                )}
+
+                {/* Recruiter Selection Dropdown */}
+                <Select
+                  value=""
+                  onValueChange={handleRecruiterToggle}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select recruiters" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {selectedTeam.recruiters.map((recruiter) => (
+                      <SelectItem 
+                        key={recruiter._id} 
+                        value={recruiter._id}
+                        className={selectedRecruiterIds.includes(recruiter._id) ? "bg-gray-100" : ""}
+                      >
+                        {recruiter.name}
+                        {selectedRecruiterIds.includes(recruiter._id) && " ✓"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end space-x-2">
