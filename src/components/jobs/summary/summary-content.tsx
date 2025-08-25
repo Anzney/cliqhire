@@ -82,6 +82,21 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
     handleFieldSave(field, value);
   };
 
+  const handleUpdateMultipleFields = async (fields: Record<string, any>) => {
+    if (!jobDetails) return;
+    try {
+      const updatedDetails = {
+        ...jobDetails,
+        ...fields,
+      };
+      await updateJobById(jobId, fields);
+      setJobDetails(updatedDetails);
+      toast.success("Team assignment updated successfully");
+    } catch (err) {
+      toast.error("Failed to update team assignment");
+    }
+  };
+
   const handleSalarySave = async (values: {
     minSalary: number;
     maxSalary: number;
@@ -419,7 +434,11 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
         </div>
 
         {/* Job Info Section */}
-        <JobTeamInfoSection jobDetails={jobDetails} handleUpdateField={handleUpdateField} />
+                    <JobTeamInfoSection 
+              jobDetails={jobDetails} 
+              handleUpdateField={handleUpdateField}
+              handleUpdateMultipleFields={handleUpdateMultipleFields}
+            />
       </div>
       <EditSalaryDialog
         open={isSalaryDialogOpen}

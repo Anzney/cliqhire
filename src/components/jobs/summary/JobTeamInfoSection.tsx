@@ -18,9 +18,10 @@ import {
 interface JobInfoSectionProps {
   jobDetails: any;
   handleUpdateField: (field: string) => (value: string) => void;
+  handleUpdateMultipleFields?: (fields: Record<string, any>) => void;
 }
 
-export function JobTeamInfoSection({ jobDetails, handleUpdateField }: JobInfoSectionProps) {
+export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdateMultipleFields }: JobInfoSectionProps) {
   const [isTeamDialogOpen, setIsTeamDialogOpen] = useState(false);
 
   // Helper function to parse team assignment data
@@ -86,26 +87,36 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField }: JobInfoSec
       lastUpdated: new Date().toISOString(),
     };
 
-    // Primary update: Store complete team data as JSON (single API call)
-    const teamDataString = JSON.stringify(teamData);
-    handleUpdateField("teamAssignment")(teamDataString);
+    // Create single payload for all team-related fields
+    const teamPayload = {
+      teamAssignment: JSON.stringify(teamData),
+      teamId: teamData.team?.id || "",
+      teamName: teamData.team?.name || "",
+      hiringManagerId: teamData.hiringManager?.id || "",
+      teamLeadId: teamData.teamLead?.id || "",
+      recruiterIds: JSON.stringify(teamData.recruiters.map(r => r.id)) || "",
+      hiringManager: teamData.hiringManager?.name || "",
+      teamLead: teamData.teamLead?.name || "",
+      recruiters: JSON.stringify(teamData.recruiters.map(r => r.name)) || "",
+    };
 
-    // Fallback: Update individual fields for backward compatibility (batched)
-    startTransition(() => {
-      // Update team information
-      handleUpdateField("teamId")(teamData.team?.id || "");
-      handleUpdateField("teamName")(teamData.team?.name || "");
-
-      // Update IDs for relationships
-      handleUpdateField("hiringManagerId")(teamData.hiringManager?.id || "");
-      handleUpdateField("teamLeadId")(teamData.teamLead?.id || "");
-      handleUpdateField("recruiterIds")(JSON.stringify(teamData.recruiters.map(r => r.id)) || "");
-
-      // Update names for display
-      handleUpdateField("hiringManager")(teamData.hiringManager?.name || "");
-      handleUpdateField("teamLead")(teamData.teamLead?.name || "");
-      handleUpdateField("recruiters")(JSON.stringify(teamData.recruiters.map(r => r.name)) || "");
-    });
+    // Use single API call if available, otherwise fallback to multiple calls
+    if (handleUpdateMultipleFields) {
+      handleUpdateMultipleFields(teamPayload);
+    } else {
+      // Fallback: Update individual fields for backward compatibility
+      handleUpdateField("teamAssignment")(JSON.stringify(teamData));
+      startTransition(() => {
+        handleUpdateField("teamId")(teamData.team?.id || "");
+        handleUpdateField("teamName")(teamData.team?.name || "");
+        handleUpdateField("hiringManagerId")(teamData.hiringManager?.id || "");
+        handleUpdateField("teamLeadId")(teamData.teamLead?.id || "");
+        handleUpdateField("recruiterIds")(JSON.stringify(teamData.recruiters.map(r => r.id)) || "");
+        handleUpdateField("hiringManager")(teamData.hiringManager?.name || "");
+        handleUpdateField("teamLead")(teamData.teamLead?.name || "");
+        handleUpdateField("recruiters")(JSON.stringify(teamData.recruiters.map(r => r.name)) || "");
+      });
+    }
   };
 
   return (
