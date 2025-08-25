@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getCandidatesByStage, RecruitmentCandidate } from "@/components/dummy/recruitment-pipeline-data";
 import { ViewCandidateDialog } from "@/components/Recruitment-Pipeline/view-candidate-dialog";
+import { SourcingHeader } from "@/components/Recruiter-Pipeline/sourcing-header";
 
 interface TabContentProps {
   value: string;
@@ -119,15 +120,19 @@ export const TabContent: React.FC<TabContentProps> = ({ value }) => {
       <TabsContent value={value} className="p-0 mt-0">
         <div className="flex-1">
           <Table>
-            <TableHeader>
-              <TableRow>
-                {headerArr.map((header, index) => (
-                  <TableHead key={index} className="text-sm font-medium">
-                    {header}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
+            {value === "sourcing" ? (
+              <SourcingHeader />
+            ) : (
+              <TableHeader>
+                <TableRow>
+                  {headerArr.map((header, index) => (
+                    <TableHead key={index} className="text-sm font-medium">
+                      {header}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+            )}
             <TableBody>
               {renderCandidatesTable(candidates)}
             </TableBody>

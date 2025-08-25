@@ -8,7 +8,7 @@ const ReactruterPipelinePage = () => {
   const [open, setOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [initialLoading, setInitialLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("screening");
+  const [activeTab, setActiveTab] = useState("sourcing");
 
   return (
     <div className="flex flex-col h-full">

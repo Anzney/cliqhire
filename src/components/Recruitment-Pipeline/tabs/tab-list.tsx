@@ -22,6 +22,13 @@ export const TabList: React.FC<TabListProps> = ({ value, onValueChange, children
   return (
     <Tabs value={value} onValueChange={onValueChange} className="w-full">
       <TabsList className="flex border-b w-full rounded-none justify-start h-12 bg-transparent p-0">
+      <TabsTrigger
+          value="sourcing"
+          className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+        >
+          <Users className="h-4 w-4" />
+          Sourcing
+        </TabsTrigger>
         <TabsTrigger
           value="screening"
           className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
@@ -35,13 +42,6 @@ export const TabList: React.FC<TabListProps> = ({ value, onValueChange, children
         >
           <CheckCircle className="h-4 w-4" />
           SR/Completed
-        </TabsTrigger>
-        <TabsTrigger
-          value="sourcing"
-          className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
-        >
-          <Users className="h-4 w-4" />
-          Sourcing
         </TabsTrigger>
         <TabsTrigger
           value="interview"
