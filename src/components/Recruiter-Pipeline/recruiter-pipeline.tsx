@@ -7,124 +7,17 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { KPISection } from "./kpi-section";
-
-// Types
-interface Candidate {
-  id: string;
-  name: string;
-  source: string;
-  currentStage: string;
-  avatar?: string;
-}
-
-interface Job {
-  id: string;
-  title: string;
-  clientName: string;
-  location: string;
-  salaryRange: string;
-  headcount: number;
-  jobType: string;
-  isExpanded: boolean;
-  candidates: Candidate[];
-}
-
-// Pipeline stages
-const pipelineStages = [
-  "Sourcing",
-  "Screening", 
-  "SR/Completed",
-  "Interview",
-  "Verification",
-  "Onboarding",
-  "Hired",
-  "Disqualified"
-];
-
-// Sample data matching the image
-const sampleJobs: Job[] = [
-  {
-    id: "1",
-    title: "Product Manager",
-    clientName: "NextGen Ltd.",
-    location: "New York, NY",
-    salaryRange: "$95k - $120k",
-    headcount: 4,
-    jobType: "Contract",
-    isExpanded: true,
-    candidates: [
-      { id: "1", name: "Anjali Verma", source: "LinkedIn", currentStage: "Sourcing" },
-      { id: "2", name: "Rohit Agarwal", source: "Indeed", currentStage: "Screening" },
-      { id: "3", name: "Kavya Reddy", source: "Referral", currentStage: "Onboarding" },
-      { id: "4", name: "Manish Jain", source: "LinkedIn", currentStage: "Disqualified" }
-    ]
-  },
-  {
-    id: "2",
-    title: "Senior React Developer",
-    clientName: "TechCorp Inc.",
-    location: "San Francisco, CA",
-    salaryRange: "$120k - $150k",
-    headcount: 2,
-    jobType: "Full-time",
-    isExpanded: false,
-    candidates: [
-      { id: "5", name: "John Smith", source: "LinkedIn", currentStage: "Hired" },
-      { id: "6", name: "Sarah Johnson", source: "Indeed", currentStage: "Interview" },
-      { id: "7", name: "Mike Davis", source: "Referral", currentStage: "Screening" }
-    ]
-  },
-  {
-    id: "3",
-    title: "UX Designer",
-    clientName: "Design Studio",
-    location: "Austin, TX",
-    salaryRange: "$80k - $100k",
-    headcount: 1,
-    jobType: "Full-time",
-    isExpanded: false,
-    candidates: [
-      { id: "8", name: "Emily Wilson", source: "LinkedIn", currentStage: "Hired" },
-      { id: "9", name: "David Brown", source: "Indeed", currentStage: "Disqualified" },
-      { id: "10", name: "Lisa Anderson", source: "Referral", currentStage: "Verification" }
-    ]
-  },
-  {
-    id: "4",
-    title: "DevOps Engineer",
-    clientName: "Cloud Solutions",
-    location: "Seattle, WA",
-    salaryRange: "$110k - $140k",
-    headcount: 1,
-    jobType: "Contract",
-    isExpanded: false,
-    candidates: [
-      { id: "11", name: "Alex Turner", source: "LinkedIn", currentStage: "Sourcing" },
-      { id: "12", name: "Maria Garcia", source: "Indeed", currentStage: "Screening" }
-    ]
-  }
-];
-
-const getStageColor = (stage: string) => {
-  const colors = {
-    "Sourcing": "bg-purple-100 text-purple-800 border-purple-200",
-    "Screening": "bg-orange-100 text-orange-800 border-orange-200",
-    "SR/Completed": "bg-green-100 text-green-800 border-green-200",
-    "Interview": "bg-blue-100 text-blue-800 border-blue-200",
-    "Verification": "bg-yellow-100 text-yellow-800 border-yellow-200",
-    "Onboarding": "bg-green-100 text-green-800 border-green-200",
-    "Hired": "bg-red-100 text-red-800 border-red-200",
-    "Disqualified": "bg-red-100 text-red-800 border-red-200"
-  };
-  return colors[stage as keyof typeof colors] || "bg-gray-100 text-gray-800 border-gray-200";
-};
-
-const getCandidateCountByStage = (candidates: Candidate[], stage: string) => {
-  return candidates.filter(candidate => candidate.currentStage === stage).length;
-};
+import { 
+  dummyJobs, 
+  pipelineStages, 
+  getStageColor, 
+  getCandidateCountByStage,
+  type Job,
+  type Candidate 
+} from "./dummy-data";
 
 export function RecruiterPipeline() {
-  const [jobs, setJobs] = useState<Job[]>(sampleJobs);
+  const [jobs, setJobs] = useState<Job[]>(dummyJobs);
 
   // Calculate KPI data from jobs
   const calculateKPIData = () => {
