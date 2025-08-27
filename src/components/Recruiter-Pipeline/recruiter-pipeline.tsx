@@ -128,17 +128,43 @@ export function RecruiterPipeline() {
   };
 
   const handlePipelineCreated = (jobIds: string[], jobData?: any[]) => {
-    // Handle the pipeline creation
-    // You can add logic here to update the jobs state or perform other actions
-    console.log("Pipeline created with job IDs:", jobIds);
-    console.log("Job data:", jobData);
+    if (!jobData || jobData.length === 0) {
+      console.log("No job data provided");
+      return;
+    }
+
+    // Convert API job data to our local format
+    const newJobs: Job[] = jobData.map((apiJob, index) => ({
+      id: apiJob._id || `new-${Date.now()}-${index}`,
+      title: apiJob.jobTitle || "Untitled Job",
+      clientName: apiJob.client?.name || apiJob.client || "Unknown Client",
+      location: Array.isArray(apiJob.location) ? apiJob.location.join(", ") : apiJob.location || "Location not specified",
+      salaryRange: apiJob.minimumSalary && apiJob.maximumSalary 
+        ? `${apiJob.minimumSalary} - ${apiJob.maximumSalary}`
+        : apiJob.minimumSalary 
+        ? `${apiJob.minimumSalary}+`
+        : apiJob.maximumSalary 
+        ? `Up to ${apiJob.maximumSalary}`
+        : "Salary not specified",
+      headcount: apiJob.headcount || 1,
+      jobType: apiJob.jobType || "Full-time",
+      isExpanded: false,
+      candidates: [] // Start with empty candidates array
+    }));
+
+    // Add new jobs to the existing jobs state
+    setJobs(prevJobs => {
+      // Filter out any jobs that might already exist (by ID)
+      const existingJobIds = new Set(prevJobs.map(job => job.id));
+      const uniqueNewJobs = newJobs.filter(job => !existingJobIds.has(job.id));
+      
+      return [...prevJobs, ...uniqueNewJobs];
+    });
+
+    console.log("Added jobs to pipeline:", newJobs);
     
-    // For now, we'll just log the data
-    // In a real implementation, you might want to:
-    // 1. Add the selected jobs to the pipeline
-    // 2. Update the jobs state
-    // 3. Refresh the KPI data
-    // 4. Show success message
+    // You can add a toast notification here if you want
+    // toast.success(`Successfully added ${newJobs.length} job(s) to the pipeline`);
   };
 
   const kpiData = calculateKPIData();
