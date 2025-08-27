@@ -24,7 +24,7 @@ export interface Job {
 export const pipelineStages = [
   "Sourcing",
   "Screening", 
-  "SR/Completed",
+  "Client Screening",
   "Interview",
   "Verification",
   "Onboarding",
@@ -165,7 +165,7 @@ export const getStageColor = (stage: string) => {
   const colors = {
     "Sourcing": "bg-purple-100 text-purple-800 border-purple-200",
     "Screening": "bg-orange-100 text-orange-800 border-orange-200",
-    "SR/Completed": "bg-green-100 text-green-800 border-green-200",
+    "Client Screening": "bg-green-100 text-green-800 border-green-200",
     "Interview": "bg-blue-100 text-blue-800 border-blue-200",
     "Verification": "bg-yellow-100 text-yellow-800 border-yellow-200",
     "Onboarding": "bg-green-100 text-green-800 border-green-200",
