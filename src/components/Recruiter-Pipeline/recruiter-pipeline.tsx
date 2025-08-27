@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronDown, ChevronRight, Users, MapPin, DollarSign, Briefcase, Building2, Tag, Pin } from "lucide-react";
+import { ChevronDown, ChevronRight, Users, MapPin, DollarSign, Briefcase, Building2, Tag, Pin, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,6 +15,7 @@ import {
   type Job,
   type Candidate 
 } from "./dummy-data";
+import { Button } from "../ui/button";
 
 export function RecruiterPipeline() {
   const [jobs, setJobs] = useState<Job[]>(dummyJobs);
@@ -65,9 +66,17 @@ export function RecruiterPipeline() {
   const kpiData = calculateKPIData();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* KPI Section */}
       <KPISection data={kpiData} />
+
+      <div >
+         
+          <Button className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Add Recruitment
+          </Button>
+        </div>
 
       {/* Jobs Section */}
       {jobs.map((job) => (
