@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { KPISection } from "./kpi-section";
+import { CreatePipelineDialog } from "./create-pipeline-dialog";
 import { 
   dummyJobs, 
   pipelineStages, 
@@ -63,6 +64,20 @@ export function RecruiterPipeline() {
     }));
   };
 
+  const handlePipelineCreated = (jobIds: string[], jobData?: any[]) => {
+    // Handle the pipeline creation
+    // You can add logic here to update the jobs state or perform other actions
+    console.log("Pipeline created with job IDs:", jobIds);
+    console.log("Job data:", jobData);
+    
+    // For now, we'll just log the data
+    // In a real implementation, you might want to:
+    // 1. Add the selected jobs to the pipeline
+    // 2. Update the jobs state
+    // 3. Refresh the KPI data
+    // 4. Show success message
+  };
+
   const kpiData = calculateKPIData();
 
   return (
@@ -70,13 +85,17 @@ export function RecruiterPipeline() {
       {/* KPI Section */}
       <KPISection data={kpiData} />
 
-      <div >
-         
-          <Button className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Add Recruitment
-          </Button>
-        </div>
+      <div className="flex items-center">
+        <CreatePipelineDialog 
+          trigger={
+            <Button className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Add Recruitment
+            </Button>
+          }
+          onPipelineCreated={handlePipelineCreated}
+        />
+      </div>
 
       {/* Jobs Section */}
       {jobs.map((job) => (
