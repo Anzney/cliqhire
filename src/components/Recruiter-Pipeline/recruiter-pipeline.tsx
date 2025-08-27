@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { KPISection } from "./kpi-section";
 
 // Types
 interface Candidate {
@@ -57,6 +58,50 @@ const sampleJobs: Job[] = [
       { id: "3", name: "Kavya Reddy", source: "Referral", currentStage: "Onboarding" },
       { id: "4", name: "Manish Jain", source: "LinkedIn", currentStage: "Disqualified" }
     ]
+  },
+  {
+    id: "2",
+    title: "Senior React Developer",
+    clientName: "TechCorp Inc.",
+    location: "San Francisco, CA",
+    salaryRange: "$120k - $150k",
+    headcount: 2,
+    jobType: "Full-time",
+    isExpanded: false,
+    candidates: [
+      { id: "5", name: "John Smith", source: "LinkedIn", currentStage: "Hired" },
+      { id: "6", name: "Sarah Johnson", source: "Indeed", currentStage: "Interview" },
+      { id: "7", name: "Mike Davis", source: "Referral", currentStage: "Screening" }
+    ]
+  },
+  {
+    id: "3",
+    title: "UX Designer",
+    clientName: "Design Studio",
+    location: "Austin, TX",
+    salaryRange: "$80k - $100k",
+    headcount: 1,
+    jobType: "Full-time",
+    isExpanded: false,
+    candidates: [
+      { id: "8", name: "Emily Wilson", source: "LinkedIn", currentStage: "Hired" },
+      { id: "9", name: "David Brown", source: "Indeed", currentStage: "Disqualified" },
+      { id: "10", name: "Lisa Anderson", source: "Referral", currentStage: "Verification" }
+    ]
+  },
+  {
+    id: "4",
+    title: "DevOps Engineer",
+    clientName: "Cloud Solutions",
+    location: "Seattle, WA",
+    salaryRange: "$110k - $140k",
+    headcount: 1,
+    jobType: "Contract",
+    isExpanded: false,
+    candidates: [
+      { id: "11", name: "Alex Turner", source: "LinkedIn", currentStage: "Sourcing" },
+      { id: "12", name: "Maria Garcia", source: "Indeed", currentStage: "Screening" }
+    ]
   }
 ];
 
@@ -81,6 +126,27 @@ const getCandidateCountByStage = (candidates: Candidate[], stage: string) => {
 export function RecruiterPipeline() {
   const [jobs, setJobs] = useState<Job[]>(sampleJobs);
 
+  // Calculate KPI data from jobs
+  const calculateKPIData = () => {
+    const totalJobs = jobs.length;
+    const activeJobs = jobs.filter(job => job.candidates.some(c => c.currentStage !== "Hired" && c.currentStage !== "Disqualified")).length;
+    const appliedCandidates = jobs.reduce((total, job) => total + job.candidates.length, 0);
+    const hiredCandidates = jobs.reduce((total, job) => 
+      total + job.candidates.filter(c => c.currentStage === "Hired").length, 0
+    );
+    const disqualifiedCandidates = jobs.reduce((total, job) => 
+      total + job.candidates.filter(c => c.currentStage === "Disqualified").length, 0
+    );
+
+    return {
+      totalJobs,
+      activeJobs,
+      appliedCandidates,
+      hiredCandidates,
+      disqualifiedCandidates
+    };
+  };
+
   const toggleJobExpansion = (jobId: string) => {
     setJobs(jobs.map(job => 
       job.id === jobId ? { ...job, isExpanded: !job.isExpanded } : job
@@ -103,8 +169,14 @@ export function RecruiterPipeline() {
     }));
   };
 
+  const kpiData = calculateKPIData();
+
   return (
     <div className="space-y-6">
+      {/* KPI Section */}
+      <KPISection data={kpiData} />
+
+      {/* Jobs Section */}
       {jobs.map((job) => (
         <Card key={job.id} className="overflow-hidden shadow-sm border-gray-200">
           {/* Job Header - Clickable */}
