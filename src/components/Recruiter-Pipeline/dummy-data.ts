@@ -63,14 +63,14 @@ export interface Job {
 }
 
 export const pipelineStages = [
-  "Sourcing",
-  "Screening", 
-  "Client Screening",
-  "Interview",
-  "Verification",
-  "Onboarding",
-  "Hired",
-  "Disqualified"
+    "Sourcing",
+    "Screening", 
+    "Client Screening",
+    "Interview",
+    "Verification",
+    "Onboarding",
+    "Hired",
+    "Disqualified"
 ];
 
 // Removed dummy jobs - now using real API data

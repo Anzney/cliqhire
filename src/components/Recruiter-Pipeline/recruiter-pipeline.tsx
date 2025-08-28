@@ -15,16 +15,30 @@ import { getAllPipelineEntries, getPipelineEntry } from "@/services/recruitmentP
 
 // Utility function to convert pipeline data to Job format
 const convertPipelineDataToJob = (pipelineData: any, isExpanded: boolean = false): Job => {
+  // Format salary range using the correct backend fields
+  const formatSalaryRange = () => {
+    const minSalary = pipelineData.jobDetails.minimumSalary;
+    const maxSalary = pipelineData.jobDetails.maximumSalary;
+    const currency = pipelineData.jobDetails.salaryCurrency;
+    
+    if (minSalary && maxSalary && currency) {
+      return `${minSalary} - ${maxSalary} ${currency}`;
+    } else if (minSalary && currency) {
+      return `${minSalary} ${currency}`;
+    } else if (maxSalary && currency) {
+      return `${maxSalary} ${currency}`;
+    } else if (minSalary || maxSalary) {
+      return `${minSalary || maxSalary}`;
+    }
+    return "Salary not specified";
+  };
+
   return {
     id: pipelineData.pipelineInfo._id,
     title: pipelineData.jobDetails.jobTitle || "Untitled Job",
     clientName: pipelineData.clientInfo.name || "Unknown Client",
     location: pipelineData.jobDetails.location || "Location not specified",
-    salaryRange: pipelineData.jobDetails.salaryRange ? 
-      (typeof pipelineData.jobDetails.salaryRange === 'object' && pipelineData.jobDetails.salaryRange !== null ? 
-        `${(pipelineData.jobDetails.salaryRange as any).min || 0} - ${(pipelineData.jobDetails.salaryRange as any).max || 0} ${(pipelineData.jobDetails.salaryRange as any).currency || ''}` : 
-        String(pipelineData.jobDetails.salaryRange)) : 
-      "Salary not specified",
+    salaryRange: formatSalaryRange(),
     headcount: pipelineData.jobDetails.headcount || 1,
     jobType: pipelineData.jobDetails.jobType || "Full-time",
     isExpanded,
@@ -42,8 +56,8 @@ const convertPipelineDataToJob = (pipelineData: any, isExpanded: boolean = false
         currentJobTitle: candidate.currentJobTitle,
         previousCompanyName: candidate.previousCompanyName
       })),
-    // Pipeline-specific data
-    pipelineStatus: pipelineData.pipelineInfo.status,
+    // Pipeline-specific data - use stage field from backend
+    pipelineStatus: pipelineData.jobDetails.stage || "Unknown",
     priority: pipelineData.pipelineInfo.priority,
     notes: pipelineData.pipelineInfo.notes,
     assignedDate: pipelineData.pipelineInfo.assignedDate,
@@ -182,7 +196,7 @@ export function RecruiterPipeline() {
   // Calculate KPI data from jobs
   const calculateKPIData = () => {
     const totalJobs = jobs.length;
-    const activeJobs = jobs.filter(job => job.pipelineStatus === "Open" || job.pipelineStatus === "Active").length;
+    const activeJobs = jobs.filter(job => job.pipelineStatus !== "Closed").length;
     const appliedCandidates = jobs.reduce((total, job) => total + job.candidates.length, 0);
     const hiredCandidates = jobs.reduce((total, job) => 
       total + job.candidates.filter(c => c.currentStage === "Hired").length, 0
@@ -231,9 +245,9 @@ export function RecruiterPipeline() {
       filteredJobs = filteredJobs.filter(job => {
         switch (statusFilter) {
           case "active":
-            return job.pipelineStatus === "Open" || job.pipelineStatus === "Active";
+            return job.pipelineStatus !== "Closed";
           case "completed":
-            return job.pipelineStatus === "Closed" || job.pipelineStatus === "Completed";
+            return job.pipelineStatus === "Closed";
           case "paused":
             return job.pipelineStatus === "On Hold" || job.pipelineStatus === "Paused";
           default:

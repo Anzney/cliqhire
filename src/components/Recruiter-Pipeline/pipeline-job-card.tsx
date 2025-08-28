@@ -71,6 +71,7 @@ export function PipelineJobCard({
                     variant="outline" 
                     className={`${
                       job.pipelineStatus === 'Active' ? 'bg-green-100 text-green-700 border-green-200' :
+                      job.pipelineStatus === 'Closed' ? 'bg-red-100 text-red-700 border-red-200' :
                       job.pipelineStatus === 'On Hold' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
                       'bg-gray-100 text-gray-700 border-gray-200'
                     }`}
