@@ -13,6 +13,83 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAllPipelineEntries, getPipelineEntry } from "@/services/recruitmentPipelineService";
 
+// Utility function to convert pipeline data to Job format
+const convertPipelineDataToJob = (pipelineData: any, isExpanded: boolean = false): Job => {
+  return {
+    id: pipelineData.pipelineInfo._id,
+    title: pipelineData.jobDetails.jobTitle || "Untitled Job",
+    clientName: pipelineData.clientInfo.name || "Unknown Client",
+    location: pipelineData.jobDetails.location || "Location not specified",
+    salaryRange: pipelineData.jobDetails.salaryRange ? 
+      (typeof pipelineData.jobDetails.salaryRange === 'object' && pipelineData.jobDetails.salaryRange !== null ? 
+        `${(pipelineData.jobDetails.salaryRange as any).min || 0} - ${(pipelineData.jobDetails.salaryRange as any).max || 0} ${(pipelineData.jobDetails.salaryRange as any).currency || ''}` : 
+        String(pipelineData.jobDetails.salaryRange)) : 
+      "Salary not specified",
+    headcount: pipelineData.jobDetails.headcount || 1,
+    jobType: pipelineData.jobDetails.jobType || "Full-time",
+    isExpanded,
+    candidates: pipelineData.candidates.map((candidate: any) => ({
+        id: candidate._id,
+        name: candidate.name,
+        source: candidate.referredBy || "Pipeline",
+        currentStage: candidate.status || "Sourcing",
+        avatar: undefined,
+        experience: candidate.experience,
+        currentSalary: candidate.currentSalary,
+        currentSalaryCurrency: candidate.currentSalaryCurrency,
+        expectedSalary: candidate.expectedSalary,
+        expectedSalaryCurrency: candidate.expectedSalaryCurrency,
+        currentJobTitle: candidate.currentJobTitle,
+        previousCompanyName: candidate.previousCompanyName
+      })),
+    // Pipeline-specific data
+    pipelineStatus: pipelineData.pipelineInfo.status,
+    priority: pipelineData.pipelineInfo.priority,
+    notes: pipelineData.pipelineInfo.notes,
+    assignedDate: pipelineData.pipelineInfo.assignedDate,
+    candidateSummary: pipelineData.candidateSummary,
+    // Job details from API
+    jobPosition: Array.isArray(pipelineData.jobDetails.jobPosition) ? 
+      pipelineData.jobDetails.jobPosition.join(", ") : 
+      pipelineData.jobDetails.jobPosition,
+    department: pipelineData.jobDetails.department,
+    experience: pipelineData.jobDetails.experience,
+    education: Array.isArray(pipelineData.jobDetails.education) ? 
+      pipelineData.jobDetails.education.join(", ") : 
+      pipelineData.jobDetails.education,
+    specialization: Array.isArray(pipelineData.jobDetails.specialization) ? 
+      pipelineData.jobDetails.specialization.join(", ") : 
+      pipelineData.jobDetails.specialization,
+    teamSize: pipelineData.jobDetails.teamSize,
+    numberOfPositions: pipelineData.jobDetails.numberOfPositions,
+    workVisa: pipelineData.jobDetails.workVisa ? 
+      (typeof pipelineData.jobDetails.workVisa === 'object' ? 
+        !!pipelineData.jobDetails.workVisa : 
+        !!pipelineData.jobDetails.workVisa) : 
+      false,
+    gender: pipelineData.jobDetails.gender,
+    deadlineByClient: pipelineData.jobDetails.deadlineByClient || undefined,
+    keySkills: Array.isArray(pipelineData.jobDetails.specialization) ? 
+      pipelineData.jobDetails.specialization : 
+      [],
+    certifications: Array.isArray(pipelineData.jobDetails.certifications) ? 
+      pipelineData.jobDetails.certifications : 
+      [],
+    otherBenefits: Array.isArray(pipelineData.jobDetails.otherBenefits) ? 
+      pipelineData.jobDetails.otherBenefits.join(", ") : 
+      pipelineData.jobDetails.otherBenefits,
+    jobDescription: pipelineData.jobDetails.jobDescription,
+    // Client information from API
+    clientIndustry: pipelineData.clientInfo.industry,
+    clientLocation: pipelineData.clientInfo.location,
+    clientStage: pipelineData.clientInfo.clientStage,
+    clientCountry: pipelineData.clientInfo.countryOfBusiness,
+    clientWebsite: pipelineData.clientInfo.website,
+    clientPhone: pipelineData.clientInfo.phoneNumber,
+    clientEmails: pipelineData.clientInfo.emails
+  };
+};
+
 export function RecruiterPipeline() {
   const { user } = useAuth();
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -38,80 +115,10 @@ export function RecruiterPipeline() {
       if (response.success && response.data && response.data.pipelines) {
         console.log("Pipeline data found:", response.data.pipelines.length, "pipelines");
         
-        // Convert all pipeline entries to Job format
-        const pipelineJobs: Job[] = response.data.pipelines.map((pipelineData: any) => ({
-          id: pipelineData.pipelineInfo._id,
-          title: pipelineData.jobDetails.jobTitle || "Untitled Job",
-          clientName: pipelineData.clientInfo.name || "Unknown Client",
-          location: pipelineData.jobDetails.location || "Location not specified",
-          salaryRange: pipelineData.jobDetails.salaryRange ? 
-            (typeof pipelineData.jobDetails.salaryRange === 'object' && pipelineData.jobDetails.salaryRange !== null ? 
-              `${(pipelineData.jobDetails.salaryRange as any).min || 0} - ${(pipelineData.jobDetails.salaryRange as any).max || 0} ${(pipelineData.jobDetails.salaryRange as any).currency || ''}` : 
-              String(pipelineData.jobDetails.salaryRange)) : 
-            "Salary not specified",
-          headcount: pipelineData.jobDetails.headcount || 1,
-          jobType: pipelineData.jobDetails.jobType || "Full-time",
-          isExpanded: false,
-          candidates: pipelineData.candidates.map((candidate: any) => ({
-              id: candidate._id,
-              name: candidate.name,
-              source: candidate.referredBy || "Pipeline",
-              currentStage: candidate.status || "Sourcing",
-              avatar: undefined,
-              experience: candidate.experience,
-              currentSalary: candidate.currentSalary,
-              currentSalaryCurrency: candidate.currentSalaryCurrency,
-              expectedSalary: candidate.expectedSalary,
-              expectedSalaryCurrency: candidate.expectedSalaryCurrency,
-              currentJobTitle: candidate.currentJobTitle,
-              previousCompanyName: candidate.previousCompanyName
-            })),
-          // Pipeline-specific data
-          pipelineStatus: pipelineData.pipelineInfo.status,
-          priority: pipelineData.pipelineInfo.priority,
-          notes: pipelineData.pipelineInfo.notes,
-          assignedDate: pipelineData.pipelineInfo.assignedDate,
-          candidateSummary: pipelineData.candidateSummary,
-          // Job details from API
-          jobPosition: Array.isArray(pipelineData.jobDetails.jobPosition) ? 
-            pipelineData.jobDetails.jobPosition.join(", ") : 
-            pipelineData.jobDetails.jobPosition,
-          department: pipelineData.jobDetails.department,
-          experience: pipelineData.jobDetails.experience,
-          education: Array.isArray(pipelineData.jobDetails.education) ? 
-            pipelineData.jobDetails.education.join(", ") : 
-            pipelineData.jobDetails.education,
-          specialization: Array.isArray(pipelineData.jobDetails.specialization) ? 
-            pipelineData.jobDetails.specialization.join(", ") : 
-            pipelineData.jobDetails.specialization,
-          teamSize: pipelineData.jobDetails.teamSize,
-          numberOfPositions: pipelineData.jobDetails.numberOfPositions,
-          workVisa: pipelineData.jobDetails.workVisa ? 
-            (typeof pipelineData.jobDetails.workVisa === 'object' ? 
-              !!pipelineData.jobDetails.workVisa : 
-              !!pipelineData.jobDetails.workVisa) : 
-            false,
-          gender: pipelineData.jobDetails.gender,
-          deadlineByClient: pipelineData.jobDetails.deadlineByClient || undefined,
-          keySkills: Array.isArray(pipelineData.jobDetails.specialization) ? 
-            pipelineData.jobDetails.specialization : 
-            [],
-          certifications: Array.isArray(pipelineData.jobDetails.certifications) ? 
-            pipelineData.jobDetails.certifications : 
-            [],
-          otherBenefits: Array.isArray(pipelineData.jobDetails.otherBenefits) ? 
-            pipelineData.jobDetails.otherBenefits.join(", ") : 
-            pipelineData.jobDetails.otherBenefits,
-          jobDescription: pipelineData.jobDetails.jobDescription,
-          // Client information from API
-          clientIndustry: pipelineData.clientInfo.industry,
-          clientLocation: pipelineData.clientInfo.location,
-          clientStage: pipelineData.clientInfo.clientStage,
-          clientCountry: pipelineData.clientInfo.countryOfBusiness,
-          clientWebsite: pipelineData.clientInfo.website,
-          clientPhone: pipelineData.clientInfo.phoneNumber,
-          clientEmails: pipelineData.clientInfo.emails
-        }));
+        // Convert all pipeline entries to Job format using the utility function
+        const pipelineJobs: Job[] = response.data.pipelines.map((pipelineData: any) => 
+          convertPipelineDataToJob(pipelineData, false)
+        );
         
         console.log("Converted pipeline jobs:", pipelineJobs);
         setJobs(pipelineJobs);
@@ -148,60 +155,8 @@ export function RecruiterPipeline() {
       if (response.success && response.data) {
         const pipelineData = response.data;
         
-        // Convert to local format for detailed view
-        const detailedJob: Job = {
-          id: pipelineData.pipelineInfo._id,
-          title: pipelineData.jobDetails.jobTitle || "Untitled Job",
-          clientName: pipelineData.clientInfo.name || "Unknown Client",
-          location: pipelineData.jobDetails.location || "Location not specified",
-          salaryRange: pipelineData.jobDetails.salaryRange || "Salary not specified",
-          headcount: pipelineData.jobDetails.headcount || 1,
-          jobType: pipelineData.jobDetails.jobType || "Full-time",
-          isExpanded: true, // Show expanded by default for detailed view
-          candidates: pipelineData.candidates.map((candidate: any) => ({
-              id: candidate._id,
-              name: candidate.name,
-              source: candidate.referredBy || "Pipeline",
-              currentStage: candidate.status || "Sourcing",
-              avatar: undefined,
-              experience: candidate.experience,
-              currentSalary: candidate.currentSalary,
-              currentSalaryCurrency: candidate.currentSalaryCurrency,
-              expectedSalary: candidate.expectedSalary,
-              expectedSalaryCurrency: candidate.expectedSalaryCurrency,
-              currentJobTitle: candidate.currentJobTitle,
-              previousCompanyName: candidate.previousCompanyName
-            })),
-          // Pipeline-specific data from the detailed API
-          pipelineStatus: pipelineData.pipelineInfo.status,
-          priority: pipelineData.pipelineInfo.priority,
-          notes: pipelineData.pipelineInfo.notes,
-          assignedDate: pipelineData.pipelineInfo.assignedDate,
-          candidateSummary: pipelineData.candidateSummary,
-          // Job details from API
-          jobPosition: pipelineData.jobDetails.jobPosition,
-          department: pipelineData.jobDetails.department,
-          experience: pipelineData.jobDetails.experience,
-          education: pipelineData.jobDetails.education,
-          specialization: pipelineData.jobDetails.specialization,
-          teamSize: pipelineData.jobDetails.teamSize,
-          numberOfPositions: pipelineData.jobDetails.numberOfPositions,
-          workVisa: pipelineData.jobDetails.workVisa,
-          gender: pipelineData.jobDetails.gender,
-          deadlineByClient: pipelineData.jobDetails.deadlineByClient || undefined,
-          keySkills: pipelineData.jobDetails.keySkills,
-          certifications: pipelineData.jobDetails.certifications,
-          otherBenefits: pipelineData.jobDetails.otherBenefits,
-          jobDescription: pipelineData.jobDetails.jobDescription,
-          // Client information from API
-          clientIndustry: pipelineData.clientInfo.industry,
-          clientLocation: pipelineData.clientInfo.location,
-          clientStage: pipelineData.clientInfo.clientStage,
-          clientCountry: pipelineData.clientInfo.countryOfBusiness,
-          clientWebsite: pipelineData.clientInfo.website,
-          clientPhone: pipelineData.clientInfo.phoneNumber,
-          clientEmails: pipelineData.clientInfo.emails
-        };
+        // Convert to local format for detailed view using the utility function
+        const detailedJob: Job = convertPipelineDataToJob(pipelineData, true);
         
         // Update the specific job in the jobs array
         setJobs(prevJobs => {
