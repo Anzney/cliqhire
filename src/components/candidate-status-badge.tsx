@@ -20,25 +20,24 @@ import {
 } from "@/components/ui/dialog";
 
 const statuses = [
-  "Sourcing",
-  "Screening", 
-  "Client Screening",
-  "Interview",
-  "Verification",
-  "Onboarding",
-  "Hired",
-  "Disqualified"
+  "Active",
+  "Inactive", 
+  "Shortlisted",
+  "Interviewing",
+  "Offer",
+  "Rejected",
+  "Withdrawn"
 ] as const;
 
 const statusColors = {
-  Sourcing: "bg-green-100 text-green-800",
-  Screening: "bg-gray-100 text-gray-800",
-  "Client Screening": "bg-blue-100 text-blue-800",
-  Interview : "bg-yellow-100 text-yellow-800",
-  Verification: "bg-purple-100 text-purple-800",
-  Onboarding: "bg-emerald-100 text-emerald-800",
-  Hired: "bg-red-100 text-red-800",
-  Disqualified: "bg-orange-100 text-orange-800",
+ Active: "bg-green-100 text-green-800",
+  Inactive: "bg-gray-100 text-gray-800",
+  Shortlisted: "bg-blue-100 text-blue-800",
+  Interviewing: "bg-yellow-100 text-yellow-800",
+  Offer: "bg-purple-100 text-purple-800",
+  Hired: "bg-emerald-100 text-emerald-800",
+  Rejected: "bg-red-100 text-red-800",
+  Withdrawn: "bg-orange-100 text-orange-800",
 } as const;
 
 type CandidateStatus = keyof typeof statusColors;

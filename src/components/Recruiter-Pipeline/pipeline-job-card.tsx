@@ -133,7 +133,7 @@ export function PipelineJobCard({
             </div>
             
             {/* API Status Badges */}
-            <div className="flex flex-wrap gap-2 mb-6">
+            {/* <div className="flex flex-wrap gap-2 mb-6">
               {job.candidateSummary && Object.entries(job.candidateSummary.byStatus || {}).map(([status, count]) => (
                 <Badge 
                   key={status}
@@ -143,7 +143,7 @@ export function PipelineJobCard({
                   {status}: {count}
                 </Badge>
               ))}
-            </div>
+            </div> */}
 
             {/* Candidate Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -235,19 +235,19 @@ function CandidateCard({ candidate, jobId, onUpdateStage, onViewCandidate }: Can
           </div>
         )}
         
-        {candidate.currentJobTitle && (
+        {/* {candidate.currentJobTitle && (
           <div className="flex items-center space-x-2 text-xs text-gray-600">
             <Briefcase className="h-3 w-3 text-purple-500" />
             <span>{candidate.currentJobTitle}</span>
           </div>
-        )}
+        )} */}
         
-        {candidate.previousCompanyName && (
+        {/* {candidate.previousCompanyName && (
           <div className="flex items-center space-x-2 text-xs text-gray-600">
             <Building2 className="h-3 w-3 text-indigo-500" />
             <span>Ex: {candidate.previousCompanyName}</span>
           </div>
-        )}
+        )} */}
         
         <div className="pt-2">
           <Select
