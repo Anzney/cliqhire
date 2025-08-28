@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, Briefcase, Building, MapPin, DollarSign, Calendar, X, Check } from "lucide-react";
 import { getJobs, Job, ClientRef } from "@/services/jobService";
 import { getClientById } from "@/services/clientService";
+import { createPipeline } from "@/services/recruitmentPipelineService";
 import { toast } from "sonner";
 
 interface CreatePipelineDialogProps {
@@ -35,6 +36,7 @@ export function CreatePipelineDialog({ trigger, onPipelineCreated }: CreatePipel
   const [open, setOpen] = useState(false);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(false);
+  const [creatingPipeline, setCreatingPipeline] = useState(false);
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [clientNames, setClientNames] = useState<Record<string, string>>({});
@@ -119,15 +121,39 @@ export function CreatePipelineDialog({ trigger, onPipelineCreated }: CreatePipel
       return;
     }
 
+    setCreatingPipeline(true);
     try {
       // Get the selected job data
       const selectedJobs = jobs.filter(job => selectedJobIds.includes(job._id));
       
-      toast.success(`Successfully created pipeline with ${selectedJobIds.length} job(s)`);
+      // Create pipeline entries for each selected job
+      const results = await Promise.allSettled(
+        selectedJobIds.map(jobId => createPipeline({ jobId }))
+      );
       
-      // Call the callback to handle pipeline creation
-      if (onPipelineCreated) {
-        onPipelineCreated(selectedJobIds, selectedJobs);
+      // Check results
+      const successfulJobs: Job[] = [];
+      const failedJobs: string[] = [];
+      
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled' && result.value.success) {
+          successfulJobs.push(selectedJobs[index]);
+        } else {
+          failedJobs.push(selectedJobs[index].jobTitle);
+        }
+      });
+      
+      if (successfulJobs.length > 0) {
+        toast.success(`Successfully created pipeline with ${successfulJobs.length} job(s)`);
+        
+        // Call the callback to handle pipeline creation
+        if (onPipelineCreated) {
+          onPipelineCreated(successfulJobs.map(job => job._id), successfulJobs);
+        }
+      }
+      
+      if (failedJobs.length > 0) {
+        toast.error(`Failed to create pipeline for: ${failedJobs.join(', ')}`);
       }
       
       // Reset and close dialog
@@ -136,6 +162,8 @@ export function CreatePipelineDialog({ trigger, onPipelineCreated }: CreatePipel
     } catch (error) {
       console.error("Error creating pipeline:", error);
       toast.error("Failed to create pipeline. Please try again.");
+    } finally {
+      setCreatingPipeline(false);
     }
   };
 
@@ -370,9 +398,16 @@ export function CreatePipelineDialog({ trigger, onPipelineCreated }: CreatePipel
           </Button>
           <Button
             onClick={handleCreatePipeline}
-            disabled={selectedJobIds.length === 0 || loading}
+            disabled={selectedJobIds.length === 0 || loading || creatingPipeline}
           >
-            Create Pipeline with {selectedJobIds.length > 0 ? `${selectedJobIds.length} Job${selectedJobIds.length > 1 ? 's' : ''}` : 'Jobs'}
+            {creatingPipeline ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating Pipeline...
+              </>
+            ) : (
+              `Create Pipeline with ${selectedJobIds.length > 0 ? `${selectedJobIds.length} Job${selectedJobIds.length > 1 ? 's' : ''}` : 'Jobs'}`
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
