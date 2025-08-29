@@ -61,10 +61,13 @@ export function PipelineJobCard({
                 <ChevronRight className="h-5 w-5 text-gray-500" />
               )}
               <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
-                  <span className="text-sm text-gray-600">{job.clientName}</span>
-                </div>
+                                 <div className="flex items-center justify-between">
+                   <div className="flex items-center space-x-2">
+                     <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
+                     <Building2 className="h-4 w-4 text-gray-400" />
+                     <span className="text-sm text-gray-600">{job.clientName}</span>
+                   </div>
+                 </div>
                 <div className="flex items-center space-x-6 mt-2 text-sm text-gray-600">
                   <div className="flex items-center space-x-1">
                     <MapPin className="h-4 w-4 text-red-500" />

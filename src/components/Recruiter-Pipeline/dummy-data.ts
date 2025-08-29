@@ -14,6 +14,8 @@ export interface Candidate {
   expectedSalaryCurrency?: string;
   currentJobTitle?: string;
   previousCompanyName?: string;
+  currentCompanyName?: string;
+  subStatus?: string;
   // Additional fields from new API structure
   applicationId?: string;
   appliedDate?: string;
