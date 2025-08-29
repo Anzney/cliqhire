@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { 
   pipelineStages, 
   getStageColor, 
@@ -152,13 +153,14 @@ export function PipelineJobCard({
             {/* Candidate Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {job.candidates.map((candidate) => (
-                <CandidateCard
-                  key={candidate.id}
-                  candidate={candidate}
-                  jobId={job.id}
-                  onUpdateStage={onUpdateCandidateStage}
-                  onViewCandidate={handleViewCandidate}
-                />
+                                 <CandidateCard
+                   key={candidate.id}
+                   candidate={candidate}
+                   jobId={job.id}
+                   onUpdateStage={onUpdateCandidateStage}
+                   onViewCandidate={handleViewCandidate}
+                   onViewResume={(candidate) => console.log('View resume for:', candidate.name)}
+                 />
               ))}
             </div>
           </CardContent>
@@ -180,9 +182,10 @@ interface CandidateCardProps {
   jobId: string;
   onUpdateStage: (jobId: string, candidateId: string, newStage: string) => void;
   onViewCandidate: (candidate: Candidate) => void;
+  onViewResume: (candidate: Candidate) => void;
 }
 
-function CandidateCard({ candidate, jobId, onUpdateStage, onViewCandidate }: CandidateCardProps) {
+function CandidateCard({ candidate, jobId, onUpdateStage, onViewCandidate, onViewResume }: CandidateCardProps) {
   return (
     <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-100">
       {/* Top Section */}
@@ -205,21 +208,44 @@ function CandidateCard({ candidate, jobId, onUpdateStage, onViewCandidate }: Can
           </div>
         </div>
         
-        {/* Right side - Three-dot menu */}
-        <button
-          className="p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
-          onClick={(e) => {
-            e.stopPropagation();
-            onViewCandidate(candidate);
-          }}
-          title="View candidate details"
-        >
-          <div className="flex flex-col space-y-0.5">
-            <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-            <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-            <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-          </div>
-        </button>
+                 {/* Right side - Three-dot menu */}
+         <DropdownMenu>
+           <DropdownMenuTrigger asChild>
+             <button
+               className="p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+               onClick={(e) => e.stopPropagation()}
+               title="More options"
+             >
+               <div className="flex flex-col space-y-0.5">
+                 <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                 <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                 <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+               </div>
+             </button>
+           </DropdownMenuTrigger>
+           <DropdownMenuContent align="end" className="w-40">
+             <DropdownMenuItem 
+               onClick={(e) => {
+                 e.stopPropagation();
+                 onViewCandidate(candidate);
+               }}
+               className="cursor-pointer"
+             >
+               <Eye className="h-4 w-4 mr-2" />
+               View Details
+             </DropdownMenuItem>
+             <DropdownMenuItem 
+               onClick={(e) => {
+                 e.stopPropagation();
+                 onViewResume(candidate);
+               }}
+               className="cursor-pointer"
+             >
+               <Briefcase className="h-4 w-4 mr-2" />
+               View Resume
+             </DropdownMenuItem>
+           </DropdownMenuContent>
+         </DropdownMenu>
       </div>
       
       {/* Bottom Section */}
