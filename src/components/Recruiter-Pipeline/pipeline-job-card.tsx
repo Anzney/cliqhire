@@ -181,96 +181,53 @@ interface CandidateCardProps {
 
 function CandidateCard({ candidate, jobId, onUpdateStage, onViewCandidate }: CandidateCardProps) {
   return (
-    <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-      <div className="flex items-center space-x-3 mb-3">
-                 <Avatar className="h-10 w-10">
-           <AvatarImage src={candidate.avatar} />
-           <AvatarFallback className="text-sm bg-gray-200">
-             {candidate.name ? candidate.name.split(' ').map(n => n[0]).join('') : 'NA'}
-           </AvatarFallback>
-         </Avatar>
-                 <div className="flex-1 min-w-0">
-           <p className="text-sm font-medium text-gray-900 truncate">
-             {candidate.name || 'Unknown Candidate'}
-           </p>
-         </div>
+    <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-100">
+      {/* Top Section */}
+      <div className="flex items-start justify-between mb-3">
+        {/* Left side - Avatar, Name, Current Position */}
+        <div className="flex items-start space-x-2 flex-1 min-w-0">
+          <Avatar className="h-8 w-8 flex-shrink-0">
+            <AvatarImage src={candidate.avatar} />
+            <AvatarFallback className="text-xs bg-gray-200">
+              {candidate.name ? candidate.name.split(' ').map(n => n[0]).join('') : 'NA'}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {candidate.name || 'Unknown Candidate'}
+            </p>
+            <p className="text-xs text-gray-600 truncate">
+              {candidate.currentJobTitle || 'Position not specified'}
+            </p>
+          </div>
+        </div>
+        
+        {/* Right side - Three-dot menu */}
         <button
-          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+          className="p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
           onClick={(e) => {
             e.stopPropagation();
             onViewCandidate(candidate);
           }}
           title="View candidate details"
         >
-          <Eye className="h-4 w-4 text-gray-500 hover:text-gray-700" />
+          <div className="flex flex-col space-y-0.5">
+            <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+            <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+            <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+          </div>
         </button>
       </div>
       
-      <div className="space-y-2">
-                 <div className="flex items-center space-x-2 text-xs text-gray-600">
-           <Pin className="h-3 w-3 text-red-500" />
-           <span>{candidate.source}</span>
-         </div>
-         
-         <div className="flex items-center space-x-2 text-xs text-gray-600">
-           <Tag className="h-3 w-3 text-yellow-500" />
-           <span>Status: {candidate.currentStage}</span>
-         </div>
-         
-         <div className="flex items-center space-x-2 text-xs text-gray-600">
-           <Briefcase className="h-3 w-3 text-green-500" />
-           <span>{candidate.experience || "Experience not specified"}</span>
-         </div>
-         
-         {/* {candidate.location && (
-           <div className="flex items-center space-x-2 text-xs text-gray-600">
-             <MapPin className="h-3 w-3 text-blue-500" />
-             <span>{candidate.location}</span>
-           </div>
-         )} */}
-         
-         {/* {candidate.appliedDate && (
-           <div className="flex items-center space-x-2 text-xs text-gray-600">
-             <span className="text-xs text-gray-500">
-               Applied: {new Date(candidate.appliedDate).toLocaleDateString()}
-             </span>
-           </div>
-         )} */}
-        
-        {/* {candidate.currentSalary && (
-          <div className="flex items-center space-x-2 text-xs text-gray-600">
-            <DollarSign className="h-3 w-3 text-yellow-500" />
-            <span>Current: {candidate.currentSalary} {candidate.currentSalaryCurrency}</span>
-          </div>
-        )} */}
-        
-        {/* {candidate.expectedSalary && (
-          <div className="flex items-center space-x-2 text-xs text-gray-600">
-            <DollarSign className="h-3 w-3 text-yellow-500" />
-            <span>Expected: {candidate.expectedSalary} {candidate.expectedSalaryCurrency}</span>
-          </div>
-        )} */}
-        
-        {/* {candidate.currentJobTitle && (
-          <div className="flex items-center space-x-2 text-xs text-gray-600">
-            <Briefcase className="h-3 w-3 text-purple-500" />
-            <span>{candidate.currentJobTitle}</span>
-          </div>
-        )} */}
-        
-        {/* {candidate.previousCompanyName && (
-          <div className="flex items-center space-x-2 text-xs text-gray-600">
-            <Building2 className="h-3 w-3 text-indigo-500" />
-            <span>Ex: {candidate.previousCompanyName}</span>
-          </div>
-        )} */}
-        
-        <div className="pt-2">
+      {/* Bottom Section */}
+      <div className="flex items-center justify-between">
+        {/* Left side - Status dropdowns */}
+        <div className="flex items-center space-x-2 flex-1">
           <Select
             value={candidate.currentStage}
             onValueChange={(value) => onUpdateStage(jobId, candidate.id, value)}
           >
-            <SelectTrigger className="h-8 text-xs">
+            <SelectTrigger className="h-6 text-xs px-2">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -281,6 +238,33 @@ function CandidateCard({ candidate, jobId, onUpdateStage, onViewCandidate }: Can
               ))}
             </SelectContent>
           </Select>
+          
+          <Select
+            value={candidate.subStatus || "Select"}
+            onValueChange={(value) => console.log('Sub-status changed:', value)}
+          >
+            <SelectTrigger className="h-6 text-xs px-2">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Select" className="text-xs">Select</SelectItem>
+              <SelectItem value="In Progress" className="text-xs">In Progress</SelectItem>
+              <SelectItem value="Pending" className="text-xs">Pending</SelectItem>
+              <SelectItem value="Completed" className="text-xs">Completed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {/* Right side - Two avatars */}
+        <div className="flex items-center space-x-1 flex-shrink-0 ml-1">
+          <Avatar className="h-6 w-6">
+            <AvatarImage src="/api/placeholder/24/24" />
+            <AvatarFallback className="text-xs bg-blue-200">JD</AvatarFallback>
+          </Avatar>
+          <Avatar className="h-6 w-6">
+            <AvatarImage src="/api/placeholder/24/24" />
+            <AvatarFallback className="text-xs bg-green-200">HR</AvatarFallback>
+          </Avatar>
         </div>
       </div>
     </div>
