@@ -38,38 +38,10 @@ export function CandidateDetailsDialog({
   isOpen, 
   onClose 
 }: CandidateDetailsDialogProps) {
-  const [apiCandidate, setApiCandidate] =useState<ApiCandidate | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Fetch candidate details when dialog opens
-  useEffect(() => {
-    if (isOpen && candidate?.id) {
-      fetchCandidateDetails();
-    }
-  }, [isOpen, candidate?.id]);
-
-  const fetchCandidateDetails = async () => {
-    if (!candidate?.id) return;
-    
-    try {
-      setLoading(true);
-      setError(null);
-      const candidateData = await candidateService.getCandidateById(candidate.id);
-      setApiCandidate(candidateData);
-    } catch (err) {
-      console.error('Error fetching candidate details:', err);
-      setError('Failed to load candidate details');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Reset state when dialog closes
   React.useEffect(() => {
     if (!isOpen) {
-      setApiCandidate(null);
-      setError(null);
+      // Reset any state if needed
     }
   }, [isOpen]);
 
@@ -83,7 +55,7 @@ export function CandidateDetailsDialog({
             <Avatar className="h-16 w-16">
               <AvatarImage src={candidate.avatar} />
               <AvatarFallback className="text-lg bg-gray-200">
-                {candidate.name.split(' ').map(n => n[0]).join('')}
+                {candidate.name ? candidate.name.split(' ').map(n => n[0]).join('') : 'NA'}
               </AvatarFallback>
             </Avatar>
             <div>
@@ -97,28 +69,7 @@ export function CandidateDetailsDialog({
           </div>
         </DialogHeader>
 
-        {loading && (
-          <div className="flex items-center justify-center py-8">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-              <p className="text-gray-600">Loading candidate details...</p>
-            </div>
-          </div>
-        )}
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-800 text-sm">{error}</p>
-            <button
-              onClick={fetchCandidateDetails}
-              className="mt-2 text-red-600 hover:text-red-800 text-sm underline"
-            >
-              Try again
-            </button>
-          </div>
-        )}
-
-        {!loading && !error && apiCandidate && (
+        {candidate && (
           <div className="space-y-6">
             {/* Current Status */}
             <div className="flex items-center justify-between">
@@ -137,19 +88,19 @@ export function CandidateDetailsDialog({
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Briefcase className="h-4 w-4 text-blue-500" />
                     <span className="font-medium">Current Position:</span>
-                    <span>{apiCandidate.currentJobTitle || "Not specified"}</span>
+                    <span>{candidate.currentJobTitle || "Not specified"}</span>
                   </div>
                   
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Building2 className="h-4 w-4 text-indigo-500" />
                     <span className="font-medium">Previous Company:</span>
-                    <span>{apiCandidate.previousCompanyName || "Not specified"}</span>
+                    <span>{candidate.previousCompanyName || "Not specified"}</span>
                   </div>
                   
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Calendar className="h-4 w-4 text-green-500" />
                     <span className="font-medium">Experience:</span>
-                    <span>{apiCandidate.experience || "Not specified"}</span>
+                    <span>{candidate.experience || "Not specified"}</span>
                   </div>
                 </div>
               </div>
@@ -161,19 +112,19 @@ export function CandidateDetailsDialog({
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Mail className="h-4 w-4 text-red-500" />
                     <span className="font-medium">Email:</span>
-                    <span>{apiCandidate.email || "Not provided"}</span>
+                    <span>{candidate.email || "Not provided"}</span>
                   </div>
                   
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Phone className="h-4 w-4 text-green-500" />
                     <span className="font-medium">Phone:</span>
-                    <span>{apiCandidate.phone || "Not provided"}</span>
+                    <span>{candidate.phone || "Not provided"}</span>
                   </div>
                   
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <MapPin className="h-4 w-4 text-orange-500" />
                     <span className="font-medium">Location:</span>
-                    <span>{apiCandidate.location || "Not specified"}</span>
+                    <span>{candidate.location || "Not specified"}</span>
                   </div>
                 </div>
               </div>
@@ -183,19 +134,19 @@ export function CandidateDetailsDialog({
             <div className="space-y-3">
               <h4 className="font-medium text-gray-900">Salary Information</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {apiCandidate.currentSalary && (
+                {candidate.currentSalary && (
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <DollarSign className="h-4 w-4 text-yellow-500" />
                     <span className="font-medium">Current Salary:</span>
-                    <span>{apiCandidate.currentSalary} {apiCandidate.currentSalaryCurrency}</span>
+                    <span>{candidate.currentSalary} {candidate.currentSalaryCurrency}</span>
                   </div>
                 )}
                 
-                {apiCandidate.expectedSalary && (
+                {candidate.expectedSalary && (
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <DollarSign className="h-4 w-4 text-green-500" />
                     <span className="font-medium">Expected Salary:</span>
-                    <span>{apiCandidate.expectedSalary} {apiCandidate.expectedSalaryCurrency}</span>
+                    <span>{candidate.expectedSalary} {candidate.expectedSalaryCurrency}</span>
                   </div>
                 )}
               </div>
@@ -209,13 +160,13 @@ export function CandidateDetailsDialog({
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <GraduationCap className="h-4 w-4 text-purple-500" />
                     <span className="font-medium">Education:</span>
-                    <span>{apiCandidate.educationDegree || "Not specified"}</span>
+                    <span>{candidate.educationDegree || "Not specified"}</span>
                   </div>
                   
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Languages className="h-4 w-4 text-blue-500" />
                     <span className="font-medium">Languages:</span>
-                    <span>{apiCandidate.primaryLanguage || "Not specified"}</span>
+                    <span>{candidate.primaryLanguage || "Not specified"}</span>
                   </div>
                 </div>
                 
@@ -223,7 +174,7 @@ export function CandidateDetailsDialog({
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Award className="h-4 w-4 text-yellow-500" />
                     <span className="font-medium">Skills:</span>
-                    <span>{apiCandidate.skills?.join(', ') || "Not specified"}</span>
+                    <span>{candidate.skills?.join(', ') || "Not specified"}</span>
                   </div>
                   
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
@@ -236,23 +187,23 @@ export function CandidateDetailsDialog({
             </div>
 
             {/* Description */}
-            {apiCandidate.description && (
+            {candidate.description && (
               <div className="space-y-3">
                 <h4 className="font-medium text-gray-900">Description</h4>
                 <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-sm text-gray-700">{apiCandidate.description}</p>
+                  <p className="text-sm text-gray-700">{candidate.description}</p>
                 </div>
               </div>
             )}
 
             {/* Resume/CV Link */}
-            {apiCandidate.resume && (
+            {candidate.resume && (
               <div className="space-y-3">
                 <h4 className="font-medium text-gray-900">Documents</h4>
                 <div className="flex items-center space-x-2">
                   <FileText className="h-4 w-4 text-blue-500" />
                   <a 
-                    href={apiCandidate.resume} 
+                    href={candidate.resume} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800 text-sm underline"

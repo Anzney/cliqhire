@@ -42,26 +42,49 @@ const convertPipelineDataToJob = (pipelineData: any, isExpanded: boolean = false
     headcount: pipelineData.jobDetails.headcount || 1,
     jobType: pipelineData.jobDetails.jobType || "Full-time",
     isExpanded,
-    candidates: pipelineData.candidates.map((candidate: any) => ({
-        id: candidate._id,
+    candidates: pipelineData.candidates.map((candidateData: any) => {
+      const candidate = candidateData.candidate || candidateData; // Handle both new and old structure
+      return {
+        id: candidateData.applicationId || candidate._id,
         name: candidate.name,
         source: candidate.referredBy || "Pipeline",
-        currentStage: candidate.status || "Sourcing",
+        currentStage: candidateData.status || candidate.status || "Sourcing",
         avatar: undefined,
         experience: candidate.experience,
         currentSalary: candidate.currentSalary,
-        currentSalaryCurrency: candidate.currentSalaryCurrency,
+        currentSalaryCurrency: candidateData.salaryCurrency || candidate.currentSalaryCurrency,
         expectedSalary: candidate.expectedSalary,
         expectedSalaryCurrency: candidate.expectedSalaryCurrency,
         currentJobTitle: candidate.currentJobTitle,
-        previousCompanyName: candidate.previousCompanyName
-      })),
+        previousCompanyName: candidate.previousCompanyName,
+        // Additional fields from new structure
+        applicationId: candidateData.applicationId,
+        appliedDate: candidateData.appliedDate,
+        lastUpdated: candidateData.lastUpdated,
+        applicationDuration: candidateData.applicationDuration,
+        // Candidate details
+        email: candidate.email,
+        phone: candidate.phone,
+        location: candidate.location,
+        skills: candidate.skills,
+        softSkill: candidate.softSkill,
+        technicalSkill: candidate.technicalSkill,
+        gender: candidate.gender,
+        dateOfBirth: candidate.dateOfBirth,
+        country: candidate.country,
+        nationality: candidate.nationality,
+        willingToRelocate: candidate.willingToRelocate,
+        description: candidate.description,
+        linkedin: candidate.linkedin,
+        reportingTo: candidate.reportingTo
+      };
+    }),
     // Pipeline-specific data - use stage field from backend
     pipelineStatus: pipelineData.jobDetails.stage || "Unknown",
     priority: pipelineData.pipelineInfo.priority,
     notes: pipelineData.pipelineInfo.notes,
     assignedDate: pipelineData.pipelineInfo.assignedDate,
-    candidateSummary: pipelineData.candidateSummary,
+    candidateSummary: pipelineData.candidateSummary || { totalCandidates: 0, byStatus: {} },
     // Job details from API
     jobPosition: Array.isArray(pipelineData.jobDetails.jobPosition) ? 
       pipelineData.jobDetails.jobPosition.join(", ") : 
@@ -112,6 +135,10 @@ export function RecruiterPipeline() {
   const [sortBy, setSortBy] = useState("date");
   const [loading, setLoading] = useState(false);
   const [loadingJobId, setLoadingJobId] = useState<string | null>(null);
+  const [overallCandidateSummary, setOverallCandidateSummary] = useState<{
+    totalCandidates: number;
+    byStatus: { [key: string]: number };
+  } | null>(null);
 
   // Load pipeline jobs on component mount or when user changes
   useEffect(() => {
@@ -128,6 +155,11 @@ export function RecruiterPipeline() {
       
       if (response.success && response.data && response.data.pipelines) {
         console.log("Pipeline data found:", response.data.pipelines.length, "pipelines");
+        
+        // Store overall candidate summary if available
+        if (response.data.overallCandidateSummary) {
+          setOverallCandidateSummary(response.data.overallCandidateSummary);
+        }
         
         // Convert all pipeline entries to Job format using the utility function
         const pipelineJobs: Job[] = response.data.pipelines.map((pipelineData: any) => 
@@ -193,17 +225,32 @@ export function RecruiterPipeline() {
     }
   };
 
-  // Calculate KPI data from jobs
+  // Calculate KPI data from jobs and overall summary
   const calculateKPIData = () => {
     const totalJobs = jobs.length;
     const activeJobs = jobs.filter(job => job.pipelineStatus !== "Closed").length;
-    const appliedCandidates = jobs.reduce((total, job) => total + job.candidates.length, 0);
-    const hiredCandidates = jobs.reduce((total, job) => 
-      total + job.candidates.filter(c => c.currentStage === "Hired").length, 0
-    );
-    const disqualifiedCandidates = jobs.reduce((total, job) => 
-      total + job.candidates.filter(c => c.currentStage === "Disqualified").length, 0
-    );
+    
+    // Use overall candidate summary if available, otherwise calculate from jobs
+    let appliedCandidates = 0;
+    let hiredCandidates = 0;
+    let disqualifiedCandidates = 0;
+    
+    if (overallCandidateSummary) {
+      // Use API-provided overall summary
+      appliedCandidates = overallCandidateSummary.totalCandidates;
+      hiredCandidates = overallCandidateSummary.byStatus["Hired"] || 0;
+      disqualifiedCandidates = overallCandidateSummary.byStatus["Disqualified"] || 0;
+    } else {
+      // Fallback to calculating from individual jobs
+      appliedCandidates = jobs.reduce((total, job) => total + job.candidates.length, 0);
+      
+      jobs.forEach(job => {
+        if (job.candidateSummary && job.candidateSummary.byStatus) {
+          hiredCandidates += job.candidateSummary.byStatus["Hired"] || 0;
+          disqualifiedCandidates += job.candidateSummary.byStatus["Disqualified"] || 0;
+        }
+      });
+    }
 
     return {
       totalJobs,

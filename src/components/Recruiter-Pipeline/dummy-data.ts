@@ -14,6 +14,30 @@ export interface Candidate {
   expectedSalaryCurrency?: string;
   currentJobTitle?: string;
   previousCompanyName?: string;
+  // Additional fields from new API structure
+  applicationId?: string;
+  appliedDate?: string;
+  lastUpdated?: string;
+  applicationDuration?: number;
+  // Candidate details
+  email?: string;
+  phone?: string;
+  location?: string;
+  skills?: string[];
+  softSkill?: string[];
+  technicalSkill?: string[];
+  gender?: string;
+  dateOfBirth?: string;
+  country?: string;
+  nationality?: string;
+  willingToRelocate?: string;
+  description?: string;
+  linkedin?: string;
+  reportingTo?: string;
+  // Additional fields for dialog
+  educationDegree?: string;
+  primaryLanguage?: string;
+  resume?: string;
 }
 
 export interface Job {

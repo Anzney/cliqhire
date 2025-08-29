@@ -116,34 +116,35 @@ export function PipelineJobCard({
         {job.isExpanded && (
           <CardContent className="pt-0">
             
-            {/* Pipeline Stage Badges */}
+            {/* Pipeline Stage Badges - Use candidateSummary.byStatus for accurate counts */}
             <div className="flex flex-wrap gap-2 mb-6">
-              {pipelineStages.map((stage) => {
-                const count = job.candidates.filter(c => c.currentStage === stage).length;
-                return (
+              {job.candidateSummary && job.candidateSummary.byStatus ? (
+                // Use the API-provided status counts from candidateSummary.byStatus
+                Object.entries(job.candidateSummary.byStatus).map(([status, count]) => (
                   <Badge 
-                    key={stage}
+                    key={status}
                     variant="outline" 
-                    className={`${getStageColor(stage)} border`}
+                    className={`${getStageColor(status)} border`}
                   >
-                    {stage}: {count}
+                    {status}: {count}
                   </Badge>
-                );
-              })}
+                ))
+              ) : (
+                // Fallback to calculating from candidates array if candidateSummary is not available
+                pipelineStages.map((stage) => {
+                  const count = job.candidates.filter(c => c.currentStage === stage).length;
+                  return (
+                    <Badge 
+                      key={stage}
+                      variant="outline" 
+                      className={`${getStageColor(stage)} border`}
+                    >
+                      {stage}: {count}
+                    </Badge>
+                  );
+                })
+              )}
             </div>
-            
-            {/* API Status Badges */}
-            {/* <div className="flex flex-wrap gap-2 mb-6">
-              {job.candidateSummary && Object.entries(job.candidateSummary.byStatus || {}).map(([status, count]) => (
-                <Badge 
-                  key={status}
-                  variant="outline" 
-                  className="bg-blue-100 text-blue-800 border-blue-200"
-                >
-                  {status}: {count}
-                </Badge>
-              ))}
-            </div> */}
 
             {/* Candidate Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -182,17 +183,17 @@ function CandidateCard({ candidate, jobId, onUpdateStage, onViewCandidate }: Can
   return (
     <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
       <div className="flex items-center space-x-3 mb-3">
-        <Avatar className="h-10 w-10">
-          <AvatarImage src={candidate.avatar} />
-          <AvatarFallback className="text-sm bg-gray-200">
-            {candidate.name.split(' ').map(n => n[0]).join('')}
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">
-            {candidate.name}
-          </p>
-        </div>
+                 <Avatar className="h-10 w-10">
+           <AvatarImage src={candidate.avatar} />
+           <AvatarFallback className="text-sm bg-gray-200">
+             {candidate.name ? candidate.name.split(' ').map(n => n[0]).join('') : 'NA'}
+           </AvatarFallback>
+         </Avatar>
+                 <div className="flex-1 min-w-0">
+           <p className="text-sm font-medium text-gray-900 truncate">
+             {candidate.name || 'Unknown Candidate'}
+           </p>
+         </div>
         <button
           className="p-1 hover:bg-gray-100 rounded-full transition-colors"
           onClick={(e) => {
@@ -206,34 +207,49 @@ function CandidateCard({ candidate, jobId, onUpdateStage, onViewCandidate }: Can
       </div>
       
       <div className="space-y-2">
-        <div className="flex items-center space-x-2 text-xs text-gray-600">
-          <Pin className="h-3 w-3 text-red-500" />
-          <span>{candidate.source}</span>
-        </div>
+                 <div className="flex items-center space-x-2 text-xs text-gray-600">
+           <Pin className="h-3 w-3 text-red-500" />
+           <span>{candidate.source}</span>
+         </div>
+         
+         <div className="flex items-center space-x-2 text-xs text-gray-600">
+           <Tag className="h-3 w-3 text-yellow-500" />
+           <span>Status: {candidate.currentStage}</span>
+         </div>
+         
+         <div className="flex items-center space-x-2 text-xs text-gray-600">
+           <Briefcase className="h-3 w-3 text-green-500" />
+           <span>{candidate.experience || "Experience not specified"}</span>
+         </div>
+         
+         {/* {candidate.location && (
+           <div className="flex items-center space-x-2 text-xs text-gray-600">
+             <MapPin className="h-3 w-3 text-blue-500" />
+             <span>{candidate.location}</span>
+           </div>
+         )} */}
+         
+         {/* {candidate.appliedDate && (
+           <div className="flex items-center space-x-2 text-xs text-gray-600">
+             <span className="text-xs text-gray-500">
+               Applied: {new Date(candidate.appliedDate).toLocaleDateString()}
+             </span>
+           </div>
+         )} */}
         
-        <div className="flex items-center space-x-2 text-xs text-gray-600">
-          <Tag className="h-3 w-3 text-yellow-500" />
-          <span>Status: {candidate.currentStage}</span>
-        </div>
-        
-        <div className="flex items-center space-x-2 text-xs text-gray-600">
-          <Briefcase className="h-3 w-3 text-green-500" />
-          <span>{candidate.experience || "Experience not specified"}</span>
-        </div>
-        
-        {candidate.currentSalary && (
+        {/* {candidate.currentSalary && (
           <div className="flex items-center space-x-2 text-xs text-gray-600">
             <DollarSign className="h-3 w-3 text-yellow-500" />
             <span>Current: {candidate.currentSalary} {candidate.currentSalaryCurrency}</span>
           </div>
-        )}
+        )} */}
         
-        {candidate.expectedSalary && (
+        {/* {candidate.expectedSalary && (
           <div className="flex items-center space-x-2 text-xs text-gray-600">
             <DollarSign className="h-3 w-3 text-yellow-500" />
             <span>Expected: {candidate.expectedSalary} {candidate.expectedSalaryCurrency}</span>
           </div>
-        )}
+        )} */}
         
         {/* {candidate.currentJobTitle && (
           <div className="flex items-center space-x-2 text-xs text-gray-600">

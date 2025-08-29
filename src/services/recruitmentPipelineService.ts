@@ -124,17 +124,27 @@ export interface Candidate {
   updatedAt: string;
 }
 
+export interface CandidateApplication {
+  applicationId: string;
+  status: string;
+  appliedDate: string;
+  lastUpdated: string;
+  salaryCurrency: string;
+  applicationDuration: number;
+  candidate: Candidate;
+}
+
 export interface CandidateSummary {
   totalCandidates: number;
   byStatus: {
-    [key: string]: number;
+    [key: string]: number; // Status counts for candidates in this specific job/pipeline
   };
 }
 
 export interface OverallCandidateSummary {
   totalCandidates: number;
   byStatus: {
-    [key: string]: number;
+    [key: string]: number; // Overall status counts across all pipelines
   };
 }
 
@@ -154,7 +164,7 @@ export interface PipelineEntryDetail {
   clientInfo: ClientInfo;
   primaryContacts: PrimaryContact[];
   candidateSummary: CandidateSummary;
-  candidates: Candidate[];
+  candidates: CandidateApplication[];
 }
 
 export interface GetPipelineEntryResponse {
