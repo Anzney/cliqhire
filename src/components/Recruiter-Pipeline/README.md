@@ -7,7 +7,7 @@ The `PipelineStageDetails` component displays detailed information for each stag
 ### Features
 
 - **Dynamic Field Display**: Shows different fields based on the selected pipeline stage
-- **Stage Navigation**: Click on any stage button to view its details
+- **Interactive Progress Bar**: Click on any stage in the progress bar to view its details
 - **Responsive Design**: Adapts to different screen sizes
 - **Visual Indicators**: Color-coded icons and status indicators
 - **Interactive Elements**: Clickable links and hover effects
@@ -73,6 +73,8 @@ import { PipelineStageDetails } from "./pipeline-stage-details";
 // In your component
 const [selectedStage, setSelectedStage] = useState<string | undefined>(undefined);
 
+// The progress bar stages are clickable and will call setSelectedStage
+// The PipelineStageDetails component will display the details for the selected stage
 <PipelineStageDetails 
   candidate={candidate}
   selectedStage={selectedStage}
@@ -85,6 +87,13 @@ const [selectedStage, setSelectedStage] = useState<string | undefined>(undefined
 - `candidate`: The candidate object containing all relevant data
 - `selectedStage`: (Optional) The currently selected stage to display
 - `onStageSelect`: (Optional) Callback function when a stage is selected
+
+### Interaction Pattern
+
+- **Default Behavior**: Shows details for the candidate's current stage
+- **Stage Selection**: Click on any stage in the progress bar to view its details
+- **Visual Feedback**: Selected stages are highlighted with enhanced styling
+- **Hover Effects**: Stages show hover effects to indicate they are clickable
 
 ### Styling
 

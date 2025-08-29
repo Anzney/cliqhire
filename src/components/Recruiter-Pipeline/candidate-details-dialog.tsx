@@ -88,14 +88,17 @@ export function CandidateDetailsDialog({
            <div className="w-full bg-gradient-to-r from-sky-200 to-indigo-200 rounded-xl p-2 shadow-sm border border-gray-100">
              <div className="flex items-center justify-between mb-4">
                <h4 className="text-lg font-semibold text-gray-900">Pipeline Progress</h4>
-               <div className="flex items-center space-x-2">
-                 <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
-                 <span className="text-sm text-gray-600">Active</span>
+               <div className="flex items-center space-x-4">
+                 <span className="text-xs text-gray-500 italic">Click any stage to view details</span>
+                 <div className="flex items-center space-x-2">
+                   <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+                   <span className="text-sm text-gray-600">Active</span>
+                 </div>
                </div>
              </div>
              <div className="relative">
                {/* Progress Bar Background */}
-               <div className="w-full h-10 bg-gray-100 rounded-full relative overflow-hidden shadow-inner">
+               <div className="w-full h-10 bg-gray-100 rounded-full relative overflow-hidden shadow-inner hover:shadow-md transition-shadow duration-200">
                  {/* Progress Bar Fill */}
                  <div 
                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-300 to-blue-400 rounded-full transition-all duration-500 ease-out shadow-sm"
@@ -109,19 +112,24 @@ export function CandidateDetailsDialog({
                    {pipelineStages.map((stage, index) => {
                      const isCompleted = pipelineStages.indexOf(candidate.currentStage) >= index;
                      const isCurrent = candidate.currentStage === stage;
+                     const isSelected = selectedStage === stage;
                      
                      return (
-                       <div key={stage} className="flex items-center">
-                         <div className={`w-5 h-5 rounded-full flex items-center justify-center mr-2 shadow-sm ${
+                       <div 
+                         key={stage} 
+                         className="flex items-center cursor-pointer group"
+                         onClick={() => setSelectedStage(stage)}
+                       >
+                         <div className={`w-5 h-5 rounded-full flex items-center justify-center mr-2 shadow-sm transition-all duration-200 ${
                            isCompleted 
                              ? 'bg-white text-blue-500 ring-2 ring-blue-200' 
                              : 'bg-gray-200 text-gray-400'
-                         }`}>
+                         } ${isSelected ? 'ring-4 ring-blue-300 scale-110' : ''} group-hover:scale-105`}>
                            {isCompleted && <Check className="h-3 w-3" />}
                          </div>
-                         <span className={`text-xs font-semibold ${
+                         <span className={`text-xs font-semibold transition-all duration-200 ${
                            isCurrent ? 'text-white drop-shadow-sm' : isCompleted ? 'text-white drop-shadow-sm' : 'text-gray-500'
-                         }`}>
+                         } ${isSelected ? 'text-blue-100 font-bold' : ''} group-hover:text-blue-100`}>
                            {stage}
                          </span>
                        </div>

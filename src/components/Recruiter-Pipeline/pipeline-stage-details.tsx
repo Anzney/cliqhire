@@ -344,25 +344,6 @@ export function PipelineStageDetails({
             {currentStage}
           </Badge>
         </div>
-        
-        {/* Stage Navigation */}
-        <div className="flex flex-wrap gap-2 mt-4">
-          {pipelineStages.map((stage) => (
-            <Button
-              key={stage}
-              variant={stage === currentStage ? "default" : "outline"}
-              size="sm"
-              onClick={() => onStageSelect?.(stage)}
-              className={`text-xs font-medium transition-all duration-200 ${
-                stage === currentStage 
-                  ? "bg-blue-500 text-white hover:bg-blue-600 shadow-sm" 
-                  : "hover:bg-gray-50 border-gray-200"
-              }`}
-            >
-              {stage}
-            </Button>
-          ))}
-        </div>
       </CardHeader>
       
       <CardContent>
