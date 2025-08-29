@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { type Candidate, pipelineStages } from "./dummy-data";
 import { candidateService, type Candidate as ApiCandidate } from "@/services/candidateService";
+import { PipelineStageDetails } from "./pipeline-stage-details";
 
 interface CandidateDetailsDialogProps {
   candidate: Candidate | null;
@@ -39,10 +40,12 @@ export function CandidateDetailsDialog({
   isOpen, 
   onClose 
 }: CandidateDetailsDialogProps) {
+  const [selectedStage, setSelectedStage] = useState<string | undefined>(undefined);
+  
   // Reset state when dialog closes
   React.useEffect(() => {
     if (!isOpen) {
-      // Reset any state if needed
+      setSelectedStage(undefined);
     }
   }, [isOpen]);
 
@@ -127,6 +130,15 @@ export function CandidateDetailsDialog({
                  </div>
                </div>
              </div>
+           </div>
+           
+           {/* Pipeline Stage Details */}
+           <div className="mt-6">
+             <PipelineStageDetails 
+               candidate={candidate}
+               selectedStage={selectedStage}
+               onStageSelect={setSelectedStage}
+             />
            </div>
         </DialogHeader>
 
