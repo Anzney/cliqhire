@@ -22,9 +22,10 @@ import {
   Languages,
   Award,
   FileText,
-  Globe
+  Globe,
+  Check
 } from "lucide-react";
-import { type Candidate } from "./dummy-data";
+import { type Candidate, pipelineStages } from "./dummy-data";
 import { candidateService, type Candidate as ApiCandidate } from "@/services/candidateService";
 
 interface CandidateDetailsDialogProps {
@@ -49,170 +50,257 @@ export function CandidateDetailsDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center space-x-4">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src={candidate.avatar} />
-              <AvatarFallback className="text-lg bg-gray-200">
-                {candidate.name ? candidate.name.split(' ').map(n => n[0]).join('') : 'NA'}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <DialogTitle className="text-xl font-semibold">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-gray-50 to-white">
+        <DialogHeader className="pb-6">
+          <div className="flex items-center space-x-6 mb-8">
+            <div className="relative">
+              <Avatar className="h-20 w-20 ring-4 ring-blue-100 shadow-lg">
+                <AvatarImage src={candidate.avatar} />
+                <AvatarFallback className="text-xl font-semibold bg-gradient-to-br from-blue-100 to-blue-200 text-white">
+                  {candidate.name ? candidate.name.split(' ').map(n => n[0]).join('') : 'NA'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                <div className="w-2 h-2 bg-white rounded-full"></div>
+              </div>
+            </div>
+            <div className="flex-1">
+              <DialogTitle className="text-2xl font-bold text-gray-900 mb-1">
                 {candidate.name}
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-lg text-gray-600 font-medium">
                 {candidate.currentJobTitle || "Professional"}
               </DialogDescription>
+              <div className="flex items-center space-x-4 mt-2">
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-medium">
+                  {candidate.currentStage}
+                </Badge>
+                <span className="text-sm text-gray-500">•</span>
+                <span className="text-sm text-gray-500">{candidate.source}</span>
+              </div>
             </div>
           </div>
+          
+                     {/* Pipeline Progress Bar */}
+           <div className="w-full bg-gradient-to-r from-sky-200 to-indigo-200 rounded-xl p-2 shadow-sm border border-gray-100">
+             <div className="flex items-center justify-between mb-4">
+               <h4 className="text-lg font-semibold text-gray-900">Pipeline Progress</h4>
+               <div className="flex items-center space-x-2">
+                 <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+                 <span className="text-sm text-gray-600">Active</span>
+               </div>
+             </div>
+             <div className="relative">
+               {/* Progress Bar Background */}
+               <div className="w-full h-10 bg-gray-100 rounded-full relative overflow-hidden shadow-inner">
+                 {/* Progress Bar Fill */}
+                 <div 
+                   className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-300 to-blue-400 rounded-full transition-all duration-500 ease-out shadow-sm"
+                   style={{ 
+                     width: `${((pipelineStages.indexOf(candidate.currentStage) + 1) / pipelineStages.length) * 100}%` 
+                   }}
+                 ></div>
+                 
+                 {/* Stage Names Inside Progress Bar */}
+                 <div className="absolute inset-0 flex items-center justify-between px-4">
+                   {pipelineStages.map((stage, index) => {
+                     const isCompleted = pipelineStages.indexOf(candidate.currentStage) >= index;
+                     const isCurrent = candidate.currentStage === stage;
+                     
+                     return (
+                       <div key={stage} className="flex items-center">
+                         <div className={`w-5 h-5 rounded-full flex items-center justify-center mr-2 shadow-sm ${
+                           isCompleted 
+                             ? 'bg-white text-blue-500 ring-2 ring-blue-200' 
+                             : 'bg-gray-200 text-gray-400'
+                         }`}>
+                           {isCompleted && <Check className="h-3 w-3" />}
+                         </div>
+                         <span className={`text-xs font-semibold ${
+                           isCurrent ? 'text-white drop-shadow-sm' : isCompleted ? 'text-white drop-shadow-sm' : 'text-gray-500'
+                         }`}>
+                           {stage}
+                         </span>
+                       </div>
+                     );
+                   })}
+                 </div>
+               </div>
+             </div>
+           </div>
         </DialogHeader>
 
-        {candidate && (
-          <div className="space-y-6">
+                 {candidate && (
+           <div className="space-y-8">
             {/* Current Status */}
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium text-gray-900">Current Status</h3>
               <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
                 {candidate.currentStage}
               </Badge>
-            </div>
+            </div> */}
 
-            {/* Basic Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <h4 className="font-medium text-gray-900">Basic Information</h4>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <Briefcase className="h-4 w-4 text-blue-500" />
-                    <span className="font-medium">Current Position:</span>
-                    <span>{candidate.currentJobTitle || "Not specified"}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <Building2 className="h-4 w-4 text-indigo-500" />
-                    <span className="font-medium">Previous Company:</span>
-                    <span>{candidate.previousCompanyName || "Not specified"}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <Calendar className="h-4 w-4 text-green-500" />
-                    <span className="font-medium">Experience:</span>
-                    <span>{candidate.experience || "Not specified"}</span>
-                  </div>
-                </div>
-              </div>
+                         {/* Basic Information */}
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                 <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                   <Briefcase className="h-5 w-5 text-blue-500 mr-2" />
+                   Basic Information
+                 </h4>
+                 
+                 <div className="space-y-4">
+                   <div className="flex items-start space-x-3">
+                     <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                       <Briefcase className="h-4 w-4 text-blue-600" />
+                     </div>
+                     <div>
+                       <p className="text-sm font-medium text-gray-900">Current Position</p>
+                       <p className="text-sm text-gray-600">{candidate.currentJobTitle || "Not specified"}</p>
+                     </div>
+                   </div>
+                   
+                   <div className="flex items-start space-x-3">
+                     <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                       <Building2 className="h-4 w-4 text-indigo-600" />
+                     </div>
+                     <div>
+                       <p className="text-sm font-medium text-gray-900">Previous Company</p>
+                       <p className="text-sm text-gray-600">{candidate.previousCompanyName || "Not specified"}</p>
+                     </div>
+                   </div>
+                   
+                   <div className="flex items-start space-x-3">
+                     <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                       <Calendar className="h-4 w-4 text-green-600" />
+                     </div>
+                     <div>
+                       <p className="text-sm font-medium text-gray-900">Experience</p>
+                       <p className="text-sm text-gray-600">{candidate.experience || "Not specified"}</p>
+                     </div>
+                   </div>
+                 </div>
+               </div>
 
-              <div className="space-y-3">
-                <h4 className="font-medium text-gray-900">Contact Information</h4>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <Mail className="h-4 w-4 text-red-500" />
-                    <span className="font-medium">Email:</span>
-                    <span>{candidate.email || "Not provided"}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <Phone className="h-4 w-4 text-green-500" />
-                    <span className="font-medium">Phone:</span>
-                    <span>{candidate.phone || "Not provided"}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <MapPin className="h-4 w-4 text-orange-500" />
-                    <span className="font-medium">Location:</span>
-                    <span>{candidate.location || "Not specified"}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                 <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                   <Mail className="h-5 w-5 text-red-500 mr-2" />
+                   Contact Information
+                 </h4>
+                 
+                 <div className="space-y-4">
+                   <div className="flex items-start space-x-3">
+                     <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                       <Mail className="h-4 w-4 text-red-600" />
+                     </div>
+                     <div>
+                       <p className="text-sm font-medium text-gray-900">Email</p>
+                       <p className="text-sm text-gray-600">{candidate.email || "Not provided"}</p>
+                     </div>
+                   </div>
+                   
+                   <div className="flex items-start space-x-3">
+                     <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                       <Phone className="h-4 w-4 text-green-600" />
+                     </div>
+                     <div>
+                       <p className="text-sm font-medium text-gray-900">Phone</p>
+                       <p className="text-sm text-gray-600">{candidate.phone || "Not provided"}</p>
+                     </div>
+                   </div>
+                   
+                   <div className="flex items-start space-x-3">
+                     <div className="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                       <MapPin className="h-4 w-4 text-orange-600" />
+                     </div>
+                     <div>
+                       <p className="text-sm font-medium text-gray-900">Location</p>
+                       <p className="text-sm text-gray-600">{candidate.location || "Not specified"}</p>
+                     </div>
+                   </div>
+                 </div>
+               </div>
 
-            {/* Salary Information */}
-            <div className="space-y-3">
-              <h4 className="font-medium text-gray-900">Salary Information</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {candidate.currentSalary && (
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <DollarSign className="h-4 w-4 text-yellow-500" />
-                    <span className="font-medium">Current Salary:</span>
-                    <span>{candidate.currentSalary} {candidate.currentSalaryCurrency}</span>
-                  </div>
-                )}
-                
-                {candidate.expectedSalary && (
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <DollarSign className="h-4 w-4 text-green-500" />
-                    <span className="font-medium">Expected Salary:</span>
-                    <span>{candidate.expectedSalary} {candidate.expectedSalaryCurrency}</span>
-                  </div>
-                )}
-              </div>
-            </div>
+               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                 <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                   <Award className="h-5 w-5 text-purple-500 mr-2" />
+                   Additional Information
+                 </h4>
+                 
+                 <div className="space-y-4">
+                   <div className="flex items-start space-x-3">
+                     <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                       <GraduationCap className="h-4 w-4 text-purple-600" />
+                     </div>
+                     <div>
+                       <p className="text-sm font-medium text-gray-900">Education</p>
+                       <p className="text-sm text-gray-600">{candidate.educationDegree || "Not specified"}</p>
+                     </div>
+                   </div>
+                   
+                   <div className="flex items-start space-x-3">
+                     <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                       <Languages className="h-4 w-4 text-blue-600" />
+                     </div>
+                     <div>
+                       <p className="text-sm font-medium text-gray-900">Languages</p>
+                       <p className="text-sm text-gray-600">{candidate.primaryLanguage || "Not specified"}</p>
+                     </div>
+                   </div>
+                   
+                   <div className="flex items-start space-x-3">
+                     <div className="w-8 h-8 bg-yellow-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                       <Award className="h-4 w-4 text-yellow-600" />
+                     </div>
+                     <div>
+                       <p className="text-sm font-medium text-gray-900">Skills</p>
+                       <p className="text-sm text-gray-600">{candidate.skills?.join(', ') || "Not specified"}</p>
+                     </div>
+                   </div>
+                   
+                   
+                 </div>
+               </div>
+             </div>
 
-            {/* Additional Information */}
-            <div className="space-y-3">
-              <h4 className="font-medium text-gray-900">Additional Information</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <GraduationCap className="h-4 w-4 text-purple-500" />
-                    <span className="font-medium">Education:</span>
-                    <span>{candidate.educationDegree || "Not specified"}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <Languages className="h-4 w-4 text-blue-500" />
-                    <span className="font-medium">Languages:</span>
-                    <span>{candidate.primaryLanguage || "Not specified"}</span>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <Award className="h-4 w-4 text-yellow-500" />
-                    <span className="font-medium">Skills:</span>
-                    <span>{candidate.skills?.join(', ') || "Not specified"}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <FileText className="h-4 w-4 text-gray-500" />
-                    <span className="font-medium">Source:</span>
-                    <span>{candidate.source}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            
 
-            {/* Description */}
-            {candidate.description && (
-              <div className="space-y-3">
-                <h4 className="font-medium text-gray-900">Description</h4>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-sm text-gray-700">{candidate.description}</p>
-                </div>
-              </div>
-            )}
 
-            {/* Resume/CV Link */}
-            {candidate.resume && (
-              <div className="space-y-3">
-                <h4 className="font-medium text-gray-900">Documents</h4>
-                <div className="flex items-center space-x-2">
-                  <FileText className="h-4 w-4 text-blue-500" />
-                  <a 
-                    href={candidate.resume} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 text-sm underline"
-                  >
-                    View Resume/CV
-                  </a>
-                </div>
-              </div>
-            )}
+
+                         {/* Description */}
+             {candidate.description && (
+               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                 <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                   <FileText className="h-5 w-5 text-gray-500 mr-2" />
+                   Description
+                 </h4>
+                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                   <p className="text-sm text-gray-700 leading-relaxed">{candidate.description}</p>
+                 </div>
+               </div>
+             )}
+
+             {/* Resume/CV Link */}
+             {candidate.resume && (
+               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                 <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                   <FileText className="h-5 w-5 text-blue-500 mr-2" />
+                   Documents
+                 </h4>
+                 <div className="flex items-center space-x-3">
+                   <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                     <FileText className="h-4 w-4 text-blue-600" />
+                   </div>
+                   <a 
+                     href={candidate.resume} 
+                     target="_blank" 
+                     rel="noopener noreferrer"
+                     className="text-blue-600 hover:text-blue-800 text-sm font-medium underline hover:no-underline transition-all duration-200"
+                   >
+                     View Resume/CV
+                   </a>
+                 </div>
+               </div>
+             )}
           </div>
         )}
       </DialogContent>
