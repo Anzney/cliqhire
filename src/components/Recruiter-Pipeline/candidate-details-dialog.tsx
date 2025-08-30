@@ -41,6 +41,7 @@ export function CandidateDetailsDialog({
   onClose 
 }: CandidateDetailsDialogProps) {
   const [selectedStage, setSelectedStage] = useState<string | undefined>(undefined);
+  const [localCandidate, setLocalCandidate] = useState<any>(candidate);
   
   // Reset state when dialog closes
   React.useEffect(() => {
@@ -49,40 +50,51 @@ export function CandidateDetailsDialog({
     }
   }, [isOpen]);
 
-  if (!candidate) return null;
+  // Update local candidate when prop changes
+  React.useEffect(() => {
+    setLocalCandidate(candidate);
+  }, [candidate]);
+
+  const handleUpdateCandidate = (updatedCandidate: any) => {
+    setLocalCandidate(updatedCandidate);
+    // Here you would typically also call an API to save the changes
+    console.log('Updated candidate:', updatedCandidate);
+  };
+
+  if (!localCandidate) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-gray-50 to-white">
         <DialogHeader className="pb-6">
-          <div className="flex items-center space-x-6 mb-8">
-            <div className="relative">
-              <Avatar className="h-20 w-20 ring-4 ring-blue-100 shadow-lg">
-                <AvatarImage src={candidate.avatar} />
-                <AvatarFallback className="text-xl font-semibold bg-gradient-to-br from-blue-100 to-blue-200 text-white">
-                  {candidate.name ? candidate.name.split(' ').map(n => n[0]).join('') : 'NA'}
-                </AvatarFallback>
-              </Avatar>
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
-                <div className="w-2 h-2 bg-white rounded-full"></div>
+                      <div className="flex items-center space-x-6 mb-8">
+              <div className="relative">
+                <Avatar className="h-20 w-20 ring-4 ring-blue-100 shadow-lg">
+                  <AvatarImage src={localCandidate.avatar} />
+                  <AvatarFallback className="text-xl font-semibold bg-gradient-to-br from-blue-100 to-blue-200 text-white">
+                    {localCandidate.name ? localCandidate.name.split(' ').map((n: string) => n[0]).join('') : 'NA'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                </div>
+              </div>
+              <div className="flex-1">
+                <DialogTitle className="text-2xl font-bold text-gray-900 mb-1">
+                  {localCandidate.name}
+                </DialogTitle>
+                <DialogDescription className="text-lg text-gray-600 font-medium">
+                  {localCandidate.currentJobTitle || "Professional"}
+                </DialogDescription>
+                <div className="flex items-center space-x-4 mt-2">
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-medium">
+                    {localCandidate.currentStage}
+                  </Badge>
+                  <span className="text-sm text-gray-500">•</span>
+                  <span className="text-sm text-gray-500">{localCandidate.source}</span>
+                </div>
               </div>
             </div>
-            <div className="flex-1">
-              <DialogTitle className="text-2xl font-bold text-gray-900 mb-1">
-                {candidate.name}
-              </DialogTitle>
-              <DialogDescription className="text-lg text-gray-600 font-medium">
-                {candidate.currentJobTitle || "Professional"}
-              </DialogDescription>
-              <div className="flex items-center space-x-4 mt-2">
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-medium">
-                  {candidate.currentStage}
-                </Badge>
-                <span className="text-sm text-gray-500">•</span>
-                <span className="text-sm text-gray-500">{candidate.source}</span>
-              </div>
-            </div>
-          </div>
           
                      {/* Pipeline Progress Bar */}
            <div className="w-full bg-gradient-to-r from-sky-200 to-indigo-200 rounded-xl p-2 shadow-sm border border-gray-100">
@@ -103,15 +115,15 @@ export function CandidateDetailsDialog({
                  <div 
                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-300 to-blue-400 rounded-full transition-all duration-500 ease-out shadow-sm"
                    style={{ 
-                     width: `${((pipelineStages.indexOf(candidate.currentStage) + 1) / pipelineStages.length) * 100}%` 
+                     width: `${((pipelineStages.indexOf(localCandidate.currentStage) + 1) / pipelineStages.length) * 100}%` 
                    }}
                  ></div>
                  
                  {/* Stage Names Inside Progress Bar */}
                  <div className="absolute inset-0 flex items-center justify-between px-4">
                    {pipelineStages.map((stage, index) => {
-                     const isCompleted = pipelineStages.indexOf(candidate.currentStage) >= index;
-                     const isCurrent = candidate.currentStage === stage;
+                     const isCompleted = pipelineStages.indexOf(localCandidate.currentStage) >= index;
+                     const isCurrent = localCandidate.currentStage === stage;
                      const isSelected = selectedStage === stage;
                      
                      return (
@@ -143,9 +155,10 @@ export function CandidateDetailsDialog({
            {/* Pipeline Stage Details */}
            <div className="mt-6">
              <PipelineStageDetails 
-               candidate={candidate}
+               candidate={localCandidate}
                selectedStage={selectedStage}
                onStageSelect={setSelectedStage}
+               onUpdateCandidate={handleUpdateCandidate}
              />
            </div>
         </DialogHeader>
