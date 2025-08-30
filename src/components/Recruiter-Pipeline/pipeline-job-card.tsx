@@ -14,6 +14,8 @@ import {
   type Candidate 
 } from "./dummy-data";
 import { CandidateDetailsDialog } from "./candidate-details-dialog";
+import { StatusChangeConfirmationDialog } from "./status-change-confirmation-dialog";
+import { useStageStore } from "./stage-store";
 
 interface PipelineJobCardProps {
   job: Job;
@@ -30,6 +32,40 @@ export function PipelineJobCard({
 }: PipelineJobCardProps) {
   const [selectedCandidate, setSelectedCandidate] = React.useState<Candidate | null>(null);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  
+  // Status change confirmation dialog state
+  const [statusChangeDialog, setStatusChangeDialog] = React.useState<{
+    isOpen: boolean;
+    candidate: Candidate | null;
+    currentStage: string;
+    newStage: string;
+  }>({
+    isOpen: false,
+    candidate: null,
+    currentStage: '',
+    newStage: '',
+  });
+
+  // Local stage store
+  const { updateCandidateStage, getCandidateStage } = useStageStore();
+
+  // Function to calculate updated stage counts considering local changes
+  const getUpdatedStageCounts = () => {
+    const stageCounts: { [key: string]: number } = {};
+    
+    // Initialize counts for all stages
+    pipelineStages.forEach(stage => {
+      stageCounts[stage] = 0;
+    });
+    
+    // Count candidates based on their current stage (including local changes)
+    job.candidates.forEach(candidate => {
+      const currentStage = getCandidateStage(job.id, candidate.id) || candidate.currentStage;
+      stageCounts[currentStage] = (stageCounts[currentStage] || 0) + 1;
+    });
+    
+    return stageCounts;
+  };
 
   const handleViewCandidate = (candidate: Candidate) => {
     setSelectedCandidate(candidate);
@@ -39,6 +75,32 @@ export function PipelineJobCard({
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setSelectedCandidate(null);
+  };
+
+  const handleStageChange = (candidate: Candidate, newStage: string) => {
+    setStatusChangeDialog({
+      isOpen: true,
+      candidate,
+      currentStage: candidate.currentStage,
+      newStage,
+    });
+  };
+
+  const handleConfirmStageChange = () => {
+    if (statusChangeDialog.candidate) {
+      // Update local store
+      updateCandidateStage(job.id, statusChangeDialog.candidate.id, statusChangeDialog.newStage);
+      
+      // Call the parent's update function (for future API integration)
+      onUpdateCandidateStage(job.id, statusChangeDialog.candidate.id, statusChangeDialog.newStage);
+      
+      // Close the dialog
+      setStatusChangeDialog({ isOpen: false, candidate: null, currentStage: '', newStage: '' });
+    }
+  };
+
+  const handleCancelStageChange = () => {
+    setStatusChangeDialog({ isOpen: false, candidate: null, currentStage: '', newStage: '' });
   };
 
   return (
@@ -120,23 +182,12 @@ export function PipelineJobCard({
         {job.isExpanded && (
           <CardContent className="pt-0">
             
-            {/* Pipeline Stage Badges - Use candidateSummary.byStatus for accurate counts */}
+            {/* Pipeline Stage Badges - Updated counts considering local changes */}
             <div className="flex flex-wrap gap-2 mb-6">
-              {job.candidateSummary && job.candidateSummary.byStatus ? (
-                // Use the API-provided status counts from candidateSummary.byStatus
-                Object.entries(job.candidateSummary.byStatus).map(([status, count]) => (
-                  <Badge 
-                    key={status}
-                    variant="outline" 
-                    className={`${getStageColor(status)} border`}
-                  >
-                    {status}: {count}
-                  </Badge>
-                ))
-              ) : (
-                // Fallback to calculating from candidates array if candidateSummary is not available
-                pipelineStages.map((stage) => {
-                  const count = job.candidates.filter(c => c.currentStage === stage).length;
+              {(() => {
+                const updatedCounts = getUpdatedStageCounts();
+                return pipelineStages.map((stage) => {
+                  const count = updatedCounts[stage] || 0;
                   return (
                     <Badge 
                       key={stage}
@@ -146,21 +197,22 @@ export function PipelineJobCard({
                       {stage}: {count}
                     </Badge>
                   );
-                })
-              )}
+                });
+              })()}
             </div>
 
             {/* Candidate Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {job.candidates.map((candidate) => (
-                                 <CandidateCard
-                   key={candidate.id}
-                   candidate={candidate}
-                   jobId={job.id}
-                   onUpdateStage={onUpdateCandidateStage}
-                   onViewCandidate={handleViewCandidate}
-                   onViewResume={(candidate) => console.log('View resume for:', candidate.name)}
-                 />
+                <CandidateCard
+                  key={candidate.id}
+                  candidate={candidate}
+                  jobId={job.id}
+                  onStageChange={handleStageChange}
+                  onViewCandidate={handleViewCandidate}
+                  onViewResume={(candidate) => console.log('View resume for:', candidate.name)}
+                  getCurrentStage={getCandidateStage}
+                />
               ))}
             </div>
           </CardContent>
@@ -173,6 +225,16 @@ export function PipelineJobCard({
         isOpen={isDialogOpen}
         onClose={handleCloseDialog}
       />
+      
+      {/* Status Change Confirmation Dialog */}
+      <StatusChangeConfirmationDialog
+        isOpen={statusChangeDialog.isOpen}
+        onClose={handleCancelStageChange}
+        onConfirm={handleConfirmStageChange}
+        candidateName={statusChangeDialog.candidate?.name || ''}
+        currentStage={statusChangeDialog.currentStage}
+        newStage={statusChangeDialog.newStage}
+      />
     </>
   );
 }
@@ -180,12 +242,13 @@ export function PipelineJobCard({
 interface CandidateCardProps {
   candidate: Candidate;
   jobId: string;
-  onUpdateStage: (jobId: string, candidateId: string, newStage: string) => void;
+  onStageChange: (candidate: Candidate, newStage: string) => void;
   onViewCandidate: (candidate: Candidate) => void;
   onViewResume: (candidate: Candidate) => void;
+  getCurrentStage: (jobId: string, candidateId: string) => string | null;
 }
 
-function CandidateCard({ candidate, jobId, onUpdateStage, onViewCandidate, onViewResume }: CandidateCardProps) {
+function CandidateCard({ candidate, jobId, onStageChange, onViewCandidate, onViewResume, getCurrentStage }: CandidateCardProps) {
   return (
     <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-100">
       {/* Top Section */}
@@ -253,8 +316,8 @@ function CandidateCard({ candidate, jobId, onUpdateStage, onViewCandidate, onVie
         {/* Left side - Status dropdowns */}
         <div className="flex items-center space-x-2 flex-1">
           <Select
-            value={candidate.currentStage}
-            onValueChange={(value) => onUpdateStage(jobId, candidate.id, value)}
+            value={getCurrentStage(jobId, candidate.id) || candidate.currentStage}
+            onValueChange={(value) => onStageChange(candidate, value)}
           >
             <SelectTrigger className="h-6 text-xs px-2">
               <SelectValue />
