@@ -1,5 +1,5 @@
 // Types and utilities for Recruiter Pipeline
-// Dummy data has been removed - now using real API data from backend
+// Updated to match the new API response structure
 
 export interface Candidate {
   id: string;
@@ -40,6 +40,9 @@ export interface Candidate {
   educationDegree?: string;
   primaryLanguage?: string;
   resume?: string;
+  // Pipeline-specific data
+  priority?: string;
+  notes?: string;
 }
 
 export interface Job {
@@ -52,17 +55,20 @@ export interface Job {
   jobType: string;
   isExpanded: boolean;
   candidates: Candidate[];
-  // Pipeline-specific fields
+  // Pipeline-specific fields from new API structure
   pipelineStatus?: string;
   priority?: string;
   notes?: string;
   assignedDate?: string;
-  candidateSummary?: {
-    totalCandidates: number;
-    byStatus: {
-      [key: string]: number;
-    };
-  };
+  // Candidate counts from new API structure
+  totalCandidates?: number;
+  activeCandidates?: number;
+  completedCandidates?: number;
+  droppedCandidates?: number;
+  numberOfCandidates?: number;
+  // Recruiter information
+  recruiterName?: string;
+  recruiterEmail?: string;
   // Job details from API
   jobPosition?: string;
   department?: string;
@@ -98,10 +104,6 @@ export const pipelineStages = [
     "Hired",
     "Disqualified"
 ];
-
-// Removed dummy jobs - now using real API data
-
-// Removed alternative dummy jobs - now using real API data
 
 // Helper function to get stage colors
 export const getStageColor = (stage: string) => {

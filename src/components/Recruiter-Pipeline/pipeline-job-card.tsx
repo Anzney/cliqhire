@@ -145,7 +145,7 @@ export function PipelineJobCard({
                   </Badge>
                   <div className="flex items-center space-x-1">
                     <Users className="h-4 w-4 text-purple-500" />
-                    <span>{job.candidates.length} candidates</span>
+                    <span>{job.totalCandidates || job.candidates.length} candidates</span>
                   </div>
                   {job.pipelineStatus && (
                     <Badge 
@@ -160,7 +160,7 @@ export function PipelineJobCard({
                       {job.pipelineStatus}
                     </Badge>
                   )}
-                  {/* {job.priority && (
+                  {job.priority && (
                     <Badge 
                       variant="outline" 
                       className={`${
@@ -171,7 +171,7 @@ export function PipelineJobCard({
                     >
                       {job.priority}
                     </Badge>
-                  )} */}
+                  )}
                 </div>
               </div>
             </div>
@@ -201,19 +201,24 @@ export function PipelineJobCard({
               })()}
             </div>
 
-            {/* Candidate Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {job.candidates.map((candidate) => (
-                <CandidateCard
-                  key={candidate.id}
-                  candidate={candidate}
-                  jobId={job.id}
-                  onStageChange={handleStageChange}
-                  onViewCandidate={handleViewCandidate}
-                  onViewResume={(candidate) => console.log('View resume for:', candidate.name)}
-                  getCurrentStage={getCandidateStage}
-                />
-              ))}
+            {/* Candidate Cards - Fixed height with scrollable content */}
+            <div className="max-h-[300px] overflow-y-auto border-2 border-blue-200 rounded-md p-2 bg-gray-50" style={{
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#d1d5db #f3f4f6'
+            }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
+                {job.candidates.map((candidate) => (
+                  <CandidateCard
+                    key={candidate.id}
+                    candidate={candidate}
+                    jobId={job.id}
+                    onStageChange={handleStageChange}
+                    onViewCandidate={handleViewCandidate}
+                onViewResume={(candidate) => console.log('View resume for:', candidate.name)}
+                    getCurrentStage={getCandidateStage}
+                  />
+                ))}
+              </div>
             </div>
           </CardContent>
         )}

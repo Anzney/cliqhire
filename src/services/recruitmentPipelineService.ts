@@ -21,43 +21,63 @@ export interface AddJobToPipelineResponse {
 export interface PipelineJob {
   _id: string;
   jobTitle: string;
-  jobPosition: string;
+  jobPosition: string[];
   department: string;
   location: string;
   locations: string[];
   headcount: number;
   stage: string;
-  workVisa: boolean;
+  workVisa: {
+    workVisa: string;
+    visaCountries: string[];
+  };
   minimumSalary: number;
   maximumSalary: number;
   salaryCurrency: string;
-  salaryRange: string;
+  salaryRange: {
+    min: number;
+    max: number;
+    currency: string;
+  };
   jobType: string;
   experience: string;
-  education: string;
-  specialization: string;
+  education: string[];
+  specialization: string[];
   certifications: string[];
-  otherBenefits: string;
+  otherBenefits: string[];
   jobDescription: string;
   jobDescriptionByInternalTeam: string;
-  jobDescriptionPdf: string;
-  benefitPdf: string;
   nationalities: string[];
   gender: string;
   deadlineByClient: string | null;
   startDateByInternalTeam: string | null;
   endDateByInternalTeam: string | null;
   relationshipManager: string;
-  reportingTo: string;
   teamSize: number;
-  link: string;
-  keySkills: string[];
   numberOfPositions: number;
-  primaryContact: string[];
+  primaryContact: PrimaryContact[];
   jobTeamInfo: {
-    recruitmentManager: string;
-    teamLead: string;
+    teamId: {
+      _id: string;
+      teamName: string;
+    };
+    hiringManager: {
+      _id: string;
+      name: string;
+      email: string;
+    };
+    teamLead: {
+      _id: string;
+      name: string;
+      email: string;
+    };
+    recruiter: {
+      _id: string;
+      name: string;
+      email: string;
+    };
   };
+  client: ClientInfo;
   createdAt: string;
   updatedAt: string;
 }
@@ -106,7 +126,7 @@ export interface Candidate {
   universityName: string;
   educationDegree: string;
   primaryLanguage: string;
-  willingToRelocate: boolean;
+  willingToRelocate: string;
   description: string;
   linkedin: string;
   currentSalary: number;
@@ -116,12 +136,46 @@ export interface Candidate {
   previousCompanyName: string;
   currentJobTitle: string;
   reportingTo: string;
-  totalStaffReporting: number;
+  totalStaffReporting: string;
   recruitmentManager: string;
   recruiter: string;
   teamLead: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CandidatePipelineInfo {
+  candidateId: Candidate;
+  currentStage: string;
+  status: string;
+  priority: string;
+  notes: string;
+  addedToPipelineDate: string;
+  lastUpdated: string;
+  sourcing: {
+    sourcingDate: string;
+    connection: string;
+    referredBy: string;
+    source: string;
+    notes: string;
+    status: string;
+  } | null;
+  screening: {
+    screeningDate: string;
+    aemsInterviewDate: string;
+    screeningStatus: string;
+    screeningNotes: string;
+    technicalAssessment: string;
+    softSkillsAssessment: string;
+    overallRating: number;
+    feedback: string;
+  } | null;
+  clientScreening: any | null;
+  interview: any | null;
+  verification: any | null;
+  onboarding: any | null;
+  hired: any | null;
+  rejectionHistory: any[];
 }
 
 export interface CandidateApplication {
@@ -159,12 +213,24 @@ export interface PipelineInfo {
 }
 
 export interface PipelineEntryDetail {
-  pipelineInfo: PipelineInfo;
-  jobDetails: PipelineJob;
-  clientInfo: ClientInfo;
-  primaryContacts: PrimaryContact[];
-  candidateSummary: CandidateSummary;
-  candidates: CandidateApplication[];
+  _id: string;
+  jobId: PipelineJob;
+  recruiterId: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  status: string;
+  priority: string;
+  assignedDate: string;
+  notes: string;
+  totalCandidates: number;
+  activeCandidates: number;
+  completedCandidates: number;
+  droppedCandidates: number;
+  candidateIdArray: CandidatePipelineInfo[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface GetPipelineEntryResponse {
@@ -178,14 +244,7 @@ export interface GetAllPipelineEntriesResponse {
   message: string;
   data: {
     totalPipelines: number;
-    totalCandidates: number;
-    overallCandidateSummary: {
-      totalCandidates: number;
-      byStatus: {
-        [key: string]: number;
-      };
-    };
-    pipelines: PipelineEntryDetail[];
+    pipelines: PipelineListItem[];
     pagination: {
       currentPage: number;
       totalPages: number;
@@ -195,6 +254,40 @@ export interface GetAllPipelineEntriesResponse {
       limit: number;
     };
   };
+}
+
+// Updated interface to match the new API response structure
+export interface PipelineListItem {
+  _id: string;
+  jobId: {
+    _id: string;
+    jobTitle: string;
+    department: string;
+    location: string;
+    minimumSalary?: number;
+    maximumSalary?: number;
+    salaryCurrency?: string;
+    jobType?: string;
+    numberOfPositions?: number;
+    stage?: string;
+    clientName?: string | null;
+  };
+  recruiterId?: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  status: string;
+  priority: string;
+  assignedDate: string;
+  notes?: string;
+  totalCandidates: number;
+  activeCandidates: number;
+  completedCandidates: number;
+  droppedCandidates: number;
+  numberOfCandidates: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**

@@ -11,15 +11,15 @@ import { type Job } from "./dummy-data";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { getAllPipelineEntries, getPipelineEntry } from "@/services/recruitmentPipelineService";
+import { getAllPipelineEntries, getPipelineEntry, type PipelineListItem } from "@/services/recruitmentPipelineService";
 
-// Utility function to convert pipeline data to Job format
-const convertPipelineDataToJob = (pipelineData: any, isExpanded: boolean = false): Job => {
+// Utility function to convert pipeline list data to Job format
+const convertPipelineListDataToJob = (pipelineData: PipelineListItem, isExpanded: boolean = false): Job => {
   // Format salary range using the correct backend fields
   const formatSalaryRange = () => {
-    const minSalary = pipelineData.jobDetails.minimumSalary;
-    const maxSalary = pipelineData.jobDetails.maximumSalary;
-    const currency = pipelineData.jobDetails.salaryCurrency;
+    const minSalary = pipelineData.jobId.minimumSalary;
+    const maxSalary = pipelineData.jobId.maximumSalary;
+    const currency = pipelineData.jobId.salaryCurrency;
     
     if (minSalary && maxSalary && currency) {
       return `${minSalary} - ${maxSalary} ${currency}`;
@@ -34,34 +34,85 @@ const convertPipelineDataToJob = (pipelineData: any, isExpanded: boolean = false
   };
 
   return {
-    id: pipelineData.pipelineInfo._id,
-    title: pipelineData.jobDetails.jobTitle || "Untitled Job",
-    clientName: pipelineData.clientInfo.name || "Unknown Client",
-    location: pipelineData.jobDetails.location || "Location not specified",
+    id: pipelineData._id,
+    title: pipelineData.jobId.jobTitle || "Untitled Job",
+    clientName: pipelineData.jobId.clientName || "Unknown Client",
+    location: pipelineData.jobId.location || "Location not specified",
     salaryRange: formatSalaryRange(),
-    headcount: pipelineData.jobDetails.headcount || 1,
-    jobType: pipelineData.jobDetails.jobType || "Full-time",
+    headcount: pipelineData.jobId.numberOfPositions || 1,
+    jobType: pipelineData.jobId.jobType || "Full-time",
     isExpanded,
-    candidates: pipelineData.candidates.map((candidateData: any) => {
-      const candidate = candidateData.candidate || candidateData; // Handle both new and old structure
+    candidates: [], // Will be populated when expanded
+    // Pipeline-specific data from new API structure
+    pipelineStatus: pipelineData.status,
+    priority: pipelineData.priority,
+    notes: pipelineData.notes,
+    assignedDate: pipelineData.assignedDate,
+    // Candidate counts from new API structure
+    totalCandidates: pipelineData.totalCandidates,
+    activeCandidates: pipelineData.activeCandidates,
+    completedCandidates: pipelineData.completedCandidates,
+    droppedCandidates: pipelineData.droppedCandidates,
+    numberOfCandidates: pipelineData.numberOfCandidates,
+    // Recruiter information
+    recruiterName: pipelineData.recruiterId?.name || "Unknown Recruiter",
+    recruiterEmail: pipelineData.recruiterId?.email || "",
+    // Job details from API
+    department: pipelineData.jobId.department,
+    numberOfPositions: pipelineData.jobId.numberOfPositions,
+    // Additional fields will be populated when detailed data is loaded
+  };
+};
+
+// Utility function to convert detailed pipeline data to Job format
+const convertPipelineDataToJob = (pipelineData: any, isExpanded: boolean = false): Job => {
+  // Format salary range using the correct backend fields
+  const formatSalaryRange = () => {
+    const minSalary = pipelineData.jobId.minimumSalary;
+    const maxSalary = pipelineData.jobId.maximumSalary;
+    const currency = pipelineData.jobId.salaryCurrency;
+    
+    if (minSalary && maxSalary && currency) {
+      return `${minSalary} - ${maxSalary} ${currency}`;
+    } else if (minSalary && currency) {
+      return `${minSalary} ${currency}`;
+    } else if (maxSalary && currency) {
+      return `${maxSalary} ${currency}`;
+    } else if (minSalary || maxSalary) {
+      return `${minSalary || maxSalary}`;
+    }
+    return "Salary not specified";
+  };
+
+  return {
+    id: pipelineData._id,
+    title: pipelineData.jobId.jobTitle || "Untitled Job",
+    clientName: pipelineData.jobId.client?.name || "Unknown Client",
+    location: pipelineData.jobId.location || "Location not specified",
+    salaryRange: formatSalaryRange(),
+    headcount: pipelineData.jobId.headcount || 1,
+    jobType: pipelineData.jobId.jobType || "Full-time",
+    isExpanded,
+    candidates: pipelineData.candidateIdArray.map((candidateData: any) => {
+      const candidate = candidateData.candidateId;
       return {
-        id: candidateData.applicationId || candidate._id,
+        id: candidate._id,
         name: candidate.name,
         source: candidate.referredBy || "Pipeline",
-        currentStage: candidateData.status || candidate.status || "Sourcing",
+        currentStage: candidateData.currentStage || "Sourcing",
         avatar: undefined,
         experience: candidate.experience,
         currentSalary: candidate.currentSalary,
-        currentSalaryCurrency: candidateData.salaryCurrency || candidate.currentSalaryCurrency,
+        currentSalaryCurrency: candidate.currentSalaryCurrency,
         expectedSalary: candidate.expectedSalary,
         expectedSalaryCurrency: candidate.expectedSalaryCurrency,
         currentJobTitle: candidate.currentJobTitle,
         previousCompanyName: candidate.previousCompanyName,
         // Additional fields from new structure
-        applicationId: candidateData.applicationId,
-        appliedDate: candidateData.appliedDate,
+        applicationId: candidate._id,
+        appliedDate: candidateData.addedToPipelineDate,
         lastUpdated: candidateData.lastUpdated,
-        applicationDuration: candidateData.applicationDuration,
+        applicationDuration: 0, // Calculate if needed
         // Candidate details
         email: candidate.email,
         phone: candidate.phone,
@@ -76,54 +127,70 @@ const convertPipelineDataToJob = (pipelineData: any, isExpanded: boolean = false
         willingToRelocate: candidate.willingToRelocate,
         description: candidate.description,
         linkedin: candidate.linkedin,
-        reportingTo: candidate.reportingTo
+        reportingTo: candidate.reportingTo,
+        // Additional fields for dialog
+        educationDegree: candidate.educationDegree,
+        primaryLanguage: candidate.primaryLanguage,
+        resume: candidate.resume,
+        // Pipeline-specific data
+        subStatus: candidateData.status,
+        priority: candidateData.priority,
+        notes: candidateData.notes
       };
     }),
-    // Pipeline-specific data - use stage field from backend
-    pipelineStatus: pipelineData.jobDetails.stage || "Unknown",
-    priority: pipelineData.pipelineInfo.priority,
-    notes: pipelineData.pipelineInfo.notes,
-    assignedDate: pipelineData.pipelineInfo.assignedDate,
-    candidateSummary: pipelineData.candidateSummary || { totalCandidates: 0, byStatus: {} },
+    // Pipeline-specific data from new API structure
+    pipelineStatus: pipelineData.status,
+    priority: pipelineData.priority,
+    notes: pipelineData.notes,
+    assignedDate: pipelineData.assignedDate,
+    // Candidate counts from new API structure
+    totalCandidates: pipelineData.totalCandidates,
+    activeCandidates: pipelineData.activeCandidates,
+    completedCandidates: pipelineData.completedCandidates,
+    droppedCandidates: pipelineData.droppedCandidates,
+    numberOfCandidates: pipelineData.totalCandidates,
+    // Recruiter information
+    recruiterName: pipelineData.recruiterId?.name || "Unknown Recruiter",
+    recruiterEmail: pipelineData.recruiterId?.email || "",
     // Job details from API
-    jobPosition: Array.isArray(pipelineData.jobDetails.jobPosition) ? 
-      pipelineData.jobDetails.jobPosition.join(", ") : 
-      pipelineData.jobDetails.jobPosition,
-    department: pipelineData.jobDetails.department,
-    experience: pipelineData.jobDetails.experience,
-    education: Array.isArray(pipelineData.jobDetails.education) ? 
-      pipelineData.jobDetails.education.join(", ") : 
-      pipelineData.jobDetails.education,
-    specialization: Array.isArray(pipelineData.jobDetails.specialization) ? 
-      pipelineData.jobDetails.specialization.join(", ") : 
-      pipelineData.jobDetails.specialization,
-    teamSize: pipelineData.jobDetails.teamSize,
-    numberOfPositions: pipelineData.jobDetails.numberOfPositions,
-    workVisa: pipelineData.jobDetails.workVisa ? 
-      (typeof pipelineData.jobDetails.workVisa === 'object' ? 
-        !!pipelineData.jobDetails.workVisa : 
-        !!pipelineData.jobDetails.workVisa) : 
+    jobPosition: Array.isArray(pipelineData.jobId.jobPosition) ? 
+      pipelineData.jobId.jobPosition.join(", ") : 
+      pipelineData.jobId.jobPosition,
+    department: pipelineData.jobId.department,
+    experience: pipelineData.jobId.experience,
+    education: Array.isArray(pipelineData.jobId.education) ? 
+      pipelineData.jobId.education.join(", ") : 
+      pipelineData.jobId.education,
+    specialization: Array.isArray(pipelineData.jobId.specialization) ? 
+      pipelineData.jobId.specialization.join(", ") : 
+      pipelineData.jobId.specialization,
+    teamSize: pipelineData.jobId.teamSize,
+    numberOfPositions: pipelineData.jobId.numberOfPositions,
+    workVisa: pipelineData.jobId.workVisa ? 
+      (typeof pipelineData.jobId.workVisa === 'object' ? 
+        !!pipelineData.jobId.workVisa.workVisa : 
+        !!pipelineData.jobId.workVisa) : 
       false,
-    gender: pipelineData.jobDetails.gender,
-    deadlineByClient: pipelineData.jobDetails.deadlineByClient || undefined,
-    keySkills: Array.isArray(pipelineData.jobDetails.specialization) ? 
-      pipelineData.jobDetails.specialization : 
+    gender: pipelineData.jobId.gender,
+    deadlineByClient: pipelineData.jobId.deadlineByClient || undefined,
+    keySkills: Array.isArray(pipelineData.jobId.specialization) ? 
+      pipelineData.jobId.specialization : 
       [],
-    certifications: Array.isArray(pipelineData.jobDetails.certifications) ? 
-      pipelineData.jobDetails.certifications : 
+    certifications: Array.isArray(pipelineData.jobId.certifications) ? 
+      pipelineData.jobId.certifications : 
       [],
-    otherBenefits: Array.isArray(pipelineData.jobDetails.otherBenefits) ? 
-      pipelineData.jobDetails.otherBenefits.join(", ") : 
-      pipelineData.jobDetails.otherBenefits,
-    jobDescription: pipelineData.jobDetails.jobDescription,
+    otherBenefits: Array.isArray(pipelineData.jobId.otherBenefits) ? 
+      pipelineData.jobId.otherBenefits.join(", ") : 
+      pipelineData.jobId.otherBenefits,
+    jobDescription: pipelineData.jobId.jobDescription,
     // Client information from API
-    clientIndustry: pipelineData.clientInfo.industry,
-    clientLocation: pipelineData.clientInfo.location,
-    clientStage: pipelineData.clientInfo.clientStage,
-    clientCountry: pipelineData.clientInfo.countryOfBusiness,
-    clientWebsite: pipelineData.clientInfo.website,
-    clientPhone: pipelineData.clientInfo.phoneNumber,
-    clientEmails: pipelineData.clientInfo.emails
+    clientIndustry: pipelineData.jobId.client?.industry,
+    clientLocation: pipelineData.jobId.client?.location,
+    clientStage: pipelineData.jobId.client?.clientStage,
+    clientCountry: pipelineData.jobId.client?.countryOfBusiness,
+    clientWebsite: pipelineData.jobId.client?.website,
+    clientPhone: pipelineData.jobId.client?.phoneNumber,
+    clientEmails: pipelineData.jobId.client?.emails
   };
 };
 
@@ -150,44 +217,42 @@ export function RecruiterPipeline() {
   const loadPipelineJobs = async () => {
     try {
       setLoading(true);
-      const response = await (getAllPipelineEntries as any)();
+      
+      console.log("Loading pipeline data from API");
+      const response = await getAllPipelineEntries();
+      
       console.log("API Response:", response);
       
-      if (response.success && response.data && response.data.pipelines) {
-        console.log("Pipeline data found:", response.data.pipelines.length, "pipelines");
+      if (response.success && response.data) {
+        console.log("Raw pipeline data:", response.data.pipelines);
         
-        // Store overall candidate summary if available
-        if (response.data.overallCandidateSummary) {
-          setOverallCandidateSummary(response.data.overallCandidateSummary);
-        }
-        
-        // Convert all pipeline entries to Job format using the utility function
-        const pipelineJobs: Job[] = response.data.pipelines.map((pipelineData: any) => 
-          convertPipelineDataToJob(pipelineData, false)
+        // Convert API data to Job format
+        const convertedJobs = response.data.pipelines.map(pipeline => 
+          convertPipelineListDataToJob(pipeline, false)
         );
         
-        console.log("Converted pipeline jobs:", pipelineJobs);
-        setJobs(pipelineJobs);
+        console.log("Converted jobs:", convertedJobs);
+        
+        // Calculate overall candidate summary
+        const overallSummary = {
+          totalCandidates: response.data.pipelines.reduce((total, pipeline) => total + pipeline.totalCandidates, 0),
+          byStatus: {} as { [key: string]: number }
+        };
+        
+        // For now, we'll use the basic counts since detailed status breakdown isn't in the list response
+        // This will be updated when individual pipeline details are loaded
+        setOverallCandidateSummary(overallSummary);
+        setJobs(convertedJobs);
+        
+        console.log("Loaded pipelines:", convertedJobs.length, "pipelines");
+        console.log("Overall summary:", overallSummary);
       } else {
-        console.log("No pipeline data found in response");
+        throw new Error(response.message || 'Failed to load pipeline data');
       }
+      
     } catch (error: any) {
       console.error("Error loading pipeline jobs:", error);
-      console.error("Error details:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
-      
-      if (error.message.includes('404') || error.message.includes('Not Found')) {
-        toast.error("Pipeline endpoint not found. Please ensure the backend API is running and the endpoint exists.");
-      } else if (error.response?.status === 404) {
-        toast.error("Pipeline API endpoint not found. Check if the backend route exists.");
-      } else if (error.response?.status === 500) {
-        toast.error("Server error. Please check the backend logs.");
-      } else {
-        toast.error(`Failed to load pipeline jobs: ${error.message}`);
-      }
+      toast.error(`Failed to load pipeline jobs: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -198,11 +263,17 @@ export function RecruiterPipeline() {
       setLoadingJobId(pipelineId);
       console.log(`Calling getPipelineEntry API for pipeline ID: ${pipelineId}`);
       const response = await getPipelineEntry(pipelineId);
+      
+      console.log("Detailed pipeline entry response:", response);
+      
       if (response.success && response.data) {
         const pipelineData = response.data;
+        console.log("Raw detailed pipeline data:", pipelineData);
         
         // Convert to local format for detailed view using the utility function
         const detailedJob: Job = convertPipelineDataToJob(pipelineData, true);
+        
+        console.log("Converted detailed job:", detailedJob);
         
         // Update the specific job in the jobs array
         setJobs(prevJobs => {
@@ -229,6 +300,7 @@ export function RecruiterPipeline() {
   const calculateKPIData = () => {
     const totalJobs = jobs.length;
     const activeJobs = jobs.filter(job => job.pipelineStatus !== "Closed").length;
+    const inactiveJobs = jobs.filter(job => job.pipelineStatus === "Closed").length;
     
     // Use overall candidate summary if available, otherwise calculate from jobs
     let appliedCandidates = 0;
@@ -242,12 +314,12 @@ export function RecruiterPipeline() {
       disqualifiedCandidates = overallCandidateSummary.byStatus["Disqualified"] || 0;
     } else {
       // Fallback to calculating from individual jobs
-      appliedCandidates = jobs.reduce((total, job) => total + job.candidates.length, 0);
+      appliedCandidates = jobs.reduce((total, job) => total + (job.totalCandidates || 0), 0);
       
       jobs.forEach(job => {
-        if (job.candidateSummary && job.candidateSummary.byStatus) {
-          hiredCandidates += job.candidateSummary.byStatus["Hired"] || 0;
-          disqualifiedCandidates += job.candidateSummary.byStatus["Disqualified"] || 0;
+        if (job.candidates && job.candidates.length > 0) {
+          hiredCandidates += job.candidates.filter(c => c.currentStage === "Hired").length;
+          disqualifiedCandidates += job.candidates.filter(c => c.currentStage === "Disqualified").length;
         }
       });
     }
@@ -255,6 +327,7 @@ export function RecruiterPipeline() {
     return {
       totalJobs,
       activeJobs,
+      inactiveJobs,
       appliedCandidates,
       hiredCandidates,
       disqualifiedCandidates
@@ -309,7 +382,7 @@ export function RecruiterPipeline() {
         case "title":
           return a.title.localeCompare(b.title);
         case "candidates":
-          return b.candidates.length - a.candidates.length;
+          return (b.totalCandidates || 0) - (a.totalCandidates || 0);
         case "client":
           return a.clientName.localeCompare(b.clientName);
         case "date":
@@ -326,12 +399,11 @@ export function RecruiterPipeline() {
     const job = jobs.find(j => j.id === jobId);
     if (!job) return;
 
-    if (!job.isExpanded) {
-      // Load detailed information when expanding
-      console.log(`Loading pipeline entry details for job ID: ${jobId}`);
+    if (!job.isExpanded && job.candidates.length === 0) {
+      // Load detailed data when expanding for the first time
       await loadPipelineEntryDetails(jobId);
     } else {
-      // Just toggle expansion state when collapsing
+      // Simply toggle the expansion state
       setJobs(jobs.map(job => 
         job.id === jobId ? { ...job, isExpanded: !job.isExpanded } : job
       ));
