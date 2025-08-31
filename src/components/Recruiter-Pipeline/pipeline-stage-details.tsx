@@ -907,7 +907,7 @@ export function PipelineStageDetails({
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-blue-600" />
               <p className="text-sm text-blue-800">
-                Viewing previous stage data. You can view and edit historical information, but stage progression is based on the current stage.
+                Viewing previous stage data. This stage is in read-only mode. Only the current stage ({candidate.currentStage}) can be edited.
               </p>
             </div>
           </div>
@@ -948,7 +948,7 @@ export function PipelineStageDetails({
                           <X className="h-3 w-3" />
                         </Button>
                       </div>
-                    ) : (
+                    ) : displayStage === candidate.currentStage ? (
                       <Button
                         size="sm"
                         variant="ghost"
@@ -957,7 +957,7 @@ export function PipelineStageDetails({
                       >
                         <Edit3 className="h-3 w-3" />
                       </Button>
-                    )}
+                    ) : null}
                   </div>
                   
                   {editingField === field.key ? (
