@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -42,7 +43,7 @@ import {
   FileCheck,
   FileX,
   Edit3,
-  Save,
+  Check,
   X,
   CalendarIcon,
   Loader2
@@ -755,6 +756,8 @@ export function PipelineStageDetails({
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingFieldKey, setPendingFieldKey] = useState<string | null>(null);
   
   if (!candidate) return null;
   
@@ -771,7 +774,18 @@ export function PipelineStageDetails({
     setEditValue(field.value?.toString() || "");
   };
 
-  const handleSaveField = async (fieldKey: string) => {
+  const handleSaveField = (fieldKey: string) => {
+    // Show confirmation dialog instead of immediately saving
+    setPendingFieldKey(fieldKey);
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmSave = async () => {
+    if (!pendingFieldKey) return;
+    
+    const fieldKey = pendingFieldKey;
+    const fieldLabel = stageFields.find(field => field.key === fieldKey)?.label || fieldKey;
+    
     // Check if API integration is available
     const hasApiIntegration = pipelineId && candidate.id;
     
@@ -790,9 +804,11 @@ export function PipelineStageDetails({
       };
       onUpdateCandidate?.(updatedCandidate);
       
-      toast.success("Field updated locally (API integration not available)");
+      toast.success(`${fieldLabel} updated locally (API integration not available)`);
       setEditingField(null);
       setEditValue("");
+      setShowConfirmDialog(false);
+      setPendingFieldKey(null);
       return;
     }
 
@@ -832,7 +848,7 @@ export function PipelineStageDetails({
         };
         onUpdateCandidate?.(updatedCandidate);
         
-        toast.success("Field updated successfully");
+        toast.success(`${fieldLabel} updated successfully`);
         setEditingField(null);
         setEditValue("");
       } else {
@@ -843,7 +859,14 @@ export function PipelineStageDetails({
       toast.error("An error occurred while updating the field");
     } finally {
       setIsUpdating(false);
+      setShowConfirmDialog(false);
+      setPendingFieldKey(null);
     }
+  };
+
+  const handleCancelSave = () => {
+    setShowConfirmDialog(false);
+    setPendingFieldKey(null);
   };
 
   const handleCancelEdit = () => {
@@ -912,7 +935,7 @@ export function PipelineStageDetails({
                           {isUpdating ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
                           ) : (
-                            <Save className="h-3 w-3" />
+                            <Check className="h-3 w-3" />
                           )}
                         </Button>
                         <Button
@@ -972,6 +995,35 @@ export function PipelineStageDetails({
           </div>
         )}
       </CardContent>
+      
+      {/* Confirmation Dialog */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Update</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to update the field "{pendingFieldKey ? stageFields.find(field => field.key === pendingFieldKey)?.label || pendingFieldKey : ''}?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelSave}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmSave}
+              disabled={isUpdating}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {isUpdating ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                'Confirm Update'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
