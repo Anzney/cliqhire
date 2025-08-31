@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { type Candidate, pipelineStages } from "./dummy-data";
 import { candidateService, type Candidate as ApiCandidate } from "@/services/candidateService";
-import { PipelineStageDetails } from "./pipeline-stage-details";
+import { PipelineStageDetails } from "./pipeline-stage-details/PipelineStageDetails";
 
 interface CandidateDetailsDialogProps {
   candidate: Candidate | null;
