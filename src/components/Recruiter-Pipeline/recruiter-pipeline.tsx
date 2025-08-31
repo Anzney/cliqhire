@@ -135,7 +135,16 @@ const convertPipelineDataToJob = (pipelineData: any, isExpanded: boolean = false
         // Pipeline-specific data
         subStatus: candidateData.status,
         priority: candidateData.priority,
-        notes: candidateData.notes
+        notes: candidateData.notes,
+        // Stage-specific data - IMPORTANT: Include all stage data
+        sourcing: candidateData.sourcing,
+        screening: candidateData.screening,
+        clientScreening: candidateData.clientScreening,
+        interview: candidateData.interview,
+        verification: candidateData.verification,
+        onboarding: candidateData.onboarding,
+        hired: candidateData.hired,
+        disqualified: candidateData.disqualified
       };
     }),
     // Pipeline-specific data from new API structure

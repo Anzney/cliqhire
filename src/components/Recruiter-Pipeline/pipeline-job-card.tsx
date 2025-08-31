@@ -229,6 +229,7 @@ export function PipelineJobCard({
         candidate={selectedCandidate}
         isOpen={isDialogOpen}
         onClose={handleCloseDialog}
+        pipelineId={job.id}
       />
       
       {/* Status Change Confirmation Dialog */}

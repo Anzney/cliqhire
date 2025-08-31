@@ -33,12 +33,14 @@ interface CandidateDetailsDialogProps {
   candidate: Candidate | null;
   isOpen: boolean;
   onClose: () => void;
+  pipelineId?: string;
 }
 
 export function CandidateDetailsDialog({ 
   candidate, 
   isOpen, 
-  onClose 
+  onClose,
+  pipelineId
 }: CandidateDetailsDialogProps) {
   const [selectedStage, setSelectedStage] = useState<string | undefined>(undefined);
   const [localCandidate, setLocalCandidate] = useState<any>(candidate);
@@ -81,7 +83,7 @@ export function CandidateDetailsDialog({
               </div>
               <div className="flex-1">
                 <DialogTitle className="text-2xl font-bold text-gray-900 mb-1">
-                  {localCandidate.name}
+                  {localCandidate.name || 'Unknown Candidate'}
                 </DialogTitle>
                 <DialogDescription className="text-lg text-gray-600 font-medium">
                   {localCandidate.currentJobTitle || "Professional"}
@@ -159,6 +161,7 @@ export function CandidateDetailsDialog({
                selectedStage={selectedStage}
                onStageSelect={setSelectedStage}
                onUpdateCandidate={handleUpdateCandidate}
+               pipelineId={pipelineId}
              />
            </div>
         </DialogHeader>

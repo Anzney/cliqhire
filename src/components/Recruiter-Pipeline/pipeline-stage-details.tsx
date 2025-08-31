@@ -44,17 +44,21 @@ import {
   Edit3,
   Save,
   X,
-  CalendarIcon
+  CalendarIcon,
+  Loader2
 } from "lucide-react";
 import { pipelineStages } from "./dummy-data";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { RecruiterPipelineService } from "@/services/recruiterPipelineService";
+import { toast } from "sonner";
 
 interface PipelineStageDetailsProps {
   candidate: any;
   selectedStage?: string;
   onStageSelect?: (stage: string) => void;
   onUpdateCandidate?: (updatedCandidate: any) => void;
+  pipelineId?: string;
 }
 
 interface StageField {
@@ -90,49 +94,43 @@ const formatDateTimeForInput = (dateTimeString: string): string => {
 };
 
 const getStageFields = (stage: string, candidate: any): StageField[] => {
-  // Mock data for demonstration - in real app, this would come from the candidate object
-  const mockData = {
-    sourcingDate: "2024-01-15",
-    connection: "LinkedIn",
-    referredBy: "John Doe",
-    screeningRating: "4.5/5",
-    outreachChannel: "Email",
-    sourcingDueDate: "2024-01-30",
-    followUpDateTime: "2024-01-20 10:00 AM",
-    screeningDate: "2024-01-18",
-    aemsInterviewDate: "2024-01-25",
-    screeningStatus: "Complete",
-    screeningFollowUpDate: "2024-01-22",
-    screeningDueDate: "2024-01-28",
-    clientScreeningDate: "2024-02-01",
-    clientFeedback: "Positive",
-    clientRating: "4/5",
-    interviewDate: "2024-02-05",
-    interviewStatus: "Scheduled",
-    interviewRoundNo: "1",
-    interviewReschedules: "0",
-    interviewMeetingLink: "https://meet.google.com/abc-defg-hij",
-    documents: "Complete",
-    offerLetter: "Sent",
-    backgroundCheck: "Complete",
-    onboardingStartDate: "2024-03-01",
-    onboardingStatus: "In Progress",
-    trainingCompleted: "Yes",
-    hireDate: "2024-02-15",
-    contractType: "Full-time",
-    finalSalary: "$75,000",
-    disqualificationDate: "2024-01-20",
-    disqualificationReason: "Failed technical assessment",
-    disqualificationFeedback: "Candidate did not meet technical requirements"
+  // Helper function to get stage-specific data
+  const getStageData = (stageName: string) => {
+    const stageKey = stageName.toLowerCase().replace(/\s+/g, '');
+    const stageData = candidate[stageKey] || {};
+    return stageData;
+  };
+
+  // Helper function to format date from API response
+  const formatApiDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return "Not set";
+    try {
+      const date = new Date(dateString);
+      return format(date, "yyyy-MM-dd");
+    } catch {
+      return "Not set";
+    }
+  };
+
+  // Helper function to format datetime from API response
+  const formatApiDateTime = (dateTimeString: string | null | undefined): string => {
+    if (!dateTimeString) return "Not set";
+    try {
+      const date = new Date(dateTimeString);
+      return format(date, "yyyy-MM-dd'T'HH:mm");
+    } catch {
+      return "Not set";
+    }
   };
 
   switch (stage) {
     case "Sourcing":
+      const sourcingData = getStageData("Sourcing");
       return [
         {
           key: "sourcingDate",
           label: "Sourcing Date",
-          value: candidate.sourcingDate || mockData.sourcingDate,
+          value: formatApiDate(sourcingData.sourcingDate),
           icon: <CalendarDays className="h-4 w-4" />,
           color: "bg-blue-50 text-blue-600",
           type: "date"
@@ -140,7 +138,7 @@ const getStageFields = (stage: string, candidate: any): StageField[] => {
         {
           key: "connection",
           label: "Connection",
-          value: candidate.connection || mockData.connection,
+          value: sourcingData.connection || "Not set",
           icon: <Users className="h-4 w-4" />,
           color: "bg-green-50 text-green-600",
           type: "select",
@@ -149,25 +147,34 @@ const getStageFields = (stage: string, candidate: any): StageField[] => {
         {
           key: "referredBy",
           label: "Referred By",
-          value: candidate.referredBy || mockData.referredBy,
+          value: sourcingData.referredBy || "Not set",
           icon: <User className="h-4 w-4" />,
           color: "bg-purple-50 text-purple-600",
           type: "text",
           placeholder: "Enter referrer name"
         },
         {
-          key: "screeningRating",
-          label: "Screening Rating",
-          value: candidate.screeningRating || mockData.screeningRating,
+          key: "source",
+          label: "Source",
+          value: sourcingData.source || "Not set",
+          icon: <Target className="h-4 w-4" />,
+          color: "bg-orange-50 text-orange-600",
+          type: "text",
+          placeholder: "Enter source"
+        },
+        {
+          key: "sourcingRating",
+          label: "Sourcing Rating",
+          value: sourcingData.sourcingRating?.toString() || "Not set",
           icon: <Star className="h-4 w-4" />,
           color: "bg-yellow-50 text-yellow-600",
-          type: "rating",
-          options: ["1/5", "2/5", "3/5", "4/5", "5/5"]
+          type: "select",
+          options: ["1", "2", "3", "4", "5"]
         },
         {
           key: "outreachChannel",
           label: "Outreach Channel",
-          value: candidate.outreachChannel || mockData.outreachChannel,
+          value: sourcingData.outreachChannel || "Not set",
           icon: <MessageSquare className="h-4 w-4" />,
           color: "bg-indigo-50 text-indigo-600",
           type: "select",
@@ -176,7 +183,7 @@ const getStageFields = (stage: string, candidate: any): StageField[] => {
         {
           key: "sourcingDueDate",
           label: "Sourcing Due Date",
-          value: candidate.sourcingDueDate || mockData.sourcingDueDate,
+          value: formatApiDate(sourcingData.sourcingDueDate),
           icon: <CalendarDays className="h-4 w-4" />,
           color: "bg-red-50 text-red-600",
           type: "date"
@@ -184,19 +191,38 @@ const getStageFields = (stage: string, candidate: any): StageField[] => {
         {
           key: "followUpDateTime",
           label: "Follow-up Date & Time",
-          value: candidate.followUpDateTime || mockData.followUpDateTime,
+          value: formatApiDateTime(sourcingData.followUpDateTime),
           icon: <Clock3 className="h-4 w-4" />,
           color: "bg-orange-50 text-orange-600",
           type: "datetime"
+        },
+        {
+          key: "notes",
+          label: "Notes",
+          value: sourcingData.notes || "Not set",
+          icon: <MessageSquare className="h-4 w-4" />,
+          color: "bg-gray-50 text-gray-600",
+          type: "textarea",
+          placeholder: "Enter sourcing notes..."
+        },
+        {
+          key: "status",
+          label: "Status",
+          value: sourcingData.status || "Not set",
+          icon: sourcingData.status === "Completed" ? <CheckCircle className="h-4 w-4" /> : <Clock className="h-4 w-4" />,
+          color: sourcingData.status === "Completed" ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600",
+          type: "select",
+          options: ["Pending", "In Progress", "Completed"]
         }
       ];
 
     case "Screening":
+      const screeningData = getStageData("Screening");
       return [
         {
           key: "screeningDate",
           label: "Screening Date",
-          value: candidate.screeningDate || "Not set",
+          value: formatApiDate(screeningData.screeningDate),
           icon: <CalendarDays className="h-4 w-4" />,
           color: "bg-blue-50 text-blue-600",
           type: "date"
@@ -204,33 +230,33 @@ const getStageFields = (stage: string, candidate: any): StageField[] => {
         {
           key: "aemsInterviewDate",
           label: "AEMS Interview Date",
-          value: candidate.aemsInterviewDate || mockData.aemsInterviewDate,
+          value: formatApiDateTime(screeningData.aemsInterviewDate),
           icon: <CalendarDays className="h-4 w-4" />,
           color: "bg-green-50 text-green-600",
-          type: "date"
+          type: "datetime"
         },
         {
           key: "screeningStatus",
           label: "Screening Status",
-          value: candidate.screeningStatus || mockData.screeningStatus,
-          icon: (candidate.screeningStatus || mockData.screeningStatus) === "Complete" ? <CheckCircle className="h-4 w-4" /> : <Clock className="h-4 w-4" />,
-          color: (candidate.screeningStatus || mockData.screeningStatus) === "Complete" ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600",
+          value: screeningData.screeningStatus || "Not set",
+          icon: screeningData.screeningStatus === "Complete" ? <CheckCircle className="h-4 w-4" /> : <Clock className="h-4 w-4" />,
+          color: screeningData.screeningStatus === "Complete" ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600",
           type: "select",
-          options: ["Pending", "Complete", "In Progress"]
+          options: ["Pending", "In Progress", "Complete"]
         },
         {
           key: "screeningRating",
           label: "Screening Rating",
-          value: candidate.screeningRating || mockData.screeningRating,
+          value: screeningData.screeningRating?.toString() || "Not set",
           icon: <Star className="h-4 w-4" />,
           color: "bg-purple-50 text-purple-600",
-          type: "rating",
-          options: ["1/5", "2/5", "3/5", "4/5", "5/5"]
+          type: "select",
+          options: ["1", "2", "3", "4", "5"]
         },
         {
           key: "screeningFollowUpDate",
           label: "Follow-up Date",
-          value: candidate.screeningFollowUpDate || mockData.screeningFollowUpDate,
+          value: formatApiDate(screeningData.screeningFollowUpDate),
           icon: <Clock3 className="h-4 w-4" />,
           color: "bg-orange-50 text-orange-600",
           type: "date"
@@ -238,19 +264,65 @@ const getStageFields = (stage: string, candidate: any): StageField[] => {
         {
           key: "screeningDueDate",
           label: "Screening Due Date",
-          value: candidate.screeningDueDate || mockData.screeningDueDate,
+          value: formatApiDate(screeningData.screeningDueDate),
           icon: <CalendarDays className="h-4 w-4" />,
           color: "bg-red-50 text-red-600",
           type: "date"
+        },
+        {
+          key: "screeningNotes",
+          label: "Screening Notes",
+          value: screeningData.screeningNotes || "Not set",
+          icon: <MessageSquare className="h-4 w-4" />,
+          color: "bg-gray-50 text-gray-600",
+          type: "textarea",
+          placeholder: "Enter screening notes..."
+        },
+        {
+          key: "technicalAssessment",
+          label: "Technical Assessment",
+          value: screeningData.technicalAssessment || "Not set",
+          icon: <Target className="h-4 w-4" />,
+          color: "bg-blue-50 text-blue-600",
+          type: "text",
+          placeholder: "Enter technical assessment"
+        },
+        {
+          key: "softSkillsAssessment",
+          label: "Soft Skills Assessment",
+          value: screeningData.softSkillsAssessment || "Not set",
+          icon: <User className="h-4 w-4" />,
+          color: "bg-green-50 text-green-600",
+          type: "text",
+          placeholder: "Enter soft skills assessment"
+        },
+        {
+          key: "overallRating",
+          label: "Overall Rating",
+          value: screeningData.overallRating?.toString() || "Not set",
+          icon: <Star className="h-4 w-4" />,
+          color: "bg-yellow-50 text-yellow-600",
+          type: "select",
+          options: ["1", "2", "3", "4", "5"]
+        },
+        {
+          key: "feedback",
+          label: "Feedback",
+          value: screeningData.feedback || "Not set",
+          icon: <MessageSquare className="h-4 w-4" />,
+          color: "bg-purple-50 text-purple-600",
+          type: "textarea",
+          placeholder: "Enter feedback..."
         }
       ];
 
     case "Client Screening":
+      const clientScreeningData = getStageData("Client Screening");
       return [
         {
           key: "clientScreeningDate",
           label: "Client Screening Date",
-          value: candidate.clientScreeningDate || mockData.clientScreeningDate,
+          value: formatApiDate(clientScreeningData.clientScreeningDate),
           icon: <CalendarDays className="h-4 w-4" />,
           color: "bg-blue-50 text-blue-600",
           type: "date"
@@ -258,46 +330,47 @@ const getStageFields = (stage: string, candidate: any): StageField[] => {
         {
           key: "clientFeedback",
           label: "Client Feedback",
-          value: candidate.clientFeedback || mockData.clientFeedback,
+          value: clientScreeningData.clientFeedback || "Not set",
           icon: <MessageSquare className="h-4 w-4" />,
           color: "bg-green-50 text-green-600",
           type: "select",
-          options: ["Positive", "Negative", "Neutral", "Pending"]
+          options: ["Pending", "In Progress", "Complete"]
         },
         {
           key: "clientRating",
           label: "Client Rating",
-          value: candidate.clientRating || mockData.clientRating,
+          value: clientScreeningData.clientRating?.toString() || "Not set",
           icon: <Star className="h-4 w-4" />,
           color: "bg-yellow-50 text-yellow-600",
-          type: "rating",
-          options: ["1/5", "2/5", "3/5", "4/5", "5/5"]
+          type: "select",
+          options: ["1", "2", "3", "4", "5"]
         }
       ];
 
     case "Interview":
+      const interviewData = getStageData("Interview");
       return [
         {
           key: "interviewDate",
           label: "Interview Date",
-          value: candidate.interviewDate || mockData.interviewDate,
+          value: formatApiDateTime(interviewData.interviewDate),
           icon: <CalendarDays className="h-4 w-4" />,
           color: "bg-blue-50 text-blue-600",
-          type: "date"
+          type: "datetime"
         },
         {
           key: "interviewStatus",
           label: "Interview Status",
-          value: candidate.interviewStatus || mockData.interviewStatus,
-          icon: (candidate.interviewStatus || mockData.interviewStatus) === "Completed" ? <CheckCircle className="h-4 w-4" /> : <Clock className="h-4 w-4" />,
-          color: (candidate.interviewStatus || mockData.interviewStatus) === "Completed" ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600",
+          value: interviewData.interviewStatus || "Not set",
+          icon: interviewData.interviewStatus === "Completed" ? <CheckCircle className="h-4 w-4" /> : <Clock className="h-4 w-4" />,
+          color: interviewData.interviewStatus === "Completed" ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600",
           type: "select",
           options: ["Scheduled", "Completed", "Cancelled", "Rescheduled"]
         },
         {
           key: "interviewRoundNo",
           label: "Interview Round No",
-          value: candidate.interviewRoundNo || mockData.interviewRoundNo,
+          value: interviewData.interviewRoundNo?.toString() || "Not set",
           icon: <Target className="h-4 w-4" />,
           color: "bg-purple-50 text-purple-600",
           type: "select",
@@ -306,7 +379,7 @@ const getStageFields = (stage: string, candidate: any): StageField[] => {
         {
           key: "interviewReschedules",
           label: "No. of Interview Reschedules",
-          value: candidate.interviewReschedules || mockData.interviewReschedules,
+          value: interviewData.interviewReschedules?.toString() || "Not set",
           icon: <Clock3 className="h-4 w-4" />,
           color: "bg-orange-50 text-orange-600",
           type: "select",
@@ -315,7 +388,7 @@ const getStageFields = (stage: string, candidate: any): StageField[] => {
         {
           key: "interviewMeetingLink",
           label: "Interview Meeting Link",
-          value: candidate.interviewMeetingLink || mockData.interviewMeetingLink,
+          value: interviewData.interviewMeetingLink || "Not set",
           icon: <Link className="h-4 w-4" />,
           color: "bg-indigo-50 text-indigo-600",
           type: "url",
@@ -324,42 +397,44 @@ const getStageFields = (stage: string, candidate: any): StageField[] => {
       ];
 
     case "Verification":
+      const verificationData = getStageData("Verification");
       return [
         {
           key: "documents",
           label: "Documents",
-          value: candidate.documents || mockData.documents,
-          icon: (candidate.documents || mockData.documents) === "Complete" ? <FileCheck className="h-4 w-4" /> : <FileText className="h-4 w-4" />,
-          color: (candidate.documents || mockData.documents) === "Complete" ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600",
+          value: verificationData.documents || "Not set",
+          icon: verificationData.documents === "Complete" ? <FileCheck className="h-4 w-4" /> : <FileText className="h-4 w-4" />,
+          color: verificationData.documents === "Complete" ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600",
           type: "select",
           options: ["Pending", "Complete", "In Progress"]
         },
         {
           key: "offerLetter",
           label: "Offer Letter",
-          value: candidate.offerLetter || mockData.offerLetter,
-          icon: (candidate.offerLetter || mockData.offerLetter) === "Sent" ? <FileCheck className="h-4 w-4" /> : <FileX className="h-4 w-4" />,
-          color: (candidate.offerLetter || mockData.offerLetter) === "Sent" ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600",
+          value: verificationData.offerLetter || "Not set",
+          icon: verificationData.offerLetter === "Sent" ? <FileCheck className="h-4 w-4" /> : <FileX className="h-4 w-4" />,
+          color: verificationData.offerLetter === "Sent" ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600",
           type: "select",
           options: ["Not sent", "Sent", "Accepted", "Rejected"]
         },
         {
           key: "backgroundCheck",
           label: "Background Check",
-          value: candidate.backgroundCheck || mockData.backgroundCheck,
-          icon: (candidate.backgroundCheck || mockData.backgroundCheck) === "Complete" ? <CheckCircle className="h-4 w-4" /> : <Clock className="h-4 w-4" />,
-          color: (candidate.backgroundCheck || mockData.backgroundCheck) === "Complete" ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600",
+          value: verificationData.backgroundCheck || "Not set",
+          icon: verificationData.backgroundCheck === "Complete" ? <CheckCircle className="h-4 w-4" /> : <Clock className="h-4 w-4" />,
+          color: verificationData.backgroundCheck === "Complete" ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600",
           type: "select",
           options: ["Pending", "Complete", "Failed"]
         }
       ];
 
     case "Onboarding":
+      const onboardingData = getStageData("Onboarding");
       return [
         {
           key: "onboardingStartDate",
           label: "Onboarding Start Date",
-          value: candidate.onboardingStartDate || mockData.onboardingStartDate,
+          value: formatApiDate(onboardingData.onboardingStartDate),
           icon: <CalendarDays className="h-4 w-4" />,
           color: "bg-blue-50 text-blue-600",
           type: "date"
@@ -367,29 +442,30 @@ const getStageFields = (stage: string, candidate: any): StageField[] => {
         {
           key: "onboardingStatus",
           label: "Onboarding Status",
-          value: candidate.onboardingStatus || "In Progress",
-          icon: <CheckCircle className="h-4 w-4" />,
-          color: "bg-green-50 text-green-600",
+          value: onboardingData.onboardingStatus || "Not set",
+          icon: onboardingData.onboardingStatus === "Complete" ? <CheckCircle className="h-4 w-4" /> : <Clock className="h-4 w-4" />,
+          color: onboardingData.onboardingStatus === "Complete" ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600",
           type: "select",
           options: ["Not Started", "In Progress", "Complete"]
         },
         {
           key: "trainingCompleted",
           label: "Training Completed",
-          value: candidate.trainingCompleted || mockData.trainingCompleted,
-          icon: (candidate.trainingCompleted || mockData.trainingCompleted) === "Yes" ? <CheckCircle className="h-4 w-4" /> : <Clock className="h-4 w-4" />,
-          color: (candidate.trainingCompleted || mockData.trainingCompleted) === "Yes" ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600",
+          value: onboardingData.trainingCompleted || "Not set",
+          icon: onboardingData.trainingCompleted === "Yes" ? <CheckCircle className="h-4 w-4" /> : <Clock className="h-4 w-4" />,
+          color: onboardingData.trainingCompleted === "Yes" ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600",
           type: "select",
           options: ["Yes", "No", "In Progress"]
         }
       ];
 
     case "Hired":
+      const hiredData = getStageData("Hired");
       return [
         {
           key: "hireDate",
           label: "Hire Date",
-          value: candidate.hireDate || mockData.hireDate,
+          value: formatApiDate(hiredData.hireDate),
           icon: <CalendarDays className="h-4 w-4" />,
           color: "bg-green-50 text-green-600",
           type: "date"
@@ -397,7 +473,7 @@ const getStageFields = (stage: string, candidate: any): StageField[] => {
         {
           key: "contractType",
           label: "Contract Type",
-          value: candidate.contractType || mockData.contractType,
+          value: hiredData.contractType || "Not set",
           icon: <FileText className="h-4 w-4" />,
           color: "bg-blue-50 text-blue-600",
           type: "select",
@@ -406,7 +482,7 @@ const getStageFields = (stage: string, candidate: any): StageField[] => {
         {
           key: "finalSalary",
           label: "Salary",
-          value: candidate.finalSalary || mockData.finalSalary,
+          value: hiredData.finalSalary || "Not set",
           icon: <DollarSign className="h-4 w-4" />,
           color: "bg-purple-50 text-purple-600",
           type: "text",
@@ -415,11 +491,12 @@ const getStageFields = (stage: string, candidate: any): StageField[] => {
       ];
 
     case "Disqualified":
+      const disqualifiedData = getStageData("Disqualified");
       return [
         {
           key: "disqualificationDate",
           label: "Disqualification Date",
-          value: candidate.disqualificationDate || mockData.disqualificationDate,
+          value: formatApiDate(disqualifiedData.disqualificationDate),
           icon: <CalendarDays className="h-4 w-4" />,
           color: "bg-red-50 text-red-600",
           type: "date"
@@ -427,7 +504,7 @@ const getStageFields = (stage: string, candidate: any): StageField[] => {
         {
           key: "disqualificationReason",
           label: "Reason",
-          value: candidate.disqualificationReason || mockData.disqualificationReason,
+          value: disqualifiedData.disqualificationReason || "Not set",
           icon: <XCircle className="h-4 w-4" />,
           color: "bg-red-50 text-red-600",
           type: "textarea",
@@ -436,7 +513,7 @@ const getStageFields = (stage: string, candidate: any): StageField[] => {
         {
           key: "disqualificationFeedback",
           label: "Feedback",
-          value: candidate.disqualificationFeedback || mockData.disqualificationFeedback,
+          value: disqualifiedData.disqualificationFeedback || "Not set",
           icon: <MessageSquare className="h-4 w-4" />,
           color: "bg-orange-50 text-orange-600",
           type: "textarea",
@@ -672,14 +749,20 @@ export function PipelineStageDetails({
   candidate, 
   selectedStage, 
   onStageSelect,
-  onUpdateCandidate
+  onUpdateCandidate,
+  pipelineId
 }: PipelineStageDetailsProps) {
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
+  const [isUpdating, setIsUpdating] = useState(false);
   
   if (!candidate) return null;
   
-  const currentStage = selectedStage || candidate.currentStage;
+  // Use the currentStage from the API response, fallback to selectedStage or default
+  const currentStage = candidate.currentStage || selectedStage || "Sourcing";
+  
+
+  
   const stageFields = getStageFields(currentStage, candidate);
 
   const handleEditField = (field: StageField) => {
@@ -687,14 +770,81 @@ export function PipelineStageDetails({
     setEditValue(field.value?.toString() || "");
   };
 
-  const handleSaveField = (fieldKey: string) => {
-    const updatedCandidate = {
-      ...candidate,
-      [fieldKey]: editValue
-    };
-    onUpdateCandidate?.(updatedCandidate);
-    setEditingField(null);
-    setEditValue("");
+  const handleSaveField = async (fieldKey: string) => {
+    // Check if API integration is available
+    const hasApiIntegration = pipelineId && candidate.id;
+    
+    if (!hasApiIntegration) {
+      // Update locally only when API integration is not available
+      console.warn("API integration not available - updating locally only");
+      
+      // Update local state - update the nested stage data
+      const stageKey = currentStage.toLowerCase().replace(/\s+/g, '');
+      const updatedCandidate = {
+        ...candidate,
+        [stageKey]: {
+          ...candidate[stageKey],
+          [fieldKey]: editValue
+        }
+      };
+      onUpdateCandidate?.(updatedCandidate);
+      
+      toast.success("Field updated locally (API integration not available)");
+      setEditingField(null);
+      setEditValue("");
+      return;
+    }
+
+    setIsUpdating(true);
+    
+    try {
+      const currentStage = candidate.currentStage || selectedStage || "Sourcing";
+      
+      // Get existing stage data to preserve other fields
+      const stageKey = currentStage.toLowerCase().replace(/\s+/g, '');
+      const existingStageData = candidate[stageKey] || {};
+      
+      // Prepare the update data - only update the specific field, preserve others
+      const updateData = {
+        fields: {
+          ...existingStageData, // Preserve all existing fields
+          [fieldKey]: editValue // Update only the specific field
+        },
+        notes: `Updated ${fieldKey} to: ${editValue}`
+      };
+
+      // Call the API to update the field
+      const response = await RecruiterPipelineService.updateStageFields(
+        pipelineId,
+        candidate.id,
+        currentStage,
+        updateData
+      );
+
+      if (response.success) {
+        // Update local state - update the nested stage data
+        const stageKey = currentStage.toLowerCase().replace(/\s+/g, '');
+        const updatedCandidate = {
+          ...candidate,
+          [stageKey]: {
+            ...candidate[stageKey],
+            [fieldKey]: editValue
+          }
+        };
+        onUpdateCandidate?.(updatedCandidate);
+        
+        toast.success("Field updated successfully");
+        setEditingField(null);
+        setEditValue("");
+      } else {
+        toast.error(response.error || "Failed to update field");
+      }
+    } catch (error) {
+      console.error("Error updating field:", error);
+      toast.error("An error occurred while updating the field");
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const handleCancelEdit = () => {
@@ -702,14 +852,24 @@ export function PipelineStageDetails({
     setEditValue("");
   };
 
+  // Check if API integration is available
+  const hasApiIntegration = pipelineId && candidate.id;
+
   return (
     <Card className="w-full bg-white shadow-sm border border-gray-100">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-gray-900 flex items-center">
-            <Target className="h-5 w-5 text-blue-500 mr-2" />
-            Stage Details: {currentStage}
-          </CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-lg font-semibold text-gray-900 flex items-center">
+              <Target className="h-5 w-5 text-blue-500 mr-2" />
+              Stage Details: {currentStage}
+            </CardTitle>
+            {!hasApiIntegration && (
+              <Badge variant="secondary" className="text-xs">
+                Local Mode
+              </Badge>
+            )}
+          </div>
           <Badge 
             variant="outline" 
             className={`${getStageColor(currentStage)} font-medium`}
@@ -720,6 +880,8 @@ export function PipelineStageDetails({
       </CardHeader>
       
       <CardContent>
+
+        
         {stageFields.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {stageFields.map((field, index) => (
@@ -736,15 +898,21 @@ export function PipelineStageDetails({
                           size="sm"
                           variant="ghost"
                           onClick={() => handleSaveField(field.key)}
-                          className="h-6 w-6 p-0 text-green-600 hover:text-green-700"
+                          disabled={isUpdating}
+                          className="h-6 w-6 p-0 text-green-600 hover:text-green-700 disabled:opacity-50"
                         >
-                          <Save className="h-3 w-3" />
+                          {isUpdating ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Save className="h-3 w-3" />
+                          )}
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={handleCancelEdit}
-                          className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+                          disabled={isUpdating}
+                          className="h-6 w-6 p-0 text-red-600 hover:text-red-700 disabled:opacity-50"
                         >
                           <X className="h-3 w-3" />
                         </Button>

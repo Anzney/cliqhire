@@ -43,6 +43,15 @@ export interface Candidate {
   // Pipeline-specific data
   priority?: string;
   notes?: string;
+  // Stage-specific data
+  sourcing?: any;
+  screening?: any;
+  clientScreening?: any;
+  interview?: any;
+  verification?: any;
+  onboarding?: any;
+  hired?: any;
+  disqualified?: any;
 }
 
 export interface Job {

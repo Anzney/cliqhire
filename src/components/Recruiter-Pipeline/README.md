@@ -1,160 +1,201 @@
-# Recruiter Pipeline Components
+# Recruiter Pipeline API Integration
 
-## PipelineStageDetails Component
+This document describes the API integration for the Recruiter Pipeline component, specifically for updating stage fields.
 
-The `PipelineStageDetails` component displays detailed information for each stage of the recruitment pipeline. It shows different fields based on the candidate's current stage and allows users to click on any stage to view its details.
+## API Endpoint
 
-### Features
+The main endpoint for updating stage fields is:
 
-- **Dynamic Field Display**: Shows different fields based on the selected pipeline stage
-- **Interactive Progress Bar**: Click on any stage in the progress bar to view its details
-- **Individual Field Editing**: Each field has its own edit icon for inline editing
-- **Responsive Design**: Adapts to different screen sizes
-- **Visual Indicators**: Color-coded icons and status indicators
-- **Interactive Elements**: Clickable links and hover effects
+```
+PATCH /api/recruiter-pipeline/:pipelineId/candidate/:candidateId/stage/:stageName/fields
+```
 
-### Pipeline Stages
+### Parameters:
+- `pipelineId`: The ID of the pipeline
+- `candidateId`: The ID of the candidate
+- `stageName`: The stage name (Sourcing, Screening, Client Screening, Interview, Verification, Onboarding, Hired)
 
-The component supports the following pipeline stages:
+### Request Body:
+```json
+{
+  "fields": {
+    "fieldName": "fieldValue"
+  },
+  "notes": "Optional notes about the update"
+}
+```
 
-1. **Sourcing**
-   - Sourcing Date
-   - Connection
-   - Referred By
-   - Screening Rating
-   - Outreach Channel
-   - Sourcing Due Date
-   - Follow-up Date & Time
+### Example Usage:
+```bash
+PATCH /api/recruiter-pipeline/64f1a2b3c4d5e6f7g8h9i0j1/candidate/64f1a2b3c4d5e6f7g8h9i0j2/stage/Sourcing/fields
+{
+  "fields": {
+    "source": "LinkedIn",
+    "contacted": true,
+    "contactDate": "2024-01-15",
+    "response": "Interested"
+  },
+  "notes": "Candidate responded positively"
+}
+```
 
-2. **Screening**
-   - Screening Date
-   - AEMS Interview Date
-   - Screening Status (Pending/Complete)
-   - Screening Rating
-   - Follow-up Date
-   - Screening Due Date
+## Service Layer
 
-3. **Client Screening**
-   - Client Screening Date
-   - Client Feedback
-   - Client Rating
+### RecruiterPipelineService
 
-4. **Interview**
-   - Interview Date
-   - Interview Status
-   - Interview Round No
-   - No. of Interview Reschedules
-   - Interview Meeting Link
+The `RecruiterPipelineService` class provides methods for interacting with the pipeline API:
 
-5. **Verification**
-   - Documents
-   - Offer Letter
-   - Background Check
+```typescript
+import { RecruiterPipelineService } from '@/services/recruiterPipelineService';
 
-6. **Onboarding**
-   - Onboarding Start Date
-   - Onboarding Status
-   - Training Completed
+// Update stage fields
+const response = await RecruiterPipelineService.updateStageFields(
+  pipelineId,
+  candidateId,
+  stageName,
+  {
+    fields: { fieldName: "newValue" },
+    notes: "Update notes"
+  }
+);
 
-7. **Hired**
-   - Hire Date
-   - Contract Type
-   - Salary
+// Get stage fields
+const response = await RecruiterPipelineService.getStageFields(
+  pipelineId,
+  candidateId,
+  stageName
+);
 
-8. **Disqualified**
-   - Disqualification Date
-   - Reason
-   - Feedback
+// Move candidate to different stage
+const response = await RecruiterPipelineService.moveCandidateToStage(
+  pipelineId,
+  candidateId,
+  newStage,
+  "Optional notes"
+);
+```
 
-### Usage
+## Custom Hook
+
+### useRecruiterPipeline
+
+A custom hook for managing pipeline operations with built-in loading states and error handling:
+
+```typescript
+import { useRecruiterPipeline } from '@/hooks/useRecruiterPipeline';
+
+const { 
+  isLoading, 
+  error, 
+  updateStageField, 
+  getStageFields, 
+  moveCandidateToStage 
+} = useRecruiterPipeline({
+  pipelineId: "your-pipeline-id",
+  candidateId: "your-candidate-id"
+});
+
+// Update a field
+const result = await updateStageField(
+  "Sourcing",
+  "source",
+  "LinkedIn",
+  "Updated source field"
+);
+
+// Move candidate
+const result = await moveCandidateToStage(
+  "Screening",
+  "Moving to screening stage"
+);
+```
+
+## Component Usage
+
+### PipelineStageDetails
+
+The updated `PipelineStageDetails` component requires API integration to function:
 
 ```tsx
-import { PipelineStageDetails } from "./pipeline-stage-details";
+import { PipelineStageDetails } from '@/components/Recruiter-Pipeline/pipeline-stage-details';
 
-// In your component
-const [selectedStage, setSelectedStage] = useState<string | undefined>(undefined);
-
-// The progress bar stages are clickable and will call setSelectedStage
-// The PipelineStageDetails component will display the details for the selected stage
 <PipelineStageDetails 
   candidate={candidate}
-  selectedStage={selectedStage}
-  onStageSelect={setSelectedStage}
+  selectedStage="Sourcing"
+  pipelineId="your-pipeline-id"
+  onUpdateCandidate={(updatedCandidate) => {
+    // Handle candidate update
+    console.log('Candidate updated:', updatedCandidate);
+  }}
 />
 ```
 
-### Props
+### Requirements
 
-- `candidate`: The candidate object containing all relevant data
-- `selectedStage`: (Optional) The currently selected stage to display
-- `onStageSelect`: (Optional) Callback function when a stage is selected
-- `onUpdateCandidate`: (Optional) Callback function when candidate data is updated
+The component requires both `pipelineId` and `candidate.id` to be provided:
+- **pipelineId**: The ID of the pipeline (required)
+- **candidate.id**: The ID of the candidate (required)
+- If either is missing, the component will show an error message and prevent field updates
 
-### Interaction Pattern
+## Available Stages
 
-- **Default Behavior**: Shows details for the candidate's current stage
-- **Stage Selection**: Click on any stage in the progress bar to view its details
-- **Individual Field Editing**: Click the edit icon on any field to edit it inline
-- **Save/Cancel Actions**: Use save (✓) or cancel (✗) buttons when editing
-- **Visual Feedback**: Selected stages are highlighted with enhanced styling
-- **Hover Effects**: Stages show hover effects to indicate they are clickable
+The following stages are supported:
 
-### Styling
+1. **Sourcing**
+   - Fields: sourcingDate, connection, referredBy, screeningRating, outreachChannel, sourcingDueDate, followUpDateTime
 
-The component uses:
-- **shadcn/ui** components (Card, Button, Badge)
-- **Lucide React** icons
-- **Tailwind CSS** for styling
-- Responsive grid layout
-- Hover effects and transitions
+2. **Screening**
+   - Fields: screeningDate, aemsInterviewDate, screeningStatus, screeningRating, screeningFollowUpDate, screeningDueDate
 
-### Mock Data
+3. **Client Screening**
+   - Fields: clientScreeningDate, clientFeedback, clientRating
 
-The component includes mock data for demonstration purposes. In a production environment, replace the mock data with real candidate data from your API.
+4. **Interview**
+   - Fields: interviewDate, interviewStatus, interviewRoundNo, interviewReschedules, interviewMeetingLink
 
-## Individual Field Editing
+5. **Verification**
+   - Fields: documents, offerLetter, backgroundCheck
 
-The component supports inline editing for individual fields with the following features:
+6. **Onboarding**
+   - Fields: onboardingStartDate, onboardingStatus, trainingCompleted
 
-### Field Types Supported
+7. **Hired**
+   - Fields: hireDate, contractType, finalSalary
 
-- **Text Input**: For simple text fields
-- **Date Picker**: For date selection using shadcn/ui Calendar component
-- **DateTime Picker**: For date and time selection with separate date and time inputs
-- **Select Dropdown**: For predefined options
-- **Rating Selector**: For rating fields (1/5 to 5/5)
-- **URL Input**: For web links with validation
-- **Textarea**: For longer text content
+8. **Disqualified**
+   - Fields: disqualificationDate, disqualificationReason, disqualificationFeedback
 
-### Editing Workflow
+## Error Handling
 
-1. **Click Edit Icon**: Each field has a small edit icon (✏️) in the top-right corner
-2. **Inline Editing**: The field transforms into an appropriate input control
-   - **Date Fields**: Open a beautiful calendar picker with shadcn/ui components
-   - **DateTime Fields**: Show separate date and time inputs for precise control
-   - **Other Fields**: Display appropriate input types (text, select, textarea, etc.)
-3. **Save/Cancel**: Use the save (✓) or cancel (✗) buttons to confirm or discard changes
-4. **Real-time Updates**: Changes are immediately reflected in the UI
-5. **Formatted Display**: Dates are displayed in a user-friendly format (e.g., "January 15, 2024")
+The service includes comprehensive error handling:
 
-### Stage-Specific Fields
+- Network errors are caught and displayed as user-friendly messages
+- API errors are logged and displayed to users
+- Loading states are managed automatically
+- Toast notifications provide feedback for success/error states
 
-Each pipeline stage has its own set of editable fields:
+## Toast Notifications
 
-1. **Sourcing**: 7 fields including dates, connections, ratings, etc.
-2. **Screening**: 6 fields including interview dates, status, ratings
-3. **Client Screening**: 3 fields for client feedback and ratings
-4. **Interview**: 5 fields including meeting links and reschedules
-5. **Verification**: 3 fields for documents and background checks
-6. **Onboarding**: 3 fields for training and status
-7. **Hired**: 3 fields for contract and salary details
-8. **Disqualified**: 3 fields for reasons and feedback
+The integration uses the `sonner` library for toast notifications:
 
-### Customization
+- Success messages for successful updates
+- Error messages for failed operations
+- Loading indicators during API calls
 
-To customize the fields for each stage, modify the `getStageFields` function in the component. You can:
-- Add new fields
-- Change field labels
-- Modify icons and colors
-- Update validation logic
-- Add new field types
+## TypeScript Support
+
+All components and services are fully typed with TypeScript interfaces:
+
+```typescript
+interface StageFieldUpdate {
+  fields: Record<string, any>;
+  notes?: string;
+}
+
+interface StageFieldUpdateResponse {
+  success: boolean;
+  message: string;
+  data?: any;
+  error?: string;
+}
+```
