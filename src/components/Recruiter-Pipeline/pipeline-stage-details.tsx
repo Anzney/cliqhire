@@ -758,12 +758,13 @@ export function PipelineStageDetails({
   
   if (!candidate) return null;
   
-  // Use the currentStage from the API response, fallback to selectedStage or default
-  const currentStage = candidate.currentStage || selectedStage || "Sourcing";
+  // Use selectedStage if provided, otherwise fallback to currentStage or default
+  // This allows viewing any stage, not just the current one
+  const displayStage = selectedStage || candidate.currentStage || "Sourcing";
   
 
   
-  const stageFields = getStageFields(currentStage, candidate);
+  const stageFields = getStageFields(displayStage, candidate);
 
   const handleEditField = (field: StageField) => {
     setEditingField(field.key);
@@ -779,7 +780,7 @@ export function PipelineStageDetails({
       console.warn("API integration not available - updating locally only");
       
       // Update local state - update the nested stage data
-      const stageKey = currentStage.toLowerCase().replace(/\s+/g, '');
+      const stageKey = displayStage.toLowerCase().replace(/\s+/g, '');
       const updatedCandidate = {
         ...candidate,
         [stageKey]: {
@@ -798,10 +799,8 @@ export function PipelineStageDetails({
     setIsUpdating(true);
     
     try {
-      const currentStage = candidate.currentStage || selectedStage || "Sourcing";
-      
-      // Get existing stage data to preserve other fields
-      const stageKey = currentStage.toLowerCase().replace(/\s+/g, '');
+      // Use displayStage for API calls
+      const stageKey = displayStage.toLowerCase().replace(/\s+/g, '');
       const existingStageData = candidate[stageKey] || {};
       
       // Prepare the update data - only update the specific field, preserve others
@@ -817,13 +816,13 @@ export function PipelineStageDetails({
       const response = await RecruiterPipelineService.updateStageFields(
         pipelineId,
         candidate.id,
-        currentStage,
+        displayStage,
         updateData
       );
 
       if (response.success) {
         // Update local state - update the nested stage data
-        const stageKey = currentStage.toLowerCase().replace(/\s+/g, '');
+        const stageKey = displayStage.toLowerCase().replace(/\s+/g, '');
         const updatedCandidate = {
           ...candidate,
           [stageKey]: {
@@ -862,7 +861,7 @@ export function PipelineStageDetails({
           <div className="flex items-center gap-2">
             <CardTitle className="text-lg font-semibold text-gray-900 flex items-center">
               <Target className="h-5 w-5 text-blue-500 mr-2" />
-              Stage Details: {currentStage}
+              Stage Details: {displayStage}
             </CardTitle>
             {!hasApiIntegration && (
               <Badge variant="secondary" className="text-xs">
@@ -872,15 +871,24 @@ export function PipelineStageDetails({
           </div>
           <Badge 
             variant="outline" 
-            className={`${getStageColor(currentStage)} font-medium`}
+            className={`${getStageColor(displayStage)} font-medium`}
           >
-            {currentStage}
+            {displayStage}
           </Badge>
         </div>
       </CardHeader>
       
       <CardContent>
-
+        {displayStage !== candidate.currentStage && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-blue-600" />
+              <p className="text-sm text-blue-800">
+                Viewing previous stage data. You can view and edit historical information, but stage progression is based on the current stage.
+              </p>
+            </div>
+          </div>
+        )}
         
         {stageFields.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
