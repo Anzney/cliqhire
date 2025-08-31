@@ -11,7 +11,7 @@ import { type Job } from "./dummy-data";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { getAllPipelineEntries, getPipelineEntry, type PipelineListItem } from "@/services/recruitmentPipelineService";
+import { getAllPipelineEntries, getPipelineEntry, updateCandidateStage as updateCandidateStageAPI, type PipelineListItem } from "@/services/recruitmentPipelineService";
 
 // Utility function to convert pipeline list data to Job format
 const convertPipelineListDataToJob = (pipelineData: PipelineListItem, isExpanded: boolean = false): Job => {
@@ -419,20 +419,54 @@ export function RecruiterPipeline() {
     }
   };
 
-  const updateCandidateStage = (jobId: string, candidateId: string, newStage: string) => {
-    setJobs(jobs.map(job => {
-      if (job.id === jobId) {
-        return {
-          ...job,
-          candidates: job.candidates.map(candidate => 
-            candidate.id === candidateId 
-              ? { ...candidate, currentStage: newStage }
-              : candidate
-          )
-        };
+  const updateCandidateStage = async (jobId: string, candidateId: string, newStage: string) => {
+    try {
+      // Optimistically update the UI first
+      setJobs(jobs.map(job => {
+        if (job.id === jobId) {
+          return {
+            ...job,
+            candidates: job.candidates.map(candidate => 
+              candidate.id === candidateId 
+                ? { ...candidate, currentStage: newStage }
+                : candidate
+            )
+          };
+        }
+        return job;
+      }));
+
+      // Make API call to update the candidate stage
+      const response = await updateCandidateStageAPI(jobId, candidateId, {
+        newStage,
+        notes: `Stage changed to ${newStage}`
+      });
+
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to update candidate stage');
       }
-      return job;
-    }));
+
+      toast.success(`Successfully moved candidate to ${newStage} stage`);
+    } catch (error: any) {
+      console.error('Error updating candidate stage:', error);
+      
+      // Revert the optimistic update on error
+      setJobs(jobs.map(job => {
+        if (job.id === jobId) {
+          return {
+            ...job,
+            candidates: job.candidates.map(candidate => 
+              candidate.id === candidateId 
+                ? { ...candidate, currentStage: candidate.currentStage }
+                : candidate
+            )
+          };
+        }
+        return job;
+      }));
+      
+      toast.error(error.message || 'Failed to update candidate stage');
+    }
   };
 
   const handlePipelineCreated = async (jobIds: string[], jobData?: any[]) => {

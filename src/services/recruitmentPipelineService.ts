@@ -355,3 +355,54 @@ export const getAllPipelineEntries = async (): Promise<GetAllPipelineEntriesResp
   }
 };
 
+// Interface for stage-specific data
+export interface StageData {
+  screeningDate?: string;
+  screeningNotes?: string;
+  aemsInterviewDate?: string;
+  screeningStatus?: string;
+  technicalAssessment?: string;
+  softSkillsAssessment?: string;
+  overallRating?: number;
+  feedback?: string;
+  // Add other stage-specific fields as needed
+}
+
+// Interface for updating candidate stage request
+export interface UpdateCandidateStageRequest {
+  newStage: string;
+  stageData?: StageData;
+  notes?: string;
+}
+
+// Interface for updating candidate stage response
+export interface UpdateCandidateStageResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    candidateId: string;
+    newStage: string;
+    updatedAt: string;
+  };
+}
+
+/**
+ * Update a candidate's stage in the recruitment pipeline
+ */
+export const updateCandidateStage = async (
+  pipelineId: string,
+  candidateId: string,
+  request: UpdateCandidateStageRequest
+): Promise<UpdateCandidateStageResponse> => {
+  try {
+    const response = await api.patch(
+      `/api/recruiter-pipeline/${pipelineId}/candidate/${candidateId}/stage`,
+      request
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error('Error updating candidate stage:', error);
+    throw new Error(error.response?.data?.message || 'Failed to update candidate stage');
+  }
+};
+

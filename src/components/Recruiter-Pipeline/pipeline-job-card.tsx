@@ -21,7 +21,7 @@ interface PipelineJobCardProps {
   job: Job;
   loadingJobId: string | null;
   onToggleExpansion: (jobId: string) => void;
-  onUpdateCandidateStage: (jobId: string, candidateId: string, newStage: string) => void;
+  onUpdateCandidateStage: (jobId: string, candidateId: string, newStage: string) => Promise<void>;
 }
 
 export function PipelineJobCard({ 
@@ -86,13 +86,13 @@ export function PipelineJobCard({
     });
   };
 
-  const handleConfirmStageChange = () => {
+  const handleConfirmStageChange = async () => {
     if (statusChangeDialog.candidate) {
       // Update local store
       updateCandidateStage(job.id, statusChangeDialog.candidate.id, statusChangeDialog.newStage);
       
-      // Call the parent's update function (for future API integration)
-      onUpdateCandidateStage(job.id, statusChangeDialog.candidate.id, statusChangeDialog.newStage);
+      // Call the parent's update function (which now includes API integration)
+      await onUpdateCandidateStage(job.id, statusChangeDialog.candidate.id, statusChangeDialog.newStage);
       
       // Close the dialog
       setStatusChangeDialog({ isOpen: false, candidate: null, currentStage: '', newStage: '' });
