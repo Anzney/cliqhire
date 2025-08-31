@@ -160,7 +160,7 @@ export function PipelineJobCard({
                       {job.pipelineStatus}
                     </Badge>
                   )}
-                  {job.priority && (
+                  {/* {job.priority && (
                     <Badge 
                       variant="outline" 
                       className={`${
@@ -171,7 +171,7 @@ export function PipelineJobCard({
                     >
                       {job.priority}
                     </Badge>
-                  )}
+                  )} */}
                 </div>
               </div>
             </div>
