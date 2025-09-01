@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AddCandidateDialog } from "./add-candidate-dialog";
 import { Button } from "@/components/ui/button";
 import { 
   pipelineStages, 
@@ -33,6 +34,7 @@ export function PipelineJobCard({
 }: PipelineJobCardProps) {
   const [selectedCandidate, setSelectedCandidate] = React.useState<Candidate | null>(null);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [isAddCandidateOpen, setIsAddCandidateOpen] = React.useState(false);
   
   // Status change confirmation dialog state
   const [statusChangeDialog, setStatusChangeDialog] = React.useState<{
@@ -106,8 +108,15 @@ export function PipelineJobCard({
 
   const handleAddCandidate = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering the card expansion
-    console.log('Add candidate for job:', job.id);
-    // TODO: Implement add candidate functionality
+    setIsAddCandidateOpen(true);
+  };
+
+  const handleAddExistingCandidate = () => {
+    console.log('Add existing candidate to job:', job.id);
+  };
+
+  const handleAddNewCandidate = () => {
+    console.log('Add new candidate to job:', job.id);
   };
 
   return (
@@ -257,6 +266,15 @@ export function PipelineJobCard({
         candidateName={statusChangeDialog.candidate?.name || ''}
         currentStage={statusChangeDialog.currentStage}
         newStage={statusChangeDialog.newStage}
+      />
+
+      {/* Add Candidate Dialog */}
+      <AddCandidateDialog
+        open={isAddCandidateOpen}
+        onOpenChange={setIsAddCandidateOpen}
+        onAddExisting={handleAddExistingCandidate}
+        onAddNew={handleAddNewCandidate}
+        jobTitle={job.title}
       />
     </>
   );
