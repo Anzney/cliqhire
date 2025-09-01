@@ -1,12 +1,13 @@
 "use client";
 
 import React from "react";
-import { ChevronDown, ChevronRight, Users, MapPin, DollarSign, Briefcase, Building2, Tag, Pin, Loader2, Eye } from "lucide-react";
+import { ChevronDown, EllipsisVertical, ChevronRight, Users, MapPin, DollarSign, Briefcase, Building2, Tag, Pin, Loader2, Eye, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import { 
   pipelineStages, 
   getStageColor, 
@@ -103,6 +104,12 @@ export function PipelineJobCard({
     setStatusChangeDialog({ isOpen: false, candidate: null, currentStage: '', newStage: '' });
   };
 
+  const handleAddCandidate = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the card expansion
+    console.log('Add candidate for job:', job.id);
+    // TODO: Implement add candidate functionality
+  };
+
   return (
     <>
       <Card className="overflow-hidden shadow-sm border-gray-200">
@@ -175,6 +182,16 @@ export function PipelineJobCard({
                 </div>
               </div>
             </div>
+            
+            {/* Add Candidate Button */}
+            <Button
+              onClick={handleAddCandidate}
+              size="sm"
+              className="ml-4  text-white"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Add Candidate
+            </Button>
           </div>
         </CardHeader>
 
@@ -285,11 +302,7 @@ function CandidateCard({ candidate, jobId, onStageChange, onViewCandidate, onVie
                onClick={(e) => e.stopPropagation()}
                title="More options"
              >
-               <div className="flex flex-col space-y-0.5">
-                 <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                 <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                 <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-               </div>
+              <EllipsisVertical className="h-4 w-4" />
              </button>
            </DropdownMenuTrigger>
            <DropdownMenuContent align="end" className="w-40">
@@ -337,7 +350,7 @@ function CandidateCard({ candidate, jobId, onStageChange, onViewCandidate, onVie
             </SelectContent>
           </Select>
           
-          <Select
+          {/* <Select
             value={candidate.subStatus || "Select"}
             onValueChange={(value) => console.log('Sub-status changed:', value)}
           >
@@ -350,7 +363,7 @@ function CandidateCard({ candidate, jobId, onStageChange, onViewCandidate, onVie
               <SelectItem value="Pending" className="text-xs">Pending</SelectItem>
               <SelectItem value="Completed" className="text-xs">Completed</SelectItem>
             </SelectContent>
-          </Select>
+          </Select> */}
         </div>
         
         {/* Right side - Two avatars */}
