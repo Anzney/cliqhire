@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AddCandidateDialog } from "./add-candidate-dialog";
+import { CreateCandidateDialog, type CreateCandidateValues } from "./create-candidate-dialog";
 import { Button } from "@/components/ui/button";
 import { 
   pipelineStages, 
@@ -35,6 +36,7 @@ export function PipelineJobCard({
   const [selectedCandidate, setSelectedCandidate] = React.useState<Candidate | null>(null);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [isAddCandidateOpen, setIsAddCandidateOpen] = React.useState(false);
+  const [isCreateCandidateOpen, setIsCreateCandidateOpen] = React.useState(false);
   
   // Status change confirmation dialog state
   const [statusChangeDialog, setStatusChangeDialog] = React.useState<{
@@ -116,7 +118,12 @@ export function PipelineJobCard({
   };
 
   const handleAddNewCandidate = () => {
-    console.log('Add new candidate to job:', job.id);
+    setIsCreateCandidateOpen(true);
+  };
+
+  const handleCreateCandidateSubmit = (values: CreateCandidateValues) => {
+    console.log('Create candidate for job:', job.id, values);
+    // TODO: integrate API call
   };
 
   return (
@@ -275,6 +282,12 @@ export function PipelineJobCard({
         onAddExisting={handleAddExistingCandidate}
         onAddNew={handleAddNewCandidate}
         jobTitle={job.title}
+      />
+
+      <CreateCandidateDialog
+        open={isCreateCandidateOpen}
+        onOpenChange={setIsCreateCandidateOpen}
+        onSubmit={handleCreateCandidateSubmit}
       />
     </>
   );
