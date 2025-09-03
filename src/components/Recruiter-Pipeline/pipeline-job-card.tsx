@@ -30,6 +30,7 @@ import {
 import { CandidateDetailsDialog } from "./candidate-details-dialog";
 import { StatusChangeConfirmationDialog } from "./status-change-confirmation-dialog";
 import { useStageStore } from "./stage-store";
+import { useRouter } from "next/navigation";
 
 interface PipelineJobCardProps {
   job: Job;
@@ -44,6 +45,7 @@ export function PipelineJobCard({
   onToggleExpansion, 
   onUpdateCandidateStage 
 }: PipelineJobCardProps) {
+  const router = useRouter();
   const [selectedCandidate, setSelectedCandidate] = React.useState<Candidate | null>(null);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [isAddCandidateOpen, setIsAddCandidateOpen] = React.useState(false);
@@ -255,6 +257,7 @@ export function PipelineJobCard({
                   className="mt-2"
                   onClick={(e) => {
                     e.stopPropagation();
+                    router.push(`/reactruterpipeline/${job.id}`);
                   }}
                 >
                   View Table
