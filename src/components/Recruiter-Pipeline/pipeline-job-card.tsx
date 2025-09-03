@@ -12,6 +12,14 @@ import { AddCandidateDialog } from "./add-candidate-dialog";
 import { AddExistingCandidateDialog } from "@/components/common/add-existing-candidate-dialog";
 import { CreateCandidateDialog, type CreateCandidateValues } from "./create-candidate-dialog";
 import { Button } from "@/components/ui/button";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 import { deleteCandidateFromPipeline } from "@/services/recruitmentPipelineService";
 import { 
   pipelineStages, 
@@ -278,25 +286,117 @@ export function PipelineJobCard({
               })()}
             </div>
 
-            {/* Candidate Cards - Fixed height with scrollable content */}
+            {/* Candidates Table - Fixed height with scrollable content */}
             <div className="max-h-[300px] overflow-y-auto border-2 border-blue-200 rounded-md p-2 bg-gray-50" style={{
               scrollbarWidth: 'thin',
               scrollbarColor: '#d1d5db #f3f4f6'
             }}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pb-4">
-                {job.candidates.map((candidate) => (
-                  <CandidateCard
-                    key={candidate.id}
-                    candidate={candidate}
-                    jobId={job.id}
-                    onStageChange={handleStageChange}
-                    onViewCandidate={handleViewCandidate}
-                    onViewResume={(candidate) => console.log('View resume for:', candidate.name)}
-                    onDeleteCandidate={handleDeleteCandidate}
-                    getCurrentStage={getCandidateStage}
-                  />
-                ))}
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[44px]"></TableHead>
+                    <TableHead>Candidate</TableHead>
+                    <TableHead>Current Position</TableHead>
+                    <TableHead className="w-[200px]">Stage</TableHead>
+                    <TableHead className="w-[90px]">Reviewers</TableHead>
+                    <TableHead className="w-[60px]"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {job.candidates.map((candidate) => (
+                    <TableRow key={candidate.id} className="bg-white">
+                      <TableCell>
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={candidate.avatar} />
+                          <AvatarFallback className="text-xs bg-gray-200">
+                            {candidate.name ? candidate.name.split(' ').map(n => n[0]).join('') : 'NA'}
+                          </AvatarFallback>
+                        </Avatar>
+                      </TableCell>
+                      <TableCell className="font-medium truncate max-w-[220px]">
+                        {candidate.name || 'Unknown Candidate'}
+                      </TableCell>
+                      <TableCell className="truncate max-w-[260px] text-gray-700">
+                        {candidate.currentJobTitle || 'Position not specified'}
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={getCandidateStage(job.id, candidate.id) || candidate.currentStage}
+                          onValueChange={(value) => handleStageChange(candidate, value)}
+                        >
+                          <SelectTrigger className="h-8 text-sm px-2">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {pipelineStages.map((stage) => (
+                              <SelectItem key={stage} value={stage} className="text-xs">
+                                {stage}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-1">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src="/api/placeholder/24/24" />
+                            <AvatarFallback className="text-xs bg-blue-200">JD</AvatarFallback>
+                          </Avatar>
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src="/api/placeholder/24/24" />
+                            <AvatarFallback className="text-xs bg-green-200">HR</AvatarFallback>
+                          </Avatar>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                              onClick={(e) => e.stopPropagation()}
+                              title="More options"
+                            >
+                              <EllipsisVertical className="h-4 w-4" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewCandidate(candidate);
+                              }}
+                              className="cursor-pointer"
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              View & Edit Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                console.log('View resume for:', candidate.name);
+                              }}
+                              className="cursor-pointer"
+                            >
+                              <Briefcase className="h-4 w-4 mr-2" />
+                              View Resume
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteCandidate(candidate);
+                              }}
+                              className="cursor-pointer"
+                            >
+                              <Trash2 className="size-4 mr-2 text-red-500" />
+                              Delete Candidate
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         )}
@@ -383,118 +483,4 @@ export function PipelineJobCard({
   );
 }
 
-interface CandidateCardProps {
-  candidate: Candidate;
-  jobId: string;
-  onStageChange: (candidate: Candidate, newStage: string) => void;
-  onViewCandidate: (candidate: Candidate) => void;
-  onViewResume: (candidate: Candidate) => void;
-  onDeleteCandidate: (candidate: Candidate) => void;
-  getCurrentStage: (jobId: string, candidateId: string) => string | null;
-}
-
-function CandidateCard({ candidate, jobId, onStageChange, onViewCandidate, onViewResume, onDeleteCandidate, getCurrentStage }: CandidateCardProps) {
-  return (
-    <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-100">
-      {/* Top Section */}
-      <div className="flex items-start justify-between mb-3">
-        {/* Left side - Avatar, Name, Current Position */}
-        <div className="flex items-start space-x-2 flex-1 min-w-0">
-          <Avatar className="h-8 w-8 flex-shrink-0">
-            <AvatarImage src={candidate.avatar} />
-            <AvatarFallback className="text-xs bg-gray-200">
-              {candidate.name ? candidate.name.split(' ').map(n => n[0]).join('') : 'NA'}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {candidate.name || 'Unknown Candidate'}
-            </p>
-            <p className="text-xs text-gray-600 truncate">
-              {candidate.currentJobTitle || 'Position not specified'}
-            </p>
-          </div>
-        </div>
-        
-                 {/* Right side - Three-dot menu */}
-         <DropdownMenu>
-           <DropdownMenuTrigger asChild>
-             <button
-               className="p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
-               onClick={(e) => e.stopPropagation()}
-               title="More options"
-             >
-              <EllipsisVertical className="h-4 w-4" />
-             </button>
-           </DropdownMenuTrigger>
-           <DropdownMenuContent align="end" className="w-40">
-             <DropdownMenuItem 
-               onClick={(e) => {
-                 e.stopPropagation();
-                 onViewCandidate(candidate);
-               }}
-               className="cursor-pointer"
-             >
-               <Eye className="h-4 w-4 mr-2" />
-               View & Edit Details
-             </DropdownMenuItem>
-             <DropdownMenuItem 
-               onClick={(e) => {
-                 e.stopPropagation();
-                 onViewResume(candidate);
-               }}
-               className="cursor-pointer"
-             >
-               <Briefcase className="h-4 w-4 mr-2" />
-               View Resume
-             </DropdownMenuItem>
-                           <DropdownMenuItem 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteCandidate(candidate);
-                }}
-                className="cursor-pointer"
-              >
-                                <Trash2 className="size-4 mr-2 text-red-500" />
-                                Delete Candidate
-                              </DropdownMenuItem>
-           </DropdownMenuContent>
-         </DropdownMenu>
-      </div>
-      
-      {/* Bottom Section */}
-      <div className="flex items-center justify-between">
-        {/* Left side - Status dropdowns */}
-        <div className="flex items-center space-x-2 flex-1">
-          <Select
-            value={getCurrentStage(jobId, candidate.id) || candidate.currentStage}
-            onValueChange={(value) => onStageChange(candidate, value)}
-          >
-            <SelectTrigger className="h-6 text-xs px-2">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {pipelineStages.map((stage) => (
-                <SelectItem key={stage} value={stage} className="text-xs">
-                  {stage}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        {/* Right side - Two avatars */}
-        <div className="flex items-center space-x-1 flex-shrink-0 ml-1">
-          <Avatar className="h-6 w-6">
-            <AvatarImage src="/api/placeholder/24/24" />
-            <AvatarFallback className="text-xs bg-blue-200">JD</AvatarFallback>
-          </Avatar>
-          <Avatar className="h-6 w-6">
-            <AvatarImage src="/api/placeholder/24/24" />
-            <AvatarFallback className="text-xs bg-green-200">HR</AvatarFallback>
-          </Avatar>
-        </div>
-      </div>
-    </div>
-  );
-}
+// Candidate card view removed and replaced by table rendering above
