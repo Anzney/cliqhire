@@ -406,3 +406,32 @@ export const updateCandidateStage = async (
   }
 };
 
+// Interface for delete candidate response
+export interface DeleteCandidateResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    pipelineId: string;
+    candidateId: string;
+    removedAt: string;
+  };
+}
+
+/**
+ * Remove a candidate from the recruitment pipeline
+ */
+export const deleteCandidateFromPipeline = async (
+  pipelineId: string,
+  candidateId: string
+): Promise<DeleteCandidateResponse> => {
+  try {
+    const response = await api.delete(
+      `/api/recruiter-pipeline/${pipelineId}/candidate/${candidateId}`
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error('Error deleting candidate from pipeline:', error);
+    throw new Error(error.response?.data?.message || 'Failed to delete candidate from pipeline');
+  }
+};
+

@@ -24,6 +24,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { tempCandidateService, CreateTempCandidateRequest } from "@/services/tempCandidateService";
 
 const CreateCandidateSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -37,10 +38,11 @@ export type CreateCandidateValues = z.infer<typeof CreateCandidateSchema>;
 interface CreateCandidateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (values: CreateCandidateValues) => void;
+  pipelineId: string;
+  onSubmit?: (values: CreateCandidateValues) => void;
 }
 
-export function CreateCandidateDialog({ open, onOpenChange, onSubmit }: CreateCandidateDialogProps) {
+export function CreateCandidateDialog({ open, onOpenChange, pipelineId, onSubmit }: CreateCandidateDialogProps) {
   const form = useForm<CreateCandidateValues>({
     resolver: zodResolver(CreateCandidateSchema),
     defaultValues: {
@@ -51,10 +53,35 @@ export function CreateCandidateDialog({ open, onOpenChange, onSubmit }: CreateCa
     },
   });
 
-  const handleSubmit = (values: CreateCandidateValues) => {
-    onSubmit(values);
-    onOpenChange(false);
-    form.reset();
+  const handleSubmit = async (values: CreateCandidateValues) => {
+    try {
+      console.log('Form values:', values);
+      console.log('Pipeline ID:', pipelineId);
+      console.log('Pipeline ID type:', typeof pipelineId);
+      console.log('Pipeline ID length:', pipelineId?.length);
+      
+      // Call the API service with pipelineId included
+      const requestData = {
+        ...values,
+        pipelineId: pipelineId,
+      };
+      console.log('Request data:', requestData);
+      
+      const result = await tempCandidateService.createTempCandidate(requestData);
+      console.log('API response:', result);
+      
+      // Call the optional onSubmit callback if provided
+      if (onSubmit) {
+        onSubmit(values);
+      }
+      
+      onOpenChange(false);
+      form.reset();
+    } catch (error) {
+      console.error('Error creating temporary candidate:', error);
+      // You might want to show an error message to the user here
+      alert('Error creating candidate. Please check the console for details.');
+    }
   };
 
   return (

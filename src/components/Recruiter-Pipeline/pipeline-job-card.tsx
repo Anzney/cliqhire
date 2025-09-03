@@ -1,15 +1,18 @@
 "use client";
 
 import React from "react";
-import { ChevronDown, EllipsisVertical, ChevronRight, Users, MapPin, DollarSign, Briefcase, Building2, Tag, Pin, Loader2, Eye, Plus } from "lucide-react";
+import { ChevronDown, EllipsisVertical, ChevronRight, Users, MapPin, DollarSign, Briefcase, Building2, Tag, Pin, Loader2, Eye, Plus, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AddCandidateDialog } from "./add-candidate-dialog";
+import { AddExistingCandidateDialog } from "@/components/common/add-existing-candidate-dialog";
 import { CreateCandidateDialog, type CreateCandidateValues } from "./create-candidate-dialog";
 import { Button } from "@/components/ui/button";
+import { deleteCandidateFromPipeline } from "@/services/recruitmentPipelineService";
 import { 
   pipelineStages, 
   getStageColor, 
@@ -49,6 +52,15 @@ export function PipelineJobCard({
     candidate: null,
     currentStage: '',
     newStage: '',
+  });
+
+  // Delete candidate confirmation dialog state
+  const [deleteCandidateDialog, setDeleteCandidateDialog] = React.useState<{
+    isOpen: boolean;
+    candidate: Candidate | null;
+  }>({
+    isOpen: false,
+    candidate: null,
   });
 
   // Local stage store
@@ -108,13 +120,41 @@ export function PipelineJobCard({
     setStatusChangeDialog({ isOpen: false, candidate: null, currentStage: '', newStage: '' });
   };
 
+  const handleDeleteCandidate = (candidate: Candidate) => {
+    setDeleteCandidateDialog({
+      isOpen: true,
+      candidate,
+    });
+  };
+
+  const handleConfirmDeleteCandidate = async () => {
+    if (deleteCandidateDialog.candidate) {
+      try {
+        // Call API to remove candidate from pipeline
+        await deleteCandidateFromPipeline(job.id, deleteCandidateDialog.candidate.id);
+        
+        // Close the dialog
+        setDeleteCandidateDialog({ isOpen: false, candidate: null });
+        
+        // TODO: Refresh the job data or trigger a reload
+      } catch (error) {
+        console.error('Error deleting candidate:', error);
+      }
+    }
+  };
+
+  const handleCancelDeleteCandidate = () => {
+    setDeleteCandidateDialog({ isOpen: false, candidate: null });
+  };
+
   const handleAddCandidate = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering the card expansion
     setIsAddCandidateOpen(true);
   };
 
   const handleAddExistingCandidate = () => {
-    console.log('Add existing candidate to job:', job.id);
+    // Open the shared Add Existing Candidate dialog
+    setIsAddExistingOpen(true);
   };
 
   const handleAddNewCandidate = () => {
@@ -123,8 +163,12 @@ export function PipelineJobCard({
 
   const handleCreateCandidateSubmit = (values: CreateCandidateValues) => {
     console.log('Create candidate for job:', job.id, values);
+    console.log('Job object:', job);
+    console.log('Job ID type:', typeof job.id);
     // TODO: integrate API call
   };
+
+  const [isAddExistingOpen, setIsAddExistingOpen] = React.useState(false);
 
   return (
     <>
@@ -239,7 +283,7 @@ export function PipelineJobCard({
               scrollbarWidth: 'thin',
               scrollbarColor: '#d1d5db #f3f4f6'
             }}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pb-4">
                 {job.candidates.map((candidate) => (
                   <CandidateCard
                     key={candidate.id}
@@ -247,7 +291,8 @@ export function PipelineJobCard({
                     jobId={job.id}
                     onStageChange={handleStageChange}
                     onViewCandidate={handleViewCandidate}
-                onViewResume={(candidate) => console.log('View resume for:', candidate.name)}
+                    onViewResume={(candidate) => console.log('View resume for:', candidate.name)}
+                    onDeleteCandidate={handleDeleteCandidate}
                     getCurrentStage={getCandidateStage}
                   />
                 ))}
@@ -284,11 +329,56 @@ export function PipelineJobCard({
         jobTitle={job.title}
       />
 
+      {/* Shared Existing Candidate selection dialog */}
+      <AddExistingCandidateDialog
+        jobId={job.id}
+        jobTitle={job.title}
+        open={isAddExistingOpen}
+        onOpenChange={setIsAddExistingOpen}
+        isPipeline={true}
+        pipelineId={job.id}
+        onCandidatesAdded={() => {
+          // Refresh the job data or trigger a reload
+          console.log('Candidates added to pipeline, refreshing...');
+        }}
+      />
+
       <CreateCandidateDialog
         open={isCreateCandidateOpen}
         onOpenChange={setIsCreateCandidateOpen}
+        pipelineId={job.id}
         onSubmit={handleCreateCandidateSubmit}
       />
+      
+      {/* Debug info */}
+      {isCreateCandidateOpen && (
+        <div style={{display: 'none'}}>
+          Debug: job.id = {job.id}, job.title = {job.title}
+        </div>
+      )}
+
+      {/* Delete Candidate Confirmation Dialog */}
+      <Dialog open={deleteCandidateDialog.isOpen} onOpenChange={(open) => setDeleteCandidateDialog(prev => ({ ...prev, isOpen: open }))}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Candidate</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete <strong>{deleteCandidateDialog.candidate?.name}</strong> from this pipeline? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelDeleteCandidate}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleConfirmDeleteCandidate}
+            >
+              Delete Candidate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
@@ -299,10 +389,11 @@ interface CandidateCardProps {
   onStageChange: (candidate: Candidate, newStage: string) => void;
   onViewCandidate: (candidate: Candidate) => void;
   onViewResume: (candidate: Candidate) => void;
+  onDeleteCandidate: (candidate: Candidate) => void;
   getCurrentStage: (jobId: string, candidateId: string) => string | null;
 }
 
-function CandidateCard({ candidate, jobId, onStageChange, onViewCandidate, onViewResume, getCurrentStage }: CandidateCardProps) {
+function CandidateCard({ candidate, jobId, onStageChange, onViewCandidate, onViewResume, onDeleteCandidate, getCurrentStage }: CandidateCardProps) {
   return (
     <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-100">
       {/* Top Section */}
@@ -345,7 +436,7 @@ function CandidateCard({ candidate, jobId, onStageChange, onViewCandidate, onVie
                className="cursor-pointer"
              >
                <Eye className="h-4 w-4 mr-2" />
-               View Details
+               View & Edit Details
              </DropdownMenuItem>
              <DropdownMenuItem 
                onClick={(e) => {
@@ -357,6 +448,16 @@ function CandidateCard({ candidate, jobId, onStageChange, onViewCandidate, onVie
                <Briefcase className="h-4 w-4 mr-2" />
                View Resume
              </DropdownMenuItem>
+                           <DropdownMenuItem 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteCandidate(candidate);
+                }}
+                className="cursor-pointer"
+              >
+                                <Trash2 className="size-4 mr-2 text-red-500" />
+                                Delete Candidate
+                              </DropdownMenuItem>
            </DropdownMenuContent>
          </DropdownMenu>
       </div>
@@ -380,21 +481,6 @@ function CandidateCard({ candidate, jobId, onStageChange, onViewCandidate, onVie
               ))}
             </SelectContent>
           </Select>
-          
-          {/* <Select
-            value={candidate.subStatus || "Select"}
-            onValueChange={(value) => console.log('Sub-status changed:', value)}
-          >
-            <SelectTrigger className="h-6 text-xs px-2">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Select" className="text-xs">Select</SelectItem>
-              <SelectItem value="In Progress" className="text-xs">In Progress</SelectItem>
-              <SelectItem value="Pending" className="text-xs">Pending</SelectItem>
-              <SelectItem value="Completed" className="text-xs">Completed</SelectItem>
-            </SelectContent>
-          </Select> */}
         </div>
         
         {/* Right side - Two avatars */}

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader, Plus } from "lucide-react";
 import { Candidate } from "@/services/candidateService";
 import { Button } from "@/components/ui/button";
-import { AddCandidateDialog } from "./add-candidate-dialog";
+import { AddExistingCandidateDialog } from "@/components/common/add-existing-candidate-dialog";
 import { api } from "@/lib/axios-config";
 import { initializeAuth } from "@/lib/axios-config";
 
@@ -105,7 +105,7 @@ export const JobCandidatesList = forwardRef<JobCandidatesListRef, JobCandidatesL
           ) : (
             <div className="flex flex-col items-center justify-center h-48 text-gray-500 gap-3">
               <div>No candidates have been added to this job yet.</div>
-              <AddCandidateDialog
+              <AddExistingCandidateDialog
                 jobId={jobId}
                 jobTitle={jobTitle}
                 onCandidatesAdded={async () => {
