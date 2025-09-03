@@ -235,31 +235,32 @@ export function PipelineJobCard({
                       {job.pipelineStatus}
                     </Badge>
                   )}
-                  {/* {job.priority && (
-                    <Badge 
-                      variant="outline" 
-                      className={`${
-                        job.priority === 'High' ? 'bg-red-100 text-red-700 border-red-200' :
-                        job.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
-                        'bg-green-100 text-green-700 border-green-200'
-                      }`}
-                    >
-                      {job.priority}
-                    </Badge>
-                  )} */}
                 </div>
               </div>
             </div>
             
-            {/* Add Candidate Button */}
-            <Button
-              onClick={handleAddCandidate}
-              size="sm"
-              className="ml-4  text-white"
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Add Candidate
-            </Button>
+            {/* Add Candidate + View Table (stacked) */}
+            <div className="flex flex-col items-start ml-4">
+              <Button
+                onClick={handleAddCandidate}
+                size="sm"
+                className=" text-white"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Candidate
+              </Button>
+              {job.isExpanded && (
+                <Button
+                  size="sm"
+                  className="mt-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  View Table
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
 
