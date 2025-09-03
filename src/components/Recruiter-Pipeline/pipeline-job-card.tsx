@@ -298,8 +298,7 @@ export function PipelineJobCard({
                     <TableHead>Candidate</TableHead>
                     <TableHead>Current Position</TableHead>
                     <TableHead className="w-[200px]">Stage</TableHead>
-                    <TableHead className="w-[90px]">Reviewers</TableHead>
-                    <TableHead className="w-[60px]"></TableHead>
+                    <TableHead className="w-[90px]">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -335,18 +334,6 @@ export function PipelineJobCard({
                             ))}
                           </SelectContent>
                         </Select>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-1">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src="/api/placeholder/24/24" />
-                            <AvatarFallback className="text-xs bg-blue-200">JD</AvatarFallback>
-                          </Avatar>
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src="/api/placeholder/24/24" />
-                            <AvatarFallback className="text-xs bg-green-200">HR</AvatarFallback>
-                          </Avatar>
-                        </div>
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
