@@ -2,7 +2,6 @@
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Loader2, ChevronLeft, Users, MapPin, DollarSign, Building2 } from "lucide-react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,7 +17,8 @@ import {
 import { Eye, Briefcase, Trash2, EllipsisVertical } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { pipelineStages, getStageColor, type Job, type Candidate } from "@/components/Recruiter-Pipeline/dummy-data";
-import { getPipelineEntry } from "@/services/recruitmentPipelineService";
+import { getPipelineEntry, updateCandidateStage, deleteCandidateFromPipeline } from "@/services/recruitmentPipelineService";
+import { CandidateDetailsDialog } from "@/components/Recruiter-Pipeline/candidate-details-dialog";
 
 const Page = () => {
   const params = useParams();
@@ -27,6 +27,8 @@ const Page = () => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [job, setJob] = React.useState<Job | null>(null);
+  const [selectedCandidate, setSelectedCandidate] = React.useState<Candidate | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -121,133 +123,147 @@ const Page = () => {
         </div>
       </div>
 
-      <Card className="overflow-hidden shadow-sm border-gray-200">
-        <CardHeader className="pt-4 pb-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex-1">
-                <div className="flex items-center space-x-2">
-                  <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
-                  <Building2 className="h-4 w-4 text-gray-400" />
-                  <span className="text-sm text-gray-600">{job.clientName}</span>
-                </div>
-                <div className="flex items-center space-x-6 mt-2 text-sm text-gray-600">
-                  <div className="flex items-center space-x-1">
-                    <MapPin className="h-4 w-4 text-red-500" />
-                    <span>{job.location}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <DollarSign className="h-4 w-4 text-yellow-500" />
-                    <span>{job.salaryRange}</span>
-                  </div>
-                  <Badge variant="outline" className="bg-gray-100 text-gray-700">
-                    {job.jobType}
-                  </Badge>
-                  <div className="flex items-center space-x-1">
-                    <Users className="h-4 w-4 text-purple-500" />
-                    <span>{job.totalCandidates || job.candidates.length} candidates</span>
-                  </div>
-                  {job.pipelineStatus && (
-                    <Badge 
-                      variant="outline" 
-                      className={`${
-                        job.pipelineStatus === 'Active' ? 'bg-green-100 text-green-700 border-green-200' :
-                        job.pipelineStatus === 'Closed' ? 'bg-red-100 text-red-700 border-red-200' :
-                        job.pipelineStatus === 'On Hold' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
-                        'bg-gray-100 text-gray-700 border-gray-200'
-                      }`}
-                    >
-                      {job.pipelineStatus}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            </div>
+      {/* Job Header (not inside any card) */}
+      <div className="">
+        <div className="flex items-center space-x-2">
+          <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
+          <Building2 className="h-4 w-4 text-gray-400" />
+          <span className="text-sm text-gray-600">{job.clientName}</span>
+        </div>
+        <div className="flex items-center space-x-6 mt-2 text-sm text-gray-600">
+          <div className="flex items-center space-x-1">
+            <MapPin className="h-4 w-4 text-red-500" />
+            <span>{job.location}</span>
           </div>
-        </CardHeader>
+          <div className="flex items-center space-x-1">
+            <DollarSign className="h-4 w-4 text-yellow-500" />
+            <span>{job.salaryRange}</span>
+          </div>
+          <Badge variant="outline" className="bg-gray-100 text-gray-700">
+            {job.jobType}
+          </Badge>
+          <div className="flex items-center space-x-1">
+            <Users className="h-4 w-4 text-purple-500" />
+            <span>{job.totalCandidates || job.candidates.length} candidates</span>
+          </div>
+          {job.pipelineStatus && (
+            <Badge 
+              variant="outline" 
+              className={`${
+                job.pipelineStatus === 'Active' ? 'bg-green-100 text-green-700 border-green-200' :
+                job.pipelineStatus === 'Closed' ? 'bg-red-100 text-red-700 border-red-200' :
+                job.pipelineStatus === 'On Hold' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
+                'bg-gray-100 text-gray-700 border-gray-200'
+              }`}
+            >
+              {job.pipelineStatus}
+            </Badge>
+          )}
+        </div>
+      </div>
 
-        <CardContent className="pt-0">
-          <div className="border-2 border-blue-200 rounded-md p-2 bg-gray-50">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[44px]"></TableHead>
-                  <TableHead>Candidate</TableHead>
-                  <TableHead>Current Position</TableHead>
-                  <TableHead className="w-[200px]">Stage</TableHead>
-                  <TableHead className="w-[90px]">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {job.candidates.map((candidate) => (
-                  <TableRow key={candidate.id} className="bg-white">
-                    <TableCell>
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={candidate.avatar} />
-                        <AvatarFallback className="text-xs bg-gray-200">
-                          {candidate.name ? candidate.name.split(' ').map(n => n[0]).join('') : 'NA'}
-                        </AvatarFallback>
-                      </Avatar>
-                    </TableCell>
-                    <TableCell className="font-medium truncate max-w-[220px]">
-                      {candidate.name || 'Unknown Candidate'}
-                    </TableCell>
-                    <TableCell className="truncate max-w-[260px] text-gray-700">
-                      {candidate.currentJobTitle || 'Position not specified'}
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        value={candidate.currentStage}
-                        onValueChange={(value) => {
-                          // Future: integrate update via API
-                          console.log('Change stage', candidate.id, value);
-                        }}
+      {/* Candidate Table (not inside any card) */}
+      <div className="border-2 border-blue-200 rounded-md p-2 bg-gray-50">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[44px]"></TableHead>
+              <TableHead>Candidate</TableHead>
+              <TableHead>Current Position</TableHead>
+              <TableHead className="w-[200px]">Stage</TableHead>
+              <TableHead className="w-[90px]">Action</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {job.candidates.map((candidate) => (
+              <TableRow key={candidate.id} className="bg-white">
+                <TableCell>
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={candidate.avatar} />
+                    <AvatarFallback className="text-xs bg-gray-200">
+                      {candidate.name ? candidate.name.split(' ').map(n => n[0]).join('') : 'NA'}
+                    </AvatarFallback>
+                  </Avatar>
+                </TableCell>
+                <TableCell className="font-medium truncate max-w-[220px]">
+                  {candidate.name || 'Unknown Candidate'}
+                </TableCell>
+                <TableCell className="truncate max-w-[260px] text-gray-700">
+                  {candidate.currentJobTitle || 'Position not specified'}
+                </TableCell>
+                <TableCell>
+                  <Select
+                    value={candidate.currentStage}
+                    onValueChange={async (value) => {
+                      try {
+                        await updateCandidateStage(job.id, candidate.id, { newStage: value });
+                        setJob((prev) => prev ? {
+                          ...prev,
+                          candidates: prev.candidates.map(c => c.id === candidate.id ? { ...c, currentStage: value } : c)
+                        } : prev);
+                      } catch (e) {
+                        console.error('Failed to update stage', e);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="h-8 text-sm px-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {pipelineStages.map((stage) => (
+                        <SelectItem key={stage} value={stage} className="text-xs">
+                          {stage}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                        title="More options"
                       >
-                        <SelectTrigger className="h-8 text-sm px-2">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {pipelineStages.map((stage) => (
-                            <SelectItem key={stage} value={stage} className="text-xs">
-                              {stage}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                            title="More options"
-                          >
-                            <EllipsisVertical className="h-4 w-4" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuItem className="cursor-pointer">
-                            <Eye className="h-4 w-4 mr-2" />
-                            View & Edit Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="cursor-pointer">
-                            <Briefcase className="h-4 w-4 mr-2" />
-                            View Resume
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="cursor-pointer">
-                            <Trash2 className="size-4 mr-2 text-red-500" />
-                            Delete Candidate
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                        <EllipsisVertical className="h-4 w-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => { setSelectedCandidate(candidate); setIsDialogOpen(true); }}>
+                        <Eye className="h-4 w-4 mr-2" />
+                        View & Edit Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => console.log('View resume for:', candidate.name)}>
+                        <Briefcase className="h-4 w-4 mr-2" />
+                        View Resume
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer" onClick={async () => {
+                        try {
+                          await deleteCandidateFromPipeline(job.id, candidate.id);
+                          setJob((prev) => prev ? { ...prev, candidates: prev.candidates.filter(c => c.id !== candidate.id) } : prev);
+                        } catch (e) {
+                          console.error('Failed to delete candidate', e);
+                        }
+                      }}>
+                        <Trash2 className="size-4 mr-2 text-red-500" />
+                        Delete Candidate
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Candidate Details Dialog */}
+      <CandidateDetailsDialog
+        candidate={selectedCandidate}
+        isOpen={isDialogOpen}
+        onClose={() => { setIsDialogOpen(false); setSelectedCandidate(null); }}
+        pipelineId={job.id}
+      />
     </div>
   );
 };
