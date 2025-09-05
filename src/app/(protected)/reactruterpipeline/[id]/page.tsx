@@ -74,6 +74,9 @@ const Page = () => {
     newConnection: null,
   });
 
+  // Filter state for stage filtering
+  const [selectedStageFilter, setSelectedStageFilter] = React.useState<string | null>(null);
+
   React.useEffect(() => {
     let isMounted = true;
     const load = async () => {
@@ -323,6 +326,27 @@ const Page = () => {
     setConnectionChangeDialog({ isOpen: false, candidate: null, newConnection: null });
   };
 
+  // Function to get filtered candidates based on selected stage
+  const getFilteredCandidates = () => {
+    if (!selectedStageFilter) {
+      return job?.candidates || [];
+    }
+    return (job?.candidates || []).filter(candidate => {
+      return candidate.currentStage === selectedStageFilter;
+    });
+  };
+
+  // Function to handle stage badge click
+  const handleStageBadgeClick = (stage: string) => {
+    if (selectedStageFilter === stage) {
+      // If clicking the same stage, clear the filter
+      setSelectedStageFilter(null);
+    } else {
+      // Filter by the selected stage
+      setSelectedStageFilter(stage);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -412,23 +436,42 @@ const Page = () => {
           </div>
         </div>
 
-        {/* Pipeline Stage Badges */}
+        {/* Pipeline Stage Badges - Clickable filters */}
         <div className="flex flex-wrap gap-2">
           {pipelineStages.map((stage) => {
             const count = job.candidates.filter(c => c.currentStage === stage).length;
+            const isActive = selectedStageFilter === stage;
             return (
               <Badge 
                 key={stage}
                 variant="outline" 
-                className={`${getStageColor(stage)} border`}
+                className={`${getStageColor(stage)} border cursor-pointer hover:opacity-80 transition-opacity ${
+                  isActive ? 'ring-2 ring-blue-500 ring-offset-2' : ''
+                }`}
+                onClick={() => handleStageBadgeClick(stage)}
               >
                 {stage}: {count}
               </Badge>
             );
           })}
+          {selectedStageFilter && (
+            <Badge 
+              variant="outline" 
+              className="bg-gray-100 text-gray-600 border-gray-300 cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => setSelectedStageFilter(null)}
+            >
+              Clear Filter
+            </Badge>
+          )}
         </div>
 
         {/* Candidates Table */}
+        {selectedStageFilter && (
+          <div className="px-4 py-2 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-700 mb-4">
+            Showing candidates in: <span className="font-semibold">{selectedStageFilter}</span>
+            <span className="ml-2 text-blue-500">({getFilteredCandidates().length} candidates)</span>
+          </div>
+        )}
         <Table>
           <TableHeader>
             <TableRow>
@@ -443,7 +486,7 @@ const Page = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {job.candidates.map((candidate) => (
+            {getFilteredCandidates().map((candidate) => (
               <TableRow key={candidate.id} className="hover:bg-muted/50">
                 <TableCell>
                   <Avatar className="h-8 w-8">
