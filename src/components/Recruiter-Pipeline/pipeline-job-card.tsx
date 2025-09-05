@@ -179,6 +179,31 @@ export function PipelineJobCard({
   };
 
   const [isAddExistingOpen, setIsAddExistingOpen] = React.useState(false);
+  
+  // Filter state for stage filtering
+  const [selectedStageFilter, setSelectedStageFilter] = React.useState<string | null>(null);
+
+  // Function to get filtered candidates based on selected stage
+  const getFilteredCandidates = () => {
+    if (!selectedStageFilter) {
+      return job.candidates;
+    }
+    return job.candidates.filter(candidate => {
+      const currentStage = getCandidateStage(job.id, candidate.id) || candidate.currentStage;
+      return currentStage === selectedStageFilter;
+    });
+  };
+
+  // Function to handle stage badge click
+  const handleStageBadgeClick = (stage: string) => {
+    if (selectedStageFilter === stage) {
+      // If clicking the same stage, clear the filter
+      setSelectedStageFilter(null);
+    } else {
+      // Filter by the selected stage
+      setSelectedStageFilter(stage);
+    }
+  };
 
   return (
     <>
@@ -271,27 +296,46 @@ export function PipelineJobCard({
         {job.isExpanded && (
           <CardContent className="pt-0">
             
-            {/* Pipeline Stage Badges - Updated counts considering local changes */}
+            {/* Pipeline Stage Badges - Clickable filters */}
             <div className="flex flex-wrap gap-2 mb-6">
               {(() => {
                 const updatedCounts = getUpdatedStageCounts();
                 return pipelineStages.map((stage) => {
                   const count = updatedCounts[stage] || 0;
+                  const isActive = selectedStageFilter === stage;
                   return (
                     <Badge 
                       key={stage}
                       variant="outline" 
-                      className={`${getStageColor(stage)} border`}
+                      className={`${getStageColor(stage)} border cursor-pointer hover:opacity-80 transition-opacity ${
+                        isActive ? 'ring-2 ring-blue-500 ring-offset-2' : ''
+                      }`}
+                      onClick={() => handleStageBadgeClick(stage)}
                     >
                       {stage}: {count}
                     </Badge>
                   );
                 });
               })()}
+              {selectedStageFilter && (
+                <Badge 
+                  variant="outline" 
+                  className="bg-gray-100 text-gray-600 border-gray-300 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setSelectedStageFilter(null)}
+                >
+                  Clear Filter
+                </Badge>
+              )}
             </div>
 
             {/* Candidates Table - Single table with sticky header */}
             <div className="border-2 border-blue-200 rounded-md bg-gray-50 max-h-[300px] overflow-hidden">
+              {selectedStageFilter && (
+                <div className="px-4 py-2 bg-blue-50 border-b border-blue-200 text-sm text-blue-700">
+                  Showing candidates in: <span className="font-semibold">{selectedStageFilter}</span>
+                  <span className="ml-2 text-blue-500">({getFilteredCandidates().length} candidates)</span>
+                </div>
+              )}
               <div className="overflow-y-auto max-h-[300px]" style={{
                 scrollbarWidth: 'thin',
                 scrollbarColor: '#d1d5db #f3f4f6'
@@ -310,7 +354,7 @@ export function PipelineJobCard({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {job.candidates.map((candidate) => (
+                    {getFilteredCandidates().map((candidate) => (
                       <TableRow key={candidate.id} className="bg-white">
                         <TableCell>
                           <Avatar className="h-8 w-8">
