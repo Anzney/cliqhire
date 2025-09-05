@@ -301,28 +301,26 @@ export function PipelineJobCard({
               </div>
             </div>
             
-            {/* Add Candidate + View Table (stacked) */}
-            <div className="flex flex-col items-start ml-4">
+            {/* View Table + Add Candidate (horizontal) */}
+            <div className="flex items-center gap-2 ml-4">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/reactruterpipeline/${job.id}`);
+                }}
+              >
+                View Table
+              </Button>
               <Button
                 onClick={handleAddCandidate}
                 size="sm"
-                className=" text-white"
+                variant="outline"
               >
                 <Plus className="h-4 w-4 mr-1" />
                 Add Candidate
               </Button>
-              {job.isExpanded && (
-                <Button
-                  size="sm"
-                  className="mt-2"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    router.push(`/reactruterpipeline/${job.id}`);
-                  }}
-                >
-                  View Table
-                </Button>
-              )}
             </div>
           </div>
         </CardHeader>
