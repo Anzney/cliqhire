@@ -31,6 +31,7 @@ import { StatusChangeConfirmationDialog } from "./status-change-confirmation-dia
 import { useStageStore } from "./stage-store";
 import { useRouter } from "next/navigation";
 import { PipelineStageBadge } from "./pipeline-stage-badge";
+import { ConnectionBadge } from "./connection-badge";
 
 interface PipelineJobCardProps {
   job: Job;
@@ -205,6 +206,12 @@ export function PipelineJobCard({
     }
   };
 
+  // Function to handle connection change
+  const handleConnectionChange = (candidate: Candidate, newConnection: any) => {
+    console.log('Connection changed for candidate:', candidate.name, 'to:', newConnection);
+    // TODO: Implement API call to update connection
+  };
+
   return (
     <>
       <Card className="overflow-hidden shadow-sm border-gray-200">
@@ -376,8 +383,22 @@ export function PipelineJobCard({
                             onStageChange={(newStage) => handleStageChange(candidate, newStage)}
                           />
                         </TableCell>
-                        <TableCell className="text-sm text-gray-700">
-                          {candidate.connection || 'Not specified'}
+                        <TableCell>
+                          {(() => {
+                            const currentStage = getCandidateStage(job.id, candidate.id) || candidate.currentStage;
+                            if (currentStage === 'Sourcing') {
+                              return (
+                                <ConnectionBadge
+                                  connection={candidate.connection || null}
+                                  onConnectionChange={(newConnection) => handleConnectionChange(candidate, newConnection)}
+                                />
+                              );
+                            } else {
+                              return (
+                                <span className="text-sm text-gray-500">N/A</span>
+                              );
+                            }
+                          })()}
                         </TableCell>
                         <TableCell className="text-sm text-gray-700">
                           {candidate.hiringManager || 'Not assigned'}

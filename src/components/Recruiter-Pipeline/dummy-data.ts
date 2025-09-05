@@ -1,6 +1,8 @@
 // Types and utilities for Recruiter Pipeline
 // Updated to match the new API response structure
 
+export type ConnectionType = "LinkedIn" | "Indeed" | "Referral" | "Direct" | "Other";
+
 export interface Candidate {
   id: string;
   name: string;
@@ -53,7 +55,7 @@ export interface Candidate {
   hired?: any;
   disqualified?: any;
   // Additional pipeline fields
-  connection?: string;
+  connection?: ConnectionType;
   hiringManager?: string;
   recruiter?: string;
 }
