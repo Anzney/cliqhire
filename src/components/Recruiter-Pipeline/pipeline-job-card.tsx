@@ -443,7 +443,7 @@ export function PipelineJobCard({
                                 <EllipsisVertical className="h-4 w-4" />
                               </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuContent align="end" className="w-50">
                               <DropdownMenuItem 
                                 onClick={(e) => {
                                   e.stopPropagation();
