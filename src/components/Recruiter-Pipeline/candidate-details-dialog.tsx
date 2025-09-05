@@ -34,13 +34,15 @@ interface CandidateDetailsDialogProps {
   isOpen: boolean;
   onClose: () => void;
   pipelineId?: string;
+  onCandidateUpdate?: (updatedCandidate: Candidate) => void;
 }
 
 export function CandidateDetailsDialog({ 
   candidate, 
   isOpen, 
   onClose,
-  pipelineId
+  pipelineId,
+  onCandidateUpdate
 }: CandidateDetailsDialogProps) {
   const [selectedStage, setSelectedStage] = useState<string | undefined>(undefined);
   const [localCandidate, setLocalCandidate] = useState<any>(candidate);
@@ -59,7 +61,8 @@ export function CandidateDetailsDialog({
 
   const handleUpdateCandidate = (updatedCandidate: any) => {
     setLocalCandidate(updatedCandidate);
-    // Here you would typically also call an API to save the changes
+    // Notify parent component about the update
+    onCandidateUpdate?.(updatedCandidate);
     console.log('Updated candidate:', updatedCandidate);
   };
 

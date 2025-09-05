@@ -148,7 +148,11 @@ const convertPipelineDataToJob = (pipelineData: any, isExpanded: boolean = false
         verification: candidateData.verification,
         onboarding: candidateData.onboarding,
         hired: candidateData.hired,
-        disqualified: candidateData.disqualified
+        disqualified: candidateData.disqualified,
+        // Additional pipeline fields
+        connection: candidateData.connection,
+        hiringManager: candidateData.hiringManager,
+        recruiter: candidateData.recruiter
       };
     }),
     // Pipeline-specific data from new API structure
@@ -473,6 +477,17 @@ export function RecruiterPipeline() {
     }
   };
 
+  const handleCandidateUpdate = async (jobId: string, updatedCandidate: any) => {
+    try {
+      // Refresh the jobs data to reflect the updated candidate
+      await loadJobs();
+      toast.success("Candidate updated successfully");
+    } catch (error: any) {
+      console.error('Error refreshing jobs after candidate update:', error);
+      toast.error("Failed to refresh candidate data");
+    }
+  };
+
   const handlePipelineCreated = async (jobIds: string[], jobData?: any[]) => {
     if (!jobData || jobData.length === 0) {
       console.log("No job data provided");
@@ -568,6 +583,7 @@ export function RecruiterPipeline() {
             loadingJobId={loadingJobId}
             onToggleExpansion={toggleJobExpansion}
             onUpdateCandidateStage={updateCandidateStage}
+            onCandidateUpdate={handleCandidateUpdate}
           />
         ))
       ) : (

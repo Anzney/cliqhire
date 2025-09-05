@@ -39,13 +39,15 @@ interface PipelineJobCardProps {
   loadingJobId: string | null;
   onToggleExpansion: (jobId: string) => void;
   onUpdateCandidateStage: (jobId: string, candidateId: string, newStage: string) => Promise<void>;
+  onCandidateUpdate?: (jobId: string, updatedCandidate: Candidate) => void;
 }
 
 export function PipelineJobCard({ 
   job, 
   loadingJobId, 
   onToggleExpansion, 
-  onUpdateCandidateStage 
+  onUpdateCandidateStage,
+  onCandidateUpdate
 }: PipelineJobCardProps) {
   const router = useRouter();
   const [selectedCandidate, setSelectedCandidate] = React.useState<Candidate | null>(null);
@@ -115,6 +117,16 @@ export function PipelineJobCard({
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setSelectedCandidate(null);
+  };
+
+  const handleCandidateUpdate = async (updatedCandidate: Candidate) => {
+    // Update the local selected candidate
+    setSelectedCandidate(updatedCandidate);
+    
+    // Notify the parent component about the update
+    onCandidateUpdate?.(job.id, updatedCandidate);
+    
+    console.log('Candidate updated in pipeline job card:', updatedCandidate);
   };
 
   const handleStageChange = (candidate: Candidate, newStage: string) => {
@@ -494,6 +506,7 @@ export function PipelineJobCard({
         isOpen={isDialogOpen}
         onClose={handleCloseDialog}
         pipelineId={job.id}
+        onCandidateUpdate={handleCandidateUpdate}
       />
       
       {/* Status Change Confirmation Dialog */}

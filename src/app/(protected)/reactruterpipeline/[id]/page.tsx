@@ -119,6 +119,38 @@ const Page = () => {
             previousCompanyName: (c as any).candidateId?.previousCompanyName,
             currentCompanyName: (c as any).candidateId?.currentCompanyName,
             subStatus: (c as any).status,
+            // Additional fields that might be updated in the dialog
+            email: (c as any).candidateId?.email,
+            phone: (c as any).candidateId?.phone,
+            location: (c as any).candidateId?.location,
+            skills: (c as any).candidateId?.skills,
+            softSkill: (c as any).candidateId?.softSkill,
+            technicalSkill: (c as any).candidateId?.technicalSkill,
+            gender: (c as any).candidateId?.gender,
+            dateOfBirth: (c as any).candidateId?.dateOfBirth,
+            country: (c as any).candidateId?.country,
+            nationality: (c as any).candidateId?.nationality,
+            willingToRelocate: (c as any).candidateId?.willingToRelocate,
+            description: (c as any).candidateId?.description,
+            linkedin: (c as any).candidateId?.linkedin,
+            reportingTo: (c as any).candidateId?.reportingTo,
+            educationDegree: (c as any).candidateId?.educationDegree,
+            primaryLanguage: (c as any).candidateId?.primaryLanguage,
+            resume: (c as any).candidateId?.resume,
+            priority: (c as any).priority,
+            notes: (c as any).notes,
+            // Stage-specific data
+            sourcing: (c as any).sourcing,
+            screening: (c as any).screening,
+            clientScreening: (c as any).clientScreening,
+            interview: (c as any).interview,
+            verification: (c as any).verification,
+            onboarding: (c as any).onboarding,
+            hired: (c as any).hired,
+            disqualified: (c as any).disqualified,
+            connection: (c as any).connection,
+            hiringManager: (c as any).hiringManager,
+            recruiter: (c as any).recruiter,
           })) as Candidate[],
           pipelineStatus: entry.status,
           priority: entry.priority,
@@ -152,6 +184,96 @@ const Page = () => {
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setSelectedCandidate(null);
+  };
+
+  const handleCandidateUpdate = async (updatedCandidate: Candidate) => {
+    // Refresh the job data to reflect the updated candidate
+    try {
+      const res = await getPipelineEntry(id);
+      const entry = res.data;
+      const jobData: any = entry.jobId || {};
+      const salaryMin = jobData?.salaryRange?.min ?? jobData?.minimumSalary;
+      const salaryMax = jobData?.salaryRange?.max ?? jobData?.maximumSalary;
+      const salaryCurrency = jobData?.salaryRange?.currency ?? jobData?.salaryCurrency ?? "";
+      const salaryRangeString =
+        (salaryMin !== undefined && salaryMin !== null && salaryMax !== undefined && salaryMax !== null)
+          ? `${salaryMin}-${salaryMax} ${salaryCurrency}`
+          : "";
+      const mappedJob: Job = {
+        id: entry._id,
+        title: entry.jobId?.jobTitle || "",
+        clientName: (entry.jobId as any)?.client?.name || "",
+        location: Array.isArray(entry.jobId?.location) ? entry.jobId.location.join(", ") : (entry.jobId?.location || ""),
+        salaryRange: salaryRangeString,
+        headcount: entry.jobId?.numberOfPositions || 0,
+        jobType: entry.jobId?.jobType || "",
+        isExpanded: true,
+        // Preserve the entire jobId object for access to jobTeamInfo
+        jobId: entry.jobId,
+        candidates: (entry.candidateIdArray || []).map((c) => ({
+          id: (c as any)._id || (c as any).candidateId?._id || "",
+          name: (c as any).candidateId?.name || "",
+          source: (c as any).sourcing?.source || "",
+          currentStage: (c as any).currentStage || (c as any).status || "Sourcing",
+          avatar: undefined,
+          experience: (c as any).candidateId?.experience,
+          currentSalary: (c as any).candidateId?.currentSalary,
+          currentSalaryCurrency: (c as any).candidateId?.currentSalaryCurrency,
+          expectedSalary: (c as any).candidateId?.expectedSalary,
+          expectedSalaryCurrency: (c as any).candidateId?.expectedSalaryCurrency,
+          currentJobTitle: (c as any).candidateId?.currentJobTitle,
+          previousCompanyName: (c as any).candidateId?.previousCompanyName,
+          currentCompanyName: (c as any).candidateId?.currentCompanyName,
+          subStatus: (c as any).status,
+          // Additional fields that might be updated in the dialog
+          email: (c as any).candidateId?.email,
+          phone: (c as any).candidateId?.phone,
+          location: (c as any).candidateId?.location,
+          skills: (c as any).candidateId?.skills,
+          softSkill: (c as any).candidateId?.softSkill,
+          technicalSkill: (c as any).candidateId?.technicalSkill,
+          gender: (c as any).candidateId?.gender,
+          dateOfBirth: (c as any).candidateId?.dateOfBirth,
+          country: (c as any).candidateId?.country,
+          nationality: (c as any).candidateId?.nationality,
+          willingToRelocate: (c as any).candidateId?.willingToRelocate,
+          description: (c as any).candidateId?.description,
+          linkedin: (c as any).candidateId?.linkedin,
+          reportingTo: (c as any).candidateId?.reportingTo,
+          educationDegree: (c as any).candidateId?.educationDegree,
+          primaryLanguage: (c as any).candidateId?.primaryLanguage,
+          resume: (c as any).candidateId?.resume,
+          priority: (c as any).priority,
+          notes: (c as any).notes,
+          // Stage-specific data
+          sourcing: (c as any).sourcing,
+          screening: (c as any).screening,
+          clientScreening: (c as any).clientScreening,
+          interview: (c as any).interview,
+          verification: (c as any).verification,
+          onboarding: (c as any).onboarding,
+          hired: (c as any).hired,
+          disqualified: (c as any).disqualified,
+          connection: (c as any).connection,
+          hiringManager: (c as any).hiringManager,
+          recruiter: (c as any).recruiter,
+        })) as Candidate[],
+        pipelineStatus: entry.status,
+        priority: entry.priority,
+        notes: entry.notes,
+        assignedDate: entry.assignedDate,
+        totalCandidates: entry.totalCandidates,
+        activeCandidates: entry.activeCandidates,
+        completedCandidates: entry.completedCandidates,
+        droppedCandidates: entry.droppedCandidates,
+        // numberOfCandidates not available on PipelineEntryDetail
+        recruiterName: entry.recruiterId?.name,
+        recruiterEmail: entry.recruiterId?.email,
+      };
+      setJob(mappedJob);
+    } catch (error) {
+      console.error('Error refreshing job data:', error);
+    }
   };
 
   const handleStageChange = (candidate: Candidate, newStage: string) => {
@@ -201,6 +323,38 @@ const Page = () => {
             previousCompanyName: (c as any).candidateId?.previousCompanyName,
             currentCompanyName: (c as any).candidateId?.currentCompanyName,
             subStatus: (c as any).status,
+            // Additional fields that might be updated in the dialog
+            email: (c as any).candidateId?.email,
+            phone: (c as any).candidateId?.phone,
+            location: (c as any).candidateId?.location,
+            skills: (c as any).candidateId?.skills,
+            softSkill: (c as any).candidateId?.softSkill,
+            technicalSkill: (c as any).candidateId?.technicalSkill,
+            gender: (c as any).candidateId?.gender,
+            dateOfBirth: (c as any).candidateId?.dateOfBirth,
+            country: (c as any).candidateId?.country,
+            nationality: (c as any).candidateId?.nationality,
+            willingToRelocate: (c as any).candidateId?.willingToRelocate,
+            description: (c as any).candidateId?.description,
+            linkedin: (c as any).candidateId?.linkedin,
+            reportingTo: (c as any).candidateId?.reportingTo,
+            educationDegree: (c as any).candidateId?.educationDegree,
+            primaryLanguage: (c as any).candidateId?.primaryLanguage,
+            resume: (c as any).candidateId?.resume,
+            priority: (c as any).priority,
+            notes: (c as any).notes,
+            // Stage-specific data
+            sourcing: (c as any).sourcing,
+            screening: (c as any).screening,
+            clientScreening: (c as any).clientScreening,
+            interview: (c as any).interview,
+            verification: (c as any).verification,
+            onboarding: (c as any).onboarding,
+            hired: (c as any).hired,
+            disqualified: (c as any).disqualified,
+            connection: (c as any).connection,
+            hiringManager: (c as any).hiringManager,
+            recruiter: (c as any).recruiter,
           })) as Candidate[],
           pipelineStatus: entry.status,
           priority: entry.priority,
@@ -269,6 +423,38 @@ const Page = () => {
             previousCompanyName: (c as any).candidateId?.previousCompanyName,
             currentCompanyName: (c as any).candidateId?.currentCompanyName,
             subStatus: (c as any).status,
+            // Additional fields that might be updated in the dialog
+            email: (c as any).candidateId?.email,
+            phone: (c as any).candidateId?.phone,
+            location: (c as any).candidateId?.location,
+            skills: (c as any).candidateId?.skills,
+            softSkill: (c as any).candidateId?.softSkill,
+            technicalSkill: (c as any).candidateId?.technicalSkill,
+            gender: (c as any).candidateId?.gender,
+            dateOfBirth: (c as any).candidateId?.dateOfBirth,
+            country: (c as any).candidateId?.country,
+            nationality: (c as any).candidateId?.nationality,
+            willingToRelocate: (c as any).candidateId?.willingToRelocate,
+            description: (c as any).candidateId?.description,
+            linkedin: (c as any).candidateId?.linkedin,
+            reportingTo: (c as any).candidateId?.reportingTo,
+            educationDegree: (c as any).candidateId?.educationDegree,
+            primaryLanguage: (c as any).candidateId?.primaryLanguage,
+            resume: (c as any).candidateId?.resume,
+            priority: (c as any).priority,
+            notes: (c as any).notes,
+            // Stage-specific data
+            sourcing: (c as any).sourcing,
+            screening: (c as any).screening,
+            clientScreening: (c as any).clientScreening,
+            interview: (c as any).interview,
+            verification: (c as any).verification,
+            onboarding: (c as any).onboarding,
+            hired: (c as any).hired,
+            disqualified: (c as any).disqualified,
+            connection: (c as any).connection,
+            hiringManager: (c as any).hiringManager,
+            recruiter: (c as any).recruiter,
           })) as Candidate[],
           pipelineStatus: entry.status,
           priority: entry.priority,
@@ -593,6 +779,7 @@ const Page = () => {
         isOpen={isDialogOpen}
         onClose={handleCloseDialog}
         pipelineId={job.id}
+        onCandidateUpdate={handleCandidateUpdate}
       />
       
       {/* Status Change Confirmation Dialog */}
