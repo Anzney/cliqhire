@@ -60,6 +60,28 @@ export interface Candidate {
   recruiter?: string;
 }
 
+export interface JobTeamInfo {
+  teamId?: {
+    _id: string;
+    teamName: string;
+  };
+  hiringManager?: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  teamLead?: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  recruiter?: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+}
+
 export interface Job {
   id: string;
   title: string;
@@ -84,6 +106,25 @@ export interface Job {
   // Recruiter information
   recruiterName?: string;
   recruiterEmail?: string;
+  // Job ID object containing job details and team info
+  jobId?: {
+    _id?: string;
+    jobTitle?: string;
+    jobTeamInfo?: JobTeamInfo;
+    client?: any;
+    location?: string;
+    headcount?: number;
+    stage?: string;
+    minimumSalary?: number;
+    maximumSalary?: number;
+    salaryCurrency?: string;
+    jobType?: string;
+    experience?: string;
+    department?: string;
+    [key: string]: any;
+  };
+  // Job team information from API (legacy - now accessed via jobId)
+  jobTeamInfo?: JobTeamInfo;
   // Job details from API
   jobPosition?: string;
   department?: string;

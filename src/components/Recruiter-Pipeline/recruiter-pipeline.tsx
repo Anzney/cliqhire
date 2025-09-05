@@ -42,6 +42,8 @@ const convertPipelineListDataToJob = (pipelineData: PipelineListItem, isExpanded
     headcount: pipelineData.jobId.numberOfPositions || 1,
     jobType: pipelineData.jobId.jobType || "Full-time",
     isExpanded,
+    // Preserve the entire jobId object for access to jobTeamInfo
+    jobId: pipelineData.jobId,
     candidates: [], // Will be populated when expanded
     // Pipeline-specific data from new API structure
     pipelineStatus: pipelineData.status,
@@ -93,6 +95,8 @@ const convertPipelineDataToJob = (pipelineData: any, isExpanded: boolean = false
     headcount: pipelineData.jobId.headcount || 1,
     jobType: pipelineData.jobId.jobType || "Full-time",
     isExpanded,
+    // Preserve the entire jobId object for access to jobTeamInfo
+    jobId: pipelineData.jobId,
     candidates: pipelineData.candidateIdArray.map((candidateData: any) => {
       const candidate = candidateData.candidateId;
       return {
