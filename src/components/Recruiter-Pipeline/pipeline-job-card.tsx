@@ -74,6 +74,17 @@ export function PipelineJobCard({
     candidate: null,
   });
 
+  // Connection change confirmation dialog state
+  const [connectionChangeDialog, setConnectionChangeDialog] = React.useState<{
+    isOpen: boolean;
+    candidate: Candidate | null;
+    newConnection: string | null;
+  }>({
+    isOpen: false,
+    candidate: null,
+    newConnection: null,
+  });
+
   // Local stage store
   const { updateCandidateStage, getCandidateStage } = useStageStore();
 
@@ -208,8 +219,25 @@ export function PipelineJobCard({
 
   // Function to handle connection change
   const handleConnectionChange = (candidate: Candidate, newConnection: any) => {
-    console.log('Connection changed for candidate:', candidate.name, 'to:', newConnection);
-    // TODO: Implement API call to update connection
+    setConnectionChangeDialog({
+      isOpen: true,
+      candidate,
+      newConnection,
+    });
+  };
+
+  const handleConfirmConnectionChange = async () => {
+    if (connectionChangeDialog.candidate && connectionChangeDialog.newConnection) {
+      console.log('Connection changed for candidate:', connectionChangeDialog.candidate.name, 'to:', connectionChangeDialog.newConnection);
+      // TODO: Implement API call to update connection
+      
+      // Close the dialog
+      setConnectionChangeDialog({ isOpen: false, candidate: null, newConnection: null });
+    }
+  };
+
+  const handleCancelConnectionChange = () => {
+    setConnectionChangeDialog({ isOpen: false, candidate: null, newConnection: null });
   };
 
   return (
@@ -534,6 +562,28 @@ export function PipelineJobCard({
               onClick={handleConfirmDeleteCandidate}
             >
               Delete Candidate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Connection Change Confirmation Dialog */}
+      <Dialog open={connectionChangeDialog.isOpen} onOpenChange={(open) => setConnectionChangeDialog(prev => ({ ...prev, isOpen: open }))}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Update Connection</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to update the connection for <strong>{connectionChangeDialog.newConnection}</strong>?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelConnectionChange}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleConfirmConnectionChange}
+            >
+              Update Connection
             </Button>
           </DialogFooter>
         </DialogContent>
