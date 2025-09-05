@@ -5,7 +5,6 @@ import { ChevronDown, EllipsisVertical, ChevronRight, Users, MapPin, DollarSign,
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AddCandidateDialog } from "./add-candidate-dialog";
@@ -31,6 +30,7 @@ import { CandidateDetailsDialog } from "./candidate-details-dialog";
 import { StatusChangeConfirmationDialog } from "./status-change-confirmation-dialog";
 import { useStageStore } from "./stage-store";
 import { useRouter } from "next/navigation";
+import { PipelineStageBadge } from "./pipeline-stage-badge";
 
 interface PipelineJobCardProps {
   job: Job;
@@ -290,104 +290,107 @@ export function PipelineJobCard({
               })()}
             </div>
 
-            {/* Candidates Table - Fixed height with scrollable content */}
-            <div className="max-h-[300px] overflow-y-auto border-2 border-blue-200 rounded-md p-2 bg-gray-50" style={{
-              scrollbarWidth: 'thin',
-              scrollbarColor: '#d1d5db #f3f4f6'
-            }}>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[44px]"></TableHead>
-                    <TableHead>Candidate</TableHead>
-                    <TableHead>Current Position</TableHead>
-                    <TableHead className="w-[200px]">Stage</TableHead>
-                    <TableHead className="w-[90px]">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {job.candidates.map((candidate) => (
-                    <TableRow key={candidate.id} className="bg-white">
-                      <TableCell>
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={candidate.avatar} />
-                          <AvatarFallback className="text-xs bg-gray-200">
-                            {candidate.name ? candidate.name.split(' ').map(n => n[0]).join('') : 'NA'}
-                          </AvatarFallback>
-                        </Avatar>
-                      </TableCell>
-                      <TableCell className="font-medium truncate max-w-[220px]">
-                        {candidate.name || 'Unknown Candidate'}
-                      </TableCell>
-                      <TableCell className="truncate max-w-[260px] text-gray-700">
-                        {candidate.currentJobTitle || 'Position not specified'}
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={getCandidateStage(job.id, candidate.id) || candidate.currentStage}
-                          onValueChange={(value) => handleStageChange(candidate, value)}
-                        >
-                          <SelectTrigger className="h-8 text-sm px-2">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {pipelineStages.map((stage) => (
-                              <SelectItem key={stage} value={stage} className="text-xs">
-                                {stage}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                              onClick={(e) => e.stopPropagation()}
-                              title="More options"
-                            >
-                              <EllipsisVertical className="h-4 w-4" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-44">
-                            <DropdownMenuItem 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleViewCandidate(candidate);
-                              }}
-                              className="cursor-pointer"
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              View & Edit Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                console.log('View resume for:', candidate.name);
-                              }}
-                              className="cursor-pointer"
-                            >
-                              <Briefcase className="h-4 w-4 mr-2" />
-                              View Resume
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteCandidate(candidate);
-                              }}
-                              className="cursor-pointer"
-                            >
-                              <Trash2 className="size-4 mr-2 text-red-500" />
-                              Delete Candidate
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+            {/* Candidates Table - Single table with sticky header */}
+            <div className="border-2 border-blue-200 rounded-md bg-gray-50 max-h-[300px] overflow-hidden">
+              <div className="overflow-y-auto max-h-[300px]" style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#d1d5db #f3f4f6'
+              }}>
+                <Table>
+                  <TableHeader className="sticky top-0 bg-white z-10">
+                    <TableRow>
+                      <TableHead className="w-[44px]"></TableHead>
+                      <TableHead>Candidate</TableHead>
+                      <TableHead>Current Position</TableHead>
+                      <TableHead className="w-[200px]">Stage</TableHead>
+                      <TableHead className="w-[120px]">Connection</TableHead>
+                      <TableHead className="w-[140px]">Hiring Manager</TableHead>
+                      <TableHead className="w-[120px]">Recruiter</TableHead>
+                      <TableHead className="w-[90px]">Action</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {job.candidates.map((candidate) => (
+                      <TableRow key={candidate.id} className="bg-white">
+                        <TableCell>
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={candidate.avatar} />
+                            <AvatarFallback className="text-xs bg-gray-200">
+                              {candidate.name ? candidate.name.split(' ').map(n => n[0]).join('') : 'NA'}
+                            </AvatarFallback>
+                          </Avatar>
+                        </TableCell>
+                        <TableCell className="font-medium truncate max-w-[220px]">
+                          {candidate.name || 'Unknown Candidate'}
+                        </TableCell>
+                        <TableCell className="truncate max-w-[260px] text-gray-700">
+                          {candidate.currentJobTitle || 'Position not specified'}
+                        </TableCell>
+                        <TableCell>
+                          <PipelineStageBadge
+                            stage={getCandidateStage(job.id, candidate.id) || candidate.currentStage}
+                            onStageChange={(newStage) => handleStageChange(candidate, newStage)}
+                          />
+                        </TableCell>
+                        <TableCell className="text-sm text-gray-700">
+                          {candidate.connection || 'Not specified'}
+                        </TableCell>
+                        <TableCell className="text-sm text-gray-700">
+                          {candidate.hiringManager || 'Not assigned'}
+                        </TableCell>
+                        <TableCell className="text-sm text-gray-700">
+                          {candidate.recruiter || 'Not assigned'}
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                                onClick={(e) => e.stopPropagation()}
+                                title="More options"
+                              >
+                                <EllipsisVertical className="h-4 w-4" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
+                              <DropdownMenuItem 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleViewCandidate(candidate);
+                                }}
+                                className="cursor-pointer"
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                View & Edit Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  console.log('View resume for:', candidate.name);
+                                }}
+                                className="cursor-pointer"
+                              >
+                                <Briefcase className="h-4 w-4 mr-2" />
+                                View Resume
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteCandidate(candidate);
+                                }}
+                                className="cursor-pointer"
+                              >
+                                <Trash2 className="size-4 mr-2 text-red-500" />
+                                Delete Candidate
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           </CardContent>
         )}

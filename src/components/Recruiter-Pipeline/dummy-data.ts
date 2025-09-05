@@ -52,6 +52,10 @@ export interface Candidate {
   onboarding?: any;
   hired?: any;
   disqualified?: any;
+  // Additional pipeline fields
+  connection?: string;
+  hiringManager?: string;
+  recruiter?: string;
 }
 
 export interface Job {
