@@ -102,6 +102,8 @@ const Page = () => {
           headcount: entry.jobId?.numberOfPositions || 0,
           jobType: entry.jobId?.jobType || "",
           isExpanded: true,
+          // Preserve the entire jobId object for access to jobTeamInfo
+          jobId: entry.jobId,
           candidates: (entry.candidateIdArray || []).map((c) => ({
             id: (c as any)._id || (c as any).candidateId?._id || "",
             name: (c as any).candidateId?.name || "",
@@ -182,6 +184,8 @@ const Page = () => {
           headcount: entry.jobId?.headcount || 1,
           jobType: entry.jobId?.jobType || "",
           isExpanded: true,
+          // Preserve the entire jobId object for access to jobTeamInfo
+          jobId: entry.jobId,
           candidates: (entry.candidateIdArray || []).map((c) => ({
             id: (c as any)._id || (c as any).candidateId?._id || "",
             name: (c as any).candidateId?.name || "",
@@ -248,6 +252,8 @@ const Page = () => {
           headcount: entry.jobId?.headcount || 1,
           jobType: entry.jobId?.jobType || "",
           isExpanded: true,
+          // Preserve the entire jobId object for access to jobTeamInfo
+          jobId: entry.jobId,
           candidates: (entry.candidateIdArray || []).map((c) => ({
             id: (c as any)._id || (c as any).candidateId?._id || "",
             name: (c as any).candidateId?.name || "",
@@ -525,10 +531,10 @@ const Page = () => {
                   })()}
                 </TableCell>
                 <TableCell className="text-sm text-gray-700">
-                  {candidate.hiringManager || 'Not assigned'}
+                  {(job as any).jobId?.jobTeamInfo?.hiringManager?.name || 'Not assigned'}
                 </TableCell>
                 <TableCell className="text-sm text-gray-700">
-                  {candidate.recruiter || 'Not assigned'}
+                  {(job as any).jobId?.jobTeamInfo?.recruiter?.name || 'Not assigned'}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
