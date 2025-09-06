@@ -262,6 +262,8 @@ export function PipelineJobCard({
   };
 
   const handleViewResume = (candidate: Candidate) => {
+    console.log('Viewing resume for candidate:', candidate.name);
+    console.log('Resume URL:', candidate.resume);
     setPdfViewer({
       isOpen: true,
       pdfUrl: candidate.resume || null,
@@ -497,16 +499,18 @@ export function PipelineJobCard({
                                 <Eye className="h-4 w-4 mr-2" />
                                 View & Edit Details
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleViewResume(candidate);
-                                }}
-                                className="cursor-pointer"
-                              >
-                                <Briefcase className="h-4 w-4 mr-2" />
-                                View Resume
-                              </DropdownMenuItem>
+                              {candidate.resume && (
+                                <DropdownMenuItem 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewResume(candidate);
+                                  }}
+                                  className="cursor-pointer"
+                                >
+                                  <Briefcase className="h-4 w-4 mr-2" />
+                                  View Resume
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem 
                                 onClick={(e) => {
                                   e.stopPropagation();

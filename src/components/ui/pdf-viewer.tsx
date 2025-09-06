@@ -36,6 +36,7 @@ export function PDFViewer({ isOpen, onClose, pdfUrl, candidateName }: PDFViewerP
   const [rotation, setRotation] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [useIframe, setUseIframe] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pdfRef = useRef<any>(null);
 
@@ -47,6 +48,7 @@ export function PDFViewer({ isOpen, onClose, pdfUrl, candidateName }: PDFViewerP
       setRotation(0);
       setError(null);
       setTotalPages(0);
+      setUseIframe(false);
     }
   }, [isOpen]);
 
@@ -62,20 +64,53 @@ export function PDFViewer({ isOpen, onClose, pdfUrl, candidateName }: PDFViewerP
       setLoading(true);
       setError(null);
       
+      console.log('Loading PDF from URL:', url);
+      
       // Dynamic import of PDF.js
       const pdfjsLib = await import('pdfjs-dist');
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
       
-      const pdf = await pdfjsLib.getDocument(url).promise;
+      // Use a more reliable worker source
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+      
+      console.log('PDF.js version:', pdfjsLib.version);
+      console.log('Worker source:', pdfjsLib.GlobalWorkerOptions.workerSrc);
+      
+      // Configure PDF.js for better compatibility
+      const loadingTask = pdfjsLib.getDocument({
+        url: url,
+        withCredentials: false,
+        httpHeaders: {},
+        disableAutoFetch: false,
+        disableStream: false,
+        disableRange: false,
+        disableFontFace: false,
+        disableCreateObjectURL: false,
+        cMapUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/cmaps/`,
+        cMapPacked: true,
+        standardFontDataUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/standard_fonts/`,
+      });
+      
+      const pdf = await loadingTask.promise;
       pdfRef.current = pdf;
       setTotalPages(pdf.numPages);
+      
+      console.log('PDF loaded successfully, pages:', pdf.numPages);
       
       // Render first page
       await renderPage(1);
       setLoading(false);
     } catch (err) {
       console.error('Error loading PDF:', err);
-      setError('Failed to load PDF. Please check if the file exists and is accessible.');
+      console.error('Error details:', {
+        message: err.message,
+        name: err.name,
+        stack: err.stack
+      });
+      
+      // Try iframe fallback for CORS issues
+      console.log('PDF.js failed, trying iframe fallback...');
+      setUseIframe(true);
+      setError(null);
       setLoading(false);
     }
   };
@@ -182,52 +217,74 @@ export function PDFViewer({ isOpen, onClose, pdfUrl, candidateName }: PDFViewerP
         {/* Controls */}
         <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToPreviousPage}
-              disabled={currentPage <= 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                value={currentPage}
-                onChange={handlePageInputChange}
-                className="w-16 px-2 py-1 text-sm border rounded"
-                min={1}
-                max={totalPages}
-              />
-              <span className="text-sm text-gray-600">of {totalPages}</span>
-            </div>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToNextPage}
-              disabled={currentPage >= totalPages}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+            {!useIframe && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goToPreviousPage}
+                  disabled={currentPage <= 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={currentPage}
+                    onChange={handlePageInputChange}
+                    className="w-16 px-2 py-1 text-sm border rounded"
+                    min={1}
+                    max={totalPages}
+                  />
+                  <span className="text-sm text-gray-600">of {totalPages}</span>
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goToNextPage}
+                  disabled={currentPage >= totalPages}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={zoomOut}>
-              <ZoomOut className="h-4 w-4" />
-            </Button>
-            <span className="text-sm text-gray-600 min-w-[60px] text-center">
-              {Math.round(scale * 100)}%
-            </span>
-            <Button variant="outline" size="sm" onClick={zoomIn}>
-              <ZoomIn className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="sm" onClick={rotate}>
-              <RotateCw className="h-4 w-4" />
-            </Button>
+            {!useIframe && (
+              <>
+                <Button variant="outline" size="sm" onClick={zoomOut}>
+                  <ZoomOut className="h-4 w-4" />
+                </Button>
+                <span className="text-sm text-gray-600 min-w-[60px] text-center">
+                  {Math.round(scale * 100)}%
+                </span>
+                <Button variant="outline" size="sm" onClick={zoomIn}>
+                  <ZoomIn className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="sm" onClick={rotate}>
+                  <RotateCw className="h-4 w-4" />
+                </Button>
+              </>
+            )}
             <Button variant="outline" size="sm" onClick={downloadPDF}>
               <Download className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => {
+                if (useIframe) {
+                  setUseIframe(false);
+                  if (pdfUrl) loadPDF(pdfUrl);
+                } else {
+                  setUseIframe(true);
+                }
+              }}
+            >
+              {useIframe ? 'Advanced View' : 'Simple View'}
             </Button>
           </div>
         </div>
@@ -247,11 +304,35 @@ export function PDFViewer({ isOpen, onClose, pdfUrl, candidateName }: PDFViewerP
               <div>
                 <p className="text-lg font-semibold text-red-700">Error Loading PDF</p>
                 <p className="text-sm text-gray-600 mt-2">{error}</p>
+                <Button 
+                  variant="outline" 
+                  className="mt-4"
+                  onClick={() => {
+                    setUseIframe(true);
+                    setError(null);
+                  }}
+                >
+                  Try Alternative View
+                </Button>
               </div>
             </div>
           )}
           
-          {!loading && !error && pdfUrl && (
+          {!loading && !error && pdfUrl && useIframe && (
+            <div className="w-full h-full bg-white shadow-lg rounded-lg overflow-hidden">
+              <iframe
+                src={pdfUrl}
+                className="w-full h-full border-0"
+                title={`Resume - ${candidateName || 'Candidate'}`}
+                onError={() => {
+                  console.error('Iframe also failed to load PDF');
+                  setError('Unable to display PDF. Please try downloading the file.');
+                }}
+              />
+            </div>
+          )}
+          
+          {!loading && !error && pdfUrl && !useIframe && (
             <div className="bg-white shadow-lg rounded-lg overflow-hidden">
               <canvas
                 ref={canvasRef}
