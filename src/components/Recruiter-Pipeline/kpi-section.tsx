@@ -55,15 +55,7 @@ const KPI_CARDS = [
     borderColor: "border-orange-200",
     description: "Paused or closed positions"
   },
-  {
-    title: "Applied Candidates",
-    value: "appliedCandidates",
-    icon: Users,
-    color: "text-purple-600",
-    bgColor: "bg-purple-50",
-    borderColor: "border-purple-200",
-    description: "Total applications received"
-  },
+ 
   {
     title: "Hired Candidates",
     value: "hiredCandidates",
@@ -73,15 +65,7 @@ const KPI_CARDS = [
     borderColor: "border-emerald-200",
     description: "Successfully placed candidates"
   },
-  {
-    title: "Disqualified",
-    value: "disqualifiedCandidates",
-    icon: UserX,
-    color: "text-red-600",
-    bgColor: "bg-red-50",
-    borderColor: "border-red-200",
-    description: "Candidates not selected"
-  }
+  
 ];
 
 export function KPISection({ data }: KPISectionProps) {
@@ -91,7 +75,7 @@ export function KPISection({ data }: KPISectionProps) {
 
   return (
     <div className="mb-2">
-      <div className="grid grid-cols-6 gap-3">
+      <div className="grid grid-cols-4 gap-3">
         {KPI_CARDS.map((card) => {
           const IconComponent = card.icon;
           const value = getCardData(card.value);
