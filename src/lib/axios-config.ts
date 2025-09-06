@@ -50,8 +50,9 @@ export const refreshToken = async (): Promise<string | null> => {
       // Store new access token in memory only
       accessToken = newToken;
       
-      // Update axios default headers
+      // Update axios default headers for both instances
       axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+      api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
       
       processQueue(null, newToken);
       return newToken;
@@ -64,6 +65,7 @@ export const refreshToken = async (): Promise<string | null> => {
     // Clear access token on refresh failure
     accessToken = null;
     delete axios.defaults.headers.common['Authorization'];
+    delete api.defaults.headers.common['Authorization'];
     
     processQueue(error, null);
     throw error;
@@ -76,6 +78,7 @@ export const refreshToken = async (): Promise<string | null> => {
 export const setAccessToken = (token: string) => {
   accessToken = token;
   axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 };
 
 // Function to get current access token
@@ -87,6 +90,7 @@ export const getAccessToken = (): string | null => {
 export const clearAccessToken = () => {
   accessToken = null;
   delete axios.defaults.headers.common['Authorization'];
+  delete api.defaults.headers.common['Authorization'];
   
   // Also clear from localStorage
   if (typeof window !== 'undefined') {
@@ -205,6 +209,7 @@ export const initializeAuth = async (): Promise<boolean> => {
     // Check if we have an access token in memory
     if (accessToken) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+      api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
       return true;
     }
     
@@ -215,6 +220,16 @@ export const initializeAuth = async (): Promise<boolean> => {
         setAccessToken(storedToken);
         return true;
       }
+    }
+    
+    // If no token found, try to refresh from server
+    try {
+      const newToken = await refreshToken();
+      if (newToken) {
+        return true;
+      }
+    } catch (refreshError) {
+      console.log('No valid refresh token available');
     }
     
     return false;

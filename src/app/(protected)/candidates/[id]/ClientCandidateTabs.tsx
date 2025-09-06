@@ -162,6 +162,9 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
       
       // Make API call to persist changes
       if (candidate._id) {
+        // Ensure authentication is initialized before making the API call
+        await initializeAuth();
+        
         await candidateService.updateCandidate(candidate._id, updatedCandidate);
         
         // Show success toast message based on API response
@@ -215,9 +218,20 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
           }
         }, 100);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating candidate:', error);
-      toast.error("Failed to update candidate");
+      
+      // Check if it's an authentication error
+      if (error.response?.status === 401) {
+        toast.error("Authentication failed. Please log in again.");
+        // Redirect to login page
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+      } else {
+        toast.error("Failed to update candidate");
+      }
+      
       // Revert local state on error
       setCandidate(candidate);
     }
