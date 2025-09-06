@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/multi-select";
 import { Loader2, User, MapPin, X } from "lucide-react";
 import { candidateService, Candidate } from "@/services/candidateService";
+import { addCandidateToPipeline } from "@/services/recruitmentPipelineService";
 import { toast } from "sonner";
 import { api } from "@/lib/axios-config";
 
@@ -122,10 +123,7 @@ export function AddExistingCandidateDialog({
       if (isPipeline && pipelineId) {
         // Use recruiter pipeline API
         await Promise.all(selectedCandidateIds.map((candidateId) => 
-          api.post('/api/recruiter-pipeline/add-candidate', {
-            pipelineId: pipelineId,
-            candidateId: candidateId
-          })
+          addCandidateToPipeline(pipelineId, candidateId)
         ));
       } else {
         // Use regular job API

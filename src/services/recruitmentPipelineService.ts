@@ -417,6 +417,41 @@ export interface DeleteCandidateResponse {
   };
 }
 
+// Interface for add candidate to pipeline request
+export interface AddCandidateToPipelineRequest {
+  candidateId: string;
+}
+
+// Interface for add candidate to pipeline response
+export interface AddCandidateToPipelineResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    pipelineId: string;
+    candidateId: string;
+    addedAt: string;
+  };
+}
+
+/**
+ * Add a candidate to the recruitment pipeline
+ */
+export const addCandidateToPipeline = async (
+  pipelineId: string,
+  candidateId: string
+): Promise<AddCandidateToPipelineResponse> => {
+  try {
+    const response = await api.post(
+      `/api/recruiter-pipeline/${pipelineId}/add-candidate`,
+      { candidateId }
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error('Error adding candidate to pipeline:', error);
+    throw new Error(error.response?.data?.message || 'Failed to add candidate to pipeline');
+  }
+};
+
 /**
  * Remove a candidate from the recruitment pipeline
  */
