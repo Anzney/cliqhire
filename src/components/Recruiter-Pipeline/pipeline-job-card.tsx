@@ -32,7 +32,8 @@ import { StatusChangeConfirmationDialog } from "./status-change-confirmation-dia
 import { useStageStore } from "./stage-store";
 import { useRouter } from "next/navigation";
 import { PipelineStageBadge } from "./pipeline-stage-badge";
-import { ConnectionBadge } from "./connection-badge";
+import { StatusBadge } from "./status-badge";
+import { PDFViewer } from "@/components/ui/pdf-viewer";
 
 interface PipelineJobCardProps {
   job: Job;
@@ -59,6 +60,17 @@ export function PipelineJobCard({
   const [statusChangeDialog, setStatusChangeDialog] = React.useState<{
     isOpen: boolean;
     candidate: Candidate | null;
+    newStatus: string | null;
+  }>({
+    isOpen: false,
+    candidate: null,
+    newStatus: null,
+  });
+
+  // Stage change confirmation dialog state
+  const [stageChangeDialog, setStageChangeDialog] = React.useState<{
+    isOpen: boolean;
+    candidate: Candidate | null;
     currentStage: string;
     newStage: string;
   }>({
@@ -77,15 +89,15 @@ export function PipelineJobCard({
     candidate: null,
   });
 
-  // Connection change confirmation dialog state
-  const [connectionChangeDialog, setConnectionChangeDialog] = React.useState<{
+  // PDF viewer state
+  const [pdfViewer, setPdfViewer] = React.useState<{
     isOpen: boolean;
-    candidate: Candidate | null;
-    newConnection: string | null;
+    pdfUrl: string | null;
+    candidateName: string | null;
   }>({
     isOpen: false,
-    candidate: null,
-    newConnection: null,
+    pdfUrl: null,
+    candidateName: null,
   });
 
   // Local stage store
@@ -130,7 +142,7 @@ export function PipelineJobCard({
   };
 
   const handleStageChange = (candidate: Candidate, newStage: string) => {
-    setStatusChangeDialog({
+    setStageChangeDialog({
       isOpen: true,
       candidate,
       currentStage: candidate.currentStage,
@@ -139,20 +151,20 @@ export function PipelineJobCard({
   };
 
   const handleConfirmStageChange = async () => {
-    if (statusChangeDialog.candidate) {
+    if (stageChangeDialog.candidate) {
       // Update local store
-      updateCandidateStage(job.id, statusChangeDialog.candidate.id, statusChangeDialog.newStage);
+      updateCandidateStage(job.id, stageChangeDialog.candidate.id, stageChangeDialog.newStage);
       
       // Call the parent's update function (which now includes API integration)
-      await onUpdateCandidateStage(job.id, statusChangeDialog.candidate.id, statusChangeDialog.newStage);
+      await onUpdateCandidateStage(job.id, stageChangeDialog.candidate.id, stageChangeDialog.newStage);
       
       // Close the dialog
-      setStatusChangeDialog({ isOpen: false, candidate: null, currentStage: '', newStage: '' });
+      setStageChangeDialog({ isOpen: false, candidate: null, currentStage: '', newStage: '' });
     }
   };
 
   const handleCancelStageChange = () => {
-    setStatusChangeDialog({ isOpen: false, candidate: null, currentStage: '', newStage: '' });
+    setStageChangeDialog({ isOpen: false, candidate: null, currentStage: '', newStage: '' });
   };
 
   const handleDeleteCandidate = (candidate: Candidate) => {
@@ -230,27 +242,43 @@ export function PipelineJobCard({
     }
   };
 
-  // Function to handle connection change
-  const handleConnectionChange = (candidate: Candidate, newConnection: any) => {
-    setConnectionChangeDialog({
+  // Function to handle status change
+  const handleStatusChange = (candidate: Candidate, newStatus: any) => {
+    setStatusChangeDialog({
       isOpen: true,
       candidate,
-      newConnection,
+      newStatus,
     });
   };
 
-  const handleConfirmConnectionChange = async () => {
-    if (connectionChangeDialog.candidate && connectionChangeDialog.newConnection) {
-      console.log('Connection changed for candidate:', connectionChangeDialog.candidate.name, 'to:', connectionChangeDialog.newConnection);
-      // TODO: Implement API call to update connection
+
+  const handleConfirmStatusChange = async () => {
+    if (statusChangeDialog.candidate && statusChangeDialog.newStatus) {
+      console.log('Status changed for candidate:', statusChangeDialog.candidate.name, 'to:', statusChangeDialog.newStatus);
+      // TODO: Implement API call to update status
       
-      // Close the dialog
-      setConnectionChangeDialog({ isOpen: false, candidate: null, newConnection: null });
+      setStatusChangeDialog({ isOpen: false, candidate: null, newStatus: null });
     }
   };
 
-  const handleCancelConnectionChange = () => {
-    setConnectionChangeDialog({ isOpen: false, candidate: null, newConnection: null });
+  const handleViewResume = (candidate: Candidate) => {
+    setPdfViewer({
+      isOpen: true,
+      pdfUrl: candidate.resume || null,
+      candidateName: candidate.name || null,
+    });
+  };
+
+  const handleCancelStatusChange = () => {
+    setStatusChangeDialog({ isOpen: false, candidate: null, newStatus: null });
+  };
+
+  const handleClosePdfViewer = () => {
+    setPdfViewer({
+      isOpen: false,
+      pdfUrl: null,
+      candidateName: null,
+    });
   };
 
   return (
@@ -393,7 +421,7 @@ export function PipelineJobCard({
                       <TableHead>Candidate</TableHead>
                       <TableHead>Current Position</TableHead>
                       <TableHead className="w-[200px]">Stage</TableHead>
-                      <TableHead className="w-[120px]">Connection</TableHead>
+                      <TableHead className="w-[120px]">Status</TableHead>
                       <TableHead className="w-[140px]">Hiring Manager</TableHead>
                       <TableHead className="w-[120px]">Recruiter</TableHead>
                       <TableHead className="w-[90px]">Action</TableHead>
@@ -425,11 +453,13 @@ export function PipelineJobCard({
                         <TableCell>
                           {(() => {
                             const currentStage = getCandidateStage(job.id, candidate.id) || candidate.currentStage;
-                            if (currentStage === 'Sourcing') {
+                            const stagesWithStatus = ['Sourcing', 'Screening', 'Client Screening', 'Interview', 'Verification'];
+                            if (stagesWithStatus.includes(currentStage)) {
                               return (
-                                <ConnectionBadge
-                                  connection={candidate.connection || null}
-                                  onConnectionChange={(newConnection) => handleConnectionChange(candidate, newConnection)}
+                                <StatusBadge
+                                  status={candidate.status || null}
+                                  stage={currentStage}
+                                  onStatusChange={(newStatus) => handleStatusChange(candidate, newStatus)}
                                 />
                               );
                             } else {
@@ -470,7 +500,7 @@ export function PipelineJobCard({
                               <DropdownMenuItem 
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  console.log('View resume for:', candidate.name);
+                                  handleViewResume(candidate);
                                 }}
                                 className="cursor-pointer"
                               >
@@ -511,12 +541,12 @@ export function PipelineJobCard({
       
       {/* Status Change Confirmation Dialog */}
       <StatusChangeConfirmationDialog
-        isOpen={statusChangeDialog.isOpen}
+        isOpen={stageChangeDialog.isOpen}
         onClose={handleCancelStageChange}
         onConfirm={handleConfirmStageChange}
-        candidateName={statusChangeDialog.candidate?.name || ''}
-        currentStage={statusChangeDialog.currentStage}
-        newStage={statusChangeDialog.newStage}
+        candidateName={stageChangeDialog.candidate?.name || ''}
+        currentStage={stageChangeDialog.currentStage}
+        newStage={stageChangeDialog.newStage}
       />
 
       {/* Add Candidate Dialog */}
@@ -579,27 +609,35 @@ export function PipelineJobCard({
         </DialogContent>
       </Dialog>
 
-      {/* Connection Change Confirmation Dialog */}
-      <Dialog open={connectionChangeDialog.isOpen} onOpenChange={(open) => setConnectionChangeDialog(prev => ({ ...prev, isOpen: open }))}>
+      {/* Status Change Confirmation Dialog */}
+      <Dialog open={statusChangeDialog.isOpen} onOpenChange={(open) => setStatusChangeDialog(prev => ({ ...prev, isOpen: open }))}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Update Connection</DialogTitle>
+            <DialogTitle>Update Status</DialogTitle>
             <DialogDescription>
-              Are you sure you want to update the connection for <strong>{connectionChangeDialog.newConnection}</strong>?
+              Are you sure you want to update the status for <strong>{statusChangeDialog.candidate?.name}</strong> to <strong>{statusChangeDialog.newStatus}</strong>?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={handleCancelConnectionChange}>
+            <Button variant="outline" onClick={handleCancelStatusChange}>
               Cancel
             </Button>
             <Button 
-              onClick={handleConfirmConnectionChange}
+              onClick={handleConfirmStatusChange}
             >
-              Update Connection
+              Update Status
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* PDF Viewer */}
+      <PDFViewer
+        isOpen={pdfViewer.isOpen}
+        onClose={handleClosePdfViewer}
+        pdfUrl={pdfViewer.pdfUrl || undefined}
+        candidateName={pdfViewer.candidateName || undefined}
+      />
     </>
   );
 }
