@@ -33,6 +33,7 @@ import { useStageStore } from "./stage-store";
 import { useRouter } from "next/navigation";
 import { PipelineStageBadge } from "./pipeline-stage-badge";
 import { StatusBadge } from "./status-badge";
+import { PDFViewer } from "@/components/ui/pdf-viewer";
 
 interface PipelineJobCardProps {
   job: Job;
@@ -86,6 +87,17 @@ export function PipelineJobCard({
   }>({
     isOpen: false,
     candidate: null,
+  });
+
+  // PDF viewer state
+  const [pdfViewer, setPdfViewer] = React.useState<{
+    isOpen: boolean;
+    pdfUrl: string | null;
+    candidateName: string | null;
+  }>({
+    isOpen: false,
+    pdfUrl: null,
+    candidateName: null,
   });
 
   // Local stage store
@@ -249,8 +261,24 @@ export function PipelineJobCard({
     }
   };
 
+  const handleViewResume = (candidate: Candidate) => {
+    setPdfViewer({
+      isOpen: true,
+      pdfUrl: candidate.resume || null,
+      candidateName: candidate.name || null,
+    });
+  };
+
   const handleCancelStatusChange = () => {
     setStatusChangeDialog({ isOpen: false, candidate: null, newStatus: null });
+  };
+
+  const handleClosePdfViewer = () => {
+    setPdfViewer({
+      isOpen: false,
+      pdfUrl: null,
+      candidateName: null,
+    });
   };
 
   return (
@@ -472,7 +500,7 @@ export function PipelineJobCard({
                               <DropdownMenuItem 
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  console.log('View resume for:', candidate.name);
+                                  handleViewResume(candidate);
                                 }}
                                 className="cursor-pointer"
                               >
@@ -602,6 +630,14 @@ export function PipelineJobCard({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* PDF Viewer */}
+      <PDFViewer
+        isOpen={pdfViewer.isOpen}
+        onClose={handleClosePdfViewer}
+        pdfUrl={pdfViewer.pdfUrl || undefined}
+        candidateName={pdfViewer.candidateName || undefined}
+      />
     </>
   );
 }

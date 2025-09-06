@@ -25,6 +25,7 @@ import { StatusChangeConfirmationDialog } from "@/components/Recruiter-Pipeline/
 import { AddCandidateDialog } from "@/components/Recruiter-Pipeline/add-candidate-dialog";
 import { AddExistingCandidateDialog } from "@/components/common/add-existing-candidate-dialog";
 import { CreateCandidateDialog, type CreateCandidateValues } from "@/components/Recruiter-Pipeline/create-candidate-dialog";
+import { PDFViewer } from "@/components/ui/pdf-viewer";
 
 const Page = () => {
   const params = useParams();
@@ -72,6 +73,17 @@ const Page = () => {
     candidate: null,
     currentStage: '',
     newStage: '',
+  });
+
+  // PDF viewer state
+  const [pdfViewer, setPdfViewer] = React.useState<{
+    isOpen: boolean;
+    pdfUrl: string | null;
+    candidateName: string | null;
+  }>({
+    isOpen: false,
+    pdfUrl: null,
+    candidateName: null,
   });
 
   // Filter state for stage filtering
@@ -515,6 +527,22 @@ const Page = () => {
     }
   };
 
+  const handleViewResume = (candidate: Candidate) => {
+    setPdfViewer({
+      isOpen: true,
+      pdfUrl: candidate.resume || null,
+      candidateName: candidate.name || null,
+    });
+  };
+
+  const handleClosePdfViewer = () => {
+    setPdfViewer({
+      isOpen: false,
+      pdfUrl: null,
+      candidateName: null,
+    });
+  };
+
   const handleCancelStatusChange = () => {
     setStatusChangeDialog({ isOpen: false, candidate: null, newStatus: null });
   };
@@ -750,7 +778,7 @@ const Page = () => {
                       <DropdownMenuItem 
                         onClick={(e) => {
                           e.stopPropagation();
-                          console.log('View resume for:', candidate.name);
+                          handleViewResume(candidate);
                         }}
                         className="cursor-pointer"
                       >
@@ -869,6 +897,14 @@ const Page = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* PDF Viewer */}
+      <PDFViewer
+        isOpen={pdfViewer.isOpen}
+        onClose={handleClosePdfViewer}
+        pdfUrl={pdfViewer.pdfUrl || undefined}
+        candidateName={pdfViewer.candidateName || undefined}
+      />
     </>
   );
 };
