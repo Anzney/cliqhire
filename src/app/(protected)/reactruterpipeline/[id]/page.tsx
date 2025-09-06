@@ -660,7 +660,7 @@ const Page = () => {
         </div>
 
         {/* Pipeline Stage Badges - Clickable filters */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 ml-2">
           {pipelineStages.map((stage) => {
             const count = job.candidates.filter(c => c.currentStage === stage).length;
             const isActive = selectedStageFilter === stage;
@@ -691,7 +691,7 @@ const Page = () => {
 
         {/* Candidates Table */}
         {selectedStageFilter && (
-          <div className="px-4 py-2 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-700 mb-4">
+          <div className="px-4 py-2 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-700 mb-4 ml-2">
             Showing candidates in: <span className="font-semibold">{selectedStageFilter}</span>
             <span className="ml-2 text-blue-500">({getFilteredCandidates().length} candidates)</span>
           </div>

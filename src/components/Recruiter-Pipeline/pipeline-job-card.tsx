@@ -373,7 +373,7 @@ export function PipelineJobCard({
           <CardContent className="pt-0">
             
             {/* Pipeline Stage Badges - Clickable filters */}
-            <div className="flex flex-wrap gap-2 mb-6">
+            <div className="flex flex-wrap gap-2 mb-6 ml-2">
               {(() => {
                 const updatedCounts = getUpdatedStageCounts();
                 return pipelineStages.map((stage) => {
@@ -408,7 +408,7 @@ export function PipelineJobCard({
             {/* Candidates Table - Single table with sticky header */}
             <div className="border-2 border-blue-200 rounded-md bg-gray-50 max-h-[300px] overflow-hidden">
               {selectedStageFilter && (
-                <div className="px-4 py-2 bg-blue-50 border-b border-blue-200 text-sm text-blue-700">
+                <div className="px-4 py-2 bg-blue-50 border-b border-blue-200 text-sm text-blue-700 ">
                   Showing candidates in: <span className="font-semibold">{selectedStageFilter}</span>
                   <span className="ml-2 text-blue-500">({getFilteredCandidates().length} candidates)</span>
                 </div>
