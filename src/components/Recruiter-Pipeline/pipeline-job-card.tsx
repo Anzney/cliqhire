@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ChevronDown, EllipsisVertical, ChevronRight, Users, MapPin, DollarSign, Briefcase, Building2, Tag, Pin, Loader2, Eye, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, EllipsisVertical, ChevronRight, Users, MapPin, DollarSign, Briefcase, Building2, Tag, Pin, Loader2, Eye, Plus, Trash2, X } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -399,6 +399,7 @@ export function PipelineJobCard({
                   className="bg-gray-100 text-gray-600 border-gray-300 cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => setSelectedStageFilter(null)}
                 >
+                  <X className="text-red-500 h-3 w-3 mr-1" />
                   Clear Filter
                 </Badge>
               )}

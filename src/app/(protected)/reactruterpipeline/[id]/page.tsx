@@ -13,7 +13,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Eye, Briefcase, Trash2, EllipsisVertical } from "lucide-react";
+import { Eye, Briefcase, Trash2, EllipsisVertical, X } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { pipelineStages, getStageColor, type Job, type Candidate, type ConnectionType } from "@/components/Recruiter-Pipeline/dummy-data";
@@ -683,6 +683,7 @@ const Page = () => {
               className="bg-gray-100 text-gray-600 border-gray-300 cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => setSelectedStageFilter(null)}
             >
+              <X className="text-red-500 h-3 w-3 mr-1" />
               Clear Filter
             </Badge>
           )}
