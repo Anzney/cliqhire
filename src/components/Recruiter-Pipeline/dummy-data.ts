@@ -3,6 +3,15 @@
 
 export type ConnectionType = "LinkedIn" | "Indeed" | "Referral" | "Direct" | "Other";
 
+// Define status types for each stage
+export type SourcingStatus = "LinkedIn Connections Sent" | "LinkedIn Connections Accepted" | "CV Received";
+export type ScreeningStatus = "Submission Pending" | "CV Submitted";
+export type ClientScreeningStatus = "Client Shortlisted" | "Rejected by Client";
+export type InterviewStatus = "Client Interviewed" | "Client Selected" | "Rejected by Client";
+export type VerificationStatus = "Document Pending" | "Document Verified" | "Offer Letter Sent" | "Offer Accepted" | "Offer Rejected";
+
+export type StatusType = SourcingStatus | ScreeningStatus | ClientScreeningStatus | InterviewStatus | VerificationStatus;
+
 export interface Candidate {
   id: string;
   name: string;
@@ -56,6 +65,7 @@ export interface Candidate {
   disqualified?: any;
   // Additional pipeline fields
   connection?: ConnectionType;
+  status?: StatusType;
   hiringManager?: string;
   recruiter?: string;
 }
