@@ -26,6 +26,18 @@ interface CreateCandidateFormProps {
   setShowAdvanced: (value: boolean) => void;
   onClose: () => void; // for dialog close (X)
   goBack: () => void; // for Cancel button
+  tempCandidateData?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    location?: string;
+    description?: string;
+    gender?: string;
+    dateOfBirth?: string;
+    country?: string;
+    nationality?: string;
+    willingToRelocate?: string;
+  };
 }
 
 export default function CreateCandidateForm({
@@ -34,18 +46,19 @@ export default function CreateCandidateForm({
   setShowAdvanced,
   onClose,
   goBack,
+  tempCandidateData,
 }: CreateCandidateFormProps) {
   const [form, setForm] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    location: "",
-    description: "",
-    gender: "",
-    dateOfBirth: null as Date | null,
-    country: "",
-    nationality: "",
-    willingToRelocate: "",
+    name: tempCandidateData?.name || "",
+    phone: tempCandidateData?.phone || "",
+    email: tempCandidateData?.email || "",
+    location: tempCandidateData?.location || "",
+    description: tempCandidateData?.description || "",
+    gender: tempCandidateData?.gender || "",
+    dateOfBirth: tempCandidateData?.dateOfBirth ? new Date(tempCandidateData.dateOfBirth) : null as Date | null,
+    country: tempCandidateData?.country || "",
+    nationality: tempCandidateData?.nationality || "",
+    willingToRelocate: tempCandidateData?.willingToRelocate || "",
     cv: null as File | null,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,6 +67,25 @@ export default function CreateCandidateForm({
   const [countryOptions] = useState<Country[]>(countryList().getData());
   const [nationalityOptions] = useState<Country[]>(countryList().getData());
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Reset form when tempCandidateData changes
+  React.useEffect(() => {
+    if (tempCandidateData) {
+      setForm({
+        name: tempCandidateData.name || "",
+        phone: tempCandidateData.phone || "",
+        email: tempCandidateData.email || "",
+        location: tempCandidateData.location || "",
+        description: tempCandidateData.description || "",
+        gender: tempCandidateData.gender || "",
+        dateOfBirth: tempCandidateData.dateOfBirth ? new Date(tempCandidateData.dateOfBirth) : null,
+        country: tempCandidateData.country || "",
+        nationality: tempCandidateData.nationality || "",
+        willingToRelocate: tempCandidateData.willingToRelocate || "",
+        cv: null,
+      });
+    }
+  }, [tempCandidateData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

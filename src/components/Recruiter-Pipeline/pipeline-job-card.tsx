@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AddCandidateDialog } from "./add-candidate-dialog";
 import { AddExistingCandidateDialog } from "@/components/common/add-existing-candidate-dialog";
 import { CreateCandidateDialog, type CreateCandidateValues } from "./create-candidate-dialog";
+import { CreateCandidateModal } from "@/components/candidates/create-candidate-modal";
 import { Button } from "@/components/ui/button";
 import { 
   Table, 
@@ -34,7 +35,7 @@ import { useRouter } from "next/navigation";
 import { PipelineStageBadge } from "./pipeline-stage-badge";
 import { StatusBadge } from "./status-badge";
 import { PDFViewer } from "@/components/ui/pdf-viewer";
-import { validateTempCandidateStageChange, isTempCandidate } from "@/lib/temp-candidate-validation";
+import { validateTempCandidateStageChange, isTempCandidate, validateTempCandidateStatusChange } from "@/lib/temp-candidate-validation";
 import { TempCandidateAlertDialog } from "./temp-candidate-alert-dialog";
 
 interface PipelineJobCardProps {
@@ -111,6 +112,15 @@ export function PipelineJobCard({
     isOpen: false,
     candidateName: null,
     message: null,
+  });
+
+  // Auto-create candidate dialog state for temp candidates
+  const [autoCreateCandidateDialog, setAutoCreateCandidateDialog] = React.useState<{
+    isOpen: boolean;
+    candidate: Candidate | null;
+  }>({
+    isOpen: false,
+    candidate: null,
   });
 
   // Local stage store
@@ -270,6 +280,28 @@ export function PipelineJobCard({
 
   // Function to handle status change
   const handleStatusChange = (candidate: Candidate, newStatus: any) => {
+    // Validate if candidate can change status (check for temp candidate)
+    const validation = validateTempCandidateStatusChange(candidate, newStatus);
+    
+    if (!validation.canChangeStage) {
+      // Show temp candidate alert instead of status change dialog
+      setTempCandidateAlert({
+        isOpen: true,
+        candidateName: candidate.name,
+        message: validation.message || null,
+      });
+      return;
+    }
+
+    // If this is a temp candidate changing to "CV Received", open create dialog
+    if (validation.shouldOpenCreateDialog) {
+      setAutoCreateCandidateDialog({
+        isOpen: true,
+        candidate: candidate,
+      });
+      return;
+    }
+
     setStatusChangeDialog({
       isOpen: true,
       candidate,
@@ -315,6 +347,32 @@ export function PipelineJobCard({
       candidateName: null,
       message: null,
     });
+  };
+
+  const handleCloseAutoCreateDialog = () => {
+    setAutoCreateCandidateDialog({
+      isOpen: false,
+      candidate: null,
+    });
+  };
+
+  const handleAutoCreateCandidateSubmit = async (candidate: any) => {
+    try {
+      console.log('Auto-create candidate for temp candidate:', autoCreateCandidateDialog.candidate?.name, candidate);
+      
+      // TODO: Call API to create the candidate from temp candidate
+      // This would involve converting the temp candidate to a full candidate
+      
+      // After successful creation, automatically progress to next stage (Screening)
+      if (autoCreateCandidateDialog.candidate) {
+        await onUpdateCandidateStage(job.id, autoCreateCandidateDialog.candidate.id, "Screening");
+      }
+      
+      handleCloseAutoCreateDialog();
+    } catch (error) {
+      console.error('Error creating candidate from temp candidate:', error);
+      // Handle error appropriately
+    }
   };
 
   return (
@@ -684,6 +742,25 @@ export function PipelineJobCard({
         onClose={handleCloseTempCandidateAlert}
         candidateName={tempCandidateAlert.candidateName || undefined}
         message={tempCandidateAlert.message || undefined}
+      />
+
+      {/* Auto-Create Candidate Dialog for Temp Candidates */}
+      <CreateCandidateModal
+        isOpen={autoCreateCandidateDialog.isOpen}
+        onClose={handleCloseAutoCreateDialog}
+        onCandidateCreated={handleAutoCreateCandidateSubmit}
+        tempCandidateData={autoCreateCandidateDialog.candidate ? {
+          name: autoCreateCandidateDialog.candidate.name,
+          email: autoCreateCandidateDialog.candidate.email,
+          phone: autoCreateCandidateDialog.candidate.phone,
+          location: autoCreateCandidateDialog.candidate.location,
+          description: autoCreateCandidateDialog.candidate.description,
+          gender: autoCreateCandidateDialog.candidate.gender,
+          dateOfBirth: autoCreateCandidateDialog.candidate.dateOfBirth,
+          country: autoCreateCandidateDialog.candidate.country,
+          nationality: autoCreateCandidateDialog.candidate.nationality,
+          willingToRelocate: autoCreateCandidateDialog.candidate.willingToRelocate,
+        } : undefined}
       />
     </>
   );

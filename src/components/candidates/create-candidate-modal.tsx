@@ -180,6 +180,18 @@ interface CreateCandidateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCandidateCreated?: (candidate: any) => void;
+  tempCandidateData?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    location?: string;
+    description?: string;
+    gender?: string;
+    dateOfBirth?: string;
+    country?: string;
+    nationality?: string;
+    willingToRelocate?: string;
+  };
 }
 
 interface OptionCardProps {
@@ -207,10 +219,11 @@ export function CreateCandidateModal({
   isOpen,
   onClose,
   onCandidateCreated,
+  tempCandidateData,
 }: CreateCandidateModalProps) {
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(!!tempCandidateData);
   const [showUpload, setShowUpload] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(!!tempCandidateData);
   const [candidateSummary, setCandidateSummary] = useState<any | null>(null);
 
   // Reset summary on dialog close
@@ -264,6 +277,7 @@ export function CreateCandidateModal({
             }}
             goBack={() => setShowForm(false)}
             onClose={onClose}
+            tempCandidateData={tempCandidateData}
           />
         ) : showUpload ? (
           <UploadResume
