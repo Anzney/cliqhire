@@ -34,6 +34,8 @@ import { useRouter } from "next/navigation";
 import { PipelineStageBadge } from "./pipeline-stage-badge";
 import { StatusBadge } from "./status-badge";
 import { PDFViewer } from "@/components/ui/pdf-viewer";
+import { validateTempCandidateStageChange, isTempCandidate } from "@/lib/temp-candidate-validation";
+import { TempCandidateAlertDialog } from "./temp-candidate-alert-dialog";
 
 interface PipelineJobCardProps {
   job: Job;
@@ -100,6 +102,17 @@ export function PipelineJobCard({
     candidateName: null,
   });
 
+  // Temp candidate alert dialog state
+  const [tempCandidateAlert, setTempCandidateAlert] = React.useState<{
+    isOpen: boolean;
+    candidateName: string | null;
+    message: string | null;
+  }>({
+    isOpen: false,
+    candidateName: null,
+    message: null,
+  });
+
   // Local stage store
   const { updateCandidateStage, getCandidateStage } = useStageStore();
 
@@ -142,6 +155,19 @@ export function PipelineJobCard({
   };
 
   const handleStageChange = (candidate: Candidate, newStage: string) => {
+    // Validate if candidate can change stage (check for temp candidate)
+    const validation = validateTempCandidateStageChange(candidate);
+    
+    if (!validation.canChangeStage) {
+      // Show temp candidate alert instead of stage change dialog
+      setTempCandidateAlert({
+        isOpen: true,
+        candidateName: candidate.name,
+        message: validation.message || null,
+      });
+      return;
+    }
+
     setStageChangeDialog({
       isOpen: true,
       candidate,
@@ -280,6 +306,14 @@ export function PipelineJobCard({
       isOpen: false,
       pdfUrl: null,
       candidateName: null,
+    });
+  };
+
+  const handleCloseTempCandidateAlert = () => {
+    setTempCandidateAlert({
+      isOpen: false,
+      candidateName: null,
+      message: null,
     });
   };
 
@@ -642,6 +676,14 @@ export function PipelineJobCard({
         onClose={handleClosePdfViewer}
         pdfUrl={pdfViewer.pdfUrl || undefined}
         candidateName={pdfViewer.candidateName || undefined}
+      />
+
+      {/* Temp Candidate Alert Dialog */}
+      <TempCandidateAlertDialog
+        isOpen={tempCandidateAlert.isOpen}
+        onClose={handleCloseTempCandidateAlert}
+        candidateName={tempCandidateAlert.candidateName || undefined}
+        message={tempCandidateAlert.message || undefined}
       />
     </>
   );

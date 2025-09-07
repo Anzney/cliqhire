@@ -68,6 +68,8 @@ export interface Candidate {
   status?: StatusType;
   hiringManager?: string;
   recruiter?: string;
+  // Temp candidate flag
+  isTempCandidate?: boolean;
 }
 
 export interface JobTeamInfo {

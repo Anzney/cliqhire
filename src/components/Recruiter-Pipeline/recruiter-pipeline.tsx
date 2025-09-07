@@ -152,7 +152,8 @@ const convertPipelineDataToJob = (pipelineData: any, isExpanded: boolean = false
         // Additional pipeline fields
         connection: candidateData.connection,
         hiringManager: candidateData.hiringManager,
-        recruiter: candidateData.recruiter
+        recruiter: candidateData.recruiter,
+        isTempCandidate: candidate.isTempCandidate || false,
       };
     }),
     // Pipeline-specific data from new API structure

@@ -26,6 +26,8 @@ import { AddCandidateDialog } from "@/components/Recruiter-Pipeline/add-candidat
 import { AddExistingCandidateDialog } from "@/components/common/add-existing-candidate-dialog";
 import { CreateCandidateDialog, type CreateCandidateValues } from "@/components/Recruiter-Pipeline/create-candidate-dialog";
 import { PDFViewer } from "@/components/ui/pdf-viewer";
+import { validateTempCandidateStageChange, isTempCandidate } from "@/lib/temp-candidate-validation";
+import { TempCandidateAlertDialog } from "@/components/Recruiter-Pipeline/temp-candidate-alert-dialog";
 
 const Page = () => {
   const params = useParams();
@@ -84,6 +86,17 @@ const Page = () => {
     isOpen: false,
     pdfUrl: null,
     candidateName: null,
+  });
+
+  // Temp candidate alert dialog state
+  const [tempCandidateAlert, setTempCandidateAlert] = React.useState<{
+    isOpen: boolean;
+    candidateName: string | null;
+    message: string | null;
+  }>({
+    isOpen: false,
+    candidateName: null,
+    message: null,
   });
 
   // Filter state for stage filtering
@@ -163,6 +176,7 @@ const Page = () => {
             connection: (c as any).connection,
             hiringManager: (c as any).hiringManager,
             recruiter: (c as any).recruiter,
+            isTempCandidate: (c as any).candidateId?.isTempCandidate || false,
           })) as Candidate[],
           pipelineStatus: entry.status,
           priority: entry.priority,
@@ -289,6 +303,19 @@ const Page = () => {
   };
 
   const handleStageChange = (candidate: Candidate, newStage: string) => {
+    // Validate if candidate can change stage (check for temp candidate)
+    const validation = validateTempCandidateStageChange(candidate);
+    
+    if (!validation.canChangeStage) {
+      // Show temp candidate alert instead of stage change dialog
+      setTempCandidateAlert({
+        isOpen: true,
+        candidateName: candidate.name,
+        message: validation.message || null,
+      });
+      return;
+    }
+
     setStageChangeDialog({
       isOpen: true,
       candidate,
@@ -367,6 +394,7 @@ const Page = () => {
             connection: (c as any).connection,
             hiringManager: (c as any).hiringManager,
             recruiter: (c as any).recruiter,
+            isTempCandidate: (c as any).candidateId?.isTempCandidate || false,
           })) as Candidate[],
           pipelineStatus: entry.status,
           priority: entry.priority,
@@ -467,6 +495,7 @@ const Page = () => {
             connection: (c as any).connection,
             hiringManager: (c as any).hiringManager,
             recruiter: (c as any).recruiter,
+            isTempCandidate: (c as any).candidateId?.isTempCandidate || false,
           })) as Candidate[],
           pipelineStatus: entry.status,
           priority: entry.priority,
@@ -542,6 +571,14 @@ const Page = () => {
       isOpen: false,
       pdfUrl: null,
       candidateName: null,
+    });
+  };
+
+  const handleCloseTempCandidateAlert = () => {
+    setTempCandidateAlert({
+      isOpen: false,
+      candidateName: null,
+      message: null,
     });
   };
 
@@ -909,6 +946,14 @@ const Page = () => {
         onClose={handleClosePdfViewer}
         pdfUrl={pdfViewer.pdfUrl || undefined}
         candidateName={pdfViewer.candidateName || undefined}
+      />
+
+      {/* Temp Candidate Alert Dialog */}
+      <TempCandidateAlertDialog
+        isOpen={tempCandidateAlert.isOpen}
+        onClose={handleCloseTempCandidateAlert}
+        candidateName={tempCandidateAlert.candidateName || undefined}
+        message={tempCandidateAlert.message || undefined}
       />
     </>
   );
