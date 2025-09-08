@@ -18,6 +18,7 @@ import ReactCountryFlag from "react-country-flag";
 import { Upload } from "lucide-react";
 import { subDays } from "date-fns";
 import { candidateService } from "@/services/candidateService";
+import { convertTempCandidateToReal, type ConvertTempCandidateRequest } from "@/services/recruitmentPipelineService";
 import { toast } from "sonner";
 
 interface CreateCandidateFormProps {
@@ -38,6 +39,10 @@ interface CreateCandidateFormProps {
     nationality?: string;
     willingToRelocate?: string;
   };
+  // Props for temp candidate conversion
+  isTempCandidateConversion?: boolean;
+  pipelineId?: string;
+  tempCandidateId?: string;
 }
 
 export default function CreateCandidateForm({
@@ -47,6 +52,9 @@ export default function CreateCandidateForm({
   onClose,
   goBack,
   tempCandidateData,
+  isTempCandidateConversion = false,
+  pipelineId,
+  tempCandidateId,
 }: CreateCandidateFormProps) {
   const [form, setForm] = useState({
     name: tempCandidateData?.name || "",
@@ -149,46 +157,86 @@ export default function CreateCandidateForm({
         return;
       }
 
-      // Create FormData for file upload
-      const formData = new FormData();
-      
-      // Add all form fields to FormData
-      Object.keys(form).forEach(key => {
-        if (key === 'cv' && form.cv) {
-          formData.append('cv', form.cv);
-        } else if (key === 'dateOfBirth' && form.dateOfBirth) {
-          formData.append('dateOfBirth', form.dateOfBirth.toISOString());
-        } else if (key !== 'cv' && key !== 'dateOfBirth') {
-          formData.append(key, (form as any)[key]);
+      if (isTempCandidateConversion) {
+        // Handle temp candidate conversion
+        if (!pipelineId || !tempCandidateId) {
+          alert("Missing pipeline or temp candidate information");
+          setIsSubmitting(false);
+          return;
         }
-      });
 
-      // Send data to backend using candidateService
-      const createdCandidate = await candidateService.createCandidate(formData);
-      
-      // Show success toast message
-      toast.success("Candidate created successfully!");
-      
-      // Call the callback with the created candidate
-      if (onCandidateCreated) {
-        onCandidateCreated(createdCandidate);
+        const candidateData: ConvertTempCandidateRequest = {
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          location: form.location,
+          description: form.description,
+          gender: form.gender,
+          dateOfBirth: form.dateOfBirth ? form.dateOfBirth.toISOString() : undefined,
+          country: form.country,
+          nationality: form.nationality,
+          willingToRelocate: form.willingToRelocate,
+        };
+
+        const result = await convertTempCandidateToReal(pipelineId, tempCandidateId, candidateData);
+        
+        if (result.success) {
+          // Show success toast message
+          toast.success("Temp candidate converted to real candidate successfully!");
+          
+          // Call the callback with the converted candidate
+          if (onCandidateCreated) {
+            onCandidateCreated(result.data);
+          }
+          
+          // Close the modal
+          onClose();
+        } else {
+          throw new Error(result.error || result.message);
+        }
+      } else {
+        // Handle regular candidate creation
+        // Create FormData for file upload
+        const formData = new FormData();
+        
+        // Add all form fields to FormData
+        Object.keys(form).forEach(key => {
+          if (key === 'cv' && form.cv) {
+            formData.append('cv', form.cv);
+          } else if (key === 'dateOfBirth' && form.dateOfBirth) {
+            formData.append('dateOfBirth', form.dateOfBirth.toISOString());
+          } else if (key !== 'cv' && key !== 'dateOfBirth') {
+            formData.append(key, (form as any)[key]);
+          }
+        });
+
+        // Send data to backend using candidateService
+        const createdCandidate = await candidateService.createCandidate(formData);
+        
+        // Show success toast message
+        toast.success("Candidate created successfully!");
+        
+        // Call the callback with the created candidate
+        if (onCandidateCreated) {
+          onCandidateCreated(createdCandidate);
+        }
+        
+        // Close the modal
+        onClose();
+        
+        // Redirect to candidate summary page
+        const candidateId = createdCandidate._id;
+        router.push(`/candidates/${candidateId}`);
       }
       
-      // Close the modal
-      onClose();
-      
-      // Redirect to candidate summary page
-      const candidateId = createdCandidate._id;
-      router.push(`/candidates/${candidateId}`);
-      
     } catch (error: any) {
-      console.error('Error creating candidate:', error);
+      console.error('Error creating/converting candidate:', error);
       
       // Show error toast message
       if (error.message) {
-        toast.error(`Failed to create candidate: ${error.message}`);
+        toast.error(`Failed to ${isTempCandidateConversion ? 'convert' : 'create'} candidate: ${error.message}`);
       } else {
-        toast.error("Failed to create candidate. Please try again.");
+        toast.error(`Failed to ${isTempCandidateConversion ? 'convert' : 'create'} candidate. Please try again.`);
       }
     } finally {
       setIsSubmitting(false);

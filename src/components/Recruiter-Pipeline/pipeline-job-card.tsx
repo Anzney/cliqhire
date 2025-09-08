@@ -417,17 +417,15 @@ export function PipelineJobCard({
     try {
       console.log('Auto-create candidate for temp candidate:', autoCreateCandidateDialog.candidate?.name, candidate);
       
-      // TODO: Call API to create the candidate from temp candidate
-      // This would involve converting the temp candidate to a full candidate
+      // The conversion is now handled by the CreateCandidateForm itself
+      // We just need to refresh the job data after successful conversion
       
-      // After successful creation, automatically progress to next stage (Screening)
-      if (autoCreateCandidateDialog.candidate) {
-        await onUpdateCandidateStage(job.id, autoCreateCandidateDialog.candidate.id, "Screening");
-      }
+      // Notify the parent component about the update
+      onCandidateUpdate?.(job.id, candidate);
       
       handleCloseAutoCreateDialog();
     } catch (error) {
-      console.error('Error creating candidate from temp candidate:', error);
+      console.error('Error handling temp candidate conversion:', error);
       // Handle error appropriately
     }
   };
@@ -819,6 +817,9 @@ export function PipelineJobCard({
           nationality: autoCreateCandidateDialog.candidate.nationality,
           willingToRelocate: autoCreateCandidateDialog.candidate.willingToRelocate,
         } : undefined}
+        isTempCandidateConversion={true}
+        pipelineId={job.id}
+        tempCandidateId={autoCreateCandidateDialog.candidate?.id}
       />
 
       {/* Disqualification Dialog */}

@@ -192,6 +192,10 @@ interface CreateCandidateModalProps {
     nationality?: string;
     willingToRelocate?: string;
   };
+  // Props for temp candidate conversion
+  isTempCandidateConversion?: boolean;
+  pipelineId?: string;
+  tempCandidateId?: string;
 }
 
 interface OptionCardProps {
@@ -220,6 +224,9 @@ export function CreateCandidateModal({
   onClose,
   onCandidateCreated,
   tempCandidateData,
+  isTempCandidateConversion = false,
+  pipelineId,
+  tempCandidateId,
 }: CreateCandidateModalProps) {
   const [showForm, setShowForm] = useState(!!tempCandidateData);
   const [showUpload, setShowUpload] = useState(false);
@@ -278,6 +285,9 @@ export function CreateCandidateModal({
             goBack={() => setShowForm(false)}
             onClose={onClose}
             tempCandidateData={tempCandidateData}
+            isTempCandidateConversion={isTempCandidateConversion}
+            pipelineId={pipelineId}
+            tempCandidateId={tempCandidateId}
           />
         ) : showUpload ? (
           <UploadResume
