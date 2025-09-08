@@ -137,6 +137,7 @@ const convertPipelineDataToJob = (pipelineData: any, isExpanded: boolean = false
         primaryLanguage: candidate.primaryLanguage,
         resume: candidate.resume,
         // Pipeline-specific data
+        status: candidateData.status,
         subStatus: candidateData.status,
         priority: candidateData.priority,
         notes: candidateData.notes,

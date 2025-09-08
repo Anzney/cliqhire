@@ -565,7 +565,7 @@ export function PipelineJobCard({
                             if (stagesWithStatus.includes(currentStage)) {
                               return (
                                 <StatusBadge
-                                  status={candidate.status || null}
+                                  status={(candidate.status as any) || null}
                                   stage={currentStage}
                                   onStatusChange={(newStatus) => handleStatusChange(candidate, newStatus)}
                                 />

@@ -37,7 +37,7 @@ export function validateTempCandidateStageChange(
     // For any other stage change, prevent it
     return {
       canChangeStage: false,
-      message: "Change the status of the candidate (CV Received), then create the candidate, then change the stage."
+      message: "First, update the candidate status to (CV Received), then proceed to create the candidate profile, and finally update the stage accordingly."
     };
   }
 

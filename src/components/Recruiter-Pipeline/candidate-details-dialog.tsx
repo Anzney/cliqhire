@@ -109,7 +109,7 @@ export function CandidateDetailsDialog({
                  <span className="text-xs text-gray-500 italic">Click any stage to view details</span>
                  <div className="flex items-center space-x-2">
                    <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
-                   <span className="text-sm text-gray-600">Active</span>
+                   <span className="text-sm text-gray-600">{localCandidate.status || 'No Status'}</span>
                  </div>
                </div>
              </div>

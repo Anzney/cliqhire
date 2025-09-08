@@ -143,7 +143,7 @@ const Page = () => {
             id: (c as any)._id || (c as any).candidateId?._id || "",
             name: (c as any).candidateId?.name || "",
             source: (c as any).sourcing?.source || "",
-            currentStage: (c as any).currentStage || (c as any).status || "Sourcing",
+            currentStage: (c as any).currentStage || "Sourcing",
             avatar: undefined,
             experience: (c as any).candidateId?.experience,
             currentSalary: (c as any).candidateId?.currentSalary,
@@ -153,6 +153,7 @@ const Page = () => {
             currentJobTitle: (c as any).candidateId?.currentJobTitle,
             previousCompanyName: (c as any).candidateId?.previousCompanyName,
             currentCompanyName: (c as any).candidateId?.currentCompanyName,
+            status: (c as any).status,
             subStatus: (c as any).status,
             // Additional fields that might be updated in the dialog
             email: (c as any).candidateId?.email,
@@ -260,6 +261,7 @@ const Page = () => {
           currentJobTitle: (c as any).candidateId?.currentJobTitle,
           previousCompanyName: (c as any).candidateId?.previousCompanyName,
           currentCompanyName: (c as any).candidateId?.currentCompanyName,
+          status: (c as any).status,
           subStatus: (c as any).status,
           // Additional fields that might be updated in the dialog
           email: (c as any).candidateId?.email,
@@ -361,7 +363,7 @@ const Page = () => {
             id: (c as any)._id || (c as any).candidateId?._id || "",
             name: (c as any).candidateId?.name || "",
             source: (c as any).sourcing?.source || "",
-            currentStage: (c as any).currentStage || (c as any).status || "Sourcing",
+            currentStage: (c as any).currentStage || "Sourcing",
             avatar: undefined,
             experience: (c as any).candidateId?.experience,
             currentSalary: (c as any).candidateId?.currentSalary,
@@ -371,6 +373,7 @@ const Page = () => {
             currentJobTitle: (c as any).candidateId?.currentJobTitle,
             previousCompanyName: (c as any).candidateId?.previousCompanyName,
             currentCompanyName: (c as any).candidateId?.currentCompanyName,
+            status: (c as any).status,
             subStatus: (c as any).status,
             // Additional fields that might be updated in the dialog
             email: (c as any).candidateId?.email,
@@ -462,7 +465,7 @@ const Page = () => {
             id: (c as any)._id || (c as any).candidateId?._id || "",
             name: (c as any).candidateId?.name || "",
             source: (c as any).sourcing?.source || "",
-            currentStage: (c as any).currentStage || (c as any).status || "Sourcing",
+            currentStage: (c as any).currentStage || "Sourcing",
             avatar: undefined,
             experience: (c as any).candidateId?.experience,
             currentSalary: (c as any).candidateId?.currentSalary,
@@ -472,6 +475,7 @@ const Page = () => {
             currentJobTitle: (c as any).candidateId?.currentJobTitle,
             previousCompanyName: (c as any).candidateId?.previousCompanyName,
             currentCompanyName: (c as any).candidateId?.currentCompanyName,
+            status: (c as any).status,
             subStatus: (c as any).status,
             // Additional fields that might be updated in the dialog
             email: (c as any).candidateId?.email,
@@ -614,7 +618,7 @@ const Page = () => {
             id: (c as any)._id || (c as any).candidateId?._id || "",
             name: (c as any).candidateId?.name || "",
             source: (c as any).sourcing?.source || "",
-            currentStage: (c as any).currentStage || (c as any).status || "Sourcing",
+            currentStage: (c as any).currentStage || "Sourcing",
             avatar: undefined,
             experience: (c as any).candidateId?.experience,
             currentSalary: (c as any).candidateId?.currentSalary,
@@ -624,6 +628,7 @@ const Page = () => {
             currentJobTitle: (c as any).candidateId?.currentJobTitle,
             previousCompanyName: (c as any).candidateId?.previousCompanyName,
             currentCompanyName: (c as any).candidateId?.currentCompanyName,
+            status: (c as any).status,
             subStatus: (c as any).status,
             // Additional fields that might be updated in the dialog
             email: (c as any).candidateId?.email,
@@ -746,7 +751,7 @@ const Page = () => {
             id: (c as any)._id || (c as any).candidateId?._id || "",
             name: (c as any).candidateId?.name || "",
             source: (c as any).sourcing?.source || "",
-            currentStage: (c as any).currentStage || (c as any).status || "Sourcing",
+            currentStage: (c as any).currentStage || "Sourcing",
             avatar: undefined,
             experience: (c as any).candidateId?.experience,
             currentSalary: (c as any).candidateId?.currentSalary,
@@ -756,6 +761,7 @@ const Page = () => {
             currentJobTitle: (c as any).candidateId?.currentJobTitle,
             previousCompanyName: (c as any).candidateId?.previousCompanyName,
             currentCompanyName: (c as any).candidateId?.currentCompanyName,
+            status: (c as any).status,
             subStatus: (c as any).status,
             // Additional fields that might be updated in the dialog
             email: (c as any).candidateId?.email,
@@ -1005,7 +1011,7 @@ const Page = () => {
                     if (stagesWithStatus.includes(candidate.currentStage)) {
                       return (
                         <StatusBadge
-                          status={candidate.status || null}
+                          status={(candidate.status as any) || null}
                           stage={candidate.currentStage}
                           onStatusChange={(newStatus) => handleStatusChange(candidate, newStatus)}
                         />

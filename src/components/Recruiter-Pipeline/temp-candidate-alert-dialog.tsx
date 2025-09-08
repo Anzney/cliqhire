@@ -16,7 +16,7 @@ export function TempCandidateAlertDialog({
   isOpen, 
   onClose, 
   candidateName,
-  message = "Change the status of the candidate (CV Received), then create the candidate, then change the stage."
+  message = "First, update the candidate status to (CV Received), then proceed to create the candidate profile, and finally update the stage accordingly."
 }: TempCandidateAlertDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

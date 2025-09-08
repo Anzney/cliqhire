@@ -26,6 +26,7 @@ export interface Candidate {
   currentJobTitle?: string;
   previousCompanyName?: string;
   currentCompanyName?: string;
+  status?: StatusType;
   subStatus?: string;
   // Additional fields from new API structure
   applicationId?: string;
@@ -65,7 +66,6 @@ export interface Candidate {
   disqualified?: any;
   // Additional pipeline fields
   connection?: ConnectionType;
-  status?: StatusType;
   hiringManager?: string;
   recruiter?: string;
   // Temp candidate flag
