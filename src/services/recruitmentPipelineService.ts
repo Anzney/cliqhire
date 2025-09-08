@@ -470,3 +470,42 @@ export const deleteCandidateFromPipeline = async (
   }
 };
 
+// Interface for updating candidate status request
+export interface UpdateCandidateStatusRequest {
+  status: string;
+  stage: string;
+  notes?: string;
+}
+
+// Interface for updating candidate status response
+export interface UpdateCandidateStatusResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    candidateId: string;
+    status: string;
+    stage: string;
+    updatedAt: string;
+  };
+}
+
+/**
+ * Update a candidate's status in the recruitment pipeline
+ */
+export const updateCandidateStatus = async (
+  pipelineId: string,
+  candidateId: string,
+  request: UpdateCandidateStatusRequest
+): Promise<UpdateCandidateStatusResponse> => {
+  try {
+    const response = await api.patch(
+      `/api/recruiter-pipeline/${pipelineId}/candidate/${candidateId}/status`,
+      request
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error('Error updating candidate status:', error);
+    throw new Error(error.response?.data?.message || 'Failed to update candidate status');
+  }
+};
+

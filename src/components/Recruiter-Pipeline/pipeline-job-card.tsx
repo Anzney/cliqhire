@@ -20,7 +20,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { deleteCandidateFromPipeline } from "@/services/recruitmentPipelineService";
+import { deleteCandidateFromPipeline, updateCandidateStatus } from "@/services/recruitmentPipelineService";
 import { 
   pipelineStages, 
   getStageColor, 
@@ -312,10 +312,23 @@ export function PipelineJobCard({
 
   const handleConfirmStatusChange = async () => {
     if (statusChangeDialog.candidate && statusChangeDialog.newStatus) {
-      console.log('Status changed for candidate:', statusChangeDialog.candidate.name, 'to:', statusChangeDialog.newStatus);
-      // TODO: Implement API call to update status
-      
-      setStatusChangeDialog({ isOpen: false, candidate: null, newStatus: null });
+      try {
+        await updateCandidateStatus(job.id, statusChangeDialog.candidate.id, {
+          status: statusChangeDialog.newStatus,
+          stage: statusChangeDialog.candidate.currentStage,
+          notes: `Status updated to ${statusChangeDialog.newStatus}`,
+        });
+        
+        // Notify the parent component about the update
+        onCandidateUpdate?.(job.id, {
+          ...statusChangeDialog.candidate,
+          subStatus: statusChangeDialog.newStatus,
+        });
+        
+        setStatusChangeDialog({ isOpen: false, candidate: null, newStatus: null });
+      } catch (error) {
+        console.error('Error updating candidate status:', error);
+      }
     }
   };
 
