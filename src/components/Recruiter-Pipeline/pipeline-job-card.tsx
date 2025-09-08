@@ -478,7 +478,7 @@ export function PipelineJobCard({
           <CardContent className="pt-0">
             
             {/* Pipeline Stage Badges - Clickable filters */}
-            <div className="flex flex-wrap gap-2 mb-6 ml-2">
+            <div className="flex flex-wrap gap-2 mb-6 ml-6">
               {(() => {
                 const updatedCounts = getUpdatedStageCounts();
                 return pipelineStages.map((stage) => {
