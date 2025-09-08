@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ChevronDown, EllipsisVertical, ChevronRight, Users, MapPin, DollarSign, Briefcase, Building2, Tag, Pin, Loader2, Eye, Plus, Trash2, X } from "lucide-react";
+import { ChevronDown, EllipsisVertical, ChevronRight, Users, MapPin, DollarSign, Briefcase, Building2, Tag, Pin, Loader2, Eye, Plus, Trash2, X, Table as TableIcon} from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -459,6 +459,7 @@ export function PipelineJobCard({
                   router.push(`/reactruterpipeline/${job.id}`);
                 }}
               >
+                <TableIcon className="size-4 mr-1" />
                 View Table
               </Button>
               <Button
