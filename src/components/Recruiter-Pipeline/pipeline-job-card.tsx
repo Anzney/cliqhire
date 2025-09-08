@@ -37,6 +37,7 @@ import { StatusBadge } from "./status-badge";
 import { PDFViewer } from "@/components/ui/pdf-viewer";
 import { validateTempCandidateStageChange, isTempCandidate, validateTempCandidateStatusChange } from "@/lib/temp-candidate-validation";
 import { TempCandidateAlertDialog } from "./temp-candidate-alert-dialog";
+import { DisqualificationDialog, type DisqualificationData } from "./disqualification-dialog";
 
 interface PipelineJobCardProps {
   job: Job;
@@ -123,6 +124,15 @@ export function PipelineJobCard({
     candidate: null,
   });
 
+  // Disqualification dialog state
+  const [disqualificationDialog, setDisqualificationDialog] = React.useState<{
+    isOpen: boolean;
+    candidate: Candidate | null;
+  }>({
+    isOpen: false,
+    candidate: null,
+  });
+
   // Local stage store
   const { updateCandidateStage, getCandidateStage } = useStageStore();
 
@@ -174,6 +184,15 @@ export function PipelineJobCard({
         isOpen: true,
         candidateName: candidate.name,
         message: validation.message || null,
+      });
+      return;
+    }
+
+    // If changing to Disqualified, show disqualification dialog
+    if (newStage === 'Disqualified') {
+      setDisqualificationDialog({
+        isOpen: true,
+        candidate,
       });
       return;
     }
@@ -367,6 +386,31 @@ export function PipelineJobCard({
       isOpen: false,
       candidate: null,
     });
+  };
+
+  const handleCloseDisqualificationDialog = () => {
+    setDisqualificationDialog({
+      isOpen: false,
+      candidate: null,
+    });
+  };
+
+  const handleConfirmDisqualification = async (data: DisqualificationData) => {
+    if (disqualificationDialog.candidate) {
+      try {
+        console.log('Disqualifying candidate:', disqualificationDialog.candidate.name, data);
+        
+        // Call API to update candidate stage to Disqualified with reason and stage info
+        await onUpdateCandidateStage(job.id, disqualificationDialog.candidate.id, 'Disqualified');
+        
+        // TODO: You might want to add additional API call to save the disqualification reason and stage
+        // await updateCandidateDisqualification(job.id, disqualificationDialog.candidate.id, data);
+        
+        handleCloseDisqualificationDialog();
+      } catch (error) {
+        console.error('Error disqualifying candidate:', error);
+      }
+    }
   };
 
   const handleAutoCreateCandidateSubmit = async (candidate: any) => {
@@ -775,6 +819,15 @@ export function PipelineJobCard({
           nationality: autoCreateCandidateDialog.candidate.nationality,
           willingToRelocate: autoCreateCandidateDialog.candidate.willingToRelocate,
         } : undefined}
+      />
+
+      {/* Disqualification Dialog */}
+      <DisqualificationDialog
+        isOpen={disqualificationDialog.isOpen}
+        onClose={handleCloseDisqualificationDialog}
+        onConfirm={handleConfirmDisqualification}
+        candidateName={disqualificationDialog.candidate?.name || ''}
+        currentStage={disqualificationDialog.candidate?.currentStage || ''}
       />
     </>
   );

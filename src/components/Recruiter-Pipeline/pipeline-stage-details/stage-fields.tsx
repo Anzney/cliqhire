@@ -191,6 +191,14 @@ export const getStageFields = (stage: string, candidate: any): StageField[] => {
           type: "date"
         },
         {
+          key: "cvSubmissionDate",
+          label: "CV Submission Date",
+          value: formatApiDate(screeningData.cvSubmissionDate),
+          icon: <FileText className="h-4 w-4" />,
+          color: "bg-indigo-50 text-indigo-600",
+          type: "date"
+        },
+        {
           key: "aemsInterviewDate",
           label: "AEMS Interview Date",
           value: formatApiDateTime(screeningData.aemsInterviewDate),

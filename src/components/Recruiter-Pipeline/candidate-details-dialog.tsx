@@ -141,12 +141,12 @@ export function CandidateDetailsDialog({
                            isCompleted 
                              ? 'bg-white text-blue-500 ring-2 ring-blue-200' 
                              : 'bg-gray-200 text-gray-400'
-                         } ${isSelected ? 'ring-4 ring-blue-300 scale-110' : ''} group-hover:scale-105`}>
+                         } ${isSelected ? 'ring-4 ring-blue-300 scale-110' : ''} `}>
                            {isCompleted && <Check className="h-3 w-3" />}
                          </div>
                          <span className={`text-xs font-semibold transition-all duration-200 ${
                            isCurrent ? 'text-white drop-shadow-sm' : isCompleted ? 'text-white drop-shadow-sm' : 'text-gray-500'
-                         } ${isSelected ? 'text-blue-100 font-bold' : ''} group-hover:text-blue-100`}>
+                         } ${isSelected ? 'text-blue-100 font-bold' : ''} `}>
                            {stage}
                          </span>
                        </div>
