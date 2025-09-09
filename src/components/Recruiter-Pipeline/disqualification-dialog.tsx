@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { pipelineStages } from "./dummy-data";
 
 interface DisqualificationDialogProps {
   isOpen: boolean;
@@ -15,11 +13,11 @@ interface DisqualificationDialogProps {
   onConfirm: (data: DisqualificationData) => void;
   candidateName: string;
   currentStage: string;
+  currentStageStatus?: string;
 }
 
 export interface DisqualificationData {
   reason: string;
-  stageAfterDisqualification: string;
 }
 
 export function DisqualificationDialog({
@@ -27,30 +25,28 @@ export function DisqualificationDialog({
   onClose,
   onConfirm,
   candidateName,
-  currentStage
+  currentStage,
+  currentStageStatus
 }: DisqualificationDialogProps) {
   const [reason, setReason] = React.useState("");
-  const [stageAfterDisqualification, setStageAfterDisqualification] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   // Reset form when dialog opens/closes
   React.useEffect(() => {
     if (isOpen) {
       setReason("");
-      setStageAfterDisqualification("");
     }
   }, [isOpen]);
 
   const handleSubmit = async () => {
-    if (!reason.trim() || !stageAfterDisqualification) {
+    if (!reason.trim()) {
       return;
     }
 
     setIsSubmitting(true);
     try {
       await onConfirm({
-        reason: reason.trim(),
-        stageAfterDisqualification
+        reason: reason.trim()
       });
       onClose();
     } catch (error) {
@@ -66,7 +62,7 @@ export function DisqualificationDialog({
     }
   };
 
-  const isFormValid = reason.trim().length > 0 && stageAfterDisqualification.length > 0;
+  const isFormValid = reason.trim().length > 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -75,7 +71,7 @@ export function DisqualificationDialog({
           <DialogTitle>Disqualify Candidate</DialogTitle>
           <DialogDescription>
             You are about to disqualify <strong>{candidateName}</strong> from the pipeline.
-            Please provide the reason for disqualification and specify after which stage this occurred.
+            Please provide the reason for disqualification.
           </DialogDescription>
         </DialogHeader>
         
@@ -90,23 +86,17 @@ export function DisqualificationDialog({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="stage-after-disqualification">
-              Stage After Disqualification <span className="text-red-500">*</span>
-            </Label>
-            <Select value={stageAfterDisqualification} onValueChange={setStageAfterDisqualification}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select the stage after disqualification" />
-              </SelectTrigger>
-              <SelectContent>
-                {pipelineStages.map((stage) => (
-                  <SelectItem key={stage} value={stage}>
-                    {stage}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {currentStageStatus && (
+            <div className="space-y-2">
+              <Label htmlFor="current-stage-status">Current Stage Status</Label>
+              <Input
+                id="current-stage-status"
+                value={currentStageStatus}
+                disabled
+                className="bg-gray-50"
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="reason">

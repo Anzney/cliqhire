@@ -829,6 +829,7 @@ export function PipelineJobCard({
         onConfirm={handleConfirmDisqualification}
         candidateName={disqualificationDialog.candidate?.name || ''}
         currentStage={disqualificationDialog.candidate?.currentStage || ''}
+        currentStageStatus={disqualificationDialog.candidate?.status || ''}
       />
     </>
   );

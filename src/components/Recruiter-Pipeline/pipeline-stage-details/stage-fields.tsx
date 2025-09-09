@@ -465,18 +465,28 @@ export const getStageFields = (stage: string, candidate: any): StageField[] => {
       const disqualifiedData = getStageData(candidate, "Disqualified");
       return [
         {
-          key: "disqualificationDate",
-          label: "Disqualification Date",
-          value: formatApiDate(disqualifiedData.disqualificationDate),
-          icon: <CalendarDays className="h-4 w-4" />,
+          key: "disqualificationStage",
+          label: "Disqualification Stage",
+          value: disqualifiedData.disqualificationStage || candidate.currentStage || "Not set",
+          icon: <Target className="h-4 w-4" />,
           color: "bg-red-50 text-red-600",
-          type: "date"
+          type: "text",
+          placeholder: "Enter the stage where disqualification occurred"
+        },
+        {
+          key: "disqualificationStatus",
+          label: "Disqualification Status",
+          value: disqualifiedData.disqualificationStatus || candidate.status || "Not set",
+          icon: <XCircle className="h-4 w-4" />,
+          color: "bg-red-50 text-red-600",
+          type: "text",
+          placeholder: "Enter the status at time of disqualification"
         },
         {
           key: "disqualificationReason",
           label: "Reason",
           value: disqualifiedData.disqualificationReason || "Not set",
-          icon: <XCircle className="h-4 w-4" />,
+          icon: <MessageSquare className="h-4 w-4" />,
           color: "bg-red-50 text-red-600",
           type: "textarea",
           placeholder: "Enter disqualification reason..."
