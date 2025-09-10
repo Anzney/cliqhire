@@ -412,9 +412,8 @@ export function PipelineJobCard({
               disqualificationStage: data.disqualificationStage,
               disqualificationStatus: data.disqualificationStatus,
               disqualificationReason: data.disqualificationReason,
-              disqualificationFeedback: data.disqualificationFeedback
             },
-            notes: data.notes
+            notes: `Disqualified: ${data.disqualificationReason}`
           }
         );
 

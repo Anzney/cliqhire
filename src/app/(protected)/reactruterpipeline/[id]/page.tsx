@@ -18,6 +18,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { pipelineStages, getStageColor, type Job, type Candidate, type ConnectionType, mapUIStageToBackendStage, mapBackendStageToUIStage } from "@/components/Recruiter-Pipeline/dummy-data";
 import { getPipelineEntry, updateCandidateStage, deleteCandidateFromPipeline, updateCandidateStatus } from "@/services/recruitmentPipelineService";
+import { RecruiterPipelineService } from "@/services/recruiterPipelineService";
 import { CandidateDetailsDialog } from "@/components/Recruiter-Pipeline/candidate-details-dialog";
 import { PipelineStageBadge } from "@/components/Recruiter-Pipeline/pipeline-stage-badge";
 import { StatusBadge } from "@/components/Recruiter-Pipeline/status-badge";
@@ -750,13 +751,29 @@ const Page = () => {
       try {
         console.log('Disqualifying candidate:', disqualificationDialog.candidate.name, data);
         
-        // Call API to update candidate stage to Disqualified
+        // First, call API to update disqualification fields
+        const fieldsUpdateResult = await RecruiterPipelineService.updateStageFields(
+          id,
+          disqualificationDialog.candidate.id,
+          'Disqualified',
+          {
+            fields: {
+              disqualificationStage: data.disqualificationStage,
+              disqualificationStatus: data.disqualificationStatus,
+              disqualificationReason: data.disqualificationReason,
+            },
+            notes: `Disqualified: ${data.disqualificationReason}`
+          }
+        );
+
+        if (!fieldsUpdateResult.success) {
+          throw new Error(fieldsUpdateResult.error || 'Failed to update disqualification fields');
+        }
+
+        // Then call API to update candidate stage to Disqualified
         await updateCandidateStage(id, disqualificationDialog.candidate.id, {
           newStage: 'Disqualified',
         });
-        
-        // TODO: You might want to add additional API call to save the disqualification reason and stage
-        // await updateCandidateDisqualification(id, disqualificationDialog.candidate.id, data);
         
         // Refresh the job data to reflect the changes
         const res = await getPipelineEntry(id);
@@ -1354,6 +1371,7 @@ const Page = () => {
         onConfirm={handleConfirmDisqualification}
         candidateName={disqualificationDialog.candidate?.name || ''}
         currentStage={disqualificationDialog.candidate?.currentStage || ''}
+        currentStageStatus={disqualificationDialog.candidate?.status || ''}
       />
     </>
   );
