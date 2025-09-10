@@ -23,7 +23,7 @@ export type StatusType = SourcingStatus | ScreeningStatus | ClientScreeningStatu
 const statusOptions: Record<string, StatusType[]> = {
   "Sourcing": ["LinkedIn Connections Sent", "LinkedIn Connections Accepted", "CV Received"],
   "Screening": ["Submission Pending", "CV Submitted", "AEMS Interview"],
-  "Client Screening": ["Client Shortlisted", "Rejected by Client"],
+  "Client Status": ["Client Shortlisted", "Rejected by Client"],
   "Interview": ["Client Interviewed", "Client Selected", "Rejected by Client"],
   "Verification": ["Document Pending", "Document Verified", "Offer Letter Sent", "Offer Accepted", "Offer Rejected"]
 };
@@ -40,7 +40,7 @@ const statusColors: Record<StatusType, string> = {
   "CV Submitted": "bg-green-100 text-green-800 border-green-200",
   "AEMS Interview": "bg-blue-100 text-blue-800 border-blue-200",
   
-  // Client Screening statuses
+  // Client Status statuses
   "Client Shortlisted": "bg-green-100 text-green-800 border-green-200",
   "Rejected by Client": "bg-red-100 text-red-800 border-red-200",
   

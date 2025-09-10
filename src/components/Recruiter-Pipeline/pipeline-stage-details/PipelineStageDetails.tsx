@@ -16,14 +16,15 @@ import {
 import { RecruiterPipelineService } from "@/services/recruiterPipelineService";
 import { toast } from "sonner";
 import { getStageFields, getStageColor, formatDateForDisplay, StageField } from "./stage-fields";
+import { mapUIStageToBackendStage } from "../dummy-data";
 import { renderFieldInput } from "./field-inputs";
 
 // Helper function to get stage key from stage name
 const getStageKey = (stageName: string): string => {
   let stageKey = stageName.toLowerCase().replace(/\s+/g, '');
   
-  // Special handling for "Client Screening" -> "clientScreening"
-  if (stageName === "Client Screening") {
+  // Special handling for "Client Status" -> "clientScreening"
+  if (stageName === "Client Status") {
     stageKey = "clientScreening";
   }
   
@@ -119,10 +120,11 @@ export function PipelineStageDetails({
       };
 
       // Call the API to update the field
+      const backendStage = mapUIStageToBackendStage(displayStage);
       const response = await RecruiterPipelineService.updateStageFields(
         pipelineId,
         candidate.id,
-        displayStage,
+        backendStage,
         updateData
       );
 

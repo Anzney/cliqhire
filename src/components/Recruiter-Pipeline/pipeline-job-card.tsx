@@ -27,7 +27,8 @@ import {
   getStageColor, 
   type Job,
   type JobTeamInfo,
-  type Candidate 
+  type Candidate,
+  mapUIStageToBackendStage
 } from "./dummy-data";
 import { CandidateDetailsDialog } from "./candidate-details-dialog";
 import { StatusChangeConfirmationDialog } from "./status-change-confirmation-dialog";
@@ -623,7 +624,7 @@ export function PipelineJobCard({
                         <TableCell>
                           {(() => {
                             const currentStage = getCandidateStage(job.id, candidate.id) || candidate.currentStage;
-                            const stagesWithStatus = ['Sourcing', 'Screening', 'Client Screening', 'Interview', 'Verification'];
+                            const stagesWithStatus = ['Sourcing', 'Screening', 'Client Status', 'Interview', 'Verification'];
                             if (stagesWithStatus.includes(currentStage)) {
                               return (
                                 <StatusBadge

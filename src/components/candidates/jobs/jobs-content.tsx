@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { Job } from "@/services/jobService";
 import { Loader } from "lucide-react";
 import { api } from "@/lib/axios-config";
-import { initializeAuth } from "@/lib/axios-config";
+import { mapBackendStageToUIStage } from "@/components/Recruiter-Pipeline/dummy-data";
 
 export interface JobsContentRef {
   addJobsToCandidate: (jobIds: string[], jobData?: any[]) => Promise<void>;
@@ -84,7 +84,7 @@ export const JobsContent = forwardRef<JobsContentRef, JobsContentProps>(
               minimumSalary: job.minimumSalary?.toString() || "0",
               maximumSalary: job.maximumSalary?.toString() || "0",
               experience: job.experience || "",
-              stage: job.stage || "",
+              stage: mapBackendStageToUIStage(job.stage || ""),
             };
           })
         );

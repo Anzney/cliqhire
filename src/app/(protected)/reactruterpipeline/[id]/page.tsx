@@ -16,7 +16,7 @@ import {
 import { Eye, Briefcase, Trash2, EllipsisVertical, X } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { pipelineStages, getStageColor, type Job, type Candidate, type ConnectionType } from "@/components/Recruiter-Pipeline/dummy-data";
+import { pipelineStages, getStageColor, type Job, type Candidate, type ConnectionType, mapUIStageToBackendStage, mapBackendStageToUIStage } from "@/components/Recruiter-Pipeline/dummy-data";
 import { getPipelineEntry, updateCandidateStage, deleteCandidateFromPipeline, updateCandidateStatus } from "@/services/recruitmentPipelineService";
 import { CandidateDetailsDialog } from "@/components/Recruiter-Pipeline/candidate-details-dialog";
 import { PipelineStageBadge } from "@/components/Recruiter-Pipeline/pipeline-stage-badge";
@@ -153,7 +153,7 @@ const Page = () => {
             id: (c as any)._id || (c as any).candidateId?._id || "",
             name: (c as any).candidateId?.name || "",
             source: (c as any).sourcing?.source || "",
-            currentStage: (c as any).currentStage || "Sourcing",
+            currentStage: mapBackendStageToUIStage((c as any).currentStage || "Sourcing"),
             avatar: undefined,
             experience: (c as any).candidateId?.experience,
             currentSalary: (c as any).candidateId?.currentSalary,
@@ -261,7 +261,7 @@ const Page = () => {
           id: (c as any)._id || (c as any).candidateId?._id || "",
           name: (c as any).candidateId?.name || "",
           source: (c as any).sourcing?.source || "",
-          currentStage: (c as any).currentStage || (c as any).status || "Sourcing",
+          currentStage: mapBackendStageToUIStage((c as any).currentStage || (c as any).status || "Sourcing"),
           avatar: undefined,
           experience: (c as any).candidateId?.experience,
           currentSalary: (c as any).candidateId?.currentSalary,
@@ -358,8 +358,9 @@ const Page = () => {
   const handleConfirmStageChange = async () => {
     if (stageChangeDialog.candidate) {
       try {
+        const backendStage = mapUIStageToBackendStage(stageChangeDialog.newStage);
         await updateCandidateStage(id, stageChangeDialog.candidate.id, {
-          newStage: stageChangeDialog.newStage,
+          newStage: backendStage,
         });
         
         // Refresh the job data
@@ -382,7 +383,7 @@ const Page = () => {
             id: (c as any)._id || (c as any).candidateId?._id || "",
             name: (c as any).candidateId?.name || "",
             source: (c as any).sourcing?.source || "",
-            currentStage: (c as any).currentStage || "Sourcing",
+            currentStage: mapBackendStageToUIStage((c as any).currentStage || "Sourcing"),
             avatar: undefined,
             experience: (c as any).candidateId?.experience,
             currentSalary: (c as any).candidateId?.currentSalary,
@@ -484,7 +485,7 @@ const Page = () => {
             id: (c as any)._id || (c as any).candidateId?._id || "",
             name: (c as any).candidateId?.name || "",
             source: (c as any).sourcing?.source || "",
-            currentStage: (c as any).currentStage || "Sourcing",
+            currentStage: mapBackendStageToUIStage((c as any).currentStage || "Sourcing"),
             avatar: undefined,
             experience: (c as any).candidateId?.experience,
             currentSalary: (c as any).candidateId?.currentSalary,
@@ -637,7 +638,7 @@ const Page = () => {
             id: (c as any)._id || (c as any).candidateId?._id || "",
             name: (c as any).candidateId?.name || "",
             source: (c as any).sourcing?.source || "",
-            currentStage: (c as any).currentStage || "Sourcing",
+            currentStage: mapBackendStageToUIStage((c as any).currentStage || "Sourcing"),
             avatar: undefined,
             experience: (c as any).candidateId?.experience,
             currentSalary: (c as any).candidateId?.currentSalary,
@@ -783,7 +784,7 @@ const Page = () => {
             id: (c as any)._id || (c as any).candidateId?._id || "",
             name: (c as any).candidateId?.name || "",
             source: (c as any).sourcing?.source || "",
-            currentStage: (c as any).currentStage || "Sourcing",
+            currentStage: mapBackendStageToUIStage((c as any).currentStage || "Sourcing"),
             avatar: undefined,
             experience: (c as any).candidateId?.experience,
             currentSalary: (c as any).candidateId?.currentSalary,
@@ -1139,7 +1140,7 @@ const Page = () => {
                 </TableCell>
                 <TableCell>
                   {(() => {
-                    const stagesWithStatus = ['Sourcing', 'Screening', 'Client Screening', 'Interview', 'Verification'];
+                    const stagesWithStatus = ['Sourcing', 'Screening', 'Client Status', 'Interview', 'Verification'];
                     if (stagesWithStatus.includes(candidate.currentStage)) {
                       return (
                         <StatusBadge

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { KPISection } from "./kpi-section";
 import { CreatePipelineDialog } from "./create-pipeline-dialog";
 import { PipelineJobCard } from "./pipeline-job-card";
-import { type Job } from "./dummy-data";
+import { type Job, mapUIStageToBackendStage, mapBackendStageToUIStage } from "./dummy-data";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -103,7 +103,7 @@ const convertPipelineDataToJob = (pipelineData: any, isExpanded: boolean = false
         id: candidate._id,
         name: candidate.name,
         source: candidate.referredBy || "Pipeline",
-        currentStage: candidateData.currentStage || "Sourcing",
+        currentStage: mapBackendStageToUIStage(candidateData.currentStage || "Sourcing"),
         avatar: undefined,
         experience: candidate.experience,
         currentSalary: candidate.currentSalary,
@@ -447,8 +447,9 @@ export function RecruiterPipeline() {
       }));
 
       // Make API call to update the candidate stage
+      const backendStage = mapUIStageToBackendStage(newStage);
       const response = await updateCandidateStageAPI(jobId, candidateId, {
-        newStage,
+        newStage: backendStage,
         notes: `Stage changed to ${newStage}`
       });
 
