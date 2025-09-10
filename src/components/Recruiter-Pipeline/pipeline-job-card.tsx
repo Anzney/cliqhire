@@ -240,9 +240,12 @@ export function PipelineJobCard({
         // Close the dialog
         setDeleteCandidateDialog({ isOpen: false, candidate: null });
         
-        // TODO: Refresh the job data or trigger a reload
+        // Notify the parent component about the candidate deletion
+        // This will trigger a refresh of the job data
+        onCandidateUpdate?.(job.id, deleteCandidateDialog.candidate);
       } catch (error) {
         console.error('Error deleting candidate:', error);
+        // You might want to show an error message to the user here
       }
     }
   };
