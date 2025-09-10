@@ -21,6 +21,7 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { deleteCandidateFromPipeline, updateCandidateStatus } from "@/services/recruitmentPipelineService";
+import { RecruiterPipelineService } from "@/services/recruiterPipelineService";
 import { 
   pipelineStages, 
   getStageColor, 
@@ -400,15 +401,33 @@ export function PipelineJobCard({
       try {
         console.log('Disqualifying candidate:', disqualificationDialog.candidate.name, data);
         
-        // Call API to update candidate stage to Disqualified with reason and stage info
+        // First, call API to update disqualification fields
+        const fieldsUpdateResult = await RecruiterPipelineService.updateStageFields(
+          job.id,
+          disqualificationDialog.candidate.id,
+          'Disqualified',
+          {
+            fields: {
+              disqualificationStage: data.disqualificationStage,
+              disqualificationStatus: data.disqualificationStatus,
+              disqualificationReason: data.disqualificationReason,
+              disqualificationFeedback: data.disqualificationFeedback
+            },
+            notes: data.notes
+          }
+        );
+
+        if (!fieldsUpdateResult.success) {
+          throw new Error(fieldsUpdateResult.error || 'Failed to update disqualification fields');
+        }
+
+        // Then call API to update candidate stage to Disqualified
         await onUpdateCandidateStage(job.id, disqualificationDialog.candidate.id, 'Disqualified');
-        
-        // TODO: You might want to add additional API call to save the disqualification reason and stage
-        // await updateCandidateDisqualification(job.id, disqualificationDialog.candidate.id, data);
         
         handleCloseDisqualificationDialog();
       } catch (error) {
         console.error('Error disqualifying candidate:', error);
+        // You might want to show an error message to the user here
       }
     }
   };

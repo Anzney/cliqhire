@@ -17,7 +17,11 @@ interface DisqualificationDialogProps {
 }
 
 export interface DisqualificationData {
-  reason: string;
+  disqualificationStage: string;
+  disqualificationStatus: string;
+  disqualificationReason: string;
+  disqualificationFeedback?: string;
+  notes?: string;
 }
 
 export function DisqualificationDialog({
@@ -29,12 +33,16 @@ export function DisqualificationDialog({
   currentStageStatus
 }: DisqualificationDialogProps) {
   const [reason, setReason] = React.useState("");
+  const [feedback, setFeedback] = React.useState("");
+  const [notes, setNotes] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   // Reset form when dialog opens/closes
   React.useEffect(() => {
     if (isOpen) {
       setReason("");
+      setFeedback("");
+      setNotes("");
     }
   }, [isOpen]);
 
@@ -46,7 +54,11 @@ export function DisqualificationDialog({
     setIsSubmitting(true);
     try {
       await onConfirm({
-        reason: reason.trim()
+        disqualificationStage: currentStage,
+        disqualificationStatus: currentStageStatus || "",
+        disqualificationReason: reason.trim(),
+        disqualificationFeedback: feedback.trim() || undefined,
+        notes: notes.trim() || undefined
       });
       onClose();
     } catch (error) {
@@ -62,11 +74,11 @@ export function DisqualificationDialog({
     }
   };
 
-  const isFormValid = reason.trim().length > 0;
+  const isFormValid = reason.trim().length > 0 && currentStageStatus && currentStageStatus.trim().length > 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Disqualify Candidate</DialogTitle>
           <DialogDescription>
@@ -86,17 +98,17 @@ export function DisqualificationDialog({
             />
           </div>
 
-          {currentStageStatus && (
-            <div className="space-y-2">
-              <Label htmlFor="current-stage-status">Current Stage Status</Label>
-              <Input
-                id="current-stage-status"
-                value={currentStageStatus}
-                disabled
-                className="bg-gray-50"
-              />
-            </div>
-          )}
+          <div className="space-y-2">
+            <Label htmlFor="current-stage-status">
+              Current Stage Status <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="current-stage-status"
+              value={currentStageStatus || ""}
+              disabled
+              className="bg-gray-50"
+            />
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="reason">
@@ -112,6 +124,40 @@ export function DisqualificationDialog({
             />
             <div className="text-xs text-gray-500">
               {reason.length}/500 characters
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="feedback">
+              Disqualification Feedback
+            </Label>
+            <Textarea
+              id="feedback"
+              placeholder="Additional feedback about the disqualification..."
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              rows={3}
+              className="resize-none"
+            />
+            <div className="text-xs text-gray-500">
+              {feedback.length}/500 characters
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="notes">
+              Notes
+            </Label>
+            <Textarea
+              id="notes"
+              placeholder="Optional notes about the disqualification..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              className="resize-none"
+            />
+            <div className="text-xs text-gray-500">
+              {notes.length}/500 characters
             </div>
           </div>
         </div>
