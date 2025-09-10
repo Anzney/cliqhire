@@ -12,7 +12,7 @@ import { ChevronDown } from "lucide-react";
 
 // Define status types for each stage
 export type SourcingStatus = "LinkedIn Connections Sent" | "LinkedIn Connections Accepted" | "CV Received";
-export type ScreeningStatus = "Submission Pending" | "CV Submitted" | "AEMS Interview";
+export type ScreeningStatus = "AEMS Interview" | "Submission Pending" | "CV Submitted" ;
 export type ClientScreeningStatus = "Client Shortlisted" | "Rejected by Client";
 export type InterviewStatus = "Client Interviewed" | "Client Selected" | "Rejected by Client";
 export type VerificationStatus = "Document Pending" | "Document Verified" | "Offer Letter Sent" | "Offer Accepted" | "Offer Rejected";
@@ -22,7 +22,7 @@ export type StatusType = SourcingStatus | ScreeningStatus | ClientScreeningStatu
 // Status options for each stage
 const statusOptions: Record<string, StatusType[]> = {
   "Sourcing": ["LinkedIn Connections Sent", "LinkedIn Connections Accepted", "CV Received"],
-  "Screening": ["Submission Pending", "CV Submitted", "AEMS Interview"],
+  "Screening": ["AEMS Interview", "Submission Pending", "CV Submitted",],
   "Client Status": ["Client Shortlisted", "Rejected by Client"],
   "Interview": ["Client Interviewed", "Client Selected", "Rejected by Client"],
   "Verification": ["Document Pending", "Document Verified", "Offer Letter Sent", "Offer Accepted", "Offer Rejected"]
@@ -47,7 +47,7 @@ const statusColors: Record<StatusType, string> = {
   // Interview statuses
   "Client Interviewed": "bg-blue-100 text-blue-800 border-blue-200",
   "Client Selected": "bg-green-100 text-green-800 border-green-200",
-  "Rejected by Client": "bg-red-100 text-red-800 border-red-200",
+  // "Rejected by Client": "bg-red-100 text-red-800 border-red-200",
   
   // Verification statuses
   "Document Pending": "bg-yellow-100 text-yellow-800 border-yellow-200",
