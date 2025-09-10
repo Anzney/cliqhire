@@ -608,7 +608,7 @@ const Page = () => {
       try {
         await updateCandidateStatus(id, statusChangeDialog.candidate.id, {
           status: statusChangeDialog.newStatus,
-          stage: statusChangeDialog.candidate.currentStage,
+          stage: mapUIStageToBackendStage(statusChangeDialog.candidate.currentStage),
           notes: `Status updated to ${statusChangeDialog.newStatus}`,
         });
         
