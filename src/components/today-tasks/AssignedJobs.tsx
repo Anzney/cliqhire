@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -10,12 +10,11 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { 
-  Calendar, 
-  Users, 
-  Building2, 
-  MapPin,
-  Briefcase
+  Briefcase,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AssignedJob } from "./types";
 
 interface AssignedJobsProps {
@@ -23,18 +22,11 @@ interface AssignedJobsProps {
 }
 
 export function AssignedJobs({ assignedJobs }: AssignedJobsProps) {
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-700 border-red-200';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'low':
-        return 'bg-green-100 text-green-700 border-green-200';
-      default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
+  const [isOpen, setIsOpen] = useState(true);
+
+  // Calculate job counts
+  const totalJobs = assignedJobs.length;
+  const activeJobs = assignedJobs.filter(job => job.status === 'active').length;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -58,72 +50,79 @@ export function AssignedJobs({ assignedJobs }: AssignedJobsProps) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Briefcase className="w-5 h-5" />
-          Assigned Jobs
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Job Title</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Candidates</TableHead>
-                <TableHead>Deadline</TableHead>
-                <TableHead>Priority</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {assignedJobs.map((job) => (
-                <TableRow key={job.id} className="hover:bg-gray-50">
-                  <TableCell className="font-medium">
-                    {job.jobTitle}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-gray-500" />
-                      {job.clientName}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-gray-500" />
-                      {job.location}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-gray-500" />
-                      {job.candidatesCount}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-gray-500" />
-                      {formatDate(job.deadline)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getPriorityColor(job.priority)}>
-                      {job.priority}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(job.status)}>
-                      {job.status}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Briefcase className="w-5 h-5" />
+                Assigned Jobs
+              </div>
+              <div className="flex items-center gap-4 text-sm text-gray-600">
+                <span>Total Job Count: <span className="font-semibold text-gray-900">{totalJobs}</span></span>
+                <span>Total Active Job: <span className="font-semibold text-green-600">{activeJobs}</span></span>
+                {isOpen ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+              </div>
+            </CardTitle>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Job Title</TableHead>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Candidates</TableHead>
+                    <TableHead>Deadline</TableHead>
+                    <TableHead>AEMS Deadline</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+              </Table>
+              <div className="max-h-96 overflow-y-auto">
+                <Table>
+                  <TableBody>
+                    {assignedJobs.map((job) => (
+                      <TableRow key={job.id} className="hover:bg-gray-50">
+                        <TableCell className="font-medium">
+                          {job.jobTitle}
+                        </TableCell>
+                        <TableCell>
+                          {job.clientName}
+                        </TableCell>
+                        <TableCell>
+                          {job.location}
+                        </TableCell>
+                        <TableCell>
+                          {job.candidatesCount}
+                        </TableCell>
+                        <TableCell>
+                          {formatDate(job.deadline)}
+                        </TableCell>
+                        <TableCell>
+                          {job.aemsDeadline ? formatDate(job.aemsDeadline) : 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(job.status)}>
+                            {job.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
     </Card>
   );
 }

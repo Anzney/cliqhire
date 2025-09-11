@@ -197,16 +197,14 @@ export default function TodayTasksPage() {
         personalTasks={personalTasks}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Assigned Jobs */}
-        <AssignedJobs assignedJobs={assignedJobs} />
+      {/* Assigned Jobs - Full Width */}
+      <AssignedJobs assignedJobs={assignedJobs} />
 
-        {/* Today's Interviews */}
-        <Interviews 
-          interviews={todayInterviews}
-          onUpdateInterviewStatus={updateInterviewStatus}
-        />
-      </div>
+      {/* Today's Interviews */}
+      <Interviews 
+        interviews={todayInterviews}
+        onUpdateInterviewStatus={updateInterviewStatus}
+      />
 
       {/* Upcoming Interviews */}
       <UpcomingInterviews upcomingInterviews={upcomingInterviews} />

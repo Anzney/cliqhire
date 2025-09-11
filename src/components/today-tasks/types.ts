@@ -7,6 +7,7 @@ export interface AssignedJob {
   location: string;
   priority: "high" | "medium" | "low";
   deadline: string;
+  aemsDeadline?: string; // Optional AEMS deadline field
   candidatesCount: number;
   status: "active" | "paused" | "completed";
   recruiter: string;
