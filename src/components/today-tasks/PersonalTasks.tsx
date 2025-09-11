@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Select, 
   SelectContent, 
@@ -15,15 +16,33 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { 
   CheckCircle, 
   User, 
   Calendar,
   Edit,
   Trash2,
-  MoreHorizontal
+  MoreHorizontal,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 import { PersonalTask } from "./types";
+import { FollowUpStatusDropdown } from "./FollowUpStatusDropdown";
 
 interface PersonalTasksProps {
   personalTasks: PersonalTask[];
@@ -46,6 +65,9 @@ export function PersonalTasks({
   onUpdateFollowUpStatus,
   onDeleteTask
 }: PersonalTasksProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isCheckboxDialogOpen, setIsCheckboxDialogOpen] = useState(false);
+  const [pendingTaskId, setPendingTaskId] = useState<string | null>(null);
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -86,30 +108,60 @@ export function PersonalTasks({
     return matchesSearch && matchesPriority;
   });
 
+  const handleCheckboxChange = (taskId: string) => {
+    setPendingTaskId(taskId);
+    setIsCheckboxDialogOpen(true);
+  };
+
+  const handleConfirmCheckboxChange = () => {
+    if (pendingTaskId) {
+      onCompleteTask(pendingTaskId);
+    }
+    setIsCheckboxDialogOpen(false);
+    setPendingTaskId(null);
+  };
+
+  const handleCancelCheckboxChange = () => {
+    setIsCheckboxDialogOpen(false);
+    setPendingTaskId(null);
+  };
+
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <User className="w-5 h-5" />
-            Personal Tasks
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            <Select value={filterPriority} onValueChange={onSetFilterPriority}>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="Priority" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <User className="w-5 h-5" />
+                Personal Tasks
+              </div>
+              <div className="flex items-center gap-4 text-sm text-gray-600">
+                <span>Total: <span className="font-semibold text-gray-900">{filteredPersonalTasks.length}</span></span>
+                {isOpen ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+              </div>
+            </CardTitle>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-end mb-4">
+              <Select value={filterPriority} onValueChange={onSetFilterPriority}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
         {filteredPersonalTasks.length > 0 ? (
           filteredPersonalTasks.map((task) => (
             <div 
@@ -121,19 +173,14 @@ export function PersonalTasks({
               }`}
             >
               <div className="flex items-start gap-3">
-                <button
-                  onClick={() => onCompleteTask(task.id)}
-                  className="mt-1 p-1 hover:bg-gray-200 rounded transition-colors"
-                  disabled={task.status === 'completed'}
-                >
-                  <CheckCircle 
-                    className={`w-5 h-5 ${
-                      task.status === 'completed' 
-                        ? 'text-green-600' 
-                        : 'text-gray-400 hover:text-green-600'
-                    }`} 
+                <div className="mt-1">
+                  <Checkbox
+                    checked={task.status === 'completed'}
+                    onCheckedChange={() => handleCheckboxChange(task.id)}
+                    disabled={task.status === 'completed'}
+                    className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
                   />
-                </button>
+                </div>
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -198,34 +245,13 @@ export function PersonalTasks({
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  {/* Follow-up status buttons for follow-up tasks */}
+                  {/* Follow-up status dropdown for follow-up tasks */}
                   {task.category === 'follow-up' && task.followUpStatus && (
-                    <div className="flex gap-1">
-                      <Button
-                        size="sm"
-                        variant={task.followUpStatus === 'pending' ? 'default' : 'outline'}
-                        onClick={() => onUpdateFollowUpStatus(task.id, 'pending')}
-                        className="text-xs px-2 py-1 h-7"
-                      >
-                        Pending
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={task.followUpStatus === 'in-progress' ? 'default' : 'outline'}
-                        onClick={() => onUpdateFollowUpStatus(task.id, 'in-progress')}
-                        className="text-xs px-2 py-1 h-7"
-                      >
-                        In Progress
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={task.followUpStatus === 'completed' ? 'default' : 'outline'}
-                        onClick={() => onUpdateFollowUpStatus(task.id, 'completed')}
-                        className="text-xs px-2 py-1 h-7"
-                      >
-                        Completed
-                      </Button>
-                    </div>
+                    <FollowUpStatusDropdown
+                      currentStatus={task.followUpStatus}
+                      onStatusChange={(status) => onUpdateFollowUpStatus(task.id, status)}
+                      taskTitle={task.title}
+                    />
                   )}
                   
                   <DropdownMenu>
@@ -260,8 +286,30 @@ export function PersonalTasks({
               {searchQuery ? 'Try adjusting your search criteria' : 'Add a new task to get started'}
             </p>
           </div>
-        )}
-      </CardContent>
+            )}
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
+
+      {/* Checkbox Confirmation Dialog */}
+      <AlertDialog open={isCheckboxDialogOpen} onOpenChange={setIsCheckboxDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Complete Task</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to mark this task as completed? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelCheckboxChange}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmCheckboxChange}>
+              Complete Task
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
