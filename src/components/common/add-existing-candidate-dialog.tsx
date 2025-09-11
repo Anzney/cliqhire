@@ -18,7 +18,7 @@ import {
   MultiSelectorList,
   MultiSelectorItem,
 } from "@/components/ui/multi-select";
-import { Loader2, User, MapPin, X } from "lucide-react";
+import { Loader2, User, Mail, X } from "lucide-react";
 import { candidateService, Candidate } from "@/services/candidateService";
 import { addCandidateToPipeline } from "@/services/recruitmentPipelineService";
 import { toast } from "sonner";
@@ -160,8 +160,8 @@ export function AddExistingCandidateDialog({
     candidate.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getCandidateLocation = (candidate: Candidate) => {
-    return candidate.location || "Location not specified";
+  const getCandidateEmail = (candidate: Candidate) => {
+    return candidate.email || "Email not specified";
   };
 
   // Ensure trigger reliably opens the dialog
@@ -232,8 +232,8 @@ export function AddExistingCandidateDialog({
                                   {getCandidateDisplayName(candidate)}
                                 </span>
                                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                  <MapPin className="h-3 w-3" />
-                                  {getCandidateLocation(candidate)}
+                                  <Mail className="h-3 w-3" />
+                                  {getCandidateEmail(candidate)}
                                 </div>
                               </div>
                             </MultiSelectorItem>
