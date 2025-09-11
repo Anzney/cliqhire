@@ -191,12 +191,12 @@ export function PersonalTasks({
                     }`}>
                       {task.title}
                     </h3>
-                    <Badge className={getPriorityColor(task.priority)}>
+                    {/* <Badge className={getPriorityColor(task.priority)}>
                       {task.priority}
                     </Badge>
                     <Badge className={getStatusColor(task.status)}>
                       {task.status}
-                    </Badge>
+                    </Badge> */}
                   </div>
                   
                   {task.description && (
