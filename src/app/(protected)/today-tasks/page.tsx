@@ -18,6 +18,7 @@ import { AssignedJobs } from "@/components/today-tasks/AssignedJobs";
 import { Interviews } from "@/components/today-tasks/Interviews";
 import { UpcomingInterviews } from "@/components/today-tasks/UpcomingInterviews";
 import { PersonalTasks } from "@/components/today-tasks/PersonalTasks";
+import { CompletedTasks } from "@/components/today-tasks/CompletedTasks";
 import { AddTaskForm } from "@/components/today-tasks/AddTaskForm";
 import { 
   AssignedJob, 
@@ -41,6 +42,7 @@ export default function TodayTasksPage() {
   const [upcomingInterviews, setUpcomingInterviews] = useState<Interview[]>(dummyUpcomingInterviews);
 
   const [personalTasks, setPersonalTasks] = useState<PersonalTask[]>(dummyPersonalTasks);
+  const [completedTasksList, setCompletedTasksList] = useState<PersonalTask[]>([]);
 
   const [completedTasks, setCompletedTasks] = useState<Set<string>>(new Set());
   const [newTaskOpen, setNewTaskOpen] = useState(false);
@@ -49,15 +51,15 @@ export default function TodayTasksPage() {
 
   const completeTask = (taskId: string) => {
     setCompletedTasks(prev => new Set(prev).add(taskId));
-    setPersonalTasks(prev => 
-      prev.map(task => 
-        task.id === taskId 
-          ? { ...task, status: 'completed' as const }
-          : task
-      )
-    );
     
-    // Auto-remove completed tasks after a short delay
+    // Find the task and move it to completed list
+    const taskToComplete = personalTasks.find(task => task.id === taskId);
+    if (taskToComplete) {
+      const completedTask = { ...taskToComplete, status: 'completed' as const };
+      setCompletedTasksList(prev => [...prev, completedTask]);
+    }
+    
+    // Auto-remove completed tasks from personal tasks after a short delay
     setTimeout(() => {
       setPersonalTasks(prev => prev.filter(task => task.id !== taskId));
       setCompletedTasks(prev => {
@@ -96,6 +98,19 @@ export default function TodayTasksPage() {
 
   const deleteTask = (taskId: string) => {
     setPersonalTasks(prev => prev.filter(task => task.id !== taskId));
+  };
+
+  const restoreTask = (taskId: string) => {
+    const taskToRestore = completedTasksList.find(task => task.id === taskId);
+    if (taskToRestore) {
+      const restoredTask = { ...taskToRestore, status: 'pending' as const };
+      setPersonalTasks(prev => [...prev, restoredTask]);
+      setCompletedTasksList(prev => prev.filter(task => task.id !== taskId));
+    }
+  };
+
+  const deleteCompletedTask = (taskId: string) => {
+    setCompletedTasksList(prev => prev.filter(task => task.id !== taskId));
   };
 
   const updateInterviewStatus = (interviewId: string, status: Interview['status']) => {
@@ -227,6 +242,16 @@ export default function TodayTasksPage() {
         onCompleteTask={completeTask}
         onUpdateFollowUpStatus={updateFollowUpStatus}
         onDeleteTask={deleteTask}
+      />
+
+      {/* Completed Tasks */}
+      <CompletedTasks
+        completedTasks={completedTasksList}
+        filterPriority={filterPriority}
+        searchQuery={searchQuery}
+        onSetFilterPriority={setFilterPriority}
+        onRestoreTask={restoreTask}
+        onDeleteTask={deleteCompletedTask}
       />
     </div>
   );
