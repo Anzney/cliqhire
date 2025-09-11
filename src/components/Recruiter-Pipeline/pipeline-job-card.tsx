@@ -527,7 +527,7 @@ export function PipelineJobCard({
                 variant="outline"
               >
                 <Plus className="h-4 w-4 mr-1" />
-                Add Candidate
+                Attach Candidate
               </Button>
             </div>
           </div>
