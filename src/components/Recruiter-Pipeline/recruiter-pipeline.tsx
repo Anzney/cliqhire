@@ -46,7 +46,7 @@ const convertPipelineListDataToJob = (pipelineData: PipelineListItem, isExpanded
     jobId: pipelineData.jobId,
     candidates: [], // Will be populated when expanded
     // Pipeline-specific data from new API structure
-    pipelineStatus: pipelineData.status,
+    // Note: pipelineStatus is now derived from jobId.stage
     priority: pipelineData.priority,
     notes: pipelineData.notes,
     assignedDate: pipelineData.assignedDate,
@@ -158,7 +158,7 @@ const convertPipelineDataToJob = (pipelineData: any, isExpanded: boolean = false
       };
     }),
     // Pipeline-specific data from new API structure
-    pipelineStatus: pipelineData.status,
+    // Note: pipelineStatus is now derived from jobId.stage
     priority: pipelineData.priority,
     notes: pipelineData.notes,
     assignedDate: pipelineData.assignedDate,
@@ -318,8 +318,8 @@ export function RecruiterPipeline() {
   // Calculate KPI data from jobs and overall summary
   const calculateKPIData = () => {
     const totalJobs = jobs.length;
-    const activeJobs = jobs.filter(job => job.pipelineStatus !== "Closed").length;
-    const inactiveJobs = jobs.filter(job => job.pipelineStatus === "Closed").length;
+    const activeJobs = jobs.filter(job => job.jobId?.stage && job.jobId.stage.toLowerCase() !== "closed").length;
+    const inactiveJobs = jobs.filter(job => job.jobId?.stage && job.jobId.stage.toLowerCase() === "closed").length;
     
     // Use overall candidate summary if available, otherwise calculate from jobs
     let appliedCandidates = 0;
@@ -384,11 +384,15 @@ export function RecruiterPipeline() {
       filteredJobs = filteredJobs.filter(job => {
         switch (statusFilter) {
           case "active":
-            return job.pipelineStatus !== "Closed";
+            return job.jobId?.stage && job.jobId.stage.toLowerCase() !== "closed";
           case "completed":
-            return job.pipelineStatus === "Closed";
+            return job.jobId?.stage && job.jobId.stage.toLowerCase() === "closed";
           case "paused":
-            return job.pipelineStatus === "On Hold" || job.pipelineStatus === "Paused";
+            return job.jobId?.stage && (
+              job.jobId.stage.toLowerCase().includes("hold") || 
+              job.jobId.stage.toLowerCase().includes("pause") ||
+              job.jobId.stage.toLowerCase().includes("suspended")
+            );
           default:
             return true;
         }
