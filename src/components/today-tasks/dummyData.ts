@@ -358,6 +358,146 @@ export const dummyInterviews: Interview[] = [
   }
 ];
 
+export const dummyUpcomingInterviews: Interview[] = [
+  {
+    id: "upcoming-1",
+    candidateName: "Michael Rodriguez",
+    candidateEmail: "michael.rodriguez@email.com",
+    candidatePhone: "+1 (555) 111-2222",
+    jobTitle: "Senior Software Engineer",
+    clientName: "TechCorp Solutions",
+    interviewType: "video",
+    scheduledTime: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] + "T10:00:00",
+    duration: 60,
+    status: "scheduled",
+    meetingLink: "https://meet.zoom.us/j/111111111",
+    notes: "Technical interview - React and Node.js focus"
+  },
+  {
+    id: "upcoming-2",
+    candidateName: "Sarah Thompson",
+    candidateEmail: "sarah.thompson@email.com",
+    candidatePhone: "+1 (555) 333-4444",
+    jobTitle: "Product Manager",
+    clientName: "InnovateLabs",
+    interviewType: "phone",
+    scheduledTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] + "T14:30:00",
+    duration: 45,
+    status: "scheduled",
+    notes: "Initial screening call"
+  },
+  {
+    id: "upcoming-3",
+    candidateName: "James Wilson",
+    candidateEmail: "james.wilson@email.com",
+    candidatePhone: "+1 (555) 555-6666",
+    jobTitle: "UX Designer",
+    clientName: "DesignStudio Pro",
+    interviewType: "in-person",
+    scheduledTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] + "T16:00:00",
+    duration: 90,
+    status: "scheduled",
+    location: "DesignStudio Pro Office, Austin TX",
+    notes: "Portfolio review and design challenge"
+  },
+  {
+    id: "upcoming-4",
+    candidateName: "Lisa Chen",
+    candidateEmail: "lisa.chen@email.com",
+    candidatePhone: "+1 (555) 777-8888",
+    jobTitle: "Data Scientist",
+    clientName: "Analytics Inc",
+    interviewType: "video",
+    scheduledTime: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] + "T09:00:00",
+    duration: 75,
+    status: "scheduled",
+    meetingLink: "https://meet.google.com/lmn-opqr-stu",
+    notes: "Machine learning algorithms discussion"
+  },
+  {
+    id: "upcoming-5",
+    candidateName: "Robert Davis",
+    candidateEmail: "robert.davis@email.com",
+    candidatePhone: "+1 (555) 999-0000",
+    jobTitle: "DevOps Engineer",
+    clientName: "CloudTech Systems",
+    interviewType: "phone",
+    scheduledTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] + "T11:30:00",
+    duration: 50,
+    status: "scheduled",
+    notes: "Infrastructure and deployment strategies"
+  },
+  {
+    id: "upcoming-6",
+    candidateName: "Jennifer Martinez",
+    candidateEmail: "jennifer.martinez@email.com",
+    candidatePhone: "+1 (555) 123-4567",
+    jobTitle: "Full Stack Developer",
+    clientName: "StartupXYZ",
+    interviewType: "in-person",
+    scheduledTime: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] + "T15:30:00",
+    duration: 90,
+    status: "scheduled",
+    location: "StartupXYZ Office, Boston MA",
+    notes: "Coding challenge and system design"
+  },
+  {
+    id: "upcoming-7",
+    candidateName: "Kevin Anderson",
+    candidateEmail: "kevin.anderson@email.com",
+    candidatePhone: "+1 (555) 234-5678",
+    jobTitle: "Frontend Developer",
+    clientName: "WebCraft Studios",
+    interviewType: "video",
+    scheduledTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] + "T13:00:00",
+    duration: 60,
+    status: "scheduled",
+    meetingLink: "https://teams.microsoft.com/l/meetup-join/abc",
+    notes: "React and TypeScript assessment"
+  },
+  {
+    id: "upcoming-8",
+    candidateName: "Amanda Taylor",
+    candidateEmail: "amanda.taylor@email.com",
+    candidatePhone: "+1 (555) 345-6789",
+    jobTitle: "Backend Developer",
+    clientName: "DataFlow Inc",
+    interviewType: "phone",
+    scheduledTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] + "T17:00:00",
+    duration: 45,
+    status: "scheduled",
+    notes: "API design and database optimization"
+  },
+  {
+    id: "upcoming-9",
+    candidateName: "Daniel Kim",
+    candidateEmail: "daniel.kim@email.com",
+    candidatePhone: "+1 (555) 456-7890",
+    jobTitle: "Mobile App Developer",
+    clientName: "AppTech Solutions",
+    interviewType: "video",
+    scheduledTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] + "T10:30:00",
+    duration: 60,
+    status: "scheduled",
+    meetingLink: "https://meet.zoom.us/j/222222222",
+    notes: "iOS and Android development experience"
+  },
+  {
+    id: "upcoming-10",
+    candidateName: "Rachel Green",
+    candidateEmail: "rachel.green@email.com",
+    candidatePhone: "+1 (555) 567-8901",
+    jobTitle: "Cloud Architect",
+    clientName: "SkyTech Systems",
+    interviewType: "in-person",
+    scheduledTime: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] + "T14:00:00",
+    duration: 90,
+    status: "scheduled",
+    location: "SkyTech Systems Office, Salt Lake City UT",
+    notes: "AWS and Azure architecture discussion"
+  }
+];
+
 export const dummyPersonalTasks: PersonalTask[] = [
   {
     id: "1",

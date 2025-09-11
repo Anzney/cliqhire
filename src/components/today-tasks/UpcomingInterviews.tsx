@@ -1,14 +1,55 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Phone, Video, MapPin, Calendar } from "lucide-react";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { 
+  Calendar, 
+  Clock, 
+  Phone,
+  Video,
+  MapPin,
+  ChevronDown,
+  ChevronRight,
+  MoreHorizontal
+} from "lucide-react";
 import { Interview } from "./types";
 
 interface UpcomingInterviewsProps {
   upcomingInterviews: Interview[];
+  onUpdateInterviewStatus: (interviewId: string, status: Interview['status']) => void;
 }
 
-export function UpcomingInterviews({ upcomingInterviews }: UpcomingInterviewsProps) {
+export function UpcomingInterviews({ upcomingInterviews, onUpdateInterviewStatus }: UpcomingInterviewsProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const isWithinWeek = (dateTime: string) => {
+    const today = new Date();
+    const interviewDate = new Date(dateTime);
+    const oneWeekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+    return interviewDate >= today && interviewDate <= oneWeekFromNow;
+  };
+
+  // Filter interviews for upcoming week
+  const upcomingWeekInterviews = upcomingInterviews.filter(interview => isWithinWeek(interview.scheduledTime));
+  
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'scheduled':
@@ -45,43 +86,147 @@ export function UpcomingInterviews({ upcomingInterviews }: UpcomingInterviewsPro
     });
   };
 
-  if (upcomingInterviews.length === 0) {
-    return null;
-  }
+  const formatDate = (dateTime: string) => {
+    return new Date(dateTime).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Clock className="w-5 h-5" />
-          Upcoming Interviews (Next 24 Hours)
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {upcomingInterviews.map((interview) => (
-            <div key={interview.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="font-semibold text-gray-900">{interview.candidateName}</h3>
-                <Badge className={getStatusColor(interview.status)}>
-                  {interview.status}
-                </Badge>
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                Upcoming Interviews (Next 7 Days)
               </div>
-              <p className="text-sm text-gray-600 mb-2">{interview.jobTitle}</p>
-              <div className="space-y-1 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  <span>{formatTime(interview.scheduledTime)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {getInterviewTypeIcon(interview.interviewType)}
-                  <span className="capitalize">{interview.interviewType}</span>
+              <div className="flex items-center gap-4 text-sm text-gray-600">
+                <span>Total: <span className="font-semibold text-gray-900">{upcomingWeekInterviews.length}</span></span>
+                {isOpen ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+              </div>
+            </CardTitle>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent>
+            {upcomingWeekInterviews.length > 0 ? (
+              <div className="rounded-md border">
+                <div className="max-h-96 overflow-y-auto">
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-white z-10">
+                      <TableRow>
+                        <TableHead>Candidate</TableHead>
+                        <TableHead>Job & Client</TableHead>
+                        <TableHead>Date & Time</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Meeting</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {upcomingWeekInterviews.map((interview) => (
+                        <TableRow key={interview.id} className="hover:bg-gray-50">
+                          <TableCell>
+                            <div>
+                              <div className="font-semibold text-gray-900">{interview.candidateName}</div>
+                              <div className="text-sm text-gray-600">{interview.candidateEmail}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{interview.jobTitle}</div>
+                              <div className="text-sm text-gray-600">{interview.clientName}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-4 h-4 text-gray-500" />
+                              <div>
+                                <div className="font-medium">{formatTime(interview.scheduledTime)}</div>
+                                <div className="text-sm text-gray-600">{formatDate(interview.scheduledTime)}</div>
+                                <div className="text-sm text-gray-600">{interview.duration} min</div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              {getInterviewTypeIcon(interview.interviewType)}
+                              <span className="capitalize text-sm">{interview.interviewType}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {interview.location ? (
+                              <div className="flex items-center gap-1">
+                                <MapPin className="w-4 h-4 text-gray-500" />
+                                <span className="text-sm">{interview.location}</span>
+                              </div>
+                            ) : (
+                              <span className="text-sm text-gray-400">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {interview.meetingLink ? (
+                              <a 
+                                href={interview.meetingLink} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 text-blue-600 hover:underline text-sm"
+                              >
+                                <Video className="w-4 h-4" />
+                                Join Meeting
+                              </a>
+                            ) : (
+                              <span className="text-sm text-gray-400">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={getStatusColor(interview.status)}>
+                              {interview.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger className="hover:bg-gray-100 p-1 rounded">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent>
+                                <DropdownMenuItem onClick={() => onUpdateInterviewStatus(interview.id, 'completed')}>
+                                  Mark Complete
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => onUpdateInterviewStatus(interview.id, 'rescheduled')}>
+                                  Reschedule
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => onUpdateInterviewStatus(interview.id, 'cancelled')}>
+                                  Cancel
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </CardContent>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                <p className="text-lg font-medium">No interviews scheduled for the next 7 days</p>
+                <p className="text-sm">You're all caught up!</p>
+              </div>
+            )}
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
     </Card>
   );
 }

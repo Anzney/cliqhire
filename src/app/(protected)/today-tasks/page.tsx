@@ -28,6 +28,7 @@ import {
 import { 
   dummyAssignedJobs, 
   dummyInterviews, 
+  dummyUpcomingInterviews,
   dummyPersonalTasks 
 } from "@/components/today-tasks/dummyData";
 
@@ -37,6 +38,7 @@ export default function TodayTasksPage() {
   const [assignedJobs] = useState<AssignedJob[]>(dummyAssignedJobs);
 
   const [interviews, setInterviews] = useState<Interview[]>(dummyInterviews);
+  const [upcomingInterviews, setUpcomingInterviews] = useState<Interview[]>(dummyUpcomingInterviews);
 
   const [personalTasks, setPersonalTasks] = useState<PersonalTask[]>(dummyPersonalTasks);
 
@@ -106,6 +108,16 @@ export default function TodayTasksPage() {
     );
   };
 
+  const updateUpcomingInterviewStatus = (interviewId: string, status: Interview['status']) => {
+    setUpcomingInterviews(prev =>
+      prev.map(interview =>
+        interview.id === interviewId
+          ? { ...interview, status }
+          : interview
+      )
+    );
+  };
+
   // Filter functions
   const filteredPersonalTasks = personalTasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -120,14 +132,7 @@ export default function TodayTasksPage() {
     return interviewDate === today;
   });
 
-  const upcomingInterviews = interviews.filter(interview => {
-    const interviewDate = new Date(interview.scheduledTime);
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    return interviewDate > today && interviewDate <= tomorrow;
-  });
+  // upcomingInterviews is now managed as separate state with dummyUpcomingInterviews
 
   // Handler functions
   const handleAddTask = (taskData: AddTaskFormData) => {
@@ -207,7 +212,10 @@ export default function TodayTasksPage() {
       />
 
       {/* Upcoming Interviews */}
-      <UpcomingInterviews upcomingInterviews={upcomingInterviews} />
+      <UpcomingInterviews 
+        upcomingInterviews={upcomingInterviews}
+        onUpdateInterviewStatus={updateUpcomingInterviewStatus}
+      />
 
       {/* Personal Tasks */}
       <PersonalTasks
