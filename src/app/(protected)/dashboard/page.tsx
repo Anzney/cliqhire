@@ -102,7 +102,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Enhanced Todo List Section */}
-                <Card className="w-full mt-12">
+                {/* <Card className="w-full mt-12">
                     <CardHeader>
                         <div className="flex items-center gap-2">
                             <Calendar className="w-6 h-6 text-primary" />
@@ -156,8 +156,8 @@ export default function DashboardPage() {
                             )}
                         </div>
                     </CardContent>
-                </Card>
-            </div>
+                </Card>*/}
+            </div> 
 
 
             <CreateClientModal

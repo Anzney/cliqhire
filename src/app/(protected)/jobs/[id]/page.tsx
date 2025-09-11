@@ -108,7 +108,7 @@ export default function JobPage({ params }: PageProps) {
       </div>
 
       {/* Button Bar */}
-      <div className="flex items-center justify-between p-4 border-b">
+      {/* <div className="flex items-center justify-between p-4 border-b">
         <Button size="sm" onClick={() => setAddCandidateOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Add Candidate
@@ -131,7 +131,7 @@ export default function JobPage({ params }: PageProps) {
             {isLoading ? 'Refreshing...' : 'Refresh'}
           </Button>
         </div>
-      </div>
+      </div> */}
 
       {/* Tabs */}
       <JobTabs
