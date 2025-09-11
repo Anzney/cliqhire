@@ -71,7 +71,7 @@ export function AddCandidateDialog({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
           <OptionCard
             icon={<Users className="w-8 h-8 text-gray-600" />}
-            title="Add Existing Candidate"
+            title="Attach Existing Candidate"
             onClick={handleExistingClick}
           />
           <OptionCard

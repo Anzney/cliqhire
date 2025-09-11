@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2, ChevronLeft, Users, MapPin, DollarSign, Building2, Plus } from "lucide-react";
+import { Loader2, ChevronLeft, Users, MapPin, DollarSign,CircleDollarSign , Building2, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -200,7 +200,6 @@ const Page = () => {
             recruiter: (c as any).recruiter,
             isTempCandidate: (c as any).candidateId?.isTempCandidate || false,
           })) as Candidate[],
-          pipelineStatus: entry.status,
           priority: entry.priority,
           notes: entry.notes,
           assignedDate: entry.assignedDate,
@@ -307,7 +306,6 @@ const Page = () => {
           hiringManager: (c as any).hiringManager,
           recruiter: (c as any).recruiter,
         })) as Candidate[],
-        pipelineStatus: entry.status,
         priority: entry.priority,
         notes: entry.notes,
         assignedDate: entry.assignedDate,
@@ -430,7 +428,6 @@ const Page = () => {
             recruiter: (c as any).recruiter,
             isTempCandidate: (c as any).candidateId?.isTempCandidate || false,
           })) as Candidate[],
-          pipelineStatus: entry.status,
           priority: entry.priority,
           notes: entry.notes,
           assignedDate: entry.assignedDate,
@@ -532,7 +529,6 @@ const Page = () => {
             recruiter: (c as any).recruiter,
             isTempCandidate: (c as any).candidateId?.isTempCandidate || false,
           })) as Candidate[],
-          pipelineStatus: entry.status,
           priority: entry.priority,
           notes: entry.notes,
           assignedDate: entry.assignedDate,
@@ -685,7 +681,6 @@ const Page = () => {
             recruiter: (c as any).recruiter,
             isTempCandidate: (c as any).candidateId?.isTempCandidate || false,
           })) as Candidate[],
-          pipelineStatus: entry.status,
           priority: entry.priority,
           notes: entry.notes,
           assignedDate: entry.assignedDate,
@@ -847,7 +842,6 @@ const Page = () => {
             recruiter: (c as any).recruiter,
             isTempCandidate: (c as any).candidateId?.isTempCandidate || false,
           })) as Candidate[],
-          pipelineStatus: entry.status,
           priority: entry.priority,
           notes: entry.notes,
           assignedDate: entry.assignedDate,
@@ -947,7 +941,6 @@ const Page = () => {
           recruiter: (c as any).recruiter,
           isTempCandidate: (c as any).candidateId?.isTempCandidate || false,
         })) as Candidate[],
-        pipelineStatus: entry.status,
         priority: entry.priority,
         notes: entry.notes,
         assignedDate: entry.assignedDate,
@@ -1041,7 +1034,7 @@ const Page = () => {
                     <span>{job.location}</span>
                   </div>
                   <div className="flex items-center space-x-1">
-                    <DollarSign className="h-4 w-4 text-yellow-500" />
+                    <CircleDollarSign  className="h-4 w-4 text-yellow-500" />
                     <span>{job.salaryRange}</span>
                   </div>
                   <Badge variant="outline" className="bg-gray-100 text-gray-700">
@@ -1051,17 +1044,12 @@ const Page = () => {
                     <Users className="h-4 w-4 text-purple-500" />
                     <span>{job.totalCandidates || job.candidates.length} candidates</span>
                   </div>
-                  {job.pipelineStatus && (
+                  {job.jobId?.stage && (
                     <Badge 
                       variant="outline" 
-                      className={`${
-                        job.pipelineStatus === 'Active' ? 'bg-green-100 text-green-700 border-green-200' :
-                        job.pipelineStatus === 'Closed' ? 'bg-red-100 text-red-700 border-red-200' :
-                        job.pipelineStatus === 'On Hold' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
-                        'bg-gray-100 text-gray-700 border-gray-200'
-                      }`}
+                      className="bg-gray-100 text-gray-700 border-gray-200"
                     >
-                      {job.pipelineStatus}
+                      {job.jobId.stage}
                     </Badge>
                   )}
                 </div>
@@ -1076,7 +1064,7 @@ const Page = () => {
                 variant="outline"
               >
                 <Plus className="h-4 w-4 mr-1" />
-                Add Candidate
+                Attach Candidate
               </Button>
             </div>
           </div>

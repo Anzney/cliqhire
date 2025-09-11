@@ -105,7 +105,7 @@ export interface Job {
   isExpanded: boolean;
   candidates: Candidate[];
   // Pipeline-specific fields from new API structure
-  pipelineStatus?: string;
+  // Note: pipelineStatus is now derived from jobId.stage
   priority?: string;
   notes?: string;
   assignedDate?: string;

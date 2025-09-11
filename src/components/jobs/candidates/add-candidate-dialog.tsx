@@ -143,8 +143,8 @@ export function AddCandidateDialog({ jobId, jobTitle, trigger, onCandidatesAdded
     candidate.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getCandidateLocation = (candidate: Candidate) => {
-    return candidate.location || "Location not specified";
+  const getCandidateEmail = (candidate: Candidate) => {
+    return candidate.email || "Email not specified";
   };
 
   // Ensure trigger reliably opens the dialog even if Trigger-asChild props don't attach
@@ -216,8 +216,8 @@ export function AddCandidateDialog({ jobId, jobTitle, trigger, onCandidatesAdded
                                   {getCandidateDisplayName(candidate)}
                                 </span>
                                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                  <MapPin className="h-3 w-3" />
-                                  {getCandidateLocation(candidate)}
+                                  <Mail className="h-3 w-3" />
+                                  {getCandidateEmail(candidate)}
                                 </div>
                               </div>
                             </MultiSelectorItem>
