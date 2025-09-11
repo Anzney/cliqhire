@@ -22,7 +22,7 @@ interface AssignedJobsProps {
 }
 
 export function AssignedJobs({ assignedJobs }: AssignedJobsProps) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   // Calculate job counts
   const totalJobs = assignedJobs.length;
