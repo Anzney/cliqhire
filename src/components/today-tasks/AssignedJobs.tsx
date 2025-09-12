@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Table, 
   TableBody, 
@@ -23,10 +24,23 @@ interface AssignedJobsProps {
 
 export function AssignedJobs({ assignedJobs }: AssignedJobsProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [checkedJobs, setCheckedJobs] = useState<Set<string>>(new Set());
 
   // Calculate job counts
   const totalJobs = assignedJobs.length;
   const activeJobs = assignedJobs.filter(job => job.status === 'active').length;
+
+  const handleJobCheck = (jobId: string, checked: boolean) => {
+    setCheckedJobs(prev => {
+      const newSet = new Set(prev);
+      if (checked) {
+        newSet.add(jobId);
+      } else {
+        newSet.delete(jobId);
+      }
+      return newSet;
+    });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -66,29 +80,54 @@ export function AssignedJobs({ assignedJobs }: AssignedJobsProps) {
         <CollapsibleContent>
           <CardContent>
             <div className="rounded-md border">
-              <div className="max-h-96 overflow-y-auto">
+              {/* Fixed Header */}
+              <div className="border-b bg-gray-50/50">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Job Title</TableHead>
-                      <TableHead>Client</TableHead>
-                      <TableHead>No of Candidates</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead className="w-12">
+                        <Checkbox 
+                          checked={checkedJobs.size === assignedJobs.length && assignedJobs.length > 0}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setCheckedJobs(new Set(assignedJobs.map(job => job.id)));
+                            } else {
+                              setCheckedJobs(new Set());
+                            }
+                          }}
+                        />
+                      </TableHead>
+                      <TableHead className="w-1/3">Job Title</TableHead>
+                      <TableHead className="w-1/4">Client</TableHead>
+                      <TableHead className="w-24">No of Candidates</TableHead>
+                      <TableHead className="w-20">Status</TableHead>
                     </TableRow>
                   </TableHeader>
+                </Table>
+              </div>
+              
+              {/* Scrollable Body */}
+              <div className="max-h-96 overflow-y-auto">
+                <Table>
                   <TableBody>
                     {assignedJobs.map((job) => (
                       <TableRow key={job.id} className="hover:bg-gray-50">
-                        <TableCell className="font-medium">
+                        <TableCell className="w-12">
+                          <Checkbox 
+                            checked={checkedJobs.has(job.id)}
+                            onCheckedChange={(checked) => handleJobCheck(job.id, checked as boolean)}
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium w-1/3">
                           {job.jobTitle}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="w-1/4">
                           {job.clientName}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="w-24">
                           {job.candidatesCount}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="w-20">
                           <Badge className={getStatusColor(job.status)}>
                             {job.status}
                           </Badge>
