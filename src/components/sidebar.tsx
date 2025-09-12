@@ -49,9 +49,14 @@ export function Sidebar() {
 
   // Determine which permissions to use
   // If user has custom permissions, use those; otherwise use default permissions
-  const finalPermissions = (user?.permissions && user.permissions.length > 0) 
+  let finalPermissions = (user?.permissions && user.permissions.length > 0) 
     ? user.permissions 
     : user?.defaultPermissions || [];
+  
+  // Ensure TODAY_TASKS permission is available for all non-admin users
+  if (!isAdmin && !finalPermissions.includes('TODAY_TASKS')) {
+    finalPermissions = [...finalPermissions, 'TODAY_TASKS'];
+  }
 
   return (
     <div className="w-[240px] border-r bg-gray-50/40 flex flex-col">

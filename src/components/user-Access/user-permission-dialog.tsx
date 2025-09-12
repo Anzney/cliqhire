@@ -89,7 +89,7 @@ export function UserPermissionDialog({
         email: user.email,
         role: user.teamRole || "RECRUITER",
         isActive: true,
-        permissions: ['RECRUITMENT_PIPELINE', 'JOBS', 'CANDIDATE'], // Default permissions
+        permissions: ['RECRUITMENT_PIPELINE', 'JOBS', 'CANDIDATE', 'TODAY_TASKS'], // Default permissions
         profile: {
           name: user.name,
           email: user.email,
@@ -101,7 +101,7 @@ export function UserPermissionDialog({
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       });
-      setSelectedPermissions(['RECRUITMENT_PIPELINE', 'JOBS', 'CANDIDATE']); // Default permissions
+      setSelectedPermissions(['RECRUITMENT_PIPELINE', 'JOBS', 'CANDIDATE', 'TODAY_TASKS']); // Default permissions
       setSelectedRole(user.teamRole || "RECRUITER");
       // Don't show error toast for new users who don't exist in permission system yet
       if (error instanceof Error && !error.message.includes('User not found')) {
@@ -128,7 +128,7 @@ export function UserPermissionDialog({
       setSelectedPermissions(permissionsInfo.roleDefaultPermissions[newRole]);
     } else {
       // Default to the three main permissions if backend doesn't provide defaults
-      setSelectedPermissions(['RECRUITMENT_PIPELINE', 'JOBS', 'CANDIDATE']);
+      setSelectedPermissions(['RECRUITMENT_PIPELINE', 'JOBS', 'CANDIDATE', 'TODAY_TASKS']);
     }
   };
 
