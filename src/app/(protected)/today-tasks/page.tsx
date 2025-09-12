@@ -285,7 +285,7 @@ export default function TodayTasksPage() {
                 Add Task
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg">
               <DialogHeader>
                 <DialogTitle>Add Personal Task</DialogTitle>
               </DialogHeader>
