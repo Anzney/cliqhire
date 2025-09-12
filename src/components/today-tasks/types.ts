@@ -40,7 +40,7 @@ export interface PersonalTask {
   dueDate?: string;
   dueTime?: string;
   status: "pending" | "in-progress" | "completed";
-  category: "follow-up" | "admin" | "research" | "meeting" | "other";
+  category: string; // Allow any string since API can return different categories
   createdAt: string;
   // Follow-up specific fields
   followUpType?: "cv-received" | "candidate-response" | "client-feedback" | "interview-scheduled" | "offer-sent" | "other";

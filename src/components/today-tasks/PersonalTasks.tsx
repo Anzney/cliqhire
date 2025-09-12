@@ -4,13 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
@@ -47,9 +40,8 @@ import { FollowUpStatusDropdown } from "./FollowUpStatusDropdown";
 interface PersonalTasksProps {
   personalTasks: PersonalTask[];
   completedTasks: Set<string>;
-  filterPriority: string;
   searchQuery: string;
-  onSetFilterPriority: (priority: string) => void;
+  loading?: boolean;
   onCompleteTask: (taskId: string) => void;
   onUpdateFollowUpStatus: (taskId: string, followUpStatus: "pending" | "in-progress" | "completed") => void;
   onDeleteTask: (taskId: string) => void;
@@ -58,9 +50,8 @@ interface PersonalTasksProps {
 export function PersonalTasks({ 
   personalTasks, 
   completedTasks, 
-  filterPriority, 
   searchQuery,
-  onSetFilterPriority,
+  loading = false,
   onCompleteTask,
   onUpdateFollowUpStatus,
   onDeleteTask
@@ -104,8 +95,7 @@ export function PersonalTasks({
   const filteredPersonalTasks = personalTasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          task.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesPriority = filterPriority === "all" || task.priority === filterPriority;
-    return matchesSearch && matchesPriority;
+    return matchesSearch;
   });
 
   const handleCheckboxChange = (taskId: string) => {
@@ -149,20 +139,15 @@ export function PersonalTasks({
         </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-end mb-4">
-              <Select value={filterPriority} onValueChange={onSetFilterPriority}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-        {filteredPersonalTasks.length > 0 ? (
+            
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+                  <span className="ml-2 text-gray-600">Loading personal tasks...</span>
+                </div>
+              </div>
+            ) : filteredPersonalTasks.length > 0 ? (
           filteredPersonalTasks.map((task) => (
             <div 
               key={task.id} 

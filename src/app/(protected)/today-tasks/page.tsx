@@ -24,8 +24,7 @@ import { AddTaskForm } from "@/components/today-tasks/AddTaskForm";
 import { 
   AssignedJob, 
   Interview, 
-  PersonalTask, 
-  AddTaskFormData 
+  PersonalTask
 } from "@/components/today-tasks/types";
 import { JobStatus } from "@/components/today-tasks/StatusDropdown";
 import { 
@@ -42,11 +41,14 @@ export default function TodayTasksPage() {
   // State management - using real API data
   const [assignedJobs, setAssignedJobs] = useState<AssignedJob[]>([]);
   const [assignedJobsLoading, setAssignedJobsLoading] = useState(true);
+  const [personalTasks, setPersonalTasks] = useState<PersonalTask[]>([]);
+  const [personalTasksLoading, setPersonalTasksLoading] = useState(true);
 
   // Fetch tasks and assigned jobs when component mounts
   useEffect(() => {
     fetchTasks();
     fetchAssignedJobs();
+    fetchPersonalTasks();
   }, []); // Empty dependency array ensures this runs only once
 
   const fetchAssignedJobs = async () => {
@@ -73,33 +75,47 @@ export default function TodayTasksPage() {
       setAssignedJobs(transformedJobs);
     } catch (error) {
       console.error('Error fetching assigned jobs:', error);
-      // Keep empty array on error
       setAssignedJobs([]);
     } finally {
       setAssignedJobsLoading(false);
     }
   };
 
+  const fetchPersonalTasks = async () => {
+    try {
+      setPersonalTasksLoading(true);
+      const apiTasks = await taskService.getPersonalTasks();
+      
+      // Transform API data to match PersonalTask interface
+      const transformedTasks: PersonalTask[] = apiTasks.map(task => ({
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        priority: 'medium', // Default priority since API doesn't provide it
+        dueDate: task.dueDate,
+        dueTime: undefined, // Not provided by API
+        status: task.status === 'to-do' ? 'pending' : 
+                task.status === 'inprogress' ? 'in-progress' : 'completed',
+        category: task.category,
+        createdAt: task.createdAt,
+        followUpType: undefined, // Not provided by API
+        followUpStatus: undefined, // Not provided by API
+        relatedCandidate: undefined, // Not provided by API
+        relatedJob: undefined, // Not provided by API
+        relatedClient: undefined, // Not provided by API
+      }));
+      
+      setPersonalTasks(transformedTasks);
+    } catch (error) {
+      console.error('Error fetching personal tasks:', error);
+      setPersonalTasks([]);
+    } finally {
+      setPersonalTasksLoading(false);
+    }
+  };
+
   const [interviews, setInterviews] = useState<Interview[]>(dummyInterviews);
   const [upcomingInterviews, setUpcomingInterviews] = useState<Interview[]>(dummyUpcomingInterviews);
-
-  // Convert API tasks to PersonalTask format
-  const personalTasks: PersonalTask[] = (tasks || []).map(task => ({
-    id: task.id,
-    title: task.title,
-    description: task.description,
-    priority: task.priority,
-    dueDate: task.dueDate,
-    dueTime: task.dueTime,
-    status: task.status,
-    category: task.category,
-    createdAt: task.createdAt,
-    followUpType: task.followUpType,
-    followUpStatus: task.followUpStatus,
-    relatedCandidate: task.relatedCandidate,
-    relatedJob: task.relatedJob,
-    relatedClient: task.relatedClient,
-  }));
 
   const [completedTasksList, setCompletedTasksList] = useState<PersonalTask[]>([]);
 
@@ -239,20 +255,17 @@ export default function TodayTasksPage() {
     }
   };
 
-  const handleAddTask = async (taskData: AddTaskFormData) => {
+  const handleAddTask = async (taskData: { title: string; description: string; category: string; dueDate: string }) => {
     try {
-      await createTask({
+      await taskService.createPersonalTask({
         title: taskData.title,
         description: taskData.description,
-        priority: taskData.priority,
         dueDate: taskData.dueDate,
-        dueTime: taskData.dueTime,
         category: taskData.category,
-        followUpType: taskData.category === 'follow-up' ? taskData.followUpType : undefined,
-        relatedCandidate: taskData.relatedCandidate,
-        relatedJob: taskData.relatedJob,
-        relatedClient: taskData.relatedClient,
       });
+      
+      // Refresh personal tasks after creating a new one
+      await fetchPersonalTasks();
     } catch (error) {
       console.error('Error creating task:', error);
     }
@@ -328,9 +341,8 @@ export default function TodayTasksPage() {
       <PersonalTasks
         personalTasks={personalTasks}
         completedTasks={completedTasks}
-        filterPriority={filterPriority}
         searchQuery={searchQuery}
-        onSetFilterPriority={setFilterPriority}
+        loading={personalTasksLoading}
         onCompleteTask={handleCompleteTask}
         onUpdateFollowUpStatus={handleUpdateFollowUpStatus}
         onDeleteTask={handleDeleteTask}

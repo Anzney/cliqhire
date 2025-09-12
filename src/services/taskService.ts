@@ -5,18 +5,12 @@ import { api } from '@/lib/axios-config';
 export interface Task {
   id: string;
   title: string;
-  description?: string;
-  priority: 'high' | 'medium' | 'low';
+  description: string;
+  status: 'to-do' | 'inprogress' | 'completed';
+  category: string;
   dueDate?: string;
-  dueTime?: string;
-  status: 'pending' | 'in-progress' | 'completed';
-  category: 'follow-up' | 'admin' | 'research' | 'meeting' | 'other';
   createdAt: string;
-  followUpType?: 'cv-received' | 'candidate-response' | 'client-feedback' | 'interview-scheduled' | 'offer-sent' | 'other';
-  followUpStatus?: 'pending' | 'in-progress' | 'completed';
-  relatedCandidate?: string;
-  relatedJob?: string;
-  relatedClient?: string;
+  updatedAt: string;
 }
 
 export interface CreateTaskRequest {
@@ -89,28 +83,28 @@ class TaskService {
   private baseURL = process.env.NEXT_PUBLIC_API_URL;
 
   /**
-   * Get current user's tasks
+   * Get personal tasks for the current user
    */
-  async getMyTasks(): Promise<Task[]> {
+  async getPersonalTasks(): Promise<Task[]> {
     try {
-      const response = await api.get('/api/tasks/my-tasks');
-      return response.data.data.tasks;
+      const response = await api.get('/api/tasks/personal');
+      return response.data.data;
     } catch (error) {
-      console.error('TaskService: Error fetching tasks:', error);
-      throw new Error('Failed to fetch tasks');
+      console.error('TaskService: Error fetching personal tasks:', error);
+      throw new Error('Failed to fetch personal tasks');
     }
   }
 
   /**
-   * Create a new task
+   * Create a personal task
    */
-  async createTask(taskData: CreateTaskRequest): Promise<Task> {
+  async createPersonalTask(taskData: { title: string; description: string; dueDate: string; category: string }): Promise<Task> {
     try {
-      const response = await api.post('/api/tasks/my-tasks', taskData);
+      const response = await api.post('/api/tasks/personal', taskData);
       return response.data.data.task;
     } catch (error) {
-      console.error('TaskService: Error creating task:', error);
-      throw new Error('Failed to create task');
+      console.error('TaskService: Error creating personal task:', error);
+      throw new Error('Failed to create personal task');
     }
   }
 

@@ -19,26 +19,18 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { AddTaskFormData } from "./types";
 
 interface AddTaskFormProps {
   onClose: () => void;
-  onSubmit?: (taskData: AddTaskFormData) => void;
+  onSubmit?: (taskData: { title: string; description: string; category: string; dueDate: string }) => void;
 }
 
 export function AddTaskForm({ onClose, onSubmit }: AddTaskFormProps) {
-  const [formData, setFormData] = useState<AddTaskFormData>({
+  const [formData, setFormData] = useState({
     title: '',
     description: '',
-    priority: 'medium', // Keep for type compatibility, but won't be used
     category: 'other',
     dueDate: '',
-    dueTime: '',
-    // Follow-up specific fields
-    followUpType: 'other',
-    relatedCandidate: '',
-    relatedJob: '',
-    relatedClient: ''
   });
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
