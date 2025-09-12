@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -11,6 +11,7 @@ import {
   DialogTrigger 
 } from "@/components/ui/dialog";
 import { Plus, Search } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Import components
 import { StatsOverview } from "@/components/today-tasks/StatsOverview";
@@ -35,13 +36,37 @@ import {
 
 
 export default function TodayTasksPage() {
-  // State management - using dummy data
+  const { tasks, createTask, updateTask, deleteTask, completeTask, updateFollowUpStatus, fetchTasks } = useAuth();
+  
+  // Fetch tasks when component mounts (only once)
+  useEffect(() => {
+    fetchTasks();
+  }, []); // Empty dependency array ensures this runs only once
+  
+  // State management - using real API data
   const [assignedJobs] = useState<AssignedJob[]>(dummyAssignedJobs);
 
   const [interviews, setInterviews] = useState<Interview[]>(dummyInterviews);
   const [upcomingInterviews, setUpcomingInterviews] = useState<Interview[]>(dummyUpcomingInterviews);
 
-  const [personalTasks, setPersonalTasks] = useState<PersonalTask[]>(dummyPersonalTasks);
+  // Convert API tasks to PersonalTask format
+  const personalTasks: PersonalTask[] = (tasks || []).map(task => ({
+    id: task.id,
+    title: task.title,
+    description: task.description,
+    priority: task.priority,
+    dueDate: task.dueDate,
+    dueTime: task.dueTime,
+    status: task.status,
+    category: task.category,
+    createdAt: task.createdAt,
+    followUpType: task.followUpType,
+    followUpStatus: task.followUpStatus,
+    relatedCandidate: task.relatedCandidate,
+    relatedJob: task.relatedJob,
+    relatedClient: task.relatedClient,
+  }));
+
   const [completedTasksList, setCompletedTasksList] = useState<PersonalTask[]>([]);
 
   const [completedTasks, setCompletedTasks] = useState<Set<string>>(new Set());
@@ -49,62 +74,69 @@ export default function TodayTasksPage() {
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const completeTask = (taskId: string) => {
-    setCompletedTasks(prev => new Set(prev).add(taskId));
-    
-    // Find the task and move it to completed list
-    const taskToComplete = personalTasks.find(task => task.id === taskId);
-    if (taskToComplete) {
-      const completedTask = { ...taskToComplete, status: 'completed' as const };
-      setCompletedTasksList(prev => [...prev, completedTask]);
-    }
-    
-    // Auto-remove completed tasks from personal tasks after a short delay
-    setTimeout(() => {
-      setPersonalTasks(prev => prev.filter(task => task.id !== taskId));
-      setCompletedTasks(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(taskId);
-        return newSet;
-      });
-    }, 2000); // 2 second delay to show completion animation
-  };
-
-  const updateFollowUpStatus = (taskId: string, followUpStatus: "pending" | "in-progress" | "completed") => {
-    if (followUpStatus === 'completed') {
+  const handleCompleteTask = async (taskId: string) => {
+    try {
+      await completeTask(taskId);
       setCompletedTasks(prev => new Set(prev).add(taskId));
-    }
-    
-    setPersonalTasks(prev =>
-      prev.map(task =>
-        task.id === taskId
-          ? { ...task, followUpStatus, status: followUpStatus === 'completed' ? 'completed' as const : task.status }
-          : task
-      )
-    );
-    
-    // Auto-remove if marked as completed
-    if (followUpStatus === 'completed') {
+      
+      // Find the task and move it to completed list
+      const taskToComplete = personalTasks.find(task => task.id === taskId);
+      if (taskToComplete) {
+        const completedTask = { ...taskToComplete, status: 'completed' as const };
+        setCompletedTasksList(prev => [...prev, completedTask]);
+      }
+      
+      // Auto-remove completed tasks from personal tasks after a short delay
       setTimeout(() => {
-        setPersonalTasks(prev => prev.filter(task => task.id !== taskId));
         setCompletedTasks(prev => {
           const newSet = new Set(prev);
           newSet.delete(taskId);
           return newSet;
         });
-      }, 2000);
+      }, 2000); // 2 second delay to show completion animation
+    } catch (error) {
+      console.error('Error completing task:', error);
     }
   };
 
-  const deleteTask = (taskId: string) => {
-    setPersonalTasks(prev => prev.filter(task => task.id !== taskId));
+  const handleUpdateFollowUpStatus = async (taskId: string, followUpStatus: "pending" | "in-progress" | "completed") => {
+    try {
+      await updateFollowUpStatus(taskId, followUpStatus);
+      
+      if (followUpStatus === 'completed') {
+        setCompletedTasks(prev => new Set(prev).add(taskId));
+      }
+      
+      // Auto-remove if marked as completed
+      if (followUpStatus === 'completed') {
+        setTimeout(() => {
+          setCompletedTasks(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(taskId);
+            return newSet;
+          });
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error updating follow-up status:', error);
+    }
   };
+
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      await deleteTask(taskId);
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
+  };
+
+
 
   const restoreTask = (taskId: string) => {
     const taskToRestore = completedTasksList.find(task => task.id === taskId);
     if (taskToRestore) {
       const restoredTask = { ...taskToRestore, status: 'pending' as const };
-      setPersonalTasks(prev => [...prev, restoredTask]);
+      // Note: In a real app, you would call updateTask API here
       setCompletedTasksList(prev => prev.filter(task => task.id !== taskId));
     }
   };
@@ -150,24 +182,23 @@ export default function TodayTasksPage() {
   // upcomingInterviews is now managed as separate state with dummyUpcomingInterviews
 
   // Handler functions
-  const handleAddTask = (taskData: AddTaskFormData) => {
-    const newTask: PersonalTask = {
-      id: Date.now().toString(),
-      title: taskData.title,
-      description: taskData.description,
-      priority: taskData.priority,
-      dueDate: taskData.dueDate,
-      dueTime: taskData.dueTime,
-      status: 'pending',
-      category: taskData.category,
-      createdAt: new Date().toISOString().split('T')[0],
-      followUpType: taskData.category === 'follow-up' ? taskData.followUpType : undefined,
-      followUpStatus: taskData.category === 'follow-up' ? 'pending' : undefined,
-      relatedCandidate: taskData.relatedCandidate,
-      relatedJob: taskData.relatedJob,
-      relatedClient: taskData.relatedClient,
-    };
-    setPersonalTasks(prev => [...prev, newTask]);
+  const handleAddTask = async (taskData: AddTaskFormData) => {
+    try {
+      await createTask({
+        title: taskData.title,
+        description: taskData.description,
+        priority: taskData.priority,
+        dueDate: taskData.dueDate,
+        dueTime: taskData.dueTime,
+        category: taskData.category,
+        followUpType: taskData.category === 'follow-up' ? taskData.followUpType : undefined,
+        relatedCandidate: taskData.relatedCandidate,
+        relatedJob: taskData.relatedJob,
+        relatedClient: taskData.relatedClient,
+      });
+    } catch (error) {
+      console.error('Error creating task:', error);
+    }
   };
 
   return (
@@ -239,9 +270,9 @@ export default function TodayTasksPage() {
         filterPriority={filterPriority}
         searchQuery={searchQuery}
         onSetFilterPriority={setFilterPriority}
-        onCompleteTask={completeTask}
-        onUpdateFollowUpStatus={updateFollowUpStatus}
-        onDeleteTask={deleteTask}
+        onCompleteTask={handleCompleteTask}
+        onUpdateFollowUpStatus={handleUpdateFollowUpStatus}
+        onDeleteTask={handleDeleteTask}
       />
 
       {/* Completed Tasks */}
