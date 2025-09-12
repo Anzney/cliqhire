@@ -27,6 +27,7 @@ import {
   PersonalTask, 
   AddTaskFormData 
 } from "@/components/today-tasks/types";
+import { JobStatus } from "@/components/today-tasks/StatusDropdown";
 import { 
   dummyAssignedJobs, 
   dummyInterviews, 
@@ -182,6 +183,12 @@ export default function TodayTasksPage() {
   // upcomingInterviews is now managed as separate state with dummyUpcomingInterviews
 
   // Handler functions
+  const handleJobStatusChange = (jobId: string, newStatus: JobStatus) => {
+    // In a real app, you would call an API to update the job status
+    console.log(`Job ${jobId} status changed to ${newStatus}`);
+    // For now, we'll just log the change since we're using dummy data
+  };
+
   const handleAddTask = async (taskData: AddTaskFormData) => {
     try {
       await createTask({
@@ -249,7 +256,10 @@ export default function TodayTasksPage() {
       />
 
       {/* Assigned Jobs - Full Width */}
-      <AssignedJobs assignedJobs={assignedJobs} />
+      <AssignedJobs 
+        assignedJobs={assignedJobs} 
+        onStatusChange={handleJobStatusChange}
+      />
 
       {/* Today's Interviews */}
       <Interviews 

@@ -9,7 +9,7 @@ export interface AssignedJob {
   deadline: string;
   aemsDeadline?: string; // Optional AEMS deadline field
   candidatesCount: number;
-  status: "active" | "paused" | "completed";
+  status: "To-do" | "In Progress" | "Completed";
   recruiter: string;
 }
 

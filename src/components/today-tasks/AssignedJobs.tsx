@@ -17,18 +17,20 @@ import {
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AssignedJob } from "./types";
+import { StatusDropdown, JobStatus } from "./StatusDropdown";
 
 interface AssignedJobsProps {
   assignedJobs: AssignedJob[];
+  onStatusChange?: (jobId: string, newStatus: JobStatus) => void;
 }
 
-export function AssignedJobs({ assignedJobs }: AssignedJobsProps) {
+export function AssignedJobs({ assignedJobs, onStatusChange }: AssignedJobsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [checkedJobs, setCheckedJobs] = useState<Set<string>>(new Set());
 
   // Calculate job counts
   const totalJobs = assignedJobs.length;
-  const activeJobs = assignedJobs.filter(job => job.status === 'active').length;
+  const activeJobs = assignedJobs.filter(job => job.status === 'In Progress').length;
 
   const handleJobCheck = (jobId: string, checked: boolean) => {
     setCheckedJobs(prev => {
@@ -42,16 +44,9 @@ export function AssignedJobs({ assignedJobs }: AssignedJobsProps) {
     });
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-700';
-      case 'paused':
-        return 'bg-yellow-100 text-yellow-700';
-      case 'completed':
-        return 'bg-blue-100 text-blue-700';
-      default:
-        return 'bg-gray-100 text-gray-700';
+  const handleStatusChange = (jobId: string, newStatus: JobStatus) => {
+    if (onStatusChange) {
+      onStatusChange(jobId, newStatus);
     }
   };
 
@@ -128,9 +123,11 @@ export function AssignedJobs({ assignedJobs }: AssignedJobsProps) {
                           {job.candidatesCount}
                         </TableCell>
                         <TableCell className="w-20">
-                          <Badge className={getStatusColor(job.status)}>
-                            {job.status}
-                          </Badge>
+                          <StatusDropdown
+                            currentStatus={job.status}
+                            onStatusChange={(newStatus) => handleStatusChange(job.id, newStatus)}
+                            jobTitle={job.jobTitle}
+                          />
                         </TableCell>
                       </TableRow>
                     ))}
