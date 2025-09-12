@@ -41,13 +41,6 @@ export function AssignedJobs({ assignedJobs }: AssignedJobsProps) {
     }
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
   return (
     <Card>
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -73,21 +66,16 @@ export function AssignedJobs({ assignedJobs }: AssignedJobsProps) {
         <CollapsibleContent>
           <CardContent>
             <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Job Title</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Candidates</TableHead>
-                    <TableHead>Deadline</TableHead>
-                    <TableHead>AEMS Deadline</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-              </Table>
               <div className="max-h-96 overflow-y-auto">
                 <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Job Title</TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>No of Candidates</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
                   <TableBody>
                     {assignedJobs.map((job) => (
                       <TableRow key={job.id} className="hover:bg-gray-50">
@@ -98,16 +86,7 @@ export function AssignedJobs({ assignedJobs }: AssignedJobsProps) {
                           {job.clientName}
                         </TableCell>
                         <TableCell>
-                          {job.location}
-                        </TableCell>
-                        <TableCell>
                           {job.candidatesCount}
-                        </TableCell>
-                        <TableCell>
-                          {formatDate(job.deadline)}
-                        </TableCell>
-                        <TableCell>
-                          {job.aemsDeadline ? formatDate(job.aemsDeadline) : 'N/A'}
                         </TableCell>
                         <TableCell>
                           <Badge className={getStatusColor(job.status)}>
