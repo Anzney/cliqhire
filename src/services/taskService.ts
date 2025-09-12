@@ -64,6 +64,27 @@ export interface TaskResponse {
   message: string;
 }
 
+// Assigned Job types based on API response
+export interface AssignedJobApiResponse {
+  content: string;
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  status: string;
+  _id: string;
+  position: string;
+  clientName: string;
+  candidateCount: number;
+  jobId: string;
+  clientId: string;
+}
+
+export interface AssignedJobsApiResponse {
+  success: boolean;
+  data: AssignedJobApiResponse[];
+  count: number;
+}
+
 class TaskService {
   private baseURL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -148,6 +169,19 @@ class TaskService {
     } catch (error) {
       console.error('TaskService: Error updating follow-up status:', error);
       throw new Error('Failed to update follow-up status');
+    }
+  }
+
+  /**
+   * Get assigned jobs for the current user
+   */
+  async getAssignedJobs(): Promise<AssignedJobApiResponse[]> {
+    try {
+      const response = await api.get('/api/tasks/my-tasks');
+      return response.data.data;
+    } catch (error) {
+      console.error('TaskService: Error fetching assigned jobs:', error);
+      throw new Error('Failed to fetch assigned jobs');
     }
   }
 }

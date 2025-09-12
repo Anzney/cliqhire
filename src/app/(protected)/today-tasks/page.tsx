@@ -29,23 +29,56 @@ import {
 } from "@/components/today-tasks/types";
 import { JobStatus } from "@/components/today-tasks/StatusDropdown";
 import { 
-  dummyAssignedJobs, 
   dummyInterviews, 
   dummyUpcomingInterviews,
   dummyPersonalTasks 
 } from "@/components/today-tasks/dummyData";
+import { taskService, AssignedJobApiResponse } from "@/services/taskService";
 
 
 export default function TodayTasksPage() {
   const { tasks, createTask, updateTask, deleteTask, completeTask, updateFollowUpStatus, fetchTasks } = useAuth();
   
-  // Fetch tasks when component mounts (only once)
+  // State management - using real API data
+  const [assignedJobs, setAssignedJobs] = useState<AssignedJob[]>([]);
+  const [assignedJobsLoading, setAssignedJobsLoading] = useState(true);
+
+  // Fetch tasks and assigned jobs when component mounts
   useEffect(() => {
     fetchTasks();
+    fetchAssignedJobs();
   }, []); // Empty dependency array ensures this runs only once
-  
-  // State management - using real API data
-  const [assignedJobs] = useState<AssignedJob[]>(dummyAssignedJobs);
+
+  const fetchAssignedJobs = async () => {
+    try {
+      setAssignedJobsLoading(true);
+      const apiJobs: AssignedJobApiResponse[] = await taskService.getAssignedJobs();
+      
+      // Transform API data to match AssignedJob interface
+      const transformedJobs: AssignedJob[] = apiJobs.map(job => ({
+        id: job.id,
+        jobTitle: job.position,
+        clientName: job.clientName,
+        candidatesCount: job.candidateCount,
+        status: job.status === 'to-do' ? 'To-do' : job.status === 'in-progress' ? 'In Progress' : 'Completed',
+        content: job.content,
+        createdAt: job.createdAt,
+        updatedAt: job.updatedAt,
+        _id: job._id,
+        position: job.position,
+        jobId: job.jobId,
+        clientId: job.clientId,
+      }));
+      
+      setAssignedJobs(transformedJobs);
+    } catch (error) {
+      console.error('Error fetching assigned jobs:', error);
+      // Keep empty array on error
+      setAssignedJobs([]);
+    } finally {
+      setAssignedJobsLoading(false);
+    }
+  };
 
   const [interviews, setInterviews] = useState<Interview[]>(dummyInterviews);
   const [upcomingInterviews, setUpcomingInterviews] = useState<Interview[]>(dummyUpcomingInterviews);
@@ -259,6 +292,7 @@ export default function TodayTasksPage() {
       <AssignedJobs 
         assignedJobs={assignedJobs} 
         onStatusChange={handleJobStatusChange}
+        loading={assignedJobsLoading}
       />
 
       {/* Today's Interviews */}

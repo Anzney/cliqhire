@@ -22,9 +22,10 @@ import { StatusDropdown, JobStatus } from "./StatusDropdown";
 interface AssignedJobsProps {
   assignedJobs: AssignedJob[];
   onStatusChange?: (jobId: string, newStatus: JobStatus) => void;
+  loading?: boolean;
 }
 
-export function AssignedJobs({ assignedJobs, onStatusChange }: AssignedJobsProps) {
+export function AssignedJobs({ assignedJobs, onStatusChange, loading = false }: AssignedJobsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [checkedJobs, setCheckedJobs] = useState<Set<string>>(new Set());
 
@@ -105,32 +106,49 @@ export function AssignedJobs({ assignedJobs, onStatusChange }: AssignedJobsProps
               <div className="max-h-96 overflow-y-auto">
                 <Table>
                   <TableBody>
-                    {assignedJobs.map((job) => (
-                      <TableRow key={job.id} className="hover:bg-gray-50">
-                        <TableCell className="w-12">
-                          <Checkbox 
-                            checked={checkedJobs.has(job.id)}
-                            onCheckedChange={(checked) => handleJobCheck(job.id, checked as boolean)}
-                          />
-                        </TableCell>
-                        <TableCell className="font-medium w-1/3">
-                          {job.jobTitle}
-                        </TableCell>
-                        <TableCell className="w-1/4">
-                          {job.clientName}
-                        </TableCell>
-                        <TableCell className="w-24">
-                          {job.candidatesCount}
-                        </TableCell>
-                        <TableCell className="w-20">
-                          <StatusDropdown
-                            currentStatus={job.status}
-                            onStatusChange={(newStatus) => handleStatusChange(job.id, newStatus)}
-                            jobTitle={job.jobTitle}
-                          />
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8">
+                          <div className="flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+                            <span className="ml-2 text-gray-600">Loading assigned jobs...</span>
+                          </div>
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : assignedJobs.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                          No assigned jobs found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      assignedJobs.map((job) => (
+                        <TableRow key={job.id} className="hover:bg-gray-50">
+                          <TableCell className="w-12">
+                            <Checkbox 
+                              checked={checkedJobs.has(job.id)}
+                              onCheckedChange={(checked) => handleJobCheck(job.id, checked as boolean)}
+                            />
+                          </TableCell>
+                          <TableCell className="font-medium w-1/3">
+                            {job.jobTitle}
+                          </TableCell>
+                          <TableCell className="w-1/4">
+                            {job.clientName}
+                          </TableCell>
+                          <TableCell className="w-24">
+                            {job.candidatesCount}
+                          </TableCell>
+                          <TableCell className="w-20">
+                            <StatusDropdown
+                              currentStatus={job.status}
+                              onStatusChange={(newStatus) => handleStatusChange(job.id, newStatus)}
+                              jobTitle={job.jobTitle}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </div>

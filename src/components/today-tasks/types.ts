@@ -4,13 +4,16 @@ export interface AssignedJob {
   id: string;
   jobTitle: string;
   clientName: string;
-  location: string;
-  priority: "high" | "medium" | "low";
-  deadline: string;
-  aemsDeadline?: string; // Optional AEMS deadline field
   candidatesCount: number;
   status: "To-do" | "In Progress" | "Completed";
-  recruiter: string;
+  // Additional fields from API
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  _id: string;
+  position: string;
+  jobId: string;
+  clientId: string;
 }
 
 export interface Interview {
