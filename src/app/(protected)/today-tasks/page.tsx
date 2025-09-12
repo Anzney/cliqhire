@@ -60,7 +60,7 @@ export default function TodayTasksPage() {
         jobTitle: job.position,
         clientName: job.clientName,
         candidatesCount: job.candidateCount,
-        status: job.status === 'to-do' ? 'To-do' : job.status === 'in-progress' ? 'In Progress' : 'Completed',
+        status: job.status === 'to-do' ? 'To-do' : job.status === 'inprogress' ? 'In Progress' : 'Completed',
         content: job.content,
         createdAt: job.createdAt,
         updatedAt: job.updatedAt,
@@ -216,10 +216,27 @@ export default function TodayTasksPage() {
   // upcomingInterviews is now managed as separate state with dummyUpcomingInterviews
 
   // Handler functions
-  const handleJobStatusChange = (jobId: string, newStatus: JobStatus) => {
-    // In a real app, you would call an API to update the job status
-    console.log(`Job ${jobId} status changed to ${newStatus}`);
-    // For now, we'll just log the change since we're using dummy data
+  const handleJobStatusChange = async (jobId: string, newStatus: JobStatus) => {
+    try {
+      // Map the UI status to API status format
+      const apiStatus = newStatus === 'To-do' ? 'to-do' : 
+                       newStatus === 'In Progress' ? 'inprogress' : 
+                       'completed';
+
+      await taskService.updateAssignedJobStatus(jobId, apiStatus);
+      
+      // Update local state to reflect the change
+      setAssignedJobs(prev => 
+        prev.map(job => 
+          job.id === jobId ? { ...job, status: newStatus } : job
+        )
+      );
+      
+      console.log(`Job ${jobId} status updated to ${newStatus}`);
+    } catch (error) {
+      console.error('Error updating job status:', error);
+      // You might want to show a toast notification here
+    }
   };
 
   const handleAddTask = async (taskData: AddTaskFormData) => {

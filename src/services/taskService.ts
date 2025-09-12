@@ -184,6 +184,20 @@ class TaskService {
       throw new Error('Failed to fetch assigned jobs');
     }
   }
+
+  /**
+   * Update assigned job status
+   */
+  async updateAssignedJobStatus(taskId: string, status: 'to-do' | 'inprogress' | 'completed'): Promise<void> {
+    try {
+      await api.patch(`/api/tasks/my-tasks/${taskId}`, {
+        status
+      });
+    } catch (error) {
+      console.error('TaskService: Error updating assigned job status:', error);
+      throw new Error('Failed to update assigned job status');
+    }
+  }
 }
 
 // Export a singleton instance
