@@ -58,7 +58,9 @@ export function PersonalTasks({
 }: PersonalTasksProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCheckboxDialogOpen, setIsCheckboxDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [pendingTaskId, setPendingTaskId] = useState<string | null>(null);
+  const [pendingDeleteTaskId, setPendingDeleteTaskId] = useState<string | null>(null);
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -114,6 +116,24 @@ export function PersonalTasks({
   const handleCancelCheckboxChange = () => {
     setIsCheckboxDialogOpen(false);
     setPendingTaskId(null);
+  };
+
+  const handleDeleteClick = (taskId: string) => {
+    setPendingDeleteTaskId(taskId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (pendingDeleteTaskId) {
+      onDeleteTask(pendingDeleteTaskId);
+    }
+    setIsDeleteDialogOpen(false);
+    setPendingDeleteTaskId(null);
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteDialogOpen(false);
+    setPendingDeleteTaskId(null);
   };
 
   return (
@@ -251,7 +271,7 @@ export function PersonalTasks({
                         Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem 
-                        onClick={() => onDeleteTask(task.id)}
+                        onClick={() => handleDeleteClick(task.id)}
                         className="text-red-600"
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
@@ -291,6 +311,29 @@ export function PersonalTasks({
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmCheckboxChange}>
               Complete Task
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Task</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this task? This action cannot be undone and the task will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelDelete}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmDelete}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              Delete Task
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

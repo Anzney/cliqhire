@@ -174,7 +174,9 @@ export default function TodayTasksPage() {
 
   const handleDeleteTask = async (taskId: string) => {
     try {
-      await deleteTask(taskId);
+      await taskService.deletePersonalTask(taskId);
+      // Refresh personal tasks after deletion
+      await fetchPersonalTasks();
     } catch (error) {
       console.error('Error deleting task:', error);
     }

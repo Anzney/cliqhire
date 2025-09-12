@@ -122,7 +122,19 @@ class TaskService {
   }
 
   /**
-   * Delete a task
+   * Delete a personal task
+   */
+  async deletePersonalTask(taskId: string): Promise<void> {
+    try {
+      await api.delete(`/api/tasks/personal/${taskId}`);
+    } catch (error) {
+      console.error('TaskService: Error deleting personal task:', error);
+      throw new Error('Failed to delete personal task');
+    }
+  }
+
+  /**
+   * Delete a task (legacy method)
    */
   async deleteTask(taskId: string): Promise<void> {
     try {
