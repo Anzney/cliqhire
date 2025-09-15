@@ -236,7 +236,7 @@ export function PersonalTasks({
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 max-h-96 overflow-y-auto">
             
             {loading ? (
               <div className="text-center py-8">
