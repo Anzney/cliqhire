@@ -226,6 +226,30 @@ class TaskService {
       throw new Error('Failed to update personal task status');
     }
   }
+
+  /**
+   * Update personal task with comprehensive data
+   */
+  async updatePersonalTask(taskId: string, taskData: {
+    title?: string;
+    description?: string;
+    dueDate?: string;
+    category?: string;
+    status?: 'to-do' | 'inprogress' | 'completed';
+    followUpType?: 'cv-received' | 'candidate-response' | 'client-feedback' | 'interview-scheduled' | 'offer-sent' | 'other';
+    followUpStatus?: 'pending' | 'in-progress' | 'completed';
+    relatedCandidate?: string;
+    relatedJob?: string;
+    relatedClient?: string;
+  }): Promise<Task> {
+    try {
+      const response = await api.put(`/api/tasks/personal/${taskId}`, taskData);
+      return response.data.data.task;
+    } catch (error) {
+      console.error('TaskService: Error updating personal task:', error);
+      throw new Error('Failed to update personal task');
+    }
+  }
 }
 
 // Export a singleton instance
