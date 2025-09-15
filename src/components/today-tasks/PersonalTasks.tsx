@@ -24,12 +24,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { 
   CheckCircle, 
   User, 
@@ -252,8 +246,7 @@ export function PersonalTasks({
                 </div>
               </div>
             ) : filteredPersonalTasks.length > 0 ? (
-          <TooltipProvider>
-            {filteredPersonalTasks.map((task) => (
+              filteredPersonalTasks.map((task) => (
               <div 
                 key={task.id} 
                 className={`border rounded-lg p-3 hover:bg-gray-50 transition-all duration-300 ${
@@ -273,58 +266,44 @@ export function PersonalTasks({
                     />
                   </div>
                   
-                  {/* Title with tooltip - Flexible width */}
+                  {/* Title - Flexible width */}
                   <div className="flex-1 min-w-0 max-w-md">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <h3 
-                          className={`font-medium text-sm truncate cursor-pointer hover:text-blue-600 hover:underline transition-colors ${
-                            task.status === 'completed' 
-                              ? 'line-through text-gray-500' 
-                              : 'text-gray-900'
-                          }`}
-                          onClick={() => handleViewDetails(task)}
-                        >
-                          {truncateText(task.title, 8)}
-                        </h3>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-xs">{task.title}</p>
-                      </TooltipContent>
-                    </Tooltip>
+                    <h3 
+                      className={`font-medium text-sm truncate cursor-pointer hover:text-blue-600 hover:underline transition-colors ${
+                        task.status === 'completed' 
+                          ? 'line-through text-gray-500' 
+                          : 'text-gray-900'
+                      }`}
+                      onClick={() => handleViewDetails(task)}
+                    >
+                      {truncateText(task.title, 8)}
+                    </h3>
                   </div>
                   
-                  {/* Description with tooltip - Flexible width */}
+                  {/* Description - Flexible width */}
                   <div className="flex-1 min-w-0 max-w-lg">
                     {task.description && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="group relative inline-block w-full">
-                            <span 
-                              className="text-xs text-gray-600 cursor-pointer hover:text-blue-600 hover:underline transition-colors"
-                              onClick={() => handleViewDetails(task)}
+                      <div className="group relative inline-block w-full">
+                        <span 
+                          className="text-xs text-gray-600 cursor-pointer hover:text-blue-600 hover:underline transition-colors"
+                          onClick={() => handleViewDetails(task)}
+                        >
+                          {truncateText(task.description, 8)}
+                          {/* Edit icon that appears on hover */}
+                          {task.description.split(' ').length > 8 && (
+                            <button
+                              className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-100 rounded p-0.5 align-middle"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditTask(task);
+                              }}
+                              title="Edit description"
                             >
-                              {truncateText(task.description, 12)}
-                              {/* Edit icon that appears on hover */}
-                              {task.description.split(' ').length > 12 && (
-                                <button
-                                  className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-100 rounded p-0.5 align-middle"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEditTask(task);
-                                  }}
-                                  title="Edit description"
-                                >
-                                  <SquarePen className="w-3 h-3 text-gray-500 hover:text-blue-600" />
-                                </button>
-                              )}
-                            </span>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="max-w-xs">{task.description}</p>
-                        </TooltipContent>
-                      </Tooltip>
+                              <SquarePen className="w-3 h-3 text-gray-500 hover:text-blue-600" />
+                            </button>
+                          )}
+                        </span>
+                      </div>
                     )}
                   </div>
                   
@@ -413,8 +392,7 @@ export function PersonalTasks({
                   </div>
                 )}
               </div>
-            ))}
-          </TooltipProvider>
+            ))
         ) : (
           <div className="text-center py-8 text-gray-500">
             <User className="w-12 h-12 mx-auto mb-3 text-gray-400" />
