@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
@@ -74,6 +81,7 @@ export function PersonalTasks({
   const [pendingDeleteTaskId, setPendingDeleteTaskId] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<PersonalTask | null>(null);
   const [taskToEdit, setTaskToEdit] = useState<PersonalTask | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -148,7 +156,8 @@ export function PersonalTasks({
   const filteredPersonalTasks = personalTasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          task.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
+    const matchesStatus = statusFilter === "all" || task.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
 
   const handleCheckboxChange = (taskId: string) => {
@@ -225,6 +234,23 @@ export function PersonalTasks({
                 Personal Tasks
               </div>
               <div className="flex items-center gap-4 text-sm text-gray-600">
+                {/* Status Filter - Only visible when open */}
+                {isOpen && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-700">Filter:</span>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="w-32 h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="pending">To-do</SelectItem>
+                        <SelectItem value="in-progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <span>Total: <span className="font-semibold text-gray-900">{filteredPersonalTasks.length}</span></span>
                 {isOpen ? (
                   <ChevronDown className="w-4 h-4" />
