@@ -276,7 +276,7 @@ export function PersonalTasks({
                       }`}
                       onClick={() => handleViewDetails(task)}
                     >
-                      {truncateText(task.title, 8)}
+                      {truncateText(task.title, 6)}
                     </h3>
                   </div>
                   
@@ -288,20 +288,18 @@ export function PersonalTasks({
                           className="text-xs text-gray-600 cursor-pointer hover:text-blue-600 hover:underline transition-colors"
                           onClick={() => handleViewDetails(task)}
                         >
-                          {truncateText(task.description, 8)}
+                          {truncateText(task.description, 6)}
                           {/* Edit icon that appears on hover */}
-                          {task.description.split(' ').length > 8 && (
-                            <button
-                              className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-100 rounded p-0.5 align-middle"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditTask(task);
-                              }}
-                              title="Edit description"
-                            >
-                              <SquarePen className="w-3 h-3 text-gray-500 hover:text-blue-600" />
-                            </button>
-                          )}
+                          <button
+                            className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-100 rounded p-0.5 align-middle"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditTask(task);
+                            }}
+                            title="Edit description"
+                          >
+                            <SquarePen className="w-3 h-3 text-gray-500 hover:text-blue-600" />
+                          </button>
                         </span>
                       </div>
                     )}
