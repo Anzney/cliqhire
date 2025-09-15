@@ -38,11 +38,13 @@ import {
   Trash2,
   MoreHorizontal,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Eye
 } from "lucide-react";
 import { PersonalTask } from "./types";
 import { FollowUpStatusDropdown } from "./FollowUpStatusDropdown";
 import { StatusDropdown, JobStatus } from "./StatusDropdown";
+import { ViewTaskDialog } from "./ViewTaskDialog";
 
 interface PersonalTasksProps {
   personalTasks: PersonalTask[];
@@ -68,8 +70,10 @@ export function PersonalTasks({
   const [isOpen, setIsOpen] = useState(false);
   const [isCheckboxDialogOpen, setIsCheckboxDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [pendingTaskId, setPendingTaskId] = useState<string | null>(null);
   const [pendingDeleteTaskId, setPendingDeleteTaskId] = useState<string | null>(null);
+  const [selectedTask, setSelectedTask] = useState<PersonalTask | null>(null);
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -175,6 +179,16 @@ export function PersonalTasks({
   const handleCancelDelete = () => {
     setIsDeleteDialogOpen(false);
     setPendingDeleteTaskId(null);
+  };
+
+  const handleViewDetails = (task: PersonalTask) => {
+    setSelectedTask(task);
+    setIsViewDialogOpen(true);
+  };
+
+  const handleCloseViewDialog = () => {
+    setIsViewDialogOpen(false);
+    setSelectedTask(null);
   };
 
   return (
@@ -309,6 +323,10 @@ export function PersonalTasks({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleViewDetails(task)}>
+                          <Eye className="w-4 h-4 mr-2" />
+                          View Details
+                        </DropdownMenuItem>
                         <DropdownMenuItem>
                           <Edit className="w-4 h-4 mr-2" />
                           Edit
@@ -402,6 +420,13 @@ export function PersonalTasks({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* View Task Details Dialog */}
+      <ViewTaskDialog
+        isOpen={isViewDialogOpen}
+        onClose={handleCloseViewDialog}
+        task={selectedTask}
+      />
     </Card>
   );
 }
