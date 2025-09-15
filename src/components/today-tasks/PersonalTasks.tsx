@@ -248,11 +248,14 @@ export function PersonalTasks({
                   <div className="flex-1 min-w-0 max-w-md">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <h3 className={`font-medium text-sm truncate cursor-help ${
-                          task.status === 'completed' 
-                            ? 'line-through text-gray-500' 
-                            : 'text-gray-900'
-                        }`}>
+                        <h3 
+                          className={`font-medium text-sm truncate cursor-pointer hover:text-blue-600 hover:underline transition-colors ${
+                            task.status === 'completed' 
+                              ? 'line-through text-gray-500' 
+                              : 'text-gray-900'
+                          }`}
+                          onClick={() => handleViewDetails(task)}
+                        >
                           {truncateText(task.title, 8)}
                         </h3>
                       </TooltipTrigger>
@@ -267,7 +270,10 @@ export function PersonalTasks({
                     {task.description && (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <p className="text-xs text-gray-600 truncate cursor-help">
+                          <p 
+                            className="text-xs text-gray-600 truncate cursor-pointer hover:text-blue-600 hover:underline transition-colors"
+                            onClick={() => handleViewDetails(task)}
+                          >
                             {truncateText(task.description, 12)}
                           </p>
                         </TooltipTrigger>
