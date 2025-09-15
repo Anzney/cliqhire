@@ -23,17 +23,20 @@ import { cn } from "@/lib/utils";
 interface AddTaskFormProps {
   onClose: () => void;
   onSubmit?: (taskData: { title: string; description: string; category: string; dueDate: string }) => void;
+  initialValues?: { title: string; description: string; category: string; dueDate: string };
 }
 
-export function AddTaskForm({ onClose, onSubmit }: AddTaskFormProps) {
+export function AddTaskForm({ onClose, onSubmit, initialValues }: AddTaskFormProps) {
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: 'other',
-    dueDate: '',
+    title: initialValues?.title || '',
+    description: initialValues?.description || '',
+    category: initialValues?.category || 'other',
+    dueDate: initialValues?.dueDate || '',
   });
 
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    initialValues?.dueDate ? new Date(initialValues.dueDate) : undefined
+  );
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   const handleDateSelect = (date: Date | undefined) => {
@@ -137,7 +140,7 @@ export function AddTaskForm({ onClose, onSubmit }: AddTaskFormProps) {
           Cancel
         </Button>
         <Button type="submit">
-          Add Task
+          {initialValues ? 'Update Task' : 'Add Task'}
         </Button>
       </div>
     </form>

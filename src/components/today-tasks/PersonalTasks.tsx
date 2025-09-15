@@ -39,12 +39,14 @@ import {
   MoreHorizontal,
   ChevronDown,
   ChevronRight,
-  Eye
+  Eye,
+  SquarePen
 } from "lucide-react";
 import { PersonalTask } from "./types";
 import { FollowUpStatusDropdown } from "./FollowUpStatusDropdown";
 import { StatusDropdown, JobStatus } from "./StatusDropdown";
 import { ViewTaskDialog } from "./ViewTaskDialog";
+import { AddTaskForm } from "./AddTaskForm";
 
 interface PersonalTasksProps {
   personalTasks: PersonalTask[];
@@ -55,6 +57,7 @@ interface PersonalTasksProps {
   onUpdateFollowUpStatus: (taskId: string, followUpStatus: "pending" | "in-progress" | "completed") => void;
   onUpdateStatus: (taskId: string, status: JobStatus) => void;
   onDeleteTask: (taskId: string) => void;
+  onEditTask?: (taskId: string, taskData: { title: string; description: string; category: string; dueDate: string }) => void;
 }
 
 export function PersonalTasks({ 
@@ -65,15 +68,18 @@ export function PersonalTasks({
   onCompleteTask,
   onUpdateFollowUpStatus,
   onUpdateStatus,
-  onDeleteTask
+  onDeleteTask,
+  onEditTask
 }: PersonalTasksProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCheckboxDialogOpen, setIsCheckboxDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [pendingTaskId, setPendingTaskId] = useState<string | null>(null);
   const [pendingDeleteTaskId, setPendingDeleteTaskId] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<PersonalTask | null>(null);
+  const [taskToEdit, setTaskToEdit] = useState<PersonalTask | null>(null);
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -108,6 +114,12 @@ export function PersonalTasks({
   };
 
   const truncateText = (text: string, maxWords: number) => {
+    const words = text.split(' ');
+    if (words.length <= maxWords) return text;
+    return words.slice(0, maxWords).join(' ') + '...';
+  };
+
+  const truncateTextWithEditIcon = (text: string, maxWords: number) => {
     const words = text.split(' ');
     if (words.length <= maxWords) return text;
     return words.slice(0, maxWords).join(' ') + '...';
@@ -191,6 +203,23 @@ export function PersonalTasks({
     setSelectedTask(null);
   };
 
+  const handleEditTask = (task: PersonalTask) => {
+    setTaskToEdit(task);
+    setIsEditFormOpen(true);
+  };
+
+  const handleCloseEditForm = () => {
+    setIsEditFormOpen(false);
+    setTaskToEdit(null);
+  };
+
+  const handleEditSubmit = (taskData: { title: string; description: string; category: string; dueDate: string }) => {
+    if (taskToEdit && onEditTask) {
+      onEditTask(taskToEdit.id, taskData);
+    }
+    handleCloseEditForm();
+  };
+
   return (
     <Card>
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -270,12 +299,27 @@ export function PersonalTasks({
                     {task.description && (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <p 
-                            className="text-xs text-gray-600 truncate cursor-pointer hover:text-blue-600 hover:underline transition-colors"
-                            onClick={() => handleViewDetails(task)}
-                          >
-                            {truncateText(task.description, 12)}
-                          </p>
+                          <div className="group relative inline-block w-full">
+                            <span 
+                              className="text-xs text-gray-600 cursor-pointer hover:text-blue-600 hover:underline transition-colors"
+                              onClick={() => handleViewDetails(task)}
+                            >
+                              {truncateText(task.description, 12)}
+                              {/* Edit icon that appears on hover */}
+                              {task.description.split(' ').length > 12 && (
+                                <button
+                                  className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-100 rounded p-0.5 align-middle"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditTask(task);
+                                  }}
+                                  title="Edit description"
+                                >
+                                  <SquarePen className="w-3 h-3 text-gray-500 hover:text-blue-600" />
+                                </button>
+                              )}
+                            </span>
+                          </div>
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="max-w-xs">{task.description}</p>
@@ -333,7 +377,7 @@ export function PersonalTasks({
                           <Eye className="w-4 h-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditTask(task)}>
                           <Edit className="w-4 h-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
@@ -433,6 +477,25 @@ export function PersonalTasks({
         onClose={handleCloseViewDialog}
         task={selectedTask}
       />
+
+      {/* Edit Task Form Dialog */}
+      {isEditFormOpen && taskToEdit && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h2 className="text-lg font-semibold mb-4">Edit Task</h2>
+            <AddTaskForm
+              onClose={handleCloseEditForm}
+              onSubmit={handleEditSubmit}
+              initialValues={{
+                title: taskToEdit.title,
+                description: taskToEdit.description || '',
+                category: taskToEdit.category,
+                dueDate: taskToEdit.dueDate || ''
+              }}
+            />
+          </div>
+        </div>
+      )}
     </Card>
   );
 }
