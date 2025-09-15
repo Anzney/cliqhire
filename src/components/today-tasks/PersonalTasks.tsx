@@ -48,6 +48,7 @@ import { FollowUpStatusDropdown } from "./FollowUpStatusDropdown";
 import { StatusDropdown, JobStatus } from "./StatusDropdown";
 import { ViewTaskDialog } from "./ViewTaskDialog";
 import { AddTaskForm } from "./AddTaskForm";
+import { taskService } from "@/services/taskService";
 
 interface PersonalTasksProps {
   personalTasks: PersonalTask[];
@@ -140,6 +141,19 @@ export function PersonalTasks({
     }
   };
 
+  const convertToApiStatus = (jobStatus: JobStatus): 'to-do' | 'inprogress' | 'completed' => {
+    switch (jobStatus) {
+      case 'To-do':
+        return 'to-do';
+      case 'In Progress':
+        return 'inprogress';
+      case 'Completed':
+        return 'completed';
+      default:
+        return 'to-do';
+    }
+  };
+
   const convertFromJobStatus = (jobStatus: JobStatus): string => {
     switch (jobStatus) {
       case 'To-do':
@@ -221,6 +235,23 @@ export function PersonalTasks({
       onEditTask(taskToEdit.id, taskData);
     }
     handleCloseEditForm();
+  };
+
+  const updateTaskStatus = async (taskId: string, newStatus: JobStatus) => {
+    try {
+      const apiStatus = convertToApiStatus(newStatus);
+      
+      // Use the taskService for API calls
+      await taskService.updatePersonalTaskStatus(taskId, apiStatus);
+
+      // Call the parent component's onUpdateStatus if provided
+      if (onUpdateStatus) {
+        onUpdateStatus(taskId, newStatus);
+      }
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      // You might want to show a toast notification here
+    }
   };
 
   return (
@@ -351,7 +382,7 @@ export function PersonalTasks({
                   <div className="flex-shrink-0 w-28">
                     <StatusDropdown
                       currentStatus={convertToJobStatus(task.status)}
-                      onStatusChange={(newStatus) => onUpdateStatus(task.id, newStatus)}
+                      onStatusChange={(newStatus) => updateTaskStatus(task.id, newStatus)}
                       jobTitle={task.title}
                     />
                   </div>

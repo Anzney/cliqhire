@@ -204,6 +204,21 @@ class TaskService {
       throw new Error('Failed to update assigned job status');
     }
   }
+
+  /**
+   * Update personal task status
+   */
+  async updatePersonalTaskStatus(taskId: string, status: 'to-do' | 'inprogress' | 'completed'): Promise<Task> {
+    try {
+      const response = await api.put(`/api/tasks/personal/${taskId}`, {
+        status
+      });
+      return response.data.data.task;
+    } catch (error) {
+      console.error('TaskService: Error updating personal task status:', error);
+      throw new Error('Failed to update personal task status');
+    }
+  }
 }
 
 // Export a singleton instance
