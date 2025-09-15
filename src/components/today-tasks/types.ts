@@ -39,7 +39,7 @@ export interface PersonalTask {
   priority: "high" | "medium" | "low";
   dueDate?: string;
   dueTime?: string;
-  status: "pending" | "in-progress" | "completed";
+  status: "to-do" | "inprogress" | "completed";
   category: string; // Allow any string since API can return different categories
   createdAt: string;
   // Follow-up specific fields

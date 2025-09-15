@@ -98,9 +98,9 @@ export function PersonalTasks({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending':
+      case 'to-do':
         return 'bg-gray-100 text-gray-700';
-      case 'in-progress':
+      case 'inprogress':
         return 'bg-blue-100 text-blue-700';
       case 'completed':
         return 'bg-green-100 text-green-700';
@@ -130,9 +130,9 @@ export function PersonalTasks({
 
   const convertToJobStatus = (status: string): JobStatus => {
     switch (status) {
-      case 'pending':
+      case 'to-do':
         return 'To-do';
-      case 'in-progress':
+      case 'inprogress':
         return 'In Progress';
       case 'completed':
         return 'Completed';
@@ -157,13 +157,13 @@ export function PersonalTasks({
   const convertFromJobStatus = (jobStatus: JobStatus): string => {
     switch (jobStatus) {
       case 'To-do':
-        return 'pending';
+        return 'to-do';
       case 'In Progress':
-        return 'in-progress';
+        return 'inprogress';
       case 'Completed':
         return 'completed';
       default:
-        return 'pending';
+        return 'to-do';
     }
   };
 
@@ -273,12 +273,12 @@ export function PersonalTasks({
                       <SelectTrigger className="w-32 h-8">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All</SelectItem>
-                        <SelectItem value="pending">To-do</SelectItem>
-                        <SelectItem value="in-progress">In Progress</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                      </SelectContent>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="to-do">To-do</SelectItem>
+                  <SelectItem value="inprogress">In Progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                </SelectContent>
                     </Select>
                   </div>
                 )}

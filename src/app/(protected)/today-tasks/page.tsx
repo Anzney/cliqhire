@@ -94,8 +94,7 @@ export default function TodayTasksPage() {
         priority: 'medium', // Default priority since API doesn't provide it
         dueDate: task.dueDate,
         dueTime: undefined, // Not provided by API
-        status: task.status === 'to-do' ? 'pending' : 
-                task.status === 'inprogress' ? 'in-progress' : 'completed',
+        status: task.status, // Keep the original API status format
         category: task.category,
         createdAt: task.createdAt,
         followUpType: undefined, // Not provided by API
@@ -347,6 +346,20 @@ export default function TodayTasksPage() {
         loading={personalTasksLoading}
         onCompleteTask={handleCompleteTask}
         onUpdateFollowUpStatus={handleUpdateFollowUpStatus}
+        onUpdateStatus={async (taskId: string, status: JobStatus) => {
+          // Map UI status to API status format
+          const apiStatus = status === 'To-do' ? 'to-do' : 
+                           status === 'In Progress' ? 'inprogress' : 
+                           'completed';
+          
+          try {
+            await taskService.updatePersonalTaskStatus(taskId, apiStatus);
+            // Refresh personal tasks after status update
+            await fetchPersonalTasks();
+          } catch (error) {
+            console.error('Error updating task status:', error);
+          }
+        }}
         onDeleteTask={handleDeleteTask}
       />
 

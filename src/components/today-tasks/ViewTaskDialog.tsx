@@ -31,9 +31,9 @@ export function ViewTaskDialog({ isOpen, onClose, task }: ViewTaskDialogProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending':
+      case 'to-do':
         return 'bg-gray-100 text-gray-700';
-      case 'in-progress':
+      case 'inprogress':
         return 'bg-blue-100 text-blue-700';
       case 'completed':
         return 'bg-green-100 text-green-700';
@@ -44,9 +44,9 @@ export function ViewTaskDialog({ isOpen, onClose, task }: ViewTaskDialogProps) {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending':
+      case 'to-do':
         return <AlertCircle className="w-4 h-4" />;
-      case 'in-progress':
+      case 'inprogress':
         return <PlayCircle className="w-4 h-4" />;
       case 'completed':
         return <CheckCircle className="w-4 h-4" />;
@@ -100,8 +100,8 @@ export function ViewTaskDialog({ isOpen, onClose, task }: ViewTaskDialogProps) {
               <span className="text-sm font-medium text-gray-700">Status:</span>
               <Badge className={`${getStatusColor(task.status)} flex items-center gap-1`}>
                 {getStatusIcon(task.status)}
-                {task.status === 'pending' ? 'To-do' : 
-                 task.status === 'in-progress' ? 'In Progress' : 
+                {task.status === 'to-do' ? 'To-do' : 
+                 task.status === 'inprogress' ? 'In Progress' : 
                  task.status === 'completed' ? 'Completed' : task.status}
               </Badge>
             </div>

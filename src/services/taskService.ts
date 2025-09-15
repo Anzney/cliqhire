@@ -9,8 +9,15 @@ export interface Task {
   status: 'to-do' | 'inprogress' | 'completed';
   category: string;
   dueDate?: string;
+  dueTime?: string;
   createdAt: string;
   updatedAt: string;
+  // Follow-up specific fields
+  followUpType?: "cv-received" | "candidate-response" | "client-feedback" | "interview-scheduled" | "offer-sent" | "other";
+  followUpStatus?: "pending" | "in-progress" | "completed";
+  relatedCandidate?: string;
+  relatedJob?: string;
+  relatedClient?: string;
 }
 
 export interface CreateTaskRequest {
