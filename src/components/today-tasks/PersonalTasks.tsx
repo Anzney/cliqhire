@@ -24,6 +24,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { 
   CheckCircle, 
   User, 
@@ -36,6 +42,7 @@ import {
 } from "lucide-react";
 import { PersonalTask } from "./types";
 import { FollowUpStatusDropdown } from "./FollowUpStatusDropdown";
+import { StatusDropdown, JobStatus } from "./StatusDropdown";
 
 interface PersonalTasksProps {
   personalTasks: PersonalTask[];
@@ -44,6 +51,7 @@ interface PersonalTasksProps {
   loading?: boolean;
   onCompleteTask: (taskId: string) => void;
   onUpdateFollowUpStatus: (taskId: string, followUpStatus: "pending" | "in-progress" | "completed") => void;
+  onUpdateStatus: (taskId: string, status: JobStatus) => void;
   onDeleteTask: (taskId: string) => void;
 }
 
@@ -54,6 +62,7 @@ export function PersonalTasks({
   loading = false,
   onCompleteTask,
   onUpdateFollowUpStatus,
+  onUpdateStatus,
   onDeleteTask
 }: PersonalTasksProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -92,6 +101,38 @@ export function PersonalTasks({
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  const truncateText = (text: string, maxWords: number) => {
+    const words = text.split(' ');
+    if (words.length <= maxWords) return text;
+    return words.slice(0, maxWords).join(' ') + '...';
+  };
+
+  const convertToJobStatus = (status: string): JobStatus => {
+    switch (status) {
+      case 'pending':
+        return 'To-do';
+      case 'in-progress':
+        return 'In Progress';
+      case 'completed':
+        return 'Completed';
+      default:
+        return 'To-do';
+    }
+  };
+
+  const convertFromJobStatus = (jobStatus: JobStatus): string => {
+    switch (jobStatus) {
+      case 'To-do':
+        return 'pending';
+      case 'In Progress':
+        return 'in-progress';
+      case 'Completed':
+        return 'completed';
+      default:
+        return 'pending';
+    }
   };
 
   const filteredPersonalTasks = personalTasks.filter(task => {
@@ -168,121 +209,144 @@ export function PersonalTasks({
                 </div>
               </div>
             ) : filteredPersonalTasks.length > 0 ? (
-          filteredPersonalTasks.map((task) => (
-            <div 
-              key={task.id} 
-              className={`border rounded-lg p-4 hover:bg-gray-50 transition-all duration-300 ${
-                completedTasks.has(task.id) 
-                  ? 'bg-green-50 border-green-200 opacity-75 transform scale-98' 
-                  : ''
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <div className="mt-1">
-                  <Checkbox
-                    checked={task.status === 'completed'}
-                    onCheckedChange={() => handleCheckboxChange(task.id)}
-                    disabled={task.status === 'completed'}
-                    className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
-                  />
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className={`font-medium ${
-                      task.status === 'completed' 
-                        ? 'line-through text-gray-500' 
-                        : 'text-gray-900'
-                    }`}>
-                      {task.title}
-                    </h3>
-                    {/* <Badge className={getPriorityColor(task.priority)}>
-                      {task.priority}
-                    </Badge>
-                    <Badge className={getStatusColor(task.status)}>
-                      {task.status}
-                    </Badge> */}
+          <TooltipProvider>
+            {filteredPersonalTasks.map((task) => (
+              <div 
+                key={task.id} 
+                className={`border rounded-lg p-3 hover:bg-gray-50 transition-all duration-300 ${
+                  completedTasks.has(task.id) 
+                    ? 'bg-green-50 border-green-200 opacity-75' 
+                    : ''
+                }`}
+              >
+                <div className="flex items-center gap-4">
+                  {/* Checkbox */}
+                  <div className="flex-shrink-0">
+                    <Checkbox
+                      checked={task.status === 'completed'}
+                      onCheckedChange={() => handleCheckboxChange(task.id)}
+                      disabled={task.status === 'completed'}
+                      className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                    />
                   </div>
                   
-                  {task.description && (
-                    <p className="text-sm text-gray-600 mb-2">{task.description}</p>
-                  )}
+                  {/* Title with tooltip - Flexible width */}
+                  <div className="flex-1 min-w-0 max-w-md">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <h3 className={`font-medium text-sm truncate cursor-help ${
+                          task.status === 'completed' 
+                            ? 'line-through text-gray-500' 
+                            : 'text-gray-900'
+                        }`}>
+                          {truncateText(task.title, 8)}
+                        </h3>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">{task.title}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                   
-                  <div className="flex items-center gap-4 text-sm text-gray-500">
-                    <span className="capitalize">{task.category}</span>
-                    {task.followUpType && (
-                      <>
-                        <span>•</span>
-                        <span className="capitalize">{task.followUpType.replace('-', ' ')}</span>
-                      </>
+                  {/* Description with tooltip - Flexible width */}
+                  <div className="flex-1 min-w-0 max-w-lg">
+                    {task.description && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="text-xs text-gray-600 truncate cursor-help">
+                            {truncateText(task.description, 12)}
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs">{task.description}</p>
+                        </TooltipContent>
+                      </Tooltip>
                     )}
+                  </div>
+                  
+                  {/* Category */}
+                  <div className="flex-shrink-0 w-28">
+                    <span className="text-xs text-gray-500 capitalize">{task.category}</span>
+                  </div>
+                  
+                  {/* Due Date */}
+                  <div className="flex-shrink-0 w-32">
                     {task.dueDate && (
-                      <>
-                        <span>•</span>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>{formatDate(task.dueDate)}</span>
-                          {task.dueTime && <span>at {task.dueTime}</span>}
-                        </div>
-                      </>
+                      <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <Calendar className="w-3 h-3" />
+                        <span>{formatDate(task.dueDate)}</span>
+                        {task.dueTime && <span className="text-xs">at {task.dueTime}</span>}
+                      </div>
                     )}
                   </div>
                   
-                  {/* Follow-up specific information */}
-                  {task.category === 'follow-up' && task.relatedCandidate && (
-                    <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
-                      <div className="flex items-center gap-2 text-blue-700">
-                        <User className="w-3 h-3" />
-                        <span><strong>Candidate:</strong> {task.relatedCandidate}</span>
-                        {task.relatedJob && <span>• <strong>Job:</strong> {task.relatedJob}</span>}
-                        {task.relatedClient && <span>• <strong>Client:</strong> {task.relatedClient}</span>}
-                      </div>
-                    </div>
-                  )}
+                  {/* Status */}
+                  <div className="flex-shrink-0 w-28">
+                    <StatusDropdown
+                      currentStatus={convertToJobStatus(task.status)}
+                      onStatusChange={(newStatus) => onUpdateStatus(task.id, newStatus)}
+                      jobTitle={task.title}
+                    />
+                  </div>
                   
-                  {/* Completion message */}
-                  {completedTasks.has(task.id) && (
-                    <div className="mt-2 p-2 bg-green-100 border border-green-200 rounded text-xs text-green-700 flex items-center gap-2">
-                      <CheckCircle className="w-3 h-3" />
-                      <span>Task completed! Removing from list...</span>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex items-center gap-2">
                   {/* Follow-up status dropdown for follow-up tasks */}
                   {task.category === 'follow-up' && task.followUpStatus && (
-                    <FollowUpStatusDropdown
-                      currentStatus={task.followUpStatus}
-                      onStatusChange={(status) => onUpdateFollowUpStatus(task.id, status)}
-                      taskTitle={task.title}
-                    />
+                    <div className="flex-shrink-0">
+                      <FollowUpStatusDropdown
+                        currentStatus={task.followUpStatus}
+                        onStatusChange={(status) => onUpdateFollowUpStatus(task.id, status)}
+                        taskTitle={task.title}
+                      />
+                    </div>
                   )}
                   
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => handleDeleteClick(task.id)}
-                        className="text-red-600"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  {/* Options Menu */}
+                  <div className="flex-shrink-0">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleDeleteClick(task.id)}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
+                
+                {/* Follow-up specific information */}
+                {task.category === 'follow-up' && task.relatedCandidate && (
+                  <div className="mt-2 ml-8 p-2 bg-blue-50 rounded text-xs">
+                    <div className="flex items-center gap-2 text-blue-700">
+                      <User className="w-3 h-3" />
+                      <span><strong>Candidate:</strong> {task.relatedCandidate}</span>
+                      {task.relatedJob && <span>• <strong>Job:</strong> {task.relatedJob}</span>}
+                      {task.relatedClient && <span>• <strong>Client:</strong> {task.relatedClient}</span>}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Completion message */}
+                {completedTasks.has(task.id) && (
+                  <div className="mt-2 ml-8 p-2 bg-green-100 border border-green-200 rounded text-xs text-green-700 flex items-center gap-2">
+                    <CheckCircle className="w-3 h-3" />
+                    <span>Task completed! Removing from list...</span>
+                  </div>
+                )}
               </div>
-            </div>
-          ))
+            ))}
+          </TooltipProvider>
         ) : (
           <div className="text-center py-8 text-gray-500">
             <User className="w-12 h-12 mx-auto mb-3 text-gray-400" />
