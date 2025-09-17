@@ -165,7 +165,7 @@ export interface Job {
 export const pipelineStages = [
     "Sourcing",
     "Screening", 
-    "Client Status",
+    "Client Review",
     "Interview",
     "Verification",
     "Onboarding",
@@ -178,7 +178,7 @@ export const getStageColor = (stage: string) => {
   const colors = {
     "Sourcing": "bg-purple-100 text-purple-800 border-purple-200",
     "Screening": "bg-orange-100 text-orange-800 border-orange-200",
-    "Client Status": "bg-green-100 text-green-800 border-green-200",
+    "Client Review": "bg-green-100 text-green-800 border-green-200",
     "Interview": "bg-blue-100 text-blue-800 border-blue-200",
     "Verification": "bg-yellow-100 text-yellow-800 border-yellow-200",
     "Onboarding": "bg-green-100 text-green-800 border-green-200",
@@ -196,7 +196,7 @@ export const getCandidateCountByStage = (candidates: Candidate[], stage: string)
 // Helper function to map UI stage names to backend stage names
 export const mapUIStageToBackendStage = (uiStage: string): string => {
   const stageMapping: Record<string, string> = {
-    "Client Status": "Client Screening",
+    "Client Review": "Client Screening",
     // Add other mappings here if needed in the future
   };
   
@@ -206,7 +206,7 @@ export const mapUIStageToBackendStage = (uiStage: string): string => {
 // Helper function to map backend stage names to UI stage names
 export const mapBackendStageToUIStage = (backendStage: string): string => {
   const stageMapping: Record<string, string> = {
-    "Client Screening": "Client Status",
+    "Client Screening": "Client Review",
     // Add other mappings here if needed in the future
   };
   

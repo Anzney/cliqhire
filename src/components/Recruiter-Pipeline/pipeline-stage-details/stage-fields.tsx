@@ -54,8 +54,8 @@ const getStageData = (candidate: any, stageName: string) => {
   // Handle different naming conventions for stage keys
   let stageKey = stageName.toLowerCase().replace(/\s+/g, '');
   
-  // Special handling for "Client Status" -> "clientScreening"
-  if (stageName === "Client Status") {
+  // Special handling for "Client Review" -> "clientScreening"
+  if (stageName === "Client Review") {
     stageKey = "clientScreening";
   }
   
@@ -287,12 +287,12 @@ export const getStageFields = (stage: string, candidate: any): StageField[] => {
         }
       ];
 
-    case "Client Status":
-      const clientScreeningData = getStageData(candidate, "Client Status");
+    case "Client Review":
+      const clientScreeningData = getStageData(candidate, "Client Review");
       return [
         {
           key: "clientScreeningDate",
-          label: "Client Status Date",
+          label: "Client Review Date",
           value: formatApiDate(clientScreeningData.clientScreeningDate),
           icon: <CalendarDays className="h-4 w-4" />,
           color: "bg-blue-50 text-blue-600",
@@ -512,7 +512,7 @@ export const getStageColor = (stage: string) => {
   const colors = {
     "Sourcing": "bg-purple-100 text-purple-800 border-purple-200",
     "Screening": "bg-orange-100 text-orange-800 border-orange-200",
-    "Client Status": "bg-green-100 text-green-800 border-green-200",
+    "Client Review": "bg-green-100 text-green-800 border-green-200",
     "Interview": "bg-blue-100 text-blue-800 border-blue-200",
     "Verification": "bg-yellow-100 text-yellow-800 border-yellow-200",
     "Onboarding": "bg-green-100 text-green-800 border-green-200",

@@ -23,8 +23,8 @@ import { renderFieldInput } from "./field-inputs";
 const getStageKey = (stageName: string): string => {
   let stageKey = stageName.toLowerCase().replace(/\s+/g, '');
   
-  // Special handling for "Client Status" -> "clientScreening"
-  if (stageName === "Client Status") {
+  // Special handling for "Client Review" -> "clientScreening"
+  if (stageName === "Client Review") {
     stageKey = "clientScreening";
   }
   

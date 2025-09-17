@@ -17,7 +17,7 @@ export class RecruiterPipelineService {
    * Update stage fields for a specific candidate in a pipeline
    * @param pipelineId - The ID of the pipeline
    * @param candidateId - The ID of the candidate
-   * @param stageName - The stage name (Sourcing, Screening, Client Status, Interview, Verification, Onboarding, Hired)
+   * @param stageName - The stage name (Sourcing, Screening, Client Review, Interview, Verification, Onboarding, Hired)
    * @param updateData - The fields to update and optional notes
    * @returns Promise with the update response
    */
