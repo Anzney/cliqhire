@@ -405,30 +405,15 @@ export function PipelineJobCard({
       try {
         console.log('Disqualifying candidate:', disqualificationDialog.candidate.name, data);
         
-        // First, call API to update disqualification fields
-        const fieldsUpdateResult = await RecruiterPipelineService.updateStageFields(
-          job.id,
-          disqualificationDialog.candidate.id,
-          disqualificationDialog.candidate.currentStage,
-          {
-            fields: {
-              disqualificationStage: data.disqualificationStage,
-              disqualificationStatus: data.disqualificationStatus,
-              disqualificationReason: data.disqualificationReason,
-            },
-            notes: `Disqualified: ${data.disqualificationReason}`
-          }
-        );
-
-        if (!fieldsUpdateResult.success) {
-          throw new Error(fieldsUpdateResult.error || 'Failed to update disqualification fields');
-        }
-
-        // Then call API to update candidate status to Disqualified
+        // Single API call to update candidate status with all disqualification data
         await updateCandidateStatus(job.id, disqualificationDialog.candidate.id, {
           status: 'Disqualified',
           stage: mapUIStageToBackendStage(disqualificationDialog.candidate.currentStage),
           notes: `Disqualified: ${data.disqualificationReason}`,
+          disqualificationStage: data.disqualificationStage,
+          disqualificationStatus: data.disqualificationStatus,
+          disqualificationReason: data.disqualificationReason,
+          disqualificationFeedback: data.disqualificationFeedback || "",
         });
         
         // Notify the parent component about the update

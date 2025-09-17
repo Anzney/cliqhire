@@ -20,6 +20,7 @@ export interface DisqualificationData {
   disqualificationStage: string;
   disqualificationStatus: string;
   disqualificationReason: string;
+  disqualificationFeedback?: string;
 }
 
 export function DisqualificationDialog({
@@ -50,7 +51,8 @@ export function DisqualificationDialog({
       await onConfirm({
         disqualificationStage: currentStage,
         disqualificationStatus: currentStageStatus || "",
-        disqualificationReason: reason.trim()
+        disqualificationReason: reason.trim(),
+        disqualificationFeedback: ""
       });
       onClose();
     } catch (error) {

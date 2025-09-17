@@ -475,6 +475,10 @@ export interface UpdateCandidateStatusRequest {
   status: string;
   stage: string;
   notes?: string;
+  disqualificationStage?: string | null;
+  disqualificationStatus?: string;
+  disqualificationReason?: string;
+  disqualificationFeedback?: string;
 }
 
 // Interface for updating candidate status response
