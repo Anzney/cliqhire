@@ -190,15 +190,6 @@ export function PipelineJobCard({
       return;
     }
 
-    // If changing to Disqualified, show disqualification dialog
-    if (newStage === 'Disqualified') {
-      setDisqualificationDialog({
-        isOpen: true,
-        candidate,
-      });
-      return;
-    }
-
     setStageChangeDialog({
       isOpen: true,
       candidate,
@@ -326,6 +317,15 @@ export function PipelineJobCard({
       return;
     }
 
+    // If changing status to "Disqualified", show disqualification dialog
+    if (newStatus === 'Disqualified') {
+      setDisqualificationDialog({
+        isOpen: true,
+        candidate,
+      });
+      return;
+    }
+
     setStatusChangeDialog({
       isOpen: true,
       candidate,
@@ -409,7 +409,7 @@ export function PipelineJobCard({
         const fieldsUpdateResult = await RecruiterPipelineService.updateStageFields(
           job.id,
           disqualificationDialog.candidate.id,
-          'Disqualified',
+          disqualificationDialog.candidate.currentStage,
           {
             fields: {
               disqualificationStage: data.disqualificationStage,
@@ -424,8 +424,18 @@ export function PipelineJobCard({
           throw new Error(fieldsUpdateResult.error || 'Failed to update disqualification fields');
         }
 
-        // Then call API to update candidate stage to Disqualified
-        await onUpdateCandidateStage(job.id, disqualificationDialog.candidate.id, 'Disqualified');
+        // Then call API to update candidate status to Disqualified
+        await updateCandidateStatus(job.id, disqualificationDialog.candidate.id, {
+          status: 'Disqualified',
+          stage: mapUIStageToBackendStage(disqualificationDialog.candidate.currentStage),
+          notes: `Disqualified: ${data.disqualificationReason}`,
+        });
+        
+        // Notify the parent component about the update
+        onCandidateUpdate?.(job.id, {
+          ...disqualificationDialog.candidate,
+          status: 'Disqualified',
+        });
         
         handleCloseDisqualificationDialog();
       } catch (error) {

@@ -337,15 +337,6 @@ const Page = () => {
       return;
     }
 
-    // If changing to Disqualified, show disqualification dialog
-    if (newStage === 'Disqualified') {
-      setDisqualificationDialog({
-        isOpen: true,
-        candidate,
-      });
-      return;
-    }
-
     setStageChangeDialog({
       isOpen: true,
       candidate,
@@ -592,6 +583,15 @@ const Page = () => {
       return;
     }
 
+    // If changing status to "Disqualified", show disqualification dialog
+    if (newStatus === 'Disqualified') {
+      setDisqualificationDialog({
+        isOpen: true,
+        candidate,
+      });
+      return;
+    }
+
     setStatusChangeDialog({
       isOpen: true,
       candidate,
@@ -750,7 +750,7 @@ const Page = () => {
         const fieldsUpdateResult = await RecruiterPipelineService.updateStageFields(
           id,
           disqualificationDialog.candidate.id,
-          'Disqualified',
+          disqualificationDialog.candidate.currentStage,
           {
             fields: {
               disqualificationStage: data.disqualificationStage,
@@ -765,9 +765,11 @@ const Page = () => {
           throw new Error(fieldsUpdateResult.error || 'Failed to update disqualification fields');
         }
 
-        // Then call API to update candidate stage to Disqualified
-        await updateCandidateStage(id, disqualificationDialog.candidate.id, {
-          newStage: 'Disqualified',
+        // Then call API to update candidate status to Disqualified
+        await updateCandidateStatus(id, disqualificationDialog.candidate.id, {
+          status: 'Disqualified',
+          stage: mapUIStageToBackendStage(disqualificationDialog.candidate.currentStage),
+          notes: `Disqualified: ${data.disqualificationReason}`,
         });
         
         // Refresh the job data to reflect the changes
