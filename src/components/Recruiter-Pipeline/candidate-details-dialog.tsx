@@ -168,22 +168,27 @@ export function CandidateDetailsDialog({
                      const disqualificationStage = localCandidate.disqualified?.disqualificationStage || localCandidate.currentStage;
                      const isDisqualified = localCandidate.status === 'Disqualified';
                      
-                     let isCompleted, isCurrent;
+                     let isCompleted, isCurrent, isPrevious;
                      if (isDisqualified) {
-                       isCompleted = pipelineStages.indexOf(disqualificationStage) >= index;
+                       const disqualificationIndex = pipelineStages.indexOf(disqualificationStage);
+                       isCompleted = disqualificationIndex >= index;
                        isCurrent = disqualificationStage === stage;
+                       isPrevious = disqualificationIndex >= index; // All completed stages are clickable
                      } else {
-                       isCompleted = pipelineStages.indexOf(localCandidate.currentStage) >= index;
+                       const currentIndex = pipelineStages.indexOf(localCandidate.currentStage);
+                       isCompleted = currentIndex >= index;
                        isCurrent = localCandidate.currentStage === stage;
+                       isPrevious = currentIndex >= index; // All completed stages are clickable
                      }
                      
                      const isSelected = selectedStage === stage;
+                     const isClickable = isCompleted; // All completed stages (current + previous) are clickable
                      
                      return (
                        <div 
                          key={stage} 
-                         className="flex items-center cursor-pointer group"
-                         onClick={() => setSelectedStage(stage)}
+                         className={`flex items-center ${isClickable ? 'cursor-pointer group' : 'cursor-default'}`}
+                         onClick={() => isClickable ? setSelectedStage(stage) : undefined}
                        >
                          <div className={`w-5 h-5 rounded-full flex items-center justify-center mr-2 shadow-sm transition-all duration-200 ${
                            isCompleted 
