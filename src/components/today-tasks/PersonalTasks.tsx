@@ -128,42 +128,31 @@ export function PersonalTasks({
     return words.slice(0, maxWords).join(' ') + '...';
   };
 
-  const convertToJobStatus = (status: string): JobStatus => {
-    switch (status) {
-      case 'to-do':
-        return 'To-do';
-      case 'inprogress':
-        return 'In Progress';
-      case 'completed':
-        return 'Completed';
-      default:
-        return 'To-do';
-    }
-  };
-
-  const convertToApiStatus = (jobStatus: JobStatus): 'to-do' | 'inprogress' | 'completed' => {
-    switch (jobStatus) {
-      case 'To-do':
-        return 'to-do';
-      case 'In Progress':
-        return 'inprogress';
-      case 'Completed':
-        return 'completed';
-      default:
-        return 'to-do';
-    }
-  };
-
-  const convertFromJobStatus = (jobStatus: JobStatus): string => {
-    switch (jobStatus) {
-      case 'To-do':
-        return 'to-do';
-      case 'In Progress':
-        return 'inprogress';
-      case 'Completed':
-        return 'completed';
-      default:
-        return 'to-do';
+  const convertStatus = (status: string | JobStatus, toApi: boolean = false) => {
+    if (toApi) {
+      // Convert JobStatus to API status
+      switch (status as JobStatus) {
+        case 'To-do':
+          return 'to-do';
+        case 'In Progress':
+          return 'inprogress';
+        case 'Completed':
+          return 'completed';
+        default:
+          return 'to-do';
+      }
+    } else {
+      // Convert API status to JobStatus
+      switch (status as string) {
+        case 'to-do':
+          return 'To-do';
+        case 'inprogress':
+          return 'In Progress';
+        case 'completed':
+          return 'Completed';
+        default:
+          return 'To-do';
+      }
     }
   };
 
@@ -255,7 +244,7 @@ export function PersonalTasks({
 
   const updateTaskStatus = async (taskId: string, newStatus: JobStatus) => {
     try {
-      const apiStatus = convertToApiStatus(newStatus);
+      const apiStatus = convertStatus(newStatus, true) as 'to-do' | 'inprogress' | 'completed';
       
       // Use the taskService for API calls
       await taskService.updatePersonalTask(taskId, {
@@ -399,7 +388,7 @@ export function PersonalTasks({
                   {/* Status */}
                   <div className="flex-shrink-0 w-28">
                     <StatusDropdown
-                      currentStatus={convertToJobStatus(task.status)}
+                      currentStatus={convertStatus(task.status, false) as JobStatus}
                       onStatusChange={(newStatus) => updateTaskStatus(task.id, newStatus)}
                       jobTitle={task.title}
                     />
