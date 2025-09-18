@@ -350,8 +350,10 @@ export function PipelineJobCard({
         });
         
         setStatusChangeDialog({ isOpen: false, candidate: null, newStatus: null });
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error updating candidate status:', error);
+        // Show user-friendly error message
+        alert(error.message || 'Failed to update candidate status. Please try again.');
       }
     }
   };
