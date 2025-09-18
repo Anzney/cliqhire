@@ -1,25 +1,15 @@
 "use client";
 
 import React from "react";
-import { ChevronDown, EllipsisVertical, ChevronRight, Users, MapPin, CircleDollarSign , Briefcase, Building2, Tag, Pin, Loader2, Eye, Plus, Trash2, X, Table as TableIcon} from "lucide-react";
+import { ChevronDown, ChevronRight, Users, MapPin, CircleDollarSign , Building2, Loader2, Plus, X, Table as TableIcon} from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AddCandidateDialog } from "./add-candidate-dialog";
 import { AddExistingCandidateDialog } from "@/components/common/add-existing-candidate-dialog";
 import { CreateCandidateDialog, type CreateCandidateValues } from "./create-candidate-dialog";
 import { CreateCandidateModal } from "@/components/candidates/create-candidate-modal";
 import { Button } from "@/components/ui/button";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
 import { deleteCandidateFromPipeline, updateCandidateStatus } from "@/services/recruitmentPipelineService";
 import { RecruiterPipelineService } from "@/services/recruiterPipelineService";
 import { 
@@ -34,8 +24,7 @@ import { CandidateDetailsDialog } from "./candidate-details-dialog";
 import { StatusChangeConfirmationDialog } from "./status-change-confirmation-dialog";
 import { useStageStore } from "./stage-store";
 import { useRouter } from "next/navigation";
-import { PipelineStageBadge } from "./pipeline-stage-badge";
-import { StatusBadge } from "./status-badge";
+import { PipelineCandidatesTable } from "./PipelineCandidatesTable";
 import { PDFViewer } from "@/components/ui/pdf-viewer";
 import { validateTempCandidateStageChange, isTempCandidate, validateTempCandidateStatusChange } from "@/lib/temp-candidate-validation";
 import { TempCandidateAlertDialog } from "./temp-candidate-alert-dialog";
@@ -567,7 +556,7 @@ export function PipelineJobCard({
               )}
             </div>
 
-            {/* Candidates Table - Single table with sticky header */}
+            {/* Candidates Table - Reusable component with sticky header within scroll container */}
             <div className="border-2 border-blue-200 rounded-md bg-gray-50 max-h-[300px] overflow-hidden">
               {selectedStageFilter && (
                 <div className="px-4 py-2 bg-blue-50 border-b border-blue-200 text-sm text-blue-700 ">
@@ -579,118 +568,18 @@ export function PipelineJobCard({
                 scrollbarWidth: 'thin',
                 scrollbarColor: '#d1d5db #f3f4f6'
               }}>
-                <Table>
-                  <TableHeader className="sticky top-0 bg-white z-10">
-                    <TableRow>
-                      <TableHead className="w-[44px]"></TableHead>
-                      <TableHead>Candidate</TableHead>
-                      <TableHead>Current Position</TableHead>
-                      <TableHead className="w-[200px]">Stage</TableHead>
-                      <TableHead className="w-[120px]">Status</TableHead>
-                      <TableHead className="w-[140px]">Hiring Manager</TableHead>
-                      <TableHead className="w-[120px]">Recruiter</TableHead>
-                      <TableHead className="w-[90px]">Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {getFilteredCandidates().map((candidate) => (
-                      <TableRow key={candidate.id} className="bg-white">
-                        <TableCell>
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={candidate.avatar} />
-                            <AvatarFallback className="text-xs bg-gray-200">
-                              {candidate.name ? candidate.name.split(' ').map(n => n[0]).join('') : 'NA'}
-                            </AvatarFallback>
-                          </Avatar>
-                        </TableCell>
-                        <TableCell className="font-medium truncate max-w-[220px]">
-                          {candidate.name || 'Unknown Candidate'}
-                        </TableCell>
-                        <TableCell className="truncate max-w-[260px] text-gray-700">
-                          {candidate.currentJobTitle || 'Position not specified'}
-                        </TableCell>
-                        <TableCell>
-                          <PipelineStageBadge
-                            stage={getCandidateStage(job.id, candidate.id) || candidate.currentStage}
-                            onStageChange={(newStage) => handleStageChange(candidate, newStage)}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          {(() => {
-                            const currentStage = getCandidateStage(job.id, candidate.id) || candidate.currentStage;
-                            const stagesWithStatus = ['Sourcing', 'Screening', 'Client Review', 'Interview', 'Verification'];
-                            if (stagesWithStatus.includes(currentStage)) {
-                              return (
-                                <StatusBadge
-                                  status={(candidate.status as any) || null}
-                                  stage={currentStage}
-                                  onStatusChange={(newStatus) => handleStatusChange(candidate, newStatus)}
-                                />
-                              );
-                            } else {
-                              return (
-                                <span className="text-sm text-gray-500">N/A</span>
-                              );
-                            }
-                          })()}
-                        </TableCell>
-                        <TableCell className="text-sm text-gray-700">
-                          {(job as any).jobId?.jobTeamInfo?.hiringManager?.name || 'Not assigned'}
-                        </TableCell>
-                        <TableCell className="text-sm text-gray-700">
-                          {(job as any).jobId?.jobTeamInfo?.recruiter?.name || 'Not assigned'}
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button
-                                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                                onClick={(e) => e.stopPropagation()}
-                                title="More options"
-                              >
-                                <EllipsisVertical className="h-4 w-4" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-50">
-                              <DropdownMenuItem 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleViewCandidate(candidate);
-                                }}
-                                className="cursor-pointer"
-                              >
-                                <Eye className="h-4 w-4 mr-2" />
-                                View & Edit Details
-                              </DropdownMenuItem>
-                              {candidate.resume && (
-                                <DropdownMenuItem 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleViewResume(candidate);
-                                  }}
-                                  className="cursor-pointer"
-                                >
-                                  <Briefcase className="h-4 w-4 mr-2" />
-                                  View Resume
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuItem 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteCandidate(candidate);
-                                }}
-                                className="cursor-pointer"
-                              >
-                                <Trash2 className="size-4 mr-2 text-red-500" />
-                                Delete Candidate
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <PipelineCandidatesTable
+                  job={job}
+                  candidates={getFilteredCandidates().map((c) => ({
+                    ...c,
+                    currentStage: getCandidateStage(job.id, c.id) || c.currentStage,
+                  }))}
+                  onStageChange={handleStageChange}
+                  onStatusChange={handleStatusChange as any}
+                  onViewCandidate={handleViewCandidate}
+                  onViewResume={handleViewResume}
+                  onDeleteCandidate={handleDeleteCandidate}
+                />
               </div>
             </div>
           </CardContent>
