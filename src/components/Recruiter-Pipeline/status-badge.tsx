@@ -11,7 +11,7 @@ import {
 import { ChevronDown } from "lucide-react";
 
 // Define status types for each stage
-export type SourcingStatus = "LinkedIn Connections Sent" | "LinkedIn Connections Accepted" | "CV Received" | "Disqualified";
+export type SourcingStatus = "Connections Sent" | "Connections Accepted" | "CV Received" | "Disqualified";
 export type ScreeningStatus = "AEMS Interview" | "Submission Pending" | "CV Submitted" | "Disqualified";
 export type ClientScreeningStatus = "Client Shortlisted" | "Disqualified";
 export type InterviewStatus = "Client Interviewed" | "Client Selected" | "Disqualified";
@@ -21,7 +21,7 @@ export type StatusType = SourcingStatus | ScreeningStatus | ClientScreeningStatu
 
 // Status options for each stage
 const statusOptions: Record<string, StatusType[]> = {
-  "Sourcing": ["LinkedIn Connections Sent", "LinkedIn Connections Accepted", "CV Received", "Disqualified"],
+  "Sourcing": ["Connections Sent", "Connections Accepted", "CV Received", "Disqualified"],
   "Screening": ["AEMS Interview", "Submission Pending", "CV Submitted", "Disqualified"],
   "Client Review": ["Client Shortlisted", "Disqualified"],
   "Interview": ["Client Interviewed", "Client Selected", "Disqualified"],
@@ -31,8 +31,8 @@ const statusOptions: Record<string, StatusType[]> = {
 // Status colors
 const statusColors: Record<StatusType, string> = {
   // Sourcing statuses
-  "LinkedIn Connections Sent": "bg-blue-100 text-blue-800 border-blue-200",
-  "LinkedIn Connections Accepted": "bg-green-100 text-green-800 border-green-200",
+  "Connections Sent": "bg-blue-100 text-blue-800 border-blue-200",
+  "Connections Accepted": "bg-green-100 text-green-800 border-green-200",
   "CV Received": "bg-purple-100 text-purple-800 border-purple-200",
   
   // Screening statuses
