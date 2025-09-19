@@ -38,14 +38,14 @@ export function PipelineCandidatesTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[44px]"></TableHead>
+          <TableHead></TableHead>
           <TableHead>Candidate</TableHead>
           <TableHead>Current Position</TableHead>
-          <TableHead className="w-[200px]">Stage</TableHead>
-          <TableHead className="w-[120px]">Status</TableHead>
-          <TableHead className="w-[140px]">Hiring Manager</TableHead>
-          <TableHead className="w-[120px]">Recruiter</TableHead>
-          <TableHead className="w-[90px]">Action</TableHead>
+          <TableHead>Stage</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Hiring Manager</TableHead>
+          <TableHead>Recruiter</TableHead>
+          <TableHead>Action</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
