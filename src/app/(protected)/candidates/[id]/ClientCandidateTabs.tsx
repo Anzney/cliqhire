@@ -268,7 +268,7 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
       </div>
 
       {/* Button Bar */}
-      <div className="flex items-center justify-between p-4 border-b">
+      {/* <div className="flex items-center justify-between p-4 border-b">
         <AddToJobDialog 
           candidateId={candidateId} 
           candidateName={enhancedCandidate.name || "Unknown Candidate"}
@@ -301,7 +301,7 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
             Refresh
           </Button>
         </div>
-      </div>
+      </div> */}
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
