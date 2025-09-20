@@ -242,8 +242,12 @@ export default function ClientPage({ params }: PageProps) {
       </Tabs>
 
       {/* Create Job Modal */}
-      <CreateJobRequirementForm open={isCreateJobOpen} onOpenChange={setIsCreateJobOpen} />
+      <CreateJobRequirementForm
+        open={isCreateJobOpen}
+        onOpenChange={setIsCreateJobOpen}
+        lockedClientId={id}
+        lockedClientName={client?.name || ""}
+      />
     </div>
   );
 }
-

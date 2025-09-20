@@ -69,7 +69,7 @@ export function CreateJobRequirementForm({
   const [clientOptions, setClientOptions] = useState<{ _id: string; name: string }[]>([]);
   const [clientSearch, setClientSearch] = useState("");
   const [showAdditional, setShowAdditional] = useState(false);
-  const [errors, setErrors] = useState<{ clientName?: string; positionName?: string }>({});
+  const [errors, setErrors] = useState<{ clientName?: string; positionName?: string; clientId?: string }>({});
   const router = useRouter();
 
   // Helper to find client by id
@@ -85,6 +85,17 @@ export function CreateJobRequirementForm({
       });
     }
   }, [clientSearch, lockedClientId, lockedClientName]);
+
+  // Keep form state in sync when a locked client is provided (or changes)
+  useEffect(() => {
+    if (lockedClientId) {
+      setForm((prev) => ({
+        ...prev,
+        clientId: lockedClientId,
+        clientName: lockedClientName || prev.clientName,
+      }));
+    }
+  }, [lockedClientId, lockedClientName]);
 
   // Form options grouped for readability and reusability
   const formOptions = {
@@ -108,8 +119,13 @@ export function CreateJobRequirementForm({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     let newErrors: typeof errors = {};
-    if (!lockedClientId && !form.clientName.trim())
+    if (!lockedClientId && !form.clientName.trim()) {
       newErrors.clientName = "Client Name is required.";
+    }
+    // Always ensure a clientId is present in payload
+    if (!form.clientId) {
+      newErrors.clientId = "Client selection is required.";
+    }
     if (!form.positionName.trim()) newErrors.positionName = "Position Name is required.";
     setErrors(newErrors);
     if (Object.keys(newErrors).length === 0) {
