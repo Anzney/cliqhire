@@ -162,6 +162,7 @@ const getJobs = async (params?: {
   jobType?: string;
   location?: string;
   client?: string;
+  clientId?: string; // some endpoints may expect clientId instead of client
   minSalary?: number;
   maxSalary?: number;
   currency?: string;
