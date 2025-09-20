@@ -29,12 +29,18 @@ import { PDFViewer } from "@/components/ui/pdf-viewer";
 import { validateTempCandidateStageChange, isTempCandidate, validateTempCandidateStatusChange } from "@/lib/temp-candidate-validation";
 import { TempCandidateAlertDialog } from "./temp-candidate-alert-dialog";
 import { DisqualificationDialog, type DisqualificationData } from "./disqualification-dialog";
+import { InterviewDetailsDialog } from "./interview-details-dialog";
 
 interface PipelineJobCardProps {
   job: Job;
   loadingJobId: string | null;
   onToggleExpansion: (jobId: string) => void;
-  onUpdateCandidateStage: (jobId: string, candidateId: string, newStage: string) => Promise<void>;
+  onUpdateCandidateStage: (
+    jobId: string,
+    candidateId: string,
+    newStage: string,
+    extras?: { interviewDate?: string; interviewMeetingLink?: string }
+  ) => Promise<void>;
   onCandidateUpdate?: (jobId: string, updatedCandidate: Candidate) => void;
 }
 
@@ -60,6 +66,15 @@ export function PipelineJobCard({
     isOpen: false,
     candidate: null,
     newStatus: null,
+  });
+
+  // Interview details dialog state
+  const [interviewDialog, setInterviewDialog] = React.useState<{
+    isOpen: boolean;
+    candidate: Candidate | null;
+  }>({
+    isOpen: false,
+    candidate: null,
   });
 
   // Stage change confirmation dialog state
@@ -179,6 +194,12 @@ export function PipelineJobCard({
       return;
     }
 
+    // If moving to Interview, open interview details dialog first
+    if (newStage === 'Interview') {
+      setInterviewDialog({ isOpen: true, candidate });
+      return;
+    }
+
     setStageChangeDialog({
       isOpen: true,
       candidate,
@@ -202,6 +223,29 @@ export function PipelineJobCard({
 
   const handleCancelStageChange = () => {
     setStageChangeDialog({ isOpen: false, candidate: null, currentStage: '', newStage: '' });
+  };
+
+  const handleCloseInterviewDialog = () => {
+    setInterviewDialog({ isOpen: false, candidate: null });
+  };
+
+  const handleConfirmInterviewDetails = async (dateTime: string, meetingLink: string) => {
+    // For now, we are only required to collect details before updating the stage.
+    // Proceed to update local store and call parent's stage update to Interview.
+    const candidate = interviewDialog.candidate;
+    if (!candidate) return;
+    try {
+      // Update local store immediately
+      updateCandidateStage(job.id, candidate.id, 'Interview');
+      // Call API via parent handler with interview details so they are persisted
+      await onUpdateCandidateStage(job.id, candidate.id, 'Interview', {
+        interviewDate: dateTime,
+        interviewMeetingLink: meetingLink,
+      });
+      // Optionally, TODO: persist dateTime/meetingLink via dedicated API if available.
+    } finally {
+      handleCloseInterviewDialog();
+    }
   };
 
   const handleDeleteCandidate = (candidate: Candidate) => {
@@ -693,6 +737,14 @@ export function PipelineJobCard({
         onClose={handleClosePdfViewer}
         pdfUrl={pdfViewer.pdfUrl || undefined}
         candidateName={pdfViewer.candidateName || undefined}
+      />
+
+      {/* Interview Details Dialog */}
+      <InterviewDetailsDialog
+        isOpen={interviewDialog.isOpen}
+        onClose={handleCloseInterviewDialog}
+        onConfirm={handleConfirmInterviewDetails}
+        candidateName={interviewDialog.candidate?.name}
       />
 
       {/* Temp Candidate Alert Dialog */}

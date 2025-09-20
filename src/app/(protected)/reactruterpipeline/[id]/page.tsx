@@ -21,6 +21,7 @@ import { PipelineJobHeader } from "@/components/Recruiter-Pipeline/PipelineJobHe
 import { PipelineStageFilters } from "@/components/Recruiter-Pipeline/PipelineStageFilters";
 import { PipelineCandidatesTable } from "@/components/Recruiter-Pipeline/PipelineCandidatesTable";
 import { mapEntryToJob } from "@/components/Recruiter-Pipeline/pipeline-mapper";
+import { InterviewDetailsDialog } from "@/components/Recruiter-Pipeline/interview-details-dialog";
 
 const Page = () => {
   const params = useParams();
@@ -168,6 +169,12 @@ const Page = () => {
       return;
     }
 
+    // If moving to Interview, ask for details first
+    if (newStage === 'Interview') {
+      setInterviewDialog({ isOpen: true, candidate });
+      return;
+    }
+
     setStageChangeDialog({
       isOpen: true,
       candidate,
@@ -198,6 +205,31 @@ const Page = () => {
 
   const handleCancelStageChange = () => {
     setStageChangeDialog({ isOpen: false, candidate: null, currentStage: '', newStage: '' });
+  };
+
+  const handleCloseInterviewDialog = () => {
+    setInterviewDialog({ isOpen: false, candidate: null });
+  };
+
+  const handleConfirmInterviewDetails = async (dateTime: string, meetingLink: string) => {
+    const candidate = interviewDialog.candidate;
+    if (!candidate) return;
+    try {
+      const backendStage = mapUIStageToBackendStage('Interview');
+      await updateCandidateStage(id, candidate.id, {
+        newStage: backendStage,
+        interviewDate: dateTime,
+        interviewMeetingLink: meetingLink,
+      });
+      // Optionally TODO: persist dateTime and meetingLink if API supports
+      const res = await getPipelineEntry(id);
+      const entry = res.data;
+      setJob(mapEntryToJob(entry));
+    } catch (error) {
+      console.error('Error updating candidate stage to Interview:', error);
+    } finally {
+      handleCloseInterviewDialog();
+    }
   };
 
   const handleDeleteCandidate = (candidate: Candidate) => {
@@ -670,6 +702,14 @@ const Page = () => {
         onClose={handleClosePdfViewer}
         pdfUrl={pdfViewer.pdfUrl || undefined}
         candidateName={pdfViewer.candidateName || undefined}
+      />
+
+      {/* Interview Details Dialog */}
+      <InterviewDetailsDialog
+        isOpen={interviewDialog.isOpen}
+        onClose={handleCloseInterviewDialog}
+        onConfirm={handleConfirmInterviewDetails}
+        candidateName={interviewDialog.candidate?.name}
       />
 
       {/* Temp Candidate Alert Dialog */}

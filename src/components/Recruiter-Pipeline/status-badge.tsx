@@ -58,6 +58,21 @@ const statusColors: Record<StatusType, string> = {
   "Disqualified": "bg-red-100 text-red-800 border-red-200"
 };
 
+// Display label mapper to keep underlying values intact while changing UI labels
+const getDisplayLabel = (status: StatusType | string) => {
+  switch (status) {
+    case "Connections Sent":
+      return "Communications Sent";
+    case "Connections Accepted":
+      return "Communications Acknowledged";
+    case "Client Shortlisted":
+      // Existing UX choice to display shorter label
+      return "Shortlisted";
+    default:
+      return status as string;
+  }
+};
+
 interface StatusBadgeProps {
   status: StatusType | null;
   stage: string;
@@ -122,7 +137,7 @@ export function StatusBadge({
                 variant="secondary" 
                 className={`${statusColors[statusOption]} border-none`}
               >
-                {statusOption === "Client Shortlisted" ? "Shortlisted" : statusOption}
+                {getDisplayLabel(statusOption)}
               </Badge>
             </DropdownMenuItem>
           ))}
@@ -138,7 +153,7 @@ export function StatusBadge({
         variant="secondary" 
         className={`${statusColors[status]} border-none`}
       >
-        {status === "Client Shortlisted" ? "Shortlisted" : status}
+        {getDisplayLabel(status)}
       </Badge>
     );
   }
@@ -154,7 +169,7 @@ export function StatusBadge({
             variant="secondary" 
             className={`${statusColors[status]} border-none flex items-center gap-1`}
           >
-            {status === "Client Shortlisted" ? "Shortlisted" : status}
+            {getDisplayLabel(status)}
             <ChevronDown className="h-3 w-3" />
           </Badge>
         </Button>
@@ -170,7 +185,7 @@ export function StatusBadge({
               variant="secondary" 
               className={`${statusColors[statusOption]} border-none`}
             >
-              {statusOption === "Client Shortlisted" ? "Shortlisted" : statusOption}
+              {getDisplayLabel(statusOption)}
             </Badge>
           </DropdownMenuItem>
         ))}

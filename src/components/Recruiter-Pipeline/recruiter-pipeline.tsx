@@ -433,7 +433,12 @@ export function RecruiterPipeline() {
     }
   };
 
-  const updateCandidateStage = async (jobId: string, candidateId: string, newStage: string) => {
+  const updateCandidateStage = async (
+    jobId: string,
+    candidateId: string,
+    newStage: string,
+    extras?: { interviewDate?: string; interviewMeetingLink?: string }
+  ) => {
     try {
       // Optimistically update the UI first
       setJobs(jobs.map(job => {
@@ -452,10 +457,14 @@ export function RecruiterPipeline() {
 
       // Make API call to update the candidate stage
       const backendStage = mapUIStageToBackendStage(newStage);
-      const response = await updateCandidateStageAPI(jobId, candidateId, {
+      const requestBody = {
         newStage: backendStage,
-        notes: `Stage changed to ${newStage}`
-      });
+        notes: `Stage changed to ${newStage}`,
+        interviewDate: extras?.interviewDate,
+        interviewMeetingLink: extras?.interviewMeetingLink,
+      };
+      console.log('updateCandidateStageAPI request body:', requestBody);
+      const response = await updateCandidateStageAPI(jobId, candidateId, requestBody);
 
       if (!response.success) {
         throw new Error(response.message || 'Failed to update candidate stage');

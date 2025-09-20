@@ -100,7 +100,7 @@ export const getStageFields = (stage: string, candidate: any): StageField[] => {
         },
         {
           key: "connection",
-          label: "Connection",
+          label: "Sourcing Channel",
           value: sourcingData.connection || "Not set",
           icon: <Users className="h-4 w-4" />,
           color: "bg-green-50 text-green-600",
@@ -116,15 +116,15 @@ export const getStageFields = (stage: string, candidate: any): StageField[] => {
           type: "text",
           placeholder: "Enter referrer name"
         },
-        {
-          key: "source",
-          label: "Source",
-          value: sourcingData.source || "Not set",
-          icon: <Target className="h-4 w-4" />,
-          color: "bg-orange-50 text-orange-600",
-          type: "text",
-          placeholder: "Enter source"
-        },
+        // {
+        //   key: "source",
+        //   label: "Source",
+        //   value: sourcingData.source || "Not set",
+        //   icon: <Target className="h-4 w-4" />,
+        //   color: "bg-orange-50 text-orange-600",
+        //   type: "text",
+        //   placeholder: "Enter source"
+        // },
         {
           key: "sourcingRating",
           label: "Sourcing Rating",

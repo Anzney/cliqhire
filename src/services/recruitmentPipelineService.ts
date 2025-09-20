@@ -373,6 +373,10 @@ export interface UpdateCandidateStageRequest {
   newStage: string;
   stageData?: StageData;
   notes?: string;
+  /** ISO string containing both date and time for interview scheduling, e.g. '2025-09-19T14:30' */
+  interviewDate?: string;
+  /** Meeting link for the scheduled interview */
+  interviewMeetingLink?: string;
 }
 
 // Interface for updating candidate stage response
