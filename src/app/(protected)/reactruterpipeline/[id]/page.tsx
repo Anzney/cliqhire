@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import {useState , useEffect , useMemo} from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Loader2, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,19 +27,19 @@ const Page = () => {
   const params = useParams();
   const id = (params as any)?.id as string;
   const router = useRouter();
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-  const [job, setJob] = React.useState<Job | null>(null);
-  const [selectedCandidate, setSelectedCandidate] = React.useState<Candidate | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] =useState<string | null>(null);
+  const [job, setJob] = useState<Job | null>(null);
+  const [selectedCandidate, setSelectedCandidate] =useState<Candidate | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   // Dialog states
-  const [isAddCandidateOpen, setIsAddCandidateOpen] = React.useState(false);
-  const [isCreateCandidateOpen, setIsCreateCandidateOpen] = React.useState(false);
-  const [isAddExistingOpen, setIsAddExistingOpen] = React.useState(false);
+  const [isAddCandidateOpen, setIsAddCandidateOpen] = useState(false);
+  const [isCreateCandidateOpen, setIsCreateCandidateOpen] = useState(false);
+  const [isAddExistingOpen, setIsAddExistingOpen] =useState(false);
   
   // Delete candidate confirmation dialog state
-  const [deleteCandidateDialog, setDeleteCandidateDialog] = React.useState<{
+  const [deleteCandidateDialog, setDeleteCandidateDialog] = useState<{
     isOpen: boolean;
     candidate: Candidate | null;
   }>({
@@ -48,7 +48,7 @@ const Page = () => {
   });
 
   // Status change confirmation dialog state
-  const [statusChangeDialog, setStatusChangeDialog] = React.useState<{
+  const [statusChangeDialog, setStatusChangeDialog] =useState<{
     isOpen: boolean;
     candidate: Candidate | null;
     newStatus: string | null;
@@ -59,7 +59,7 @@ const Page = () => {
   });
 
   // Stage change confirmation dialog state
-  const [stageChangeDialog, setStageChangeDialog] = React.useState<{
+  const [stageChangeDialog, setStageChangeDialog] =useState<{
     isOpen: boolean;
     candidate: Candidate | null;
     currentStage: string;
@@ -71,8 +71,17 @@ const Page = () => {
     newStage: '',
   });
 
+  // Interview details dialog state
+  const [interviewDialog, setInterviewDialog] =useState<{
+    isOpen: boolean;
+    candidate: Candidate | null;
+  }>({
+    isOpen: false,
+    candidate: null,
+  });
+
   // PDF viewer state
-  const [pdfViewer, setPdfViewer] = React.useState<{
+  const [pdfViewer, setPdfViewer] =useState<{
     isOpen: boolean;
     pdfUrl: string | null;
     candidateName: string | null;
@@ -83,7 +92,7 @@ const Page = () => {
   });
 
   // Temp candidate alert dialog state
-  const [tempCandidateAlert, setTempCandidateAlert] = React.useState<{
+  const [tempCandidateAlert, setTempCandidateAlert] = useState<{
     isOpen: boolean;
     candidateName: string | null;
     message: string | null;
@@ -94,7 +103,7 @@ const Page = () => {
   });
 
   // Auto-create candidate dialog state for temp candidates
-  const [autoCreateCandidateDialog, setAutoCreateCandidateDialog] = React.useState<{
+  const [autoCreateCandidateDialog, setAutoCreateCandidateDialog] = useState<{
     isOpen: boolean;
     candidate: Candidate | null;
   }>({
@@ -103,7 +112,7 @@ const Page = () => {
   });
 
   // Disqualification dialog state
-  const [disqualificationDialog, setDisqualificationDialog] = React.useState<{
+  const [disqualificationDialog, setDisqualificationDialog] = useState<{
     isOpen: boolean;
     candidate: Candidate | null;
   }>({
@@ -112,9 +121,9 @@ const Page = () => {
   });
 
   // Filter state for stage filtering
-  const [selectedStageFilter, setSelectedStageFilter] = React.useState<string | null>(null);
+  const [selectedStageFilter, setSelectedStageFilter] =useState<string | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     let isMounted = true;
     const load = async () => {
       try {
@@ -541,7 +550,7 @@ const Page = () => {
   };
 
   // Function to get filtered candidates based on selected stage
-  const getFilteredCandidates = React.useMemo(() => {
+  const getFilteredCandidates =useMemo(() => {
     if (!selectedStageFilter) return job?.candidates || [];
     return (job?.candidates || []).filter((candidate) => candidate.currentStage === selectedStageFilter);
   }, [job, selectedStageFilter]);

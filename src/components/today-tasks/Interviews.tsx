@@ -23,9 +23,7 @@ import {
 import { 
   Calendar, 
   Clock, 
-  Phone,
   Video,
-  MapPin,
   ChevronDown,
   ChevronRight,
   MoreHorizontal
@@ -64,19 +62,6 @@ export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsPr
     }
   };
 
-  const getInterviewTypeIcon = (type: string) => {
-    switch (type) {
-      case 'phone':
-        return <Phone className="w-4 h-4" />;
-      case 'video':
-        return <Video className="w-4 h-4" />;
-      case 'in-person':
-        return <MapPin className="w-4 h-4" />;
-      default:
-        return <Calendar className="w-4 h-4" />;
-    }
-  };
-
   const formatTime = (dateTime: string) => {
     return new Date(dateTime).toLocaleTimeString('en-US', {
       hour: 'numeric',
@@ -86,10 +71,10 @@ export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsPr
   };
 
   const formatDate = (dateTime: string) => {
-    return new Date(dateTime).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
-    });
+    const d = new Date(dateTime);
+    const day = d.getDate();
+    const mon = d.toLocaleString('en-US', { month: 'short' });
+    return `${day} ${mon}`;
   };
 
   return (
@@ -123,9 +108,8 @@ export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsPr
                       <TableRow>
                         <TableHead>Candidate</TableHead>
                         <TableHead>Job & Client</TableHead>
+                        <TableHead>Date</TableHead>
                         <TableHead>Time</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Location</TableHead>
                         <TableHead>Meeting</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Actions</TableHead>
@@ -148,29 +132,19 @@ export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsPr
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4 text-gray-500" />
+                              <span className="font-medium">{formatDate(interview.scheduledTime)}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
                               <Clock className="w-4 h-4 text-gray-500" />
                               <div>
                                 <div className="font-medium">{formatTime(interview.scheduledTime)}</div>
-                                <div className="text-sm text-gray-600">{interview.duration} min</div>
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              {getInterviewTypeIcon(interview.interviewType)}
-                              <span className="capitalize text-sm">{interview.interviewType}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {interview.location ? (
-                              <div className="flex items-center gap-1">
-                                <MapPin className="w-4 h-4 text-gray-500" />
-                                <span className="text-sm">{interview.location}</span>
-                              </div>
-                            ) : (
-                              <span className="text-sm text-gray-400">-</span>
-                            )}
-                          </TableCell>
+                          
                           <TableCell>
                             {interview.meetingLink ? (
                               <a 
