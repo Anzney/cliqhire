@@ -214,10 +214,6 @@ export function InternalTeam({ jobId, jobData }: InternalTeamProps) {
       {/* Team Information Display */}
       {selectedTeam && (
         <div className="space-y-4">
-          <div className="text-sm font-medium text-gray-700 border-b pb-2">
-            Selected Team Members
-          </div>
-
           <div className="grid gap-4">
             {renderTeamMemberCard(
               "Hiring Manager",
