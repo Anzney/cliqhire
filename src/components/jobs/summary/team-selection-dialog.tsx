@@ -18,9 +18,9 @@ interface TeamSelectionDialogProps {
   onClose: () => void;
   onSave: (selections: {
     team?: { id: string; name: string };
-    hiringManager?: { id: string; name: string };
-    teamLead?: { id: string; name: string };
-    recruiters?: { id: string; name: string }[];
+    hiringManager?: { id: string; name: string; email?: string; phone?: string };
+    teamLead?: { id: string; name: string; email?: string; phone?: string };
+    recruiters?: { id: string; name: string; email?: string; phone?: string }[];
   }) => void;
   initialSelections?: {
     teamId?: string;
@@ -93,18 +93,30 @@ export function TeamSelectionDialog({
   const handleSave = () => {
     const selections = {
       team: selectedTeam ? { id: selectedTeam._id, name: selectedTeam.teamName } : undefined,
-      hiringManager: selectedTeam?.hiringManagerId ? {
-        id: selectedTeam.hiringManagerId._id,
-        name: selectedTeam.hiringManagerId.name
-      } : undefined,
-      teamLead: selectedTeam?.teamLeadId ? {
-        id: selectedTeam.teamLeadId._id,
-        name: selectedTeam.teamLeadId.name
-      } : undefined,
-      recruiters: selectedRecruiterId ? (() => {
-        const recruiter = selectedTeam?.recruiters.find(r => r._id === selectedRecruiterId);
-        return recruiter ? [{ id: recruiter._id, name: recruiter.name }] : [];
-      })() : [],
+      hiringManager: selectedTeam?.hiringManagerId
+        ? {
+            id: selectedTeam.hiringManagerId._id,
+            name: selectedTeam.hiringManagerId.name,
+            email: selectedTeam.hiringManagerId.email,
+            phone: selectedTeam.hiringManagerId.phone,
+          }
+        : undefined,
+      teamLead: selectedTeam?.teamLeadId
+        ? {
+            id: selectedTeam.teamLeadId._id,
+            name: selectedTeam.teamLeadId.name,
+            email: selectedTeam.teamLeadId.email,
+            phone: selectedTeam.teamLeadId.phone,
+          }
+        : undefined,
+      recruiters: selectedRecruiterId
+        ? (() => {
+            const recruiter = selectedTeam?.recruiters.find((r) => r._id === selectedRecruiterId);
+            return recruiter
+              ? [{ id: recruiter._id, name: recruiter.name, email: recruiter.email, phone: recruiter.phone }]
+              : [];
+          })()
+        : [],
     };
 
     onSave(selections);

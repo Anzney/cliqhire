@@ -13,7 +13,7 @@ export function TeamContent({ jobId, jobData }: TeamContentProps) {
   return (
     <div className="grid grid-cols-2 gap-4 p-4 max-w-full mx-auto">
       <div className="h-full"><ClientTeam jobId={jobId} jobData={jobData} /></div>
-      <div className="h-full"><InternalTeam /></div>
+      <div className="h-full"><InternalTeam jobId={jobId} jobData={jobData} /></div>
     </div>
   )
 }
