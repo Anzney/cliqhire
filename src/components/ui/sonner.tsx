@@ -13,6 +13,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       theme={theme as ToasterProps["theme"]}
       position="top-center"
       className="toaster group"
+      richColors
       toastOptions={{
         classNames: {
           toast:
@@ -22,6 +23,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
             "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
           cancelButton:
             "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+          // Explicit variant styling
+          success:
+            "group-[.toaster]:bg-emerald-50 group-[.toaster]:text-emerald-900 group-[.toaster]:border-emerald-200",
+          error:
+            "group-[.toaster]:bg-white group-[.toaster]:text-red-900 group-[.toaster]:border-red-200",
         },
       }}
       {...props}
