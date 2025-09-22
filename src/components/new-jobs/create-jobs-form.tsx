@@ -145,7 +145,7 @@ export function CreateJobRequirementForm({
       try {
         const result = await createJob(jobData);
         if (result && result.success && result.data && (result.data as any)._id) {
-          toast("Job created successfully");
+          toast.success("Job created successfully");
           setForm({
             clientName: lockedClientName || "",
             clientId: lockedClientId || "",
@@ -163,12 +163,13 @@ export function CreateJobRequirementForm({
           return;
         }
         // fallback if no id returned
-        toast("Job created, but could not redirect (missing job ID)");
+        toast.success("Job created, but could not redirect (missing job ID)");
         onOpenChange(false);
         router.refresh();
       } catch (error) {
         // Optionally handle error (e.g., show a message)
         console.error("Failed to create job:", error);
+        toast.error("Failed to create job. Please try again.");
       }
     }
   };
