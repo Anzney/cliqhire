@@ -27,8 +27,7 @@ const columsArr = [
   "Location",
   "Stage",
   "Stage Status",
-  "Sales RM",
-  "Client Team",
+  // "Client Team",
   "Client Age",
   "Job Count",
 ];

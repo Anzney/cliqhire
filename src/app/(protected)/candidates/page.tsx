@@ -24,7 +24,6 @@ const columsArr = [
   "Location",
   "Status",
   "Experience",
-  "Skills",
   "Resume",
 ];
 
@@ -138,11 +137,6 @@ export default function CandidatesPage() {
                     />
                   </TableCell>
                   <TableCell className="text-sm">{candidate.experience || 'N/A'}</TableCell>
-                  <TableCell className="text-sm">
-                    {candidate.skills && Array.isArray(candidate.skills) 
-                      ? candidate.skills.join(', ') 
-                      : candidate.skills || 'N/A'}
-                  </TableCell>
                   <TableCell className="text-sm">
                     {candidate.resume ? (
                       <a 
