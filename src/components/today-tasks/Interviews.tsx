@@ -85,7 +85,7 @@ export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsPr
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
-                Today's Interviews
+                Today Interviews
               </div>
               <div className="flex items-center gap-4 text-sm text-gray-600">
                 <span>Total: <span className="font-semibold text-gray-900">{todaysInterviews.length}</span></span>
@@ -190,7 +190,7 @@ export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsPr
               <div className="text-center py-8 text-gray-500">
                 <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-400" />
                 <p className="text-lg font-medium">No interviews scheduled for today</p>
-                <p className="text-sm">You're all caught up!</p>
+                <p className="text-sm">You are all caught up!</p>
               </div>
             )}
           </CardContent>

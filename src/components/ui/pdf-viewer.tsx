@@ -348,7 +348,7 @@ export function PDFViewer({ isOpen, onClose, pdfUrl, candidateName }: PDFViewerP
               <div>
                 <p className="text-lg font-semibold text-gray-700">No Resume Available</p>
                 <p className="text-sm text-gray-600 mt-2">
-                  This candidate doesn't have a resume uploaded yet.
+                  This candidate doesn&apos;t have a resume uploaded yet.
                 </p>
               </div>
             </div>

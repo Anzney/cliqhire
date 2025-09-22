@@ -246,7 +246,7 @@ export default function TodayTasksPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Today's Tasks</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Today&apos;s Tasks</h1>
           <p className="text-gray-600 mt-1">
             Manage your assigned jobs, interviews, and personal tasks
           </p>

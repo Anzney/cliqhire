@@ -294,7 +294,7 @@ export function PipelineStageDetails({
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Update</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to update the field "{pendingFieldKey ? stageFields.find(field => field.key === pendingFieldKey)?.label || pendingFieldKey : ''}?
+              Are you sure you want to update the field {pendingFieldKey ? stageFields.find(field => field.key === pendingFieldKey)?.label || pendingFieldKey : ''}?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
