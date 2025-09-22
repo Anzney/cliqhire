@@ -32,7 +32,7 @@ import { taskService, AssignedJobApiResponse } from "@/services/taskService";
 
 
 export default function TodayTasksPage() {
-  const { tasks, createTask, updateTask, deleteTask, completeTask, updateFollowUpStatus, fetchTasks } = useAuth();
+  const { completeTask, updateFollowUpStatus } = useAuth();
   
   // State management - using real API data
   const [assignedJobs, setAssignedJobs] = useState<AssignedJob[]>([]);
@@ -40,9 +40,8 @@ export default function TodayTasksPage() {
   const [personalTasks, setPersonalTasks] = useState<PersonalTask[]>([]);
   const [personalTasksLoading, setPersonalTasksLoading] = useState(true);
 
-  // Fetch tasks and assigned jobs when component mounts
+  // Fetch assigned jobs and personal tasks when component mounts
   useEffect(() => {
-    fetchTasks();
     fetchAssignedJobs();
     fetchPersonalTasks();
   }, []); // Empty dependency array ensures this runs only once

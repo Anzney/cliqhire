@@ -42,7 +42,7 @@ export function StatsOverview({ assignedJobs, todayInterviews, personalTasks }: 
             <div>
               <p className="text-sm font-medium text-gray-600">Pending Tasks</p>
               <p className="text-2xl font-bold text-gray-900">
-                {personalTasks.filter(t => t.status === 'pending').length}
+                {personalTasks.filter(t => t.status === 'to-do').length}
               </p>
             </div>
             <Clock className="w-8 h-8 text-yellow-600" />

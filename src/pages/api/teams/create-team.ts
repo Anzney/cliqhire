@@ -15,7 +15,7 @@ interface Team {
 class TeamsStore {
   private teams: Team[] = [];
 
-  createTeam(teamData: Omit<Team, '_id' | 'createdAt' | 'updatedAt'>): Team {
+  createTeam(teamData: Omit<Team, '_id' | 'createdAt' | 'updatedAt' | 'status'>): Team {
     const newTeam: Team = {
       _id: `team_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       ...teamData,

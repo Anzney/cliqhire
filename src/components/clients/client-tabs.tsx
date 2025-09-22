@@ -25,7 +25,7 @@ export function ClientTabs({ clientId, clientName, filteredJobs }: ClientTabsPro
       <ClientTabsList />
       
       <ClientTabContent value="jobs">
-        <JobsTable jobs={filteredJobs} clientId={clientId} clientName={clientName} />
+        <JobsTable jobs={filteredJobs} clientName={clientName} />
       </ClientTabContent>
       
       <ClientTabContent value="summary">

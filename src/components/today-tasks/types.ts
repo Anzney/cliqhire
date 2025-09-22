@@ -4,16 +4,22 @@ export interface AssignedJob {
   id: string;
   jobTitle: string;
   clientName: string;
+  // Optional UI fields used in dummy data and UI display
+  location?: string;
+  priority?: "high" | "medium" | "low";
+  deadline?: string;
+  aemsDeadline?: string;
+  recruiter?: string;
   candidatesCount: number;
   status: "To-do" | "In Progress" | "Completed";
   // Additional fields from API
-  content: string;
-  createdAt: string;
-  updatedAt: string;
-  _id: string;
-  position: string;
-  jobId: string;
-  clientId: string;
+  content?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  _id?: string;
+  position?: string;
+  jobId?: string;
+  clientId?: string;
 }
 
 export interface Interview {
