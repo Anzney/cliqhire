@@ -15,6 +15,7 @@ import {
   BarChart,
   Search,
   DollarSign,
+  Mail,
   Route,
   LockKeyhole
 } from "lucide-react";
@@ -27,7 +28,8 @@ const menuItems = [
   { name: "Candidates", icon: Users, href: "/candidates" }, // Line after "Candidates"
   { name: "Team Members", icon: Users, href: "/teammembers" },
   { name: "Recruitment Pipeline", icon: Route, href: "/reactruterpipeline" },
-  { name: "User Access", icon:   LockKeyhole, href: "/user-access" },
+  { name: "Email", icon: Mail, href: "/emails" },
+  { name: "User Access", icon: LockKeyhole, href: "/user-access" },
 
   // { name: "Placements", icon: UserCheck, href: "/placements" },
   // { name: "Activities", icon: Calendar, href: "/activities" },
