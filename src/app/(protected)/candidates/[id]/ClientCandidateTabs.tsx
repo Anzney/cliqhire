@@ -82,16 +82,6 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
     }
   };
 
-  const handleJobsAdded = async (jobIds: string[], jobData?: any[]) => {
-    try {
-      // Add the jobs to the candidate's job list
-      if (jobsContentRef.current) {
-        await jobsContentRef.current.addJobsToCandidate(jobIds, jobData);
-      }
-    } catch (error) {
-      console.error('Error adding jobs to candidate:', error);
-    }
-  };
 
   // Show loading state
   if (isLoading) {
@@ -267,41 +257,7 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
         </div>
       </div>
 
-      {/* Button Bar */}
-      {/* <div className="flex items-center justify-between p-4 border-b">
-        <AddToJobDialog 
-          candidateId={candidateId} 
-          candidateName={enhancedCandidate.name || "Unknown Candidate"}
-          onJobsAdded={handleJobsAdded}
-          trigger={
-            <Button className="bg-black text-white hover:bg-gray-800 rounded-md flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Add to Job
-            </Button>
-          }
-        />
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border rounded-md flex items-center gap-2"
-            onClick={() => console.log("Open Filters")}
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-            Filters
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border rounded-md flex items-center gap-2"
-            onClick={handleRefresh}
-          >
-            <RefreshCcw className="h-4 w-4" />
-            Refresh
-          </Button>
-        </div>
-      </div> */}
+     
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -322,14 +278,6 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
             Jobs
           </TabsTrigger>
 
-          {/* <TabsTrigger
-            value="Activities"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
-          >
-            <Activity className="h-4 w-4" />
-            Activities
-          </TabsTrigger> */}
-
           <TabsTrigger
             value="Notes"
             className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
@@ -345,30 +293,6 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
             <Paperclip className="h-4 w-4" />
             Attachments
           </TabsTrigger>
-
-          {/* <TabsTrigger
-            value="ClientTeam"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
-          >
-            <Users className="h-4 w-4" />
-            Client Team
-          </TabsTrigger> */}
-
-          {/* <TabsTrigger
-            value="Contacts"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
-          >
-            <User className="h-4 w-4" />
-            Contacts
-          </TabsTrigger> */}
-
-          {/* <TabsTrigger
-            value="History"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
-          >
-            <Clock className="h-4 w-4" />
-            History
-          </TabsTrigger> */}
         </TabsList>
 
         <TabsContent value="Summary" className="p-4">
