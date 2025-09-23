@@ -10,9 +10,9 @@ export interface ClientTableRowProps {
     id: string;
     name: string;
     industry: string;
-    location: string;
-    stage: "Lead" | "Engaged" | "Signed";
-    clientStageStatus: ClientStageStatus;
+    countryOfBusiness: string;
+    clientStage: "Lead" | "Engaged" | "Signed";
+    clientSubStage: ClientStageStatus;
     owner: string;
     team: string;
     createdAt: string;
@@ -43,15 +43,15 @@ export const ClientTableRow: React.FC<ClientTableRowProps> = ({
     >
       <TableCell className="text-sm font-medium">{client.name}</TableCell>
       <TableCell className="text-sm">{client.industry}</TableCell>
-      <TableCell className="text-sm">{client.location}</TableCell>
+      <TableCell className="text-sm">{client.countryOfBusiness}</TableCell>
       <TableCell className="text-sm">
-        <ClientStageBadge id={client.id} stage={client.stage} onStageChange={onStageChange} />
+        <ClientStageBadge id={client.id} stage={client.clientStage} onStageChange={onStageChange} />
       </TableCell>
       <TableCell className="text-sm">
         <ClientStageStatusBadge
           id={client.id}
-          status={client.clientStageStatus}
-          stage={client.stage}
+          status={client.clientSubStage}
+          stage={client.clientStage}
           onStatusChange={onStatusChange}
         />
       </TableCell>
