@@ -57,7 +57,7 @@ class PermissionService {
   private baseURL: string;
 
   constructor() {
-    this.baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    this.baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
   }
 
   /**
