@@ -1,3 +1,4 @@
+"use client";
 import { TableRow, TableCell } from "@/components/ui/table";
 import { ClientStageBadge } from "@/components/client-stage-badge";
 import { ClientStageStatusBadge } from "@/components/client-stage-status-badge";
