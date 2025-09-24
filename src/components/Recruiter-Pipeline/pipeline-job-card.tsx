@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import { useRef, useState ,useEffect } from "react";
 import { ChevronDown, ChevronRight, Users, MapPin, CircleDollarSign , Building2, Loader2, Plus, X, Table as TableIcon} from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +42,7 @@ interface PipelineJobCardProps {
     extras?: { interviewDate?: string; interviewMeetingLink?: string }
   ) => Promise<void>;
   onCandidateUpdate?: (jobId: string, updatedCandidate: Candidate) => void;
+  isHighlighted?: boolean;
 }
 
 export function PipelineJobCard({ 
@@ -49,16 +50,25 @@ export function PipelineJobCard({
   loadingJobId, 
   onToggleExpansion, 
   onUpdateCandidateStage,
-  onCandidateUpdate
+  onCandidateUpdate,
+  isHighlighted = false,
 }: PipelineJobCardProps) {
   const router = useRouter();
-  const [selectedCandidate, setSelectedCandidate] = React.useState<Candidate | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const [isAddCandidateOpen, setIsAddCandidateOpen] = React.useState(false);
-  const [isCreateCandidateOpen, setIsCreateCandidateOpen] = React.useState(false);
+  const cardRef =useRef<HTMLDivElement | null>(null);
+  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAddCandidateOpen, setIsAddCandidateOpen]= useState(false);
+  const [isCreateCandidateOpen, setIsCreateCandidateOpen]= useState(false);
+  
+  // When highlighted, scroll into view and briefly apply emphasis
+  useEffect(() => {
+    if (isHighlighted && cardRef.current) {
+      cardRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [isHighlighted]);
   
   // Status change confirmation dialog state
-  const [statusChangeDialog, setStatusChangeDialog] = React.useState<{
+  const [statusChangeDialog, setStatusChangeDialog] =useState<{
     isOpen: boolean;
     candidate: Candidate | null;
     newStatus: string | null;
@@ -69,7 +79,7 @@ export function PipelineJobCard({
   });
 
   // Interview details dialog state
-  const [interviewDialog, setInterviewDialog] = React.useState<{
+  const [interviewDialog, setInterviewDialog] = useState<{
     isOpen: boolean;
     candidate: Candidate | null;
   }>({
@@ -78,7 +88,7 @@ export function PipelineJobCard({
   });
 
   // Stage change confirmation dialog state
-  const [stageChangeDialog, setStageChangeDialog] = React.useState<{
+  const [stageChangeDialog, setStageChangeDialog] = useState<{
     isOpen: boolean;
     candidate: Candidate | null;
     currentStage: string;
@@ -91,7 +101,7 @@ export function PipelineJobCard({
   });
 
   // Delete candidate confirmation dialog state
-  const [deleteCandidateDialog, setDeleteCandidateDialog] = React.useState<{
+  const [deleteCandidateDialog, setDeleteCandidateDialog] =useState<{
     isOpen: boolean;
     candidate: Candidate | null;
   }>({
@@ -100,7 +110,7 @@ export function PipelineJobCard({
   });
 
   // PDF viewer state
-  const [pdfViewer, setPdfViewer] = React.useState<{
+  const [pdfViewer, setPdfViewer] = useState<{
     isOpen: boolean;
     pdfUrl: string | null;
     candidateName: string | null;
@@ -111,7 +121,7 @@ export function PipelineJobCard({
   });
 
   // Temp candidate alert dialog state
-  const [tempCandidateAlert, setTempCandidateAlert] = React.useState<{
+  const [tempCandidateAlert, setTempCandidateAlert] = useState<{
     isOpen: boolean;
     candidateName: string | null;
     message: string | null;
@@ -122,7 +132,7 @@ export function PipelineJobCard({
   });
 
   // Auto-create candidate dialog state for temp candidates
-  const [autoCreateCandidateDialog, setAutoCreateCandidateDialog] = React.useState<{
+  const [autoCreateCandidateDialog, setAutoCreateCandidateDialog] =useState<{
     isOpen: boolean;
     candidate: Candidate | null;
   }>({
@@ -131,7 +141,7 @@ export function PipelineJobCard({
   });
 
   // Disqualification dialog state
-  const [disqualificationDialog, setDisqualificationDialog] = React.useState<{
+  const [disqualificationDialog, setDisqualificationDialog] =useState<{
     isOpen: boolean;
     candidate: Candidate | null;
   }>({
@@ -299,10 +309,10 @@ export function PipelineJobCard({
     // TODO: integrate API call
   };
 
-  const [isAddExistingOpen, setIsAddExistingOpen] = React.useState(false);
+  const [isAddExistingOpen, setIsAddExistingOpen] = useState(false);
   
   // Filter state for stage filtering
-  const [selectedStageFilter, setSelectedStageFilter] = React.useState<string | null>(null);
+  const [selectedStageFilter, setSelectedStageFilter] = useState<string | null>(null);
 
   // Function to get filtered candidates based on selected stage
   const getFilteredCandidates = () => {
@@ -484,7 +494,12 @@ export function PipelineJobCard({
 
   return (
     <>
-      <Card className="overflow-hidden shadow-sm border-gray-200">
+      <Card 
+        ref={cardRef}
+        className={`overflow-hidden shadow-sm border-gray-200 transition-all ${
+          isHighlighted ? 'ring-2 ring-blue-400 border-blue-300 bg-blue-50/40' : ''
+        }`}
+      >
         {/* Job Header - Clickable */}
         <CardHeader 
           className="cursor-pointer hover:bg-gray-50 transition-colors"

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Plus, Search } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -13,110 +13,94 @@ import { Button } from "../ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAllPipelineEntries, getPipelineEntry, updateCandidateStage as updateCandidateStageAPI, type PipelineListItem } from "@/services/recruitmentPipelineService";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 // Local conversion utilities removed in favor of utils/convert
 
 export function RecruiterPipeline() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date");
-  const [loading, setLoading] = useState(false);
   const [loadingJobId, setLoadingJobId] = useState<string | null>(null);
+  // Transient highlight to indicate which pipeline was updated
+  const [highlightedJobId, setHighlightedJobId] = useState<string | null>(null);
   const [overallCandidateSummary, setOverallCandidateSummary] = useState<{
     totalCandidates: number;
     byStatus: { [key: string]: number };
   } | null>(null);
 
-  // Load pipeline jobs on component mount or when user changes
+  // React Query: load pipeline jobs list
+  const { data: listResponse, isLoading: listLoading, error: listError, refetch: refetchPipelines } = useQuery({
+    queryKey: ["pipelineEntries", user?._id],
+    queryFn: async () => await getAllPipelineEntries(),
+    enabled: !!user,
+  });
+
   useEffect(() => {
-    if (user) {
-      loadPipelineJobs();
-    }
-  }, [user]);
-
-  const loadPipelineJobs = async () => {
-    try {
-      setLoading(true);
-      
-      console.log("Loading pipeline data from API");
-      const response = await getAllPipelineEntries();
-      
-      console.log("API Response:", response);
-      
-      if (response.success && response.data) {
-        console.log("Raw pipeline data:", response.data.pipelines);
-        
-        // Convert API data to Job format
-        const convertedJobs = response.data.pipelines.map(pipeline => 
-          convertPipelineListDataToJob(pipeline, false)
-        );
-        
-        console.log("Converted jobs:", convertedJobs);
-        
-        // Calculate overall candidate summary
-        const overallSummary = {
-          totalCandidates: response.data.pipelines.reduce((total, pipeline) => total + pipeline.totalCandidates, 0),
-          byStatus: {} as { [key: string]: number }
-        };
-        
-        // For now, we'll use the basic counts since detailed status breakdown isn't in the list response
-        // This will be updated when individual pipeline details are loaded
-        setOverallCandidateSummary(overallSummary);
-        setJobs(convertedJobs);
-        
-        console.log("Loaded pipelines:", convertedJobs.length, "pipelines");
-        console.log("Overall summary:", overallSummary);
-      } else {
-        throw new Error(response.message || 'Failed to load pipeline data');
+    if (!listResponse) return;
+    if (!listResponse.success || !listResponse.data) {
+      if ((listError as any)?.message) {
+        toast.error(`Failed to load pipeline jobs: ${(listError as any).message}`);
       }
-      
-    } catch (error: any) {
-      console.error("Error loading pipeline jobs:", error);
-      toast.error(`Failed to load pipeline jobs: ${error.message}`);
-    } finally {
-      setLoading(false);
+      return;
     }
-  };
+    // Capture which jobs are currently expanded before we overwrite jobs state
+    const previouslyExpandedIds = jobs.filter((j) => j.isExpanded).map((j) => j.id);
+    const convertedJobs = listResponse.data.pipelines.map((pipeline: PipelineListItem) =>
+      convertPipelineListDataToJob(pipeline, false),
+    );
+    const overallSummary = {
+      totalCandidates: listResponse.data.pipelines.reduce(
+        (total: number, pipeline: any) => total + (pipeline.totalCandidates || 0),
+        0,
+      ),
+      byStatus: {} as { [key: string]: number },
+    };
+    // Merge with previous jobs to preserve expansion state across refetches
+    setJobs((prev) => {
+      return convertedJobs.map((job) => {
+        const prevMatch = prev.find((p) => p.id === job.id);
+        return prevMatch ? { ...job, isExpanded: prevMatch.isExpanded ?? job.isExpanded } : job;
+      });
+    });
+    setOverallCandidateSummary(overallSummary);
 
-  const loadPipelineEntryDetails = async (pipelineId: string) => {
-    try {
+    // After merging list data, re-fetch details for all previously expanded jobs
+    previouslyExpandedIds.forEach((id) => {
+      loadEntryMutation.mutate(id);
+    });
+  }, [listResponse, listError]);
+
+  const loadEntryMutation = useMutation({
+    mutationFn: async (pipelineId: string) => await getPipelineEntry(pipelineId),
+    onMutate: (pipelineId: string) => {
       setLoadingJobId(pipelineId);
-      console.log(`Calling getPipelineEntry API for pipeline ID: ${pipelineId}`);
-      const response = await getPipelineEntry(pipelineId);
-      
-      console.log("Detailed pipeline entry response:", response);
-      
+    },
+    onSuccess: (response, pipelineId) => {
       if (response.success && response.data) {
-        const pipelineData = response.data;
-        console.log("Raw detailed pipeline data:", pipelineData);
-        
-        // Convert to local format for detailed view using the utility function
-        const detailedJob: Job = convertPipelineDataToJob(pipelineData, true);
-        
-        console.log("Converted detailed job:", detailedJob);
-        
-        // Update the specific job in the jobs array
-        setJobs(prevJobs => {
-          const jobIndex = prevJobs.findIndex(job => job.id === pipelineId);
-          if (jobIndex !== -1) {
-            const updatedJobs = [...prevJobs];
-            updatedJobs[jobIndex] = detailedJob;
-            return updatedJobs;
+        const detailedJob: Job = convertPipelineDataToJob(response.data, true);
+        setJobs((prevJobs) => {
+          const idx = prevJobs.findIndex((j) => j.id === pipelineId);
+          if (idx !== -1) {
+            const updated = [...prevJobs];
+            // Preserve previous expansion state so the card doesn't collapse after refetch
+            const wasExpanded = prevJobs[idx]?.isExpanded ?? false;
+            updated[idx] = { ...detailedJob, isExpanded: wasExpanded } as Job;
+            return updated;
           }
           return prevJobs;
         });
-        
-        return detailedJob;
       }
-    } catch (error) {
+    },
+    onError: (error: any) => {
       console.error("Error loading pipeline entry details:", error);
       toast.error("Failed to load pipeline entry details");
-    } finally {
-      setLoadingJobId(null);
-    }
-  };
+    },
+    onSettled: () => setLoadingJobId(null),
+  });
 
   // Calculate KPI data from jobs and overall summary
   const calculateKPIData = () => {
@@ -222,17 +206,15 @@ export function RecruiterPipeline() {
   };
 
   const toggleJobExpansion = async (jobId: string) => {
-    const job = jobs.find(j => j.id === jobId);
+    const job = jobs.find((j) => j.id === jobId);
     if (!job) return;
 
     if (!job.isExpanded && job.candidates.length === 0) {
-      // Load detailed data when expanding for the first time
-      await loadPipelineEntryDetails(jobId);
+      // Load detailed data when expanding for the first time using React Query mutation
+      loadEntryMutation.mutate(jobId);
     } else {
       // Simply toggle the expansion state
-      setJobs(jobs.map(job => 
-        job.id === jobId ? { ...job, isExpanded: !job.isExpanded } : job
-      ));
+      setJobs((prev) => prev.map((job) => (job.id === jobId ? { ...job, isExpanded: !job.isExpanded } : job)));
     }
   };
 
@@ -242,21 +224,27 @@ export function RecruiterPipeline() {
     newStage: string,
     extras?: { interviewDate?: string; interviewMeetingLink?: string }
   ) => {
+    // Track previous stage for rollback on error
+    let previousStage: string | undefined;
     try {
-      // Optimistically update the UI first
-      setJobs(jobs.map(job => {
-        if (job.id === jobId) {
-          return {
-            ...job,
-            candidates: job.candidates.map(candidate => 
-              candidate.id === candidateId 
-                ? { ...candidate, currentStage: newStage }
-                : candidate
-            )
-          };
-        }
-        return job;
-      }));
+      // Optimistically update the UI first using functional update to avoid stale state
+      setJobs((prevJobs) =>
+        prevJobs.map((job) => {
+          if (job.id === jobId) {
+            return {
+              ...job,
+              candidates: job.candidates.map((candidate) => {
+                if (candidate.id === candidateId) {
+                  previousStage = candidate.currentStage;
+                  return { ...candidate, currentStage: newStage };
+                }
+                return candidate;
+              }),
+            };
+          }
+          return job;
+        }),
+      );
 
       // Make API call to update the candidate stage
       const backendStage = mapUIStageToBackendStage(newStage);
@@ -273,24 +261,36 @@ export function RecruiterPipeline() {
         throw new Error(response.message || 'Failed to update candidate stage');
       }
 
+      // Invalidate and refetch relevant queries so UI reflects server state
+      await queryClient.invalidateQueries({ queryKey: ["pipelineEntries", user?._id] });
+      // If this job is expanded or shown, refresh its detailed data as well
+      await loadEntryMutation.mutateAsync(jobId);
+
       toast.success(`Successfully moved candidate to ${newStage} stage`);
+      // Highlight the updated pipeline card and clear highlight after a short delay
+      setHighlightedJobId(jobId);
+      setTimeout(() => setHighlightedJobId((current) => (current === jobId ? null : current)), 2500);
+      // Ensure the updated job remains expanded and visible
+      setJobs((prev) => prev.map((j) => (j.id === jobId ? { ...j, isExpanded: true } : j)));
     } catch (error: any) {
       console.error('Error updating candidate stage:', error);
       
       // Revert the optimistic update on error
-      setJobs(jobs.map(job => {
-        if (job.id === jobId) {
-          return {
-            ...job,
-            candidates: job.candidates.map(candidate => 
-              candidate.id === candidateId 
-                ? { ...candidate, currentStage: candidate.currentStage }
-                : candidate
-            )
-          };
-        }
-        return job;
-      }));
+      setJobs((prevJobs) =>
+        prevJobs.map((job) => {
+          if (job.id === jobId) {
+            return {
+              ...job,
+              candidates: job.candidates.map((candidate) =>
+                candidate.id === candidateId
+                  ? { ...candidate, currentStage: previousStage || candidate.currentStage }
+                  : candidate,
+              ),
+            };
+          }
+          return job;
+        }),
+      );
       
       toast.error(error.message || 'Failed to update candidate stage');
     }
@@ -300,8 +300,14 @@ export function RecruiterPipeline() {
     try {
       // Only refresh the specific job data instead of all pipeline jobs
       // This prevents the entire page from refreshing
-      await loadPipelineEntryDetails(jobId);
+      await loadEntryMutation.mutateAsync(jobId);
+      await queryClient.invalidateQueries({ queryKey: ["pipelineEntries", user?._id] });
       toast.success("Candidate updated successfully");
+      // Highlight the updated pipeline card and clear highlight after a short delay
+      setHighlightedJobId(jobId);
+      setTimeout(() => setHighlightedJobId((current) => (current === jobId ? null : current)), 2500);
+      // Ensure the updated job remains expanded and visible
+      setJobs((prev) => prev.map((j) => (j.id === jobId ? { ...j, isExpanded: true } : j)));
     } catch (error: any) {
       console.error('Error refreshing job data after candidate update:', error);
       toast.error("Failed to refresh candidate data");
@@ -315,19 +321,15 @@ export function RecruiterPipeline() {
     }
 
     try {
-      setLoading(true);
-      
       // Jobs have already been added to the pipeline via the create pipeline API
       toast.success(`Successfully created pipeline with ${jobData.length} job(s)`);
       console.log("Created pipeline with jobs:", jobData);
       
       // Refresh the pipeline data to show the newly created entries
-      await loadPipelineJobs();
+      await refetchPipelines();
     } catch (error) {
       console.error("Error handling pipeline creation:", error);
       toast.error("Failed to handle pipeline creation");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -343,7 +345,7 @@ export function RecruiterPipeline() {
         <div className="flex items-center gap-2">
           <CreatePipelineDialog 
             trigger={
-              <Button className="flex items-center gap-2" disabled={loading}>
+              <Button className="flex items-center gap-2" disabled={listLoading}>
                 <Plus className="h-4 w-4" />
                 Add Recruitment
               </Button>
@@ -391,7 +393,7 @@ export function RecruiterPipeline() {
       </div>
 
       {/* Jobs Section */}
-      {loading ? (
+      {listLoading ? (
         <div className="text-center py-8 text-gray-500">
           Loading pipeline jobs...
         </div>
@@ -401,6 +403,7 @@ export function RecruiterPipeline() {
             key={job.id}
             job={job}
             loadingJobId={loadingJobId}
+            isHighlighted={highlightedJobId === job.id}
             onToggleExpansion={toggleJobExpansion}
             onUpdateCandidateStage={updateCandidateStage}
             onCandidateUpdate={handleCandidateUpdate}
