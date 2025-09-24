@@ -25,6 +25,7 @@ import { StatusChangeConfirmationDialog } from "./status-change-confirmation-dia
 import { useStageStore } from "./stage-store";
 import { useRouter } from "next/navigation";
 import { PipelineCandidatesTable } from "./PipelineCandidatesTable";
+import { PipelineJobExpanded } from "./PipelineJobExpanded";
 import { PDFViewer } from "@/components/ui/pdf-viewer";
 import { validateTempCandidateStageChange, isTempCandidate, validateTempCandidateStatusChange } from "@/lib/temp-candidate-validation";
 import { TempCandidateAlertDialog } from "./temp-candidate-alert-dialog";
@@ -59,6 +60,9 @@ export function PipelineJobCard({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAddCandidateOpen, setIsAddCandidateOpen]= useState(false);
   const [isCreateCandidateOpen, setIsCreateCandidateOpen]= useState(false);
+  // Consolidated UI state
+  const [isAddExistingOpen, setIsAddExistingOpen] = useState(false);
+  const [selectedStageFilter, setSelectedStageFilter] = useState<string | null>(null);
   
   // When highlighted, scroll into view and briefly apply emphasis
   useEffect(() => {
@@ -309,10 +313,7 @@ export function PipelineJobCard({
     // TODO: integrate API call
   };
 
-  const [isAddExistingOpen, setIsAddExistingOpen] = useState(false);
   
-  // Filter state for stage filtering
-  const [selectedStageFilter, setSelectedStageFilter] = useState<string | null>(null);
 
   // Function to get filtered candidates based on selected stage
   const getFilteredCandidates = () => {
@@ -581,66 +582,17 @@ export function PipelineJobCard({
         {/* Expanded Content */}
         {job.isExpanded && (
           <CardContent className="pt-0">
-            
-            {/* Pipeline Stage Badges - Clickable filters */}
-            <div className="flex flex-wrap gap-2 mb-6 ml-6">
-              {(() => {
-                const updatedCounts = getUpdatedStageCounts();
-                return pipelineStages.map((stage) => {
-                  const count = updatedCounts[stage] || 0;
-                  const isActive = selectedStageFilter === stage;
-                  return (
-                    <Badge 
-                      key={stage}
-                      variant="outline" 
-                      className={`${getStageColor(stage)} border cursor-pointer hover:opacity-80 transition-opacity ${
-                        isActive ? 'ring-2 ring-blue-500 ring-offset-2' : ''
-                      }`}
-                      onClick={() => handleStageBadgeClick(stage)}
-                    >
-                      {stage}: {count}
-                    </Badge>
-                  );
-                });
-              })()}
-              {selectedStageFilter && (
-                <Badge 
-                  variant="outline" 
-                  className="bg-gray-100 text-gray-600 border-gray-300 cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => setSelectedStageFilter(null)}
-                >
-                  <X className="text-red-500 h-3 w-3 mr-1" />
-                  Clear Filter
-                </Badge>
-              )}
-            </div>
-
-            {/* Candidates Table - Reusable component with sticky header within scroll container */}
-            <div className="border-2 border-blue-200 rounded-md bg-gray-50 max-h-[300px] overflow-hidden">
-              {selectedStageFilter && (
-                <div className="px-4 py-2 bg-blue-50 border-b border-blue-200 text-sm text-blue-700 ">
-                  Showing candidates in: <span className="font-semibold">{selectedStageFilter}</span>
-                  <span className="ml-2 text-blue-500">({getFilteredCandidates().length} candidates)</span>
-                </div>
-              )}
-              <div className="overflow-y-auto max-h-[300px]" style={{
-                scrollbarWidth: 'thin',
-                scrollbarColor: '#d1d5db #f3f4f6'
-              }}>
-                <PipelineCandidatesTable
-                  job={job}
-                  candidates={getFilteredCandidates().map((c) => ({
-                    ...c,
-                    currentStage: getCandidateStage(job.id, c.id) || c.currentStage,
-                  }))}
-                  onStageChange={handleStageChange}
-                  onStatusChange={handleStatusChange as any}
-                  onViewCandidate={handleViewCandidate}
-                  onViewResume={handleViewResume}
-                  onDeleteCandidate={handleDeleteCandidate}
-                />
-              </div>
-            </div>
+            <PipelineJobExpanded
+              job={job}
+              selectedStageFilter={selectedStageFilter}
+              onChangeStageFilter={setSelectedStageFilter}
+              resolveCurrentStage={(c) => getCandidateStage(job.id, c.id) || c.currentStage}
+              onStageChange={handleStageChange}
+              onStatusChange={handleStatusChange as any}
+              onViewCandidate={handleViewCandidate}
+              onViewResume={handleViewResume}
+              onDeleteCandidate={handleDeleteCandidate}
+            />
           </CardContent>
         )}
       </Card>
