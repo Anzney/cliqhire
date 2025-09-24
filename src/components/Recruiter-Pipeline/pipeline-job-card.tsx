@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState ,useEffect } from "react";
-import { ChevronDown, ChevronRight, Users, MapPin, CircleDollarSign , Building2, Loader2, Plus, X, Table as TableIcon} from "lucide-react";
+import { ChevronDown, ChevronRight, Users, MapPin, HandCoins , Building2, Loader2, Plus, X, Table as TableIcon} from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -532,7 +532,7 @@ export function PipelineJobCard({
                     <span>{job.location}</span>
                   </div>
                   <div className="flex items-center space-x-1">
-                    <CircleDollarSign  className="h-4 w-4 text-yellow-500" />
+                    <HandCoins  className="h-4 w-4 text-yellow-500" />
                     <span>{typeof job.salaryRange === 'string' ? job.salaryRange : String(job.salaryRange || '')}</span>
                   </div>
                   <Badge variant="outline" className="bg-gray-100 text-gray-700">
