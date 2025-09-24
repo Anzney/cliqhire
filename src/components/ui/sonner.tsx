@@ -17,16 +17,16 @@ const Toaster = ({ ...props }: ToasterProps) => {
         classNames: {
           toast:
             "group toast group-[.toaster]:bg-white group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
-          description: "group-[.toast]:text-inherit",
+          // Ensure content inherits the variant color
+          title: "text-inherit",
+          description: "text-inherit",
           actionButton:
             "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
           cancelButton:
             "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
-          // Explicit variant styling
-          success:
-            "group-[.toaster]:bg-white group-[.toaster]:text-emerald-600 group-[.toaster]:border-border",
-          error:
-            "group-[.toaster]:bg-white group-[.toaster]:text-red-600 group-[.toaster]:border-border",
+          // Force variant colors to win over base text color regardless of Tailwind utility order
+          success: "!text-emerald-600",
+          error: "!text-red-600",
         },
       }}
       {...props}
