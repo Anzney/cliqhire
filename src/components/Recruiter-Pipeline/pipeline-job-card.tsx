@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState ,useEffect } from "react";
-import { ChevronDown, ChevronRight, Users, MapPin, HandCoins , Building2, Loader2, Plus, X, Table as TableIcon} from "lucide-react";
+import { useRef, useState } from "react";
+import { ChevronDown, ChevronRight, Users, MapPin, HandCoins , Building2, Loader2, Plus, Table as TableIcon} from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,12 +11,9 @@ import { CreateCandidateDialog, type CreateCandidateValues } from "./create-cand
 import { CreateCandidateModal } from "@/components/candidates/create-candidate-modal";
 import { Button } from "@/components/ui/button";
 import { deleteCandidateFromPipeline, updateCandidateStatus } from "@/services/recruitmentPipelineService";
-import { RecruiterPipelineService } from "@/services/recruiterPipelineService";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
-  pipelineStages, 
-  getStageColor, 
   type Job,
-  type JobTeamInfo,
   type Candidate,
   mapUIStageToBackendStage
 } from "./dummy-data";
@@ -24,10 +21,9 @@ import { CandidateDetailsDialog } from "./candidate-details-dialog";
 import { StatusChangeConfirmationDialog } from "./status-change-confirmation-dialog";
 import { useStageStore } from "./stage-store";
 import { useRouter } from "next/navigation";
-import { PipelineCandidatesTable } from "./PipelineCandidatesTable";
 import { PipelineJobExpanded } from "./PipelineJobExpanded";
 import { PDFViewer } from "@/components/ui/pdf-viewer";
-import { validateTempCandidateStageChange, isTempCandidate, validateTempCandidateStatusChange } from "@/lib/temp-candidate-validation";
+import { validateTempCandidateStageChange, validateTempCandidateStatusChange } from "@/lib/temp-candidate-validation";
 import { TempCandidateAlertDialog } from "./temp-candidate-alert-dialog";
 import { DisqualificationDialog, type DisqualificationData } from "./disqualification-dialog";
 import { InterviewDetailsDialog } from "./interview-details-dialog";
@@ -64,12 +60,6 @@ export function PipelineJobCard({
   const [isAddExistingOpen, setIsAddExistingOpen] = useState(false);
   const [selectedStageFilter, setSelectedStageFilter] = useState<string | null>(null);
   
-  // When highlighted, scroll into view and briefly apply emphasis
-  useEffect(() => {
-    if (isHighlighted && cardRef.current) {
-      cardRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [isHighlighted]);
   
   // Status change confirmation dialog state
   const [statusChangeDialog, setStatusChangeDialog] =useState<{
@@ -156,23 +146,25 @@ export function PipelineJobCard({
   // Local stage store
   const { updateCandidateStage, getCandidateStage } = useStageStore();
 
-  // Function to calculate updated stage counts considering local changes
-  const getUpdatedStageCounts = () => {
-    const stageCounts: { [key: string]: number } = {};
-    
-    // Initialize counts for all stages
-    pipelineStages.forEach(stage => {
-      stageCounts[stage] = 0;
-    });
-    
-    // Count candidates based on their current stage (including local changes)
-    job.candidates.forEach(candidate => {
-      const currentStage = getCandidateStage(job.id, candidate.id) || candidate.currentStage;
-      stageCounts[currentStage] = (stageCounts[currentStage] || 0) + 1;
-    });
-    
-    return stageCounts;
-  };
+  // React Query client and mutations
+  const queryClient = useQueryClient();
+
+  const deleteCandidateMutation = useMutation({
+    mutationFn: (vars: { jobId: string; candidateId: string }) =>
+      deleteCandidateFromPipeline(vars.jobId, vars.candidateId),
+    onSuccess: () => {
+      // Invalidate any cached pipeline/job data
+      queryClient.invalidateQueries({ queryKey: ["pipeline", job.id] });
+    },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: (vars: { candidateId: string; payload: any }) =>
+      updateCandidateStatus(job.id, vars.candidateId, vars.payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pipeline", job.id] });
+    },
+  });
 
   const handleViewCandidate = (candidate: Candidate) => {
     setSelectedCandidate(candidate);
@@ -270,8 +262,11 @@ export function PipelineJobCard({
   const handleConfirmDeleteCandidate = async () => {
     if (deleteCandidateDialog.candidate) {
       try {
-        // Call API to remove candidate from pipeline
-        await deleteCandidateFromPipeline(job.id, deleteCandidateDialog.candidate.id);
+        // Call API to remove candidate from pipeline via React Query
+        await deleteCandidateMutation.mutateAsync({
+          jobId: job.id,
+          candidateId: deleteCandidateDialog.candidate.id,
+        });
         
         // Close the dialog
         setDeleteCandidateDialog({ isOpen: false, candidate: null });
@@ -304,33 +299,22 @@ export function PipelineJobCard({
     setIsCreateCandidateOpen(true);
   };
 
-  const handleCreateCandidateSubmit = (values: CreateCandidateValues) => {
-    // TODO: integrate API call
+  const handleCreateCandidateSubmit = async (_values: CreateCandidateValues) => {
+    try {
+      // Ask parent to refresh this job and list
+      onCandidateUpdate?.(job.id, {} as any);
+      // Invalidate the broader list query used by parent: ["pipelineEntries", userId]
+      await queryClient.invalidateQueries({ predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "pipelineEntries" });
+      // Force revalidation for any server-rendered segments
+      router.refresh();
+    } catch (e) {
+      console.error('Error after creating new candidate:', e);
+    }
   };
 
   
 
-  // Function to get filtered candidates based on selected stage
-  const getFilteredCandidates = () => {
-    if (!selectedStageFilter) {
-      return job.candidates;
-    }
-    return job.candidates.filter(candidate => {
-      const currentStage = getCandidateStage(job.id, candidate.id) || candidate.currentStage;
-      return currentStage === selectedStageFilter;
-    });
-  };
-
-  // Function to handle stage badge click
-  const handleStageBadgeClick = (stage: string) => {
-    if (selectedStageFilter === stage) {
-      // If clicking the same stage, clear the filter
-      setSelectedStageFilter(null);
-    } else {
-      // Filter by the selected stage
-      setSelectedStageFilter(stage);
-    }
-  };
+  // Filtering is handled in child via selectedStageFilter
 
   // Function to handle status change
   const handleStatusChange = (candidate: Candidate, newStatus: any) => {
@@ -376,10 +360,13 @@ export function PipelineJobCard({
   const handleConfirmStatusChange = async () => {
     if (statusChangeDialog.candidate && statusChangeDialog.newStatus) {
       try {
-        await updateCandidateStatus(job.id, statusChangeDialog.candidate.id, {
-          status: statusChangeDialog.newStatus,
-          stage: mapUIStageToBackendStage(statusChangeDialog.candidate.currentStage),
-          notes: `Status updated to ${statusChangeDialog.newStatus}`,
+        await updateStatusMutation.mutateAsync({
+          candidateId: statusChangeDialog.candidate.id,
+          payload: {
+            status: statusChangeDialog.newStatus,
+            stage: mapUIStageToBackendStage(statusChangeDialog.candidate.currentStage),
+            notes: `Status updated to ${statusChangeDialog.newStatus}`,
+          },
         });
         
         // Notify the parent component about the update
@@ -442,15 +429,18 @@ export function PipelineJobCard({
   const handleConfirmDisqualification = async (data: DisqualificationData) => {
     if (disqualificationDialog.candidate) {
       try {
-        // Single API call to update candidate status with all disqualification data
-        await updateCandidateStatus(job.id, disqualificationDialog.candidate.id, {
-          status: 'Disqualified',
-          stage: mapUIStageToBackendStage(disqualificationDialog.candidate.currentStage),
-          notes: `Disqualified: ${data.disqualificationReason}`,
-          disqualificationStage: data.disqualificationStage,
-          disqualificationStatus: data.disqualificationStatus,
-          disqualificationReason: data.disqualificationReason,
-          disqualificationFeedback: data.disqualificationFeedback || "",
+        // Single API call to update candidate status with all disqualification data via React Query
+        await updateStatusMutation.mutateAsync({
+          candidateId: disqualificationDialog.candidate.id,
+          payload: {
+            status: 'Disqualified',
+            stage: mapUIStageToBackendStage(disqualificationDialog.candidate.currentStage),
+            notes: `Disqualified: ${data.disqualificationReason}`,
+            disqualificationStage: data.disqualificationStage,
+            disqualificationStatus: data.disqualificationStatus,
+            disqualificationReason: data.disqualificationReason,
+            disqualificationFeedback: data.disqualificationFeedback || "",
+          },
         });
         
         // Notify the parent component about the update
@@ -471,6 +461,10 @@ export function PipelineJobCard({
     try {  
       // Notify the parent component about the update
       onCandidateUpdate?.(job.id, candidate);
+      // Invalidate pipeline list/details queries to refetch latest data after create/convert
+      await queryClient.invalidateQueries({ predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "pipelineEntries" });
+      // Force revalidation for any server-rendered segments
+      // router.refresh();
       
       handleCloseAutoCreateDialog();
     } catch (error) {
@@ -620,8 +614,12 @@ export function PipelineJobCard({
         isPipeline={true}
         pipelineId={job.id}
         onCandidatesAdded={() => {
-          // Refresh the job data or trigger a reload
-          console.log('Candidates added to pipeline, refreshing...');
+          // Ask parent to refresh this job and list
+          onCandidateUpdate?.(job.id, {} as any);
+          // Invalidate the broader list query used by parent: ["pipelineEntries", userId]
+          queryClient.invalidateQueries({ predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "pipelineEntries" });
+          // Force revalidation for any server-rendered segments
+          // router.refresh();
         }}
       />
 
