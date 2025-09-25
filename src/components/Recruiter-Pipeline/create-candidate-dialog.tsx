@@ -72,22 +72,13 @@ export function CreateCandidateDialog({ open, onOpenChange, pipelineId, onSubmit
   }, [tempCandidateData, form]);
 
   const handleSubmit = async (values: CreateCandidateValues) => {
-    try {
-      console.log('Form values:', values);
-      console.log('Pipeline ID:', pipelineId);
-      console.log('Pipeline ID type:', typeof pipelineId);
-      console.log('Pipeline ID length:', pipelineId?.length);
-      
+    try { 
       // Call the API service with pipelineId included
       const requestData = {
         ...values,
         pipelineId: pipelineId,
-      };
-      console.log('Request data:', requestData);
-      
-      const result = await tempCandidateService.createTempCandidate(requestData);
-      console.log('API response:', result);
-      
+      }; 
+      const result = await tempCandidateService.createTempCandidate(requestData); 
       // Call the optional onSubmit callback if provided
       if (onSubmit) {
         onSubmit(values);

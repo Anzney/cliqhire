@@ -28,10 +28,8 @@ export function DeleteTeamMemberDialog({
   isLoading = false,
 }: DeleteTeamMemberDialogProps) {
   const handleConfirm = async () => {
-    console.log('Delete confirmation clicked');
     try {
       await onConfirm();
-      console.log('Delete confirmation completed successfully');
     } catch (error) {
       console.error('Error in delete confirmation:', error);
       // The error will be handled by the parent component

@@ -328,8 +328,6 @@ const Page = () => {
   };
 
   const handleViewResume = (candidate: Candidate) => {
-    console.log('Viewing resume for candidate:', candidate.name);
-    console.log('Resume URL:', candidate.resume);
     setPdfViewer({
       isOpen: true,
       pdfUrl: candidate.resume || null,
@@ -370,8 +368,6 @@ const Page = () => {
   const handleConfirmDisqualification = async (data: DisqualificationData) => {
     if (disqualificationDialog.candidate) {
       try {
-        console.log('Disqualifying candidate:', disqualificationDialog.candidate.name, data);
-        
         // Single API call to update candidate status with all disqualification data
         await updateCandidateStatus(id, disqualificationDialog.candidate.id, {
           status: 'Disqualified',
@@ -394,7 +390,6 @@ const Page = () => {
 
   const handleAutoCreateCandidateSubmit = async (candidate: any) => {
     try {
-      console.log('Auto-create candidate for temp candidate:', autoCreateCandidateDialog.candidate?.name, candidate);
       // After successful conversion in modal, refresh the pipeline
       await queryClient.invalidateQueries({ queryKey: ["pipeline", id] });
       handleCloseAutoCreateDialog();

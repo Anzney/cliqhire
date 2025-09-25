@@ -63,18 +63,11 @@ export function PDFViewer({ isOpen, onClose, pdfUrl, candidateName }: PDFViewerP
     try {
       setLoading(true);
       setError(null);
-      
-      console.log('Loading PDF from URL:', url);
-      
       // Dynamic import of PDF.js
       const pdfjsLib = await import('pdfjs-dist');
       
       // Use a more reliable worker source
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-      
-      console.log('PDF.js version:', pdfjsLib.version);
-      console.log('Worker source:', pdfjsLib.GlobalWorkerOptions.workerSrc);
-      
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;    
       // Configure PDF.js for better compatibility
       const loadingTask = pdfjsLib.getDocument({
         url: url,
@@ -91,10 +84,7 @@ export function PDFViewer({ isOpen, onClose, pdfUrl, candidateName }: PDFViewerP
       
       const pdf = await loadingTask.promise;
       pdfRef.current = pdf;
-      setTotalPages(pdf.numPages);
-      
-      console.log('PDF loaded successfully, pages:', pdf.numPages);
-      
+      setTotalPages(pdf.numPages);  
       // Render first page
       await renderPage(1);
       setLoading(false);
@@ -109,9 +99,6 @@ export function PDFViewer({ isOpen, onClose, pdfUrl, candidateName }: PDFViewerP
       } else {
         console.error('Error details (non-Error):', err);
       }
-      
-      // Try iframe fallback for CORS issues
-      console.log('PDF.js failed, trying iframe fallback...');
       setUseIframe(true);
       setError(null);
       setLoading(false);

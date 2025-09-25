@@ -20,6 +20,7 @@ import { DateRangePicker } from "./date-range-picker";
 import { NationalitySelector } from "./nationality-selector";
 import { JobStageSelector } from "./job-stage-selector";
 import { format } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface SummaryContentProps {
   jobId: string;
@@ -50,6 +51,7 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
   const [isDateRangeDialogOpen, setIsDateRangeDialogOpen] = useState(false);
   const [isNationalityDialogOpen, setIsNationalityDialogOpen] = useState(false);
   const [isJobStageDialogOpen, setIsJobStageDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleFieldSave = async (editingField: any, newValue: string | Date) => {
     if (!editingField || !jobDetails) return;
@@ -69,6 +71,8 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
           ? "Job description updated successfully"
           : "Field updated successfully",
       );
+      // Ensure the job data is refetched so other views see the latest
+      await queryClient.invalidateQueries({ queryKey: ["job", jobId] });
     } catch (err) {
       toast.error(
         editingField === "jobDescription"
@@ -92,6 +96,8 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
       await updateJobById(jobId, fields);
       setJobDetails(updatedDetails);
       toast.success("Team assignment updated successfully");
+      // Invalidate the job query to refetch latest data
+      await queryClient.invalidateQueries({ queryKey: ["job", jobId] });
     } catch (err) {
       toast.error("Failed to update team assignment");
     }

@@ -80,7 +80,6 @@ export function RegisterForm({
         
         // You can redirect to login page or dashboard here
         // Example: router.push('/login')
-        console.log("Registration successful:", response.user)
       } else {
         toast.error(response.message || "Registration failed")
       }

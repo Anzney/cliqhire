@@ -28,20 +28,10 @@ export class RecruiterPipelineService {
     updateData: StageFieldUpdate
   ): Promise<StageFieldUpdateResponse> {
     try {
-      console.log('Updating stage fields:', {
-        pipelineId,
-        candidateId,
-        stageName,
-        updateData
-      });
-
       const response = await api.patch(
         `/api/recruiter-pipeline/${pipelineId}/candidate/${candidateId}/stage/${encodeURIComponent(stageName)}/fields`,
         updateData
       );
-
-      console.log('Stage fields update response:', response.data);
-
       return {
         success: true,
         message: 'Stage fields updated successfully',
@@ -77,18 +67,9 @@ export class RecruiterPipelineService {
     stageName: string
   ): Promise<StageFieldUpdateResponse> {
     try {
-      console.log('Getting stage fields:', {
-        pipelineId,
-        candidateId,
-        stageName
-      });
-
       const response = await api.get(
         `/api/recruiter-pipeline/${pipelineId}/candidate/${candidateId}/stage/${encodeURIComponent(stageName)}/fields`
       );
-
-      console.log('Stage fields response:', response.data);
-
       return {
         success: true,
         message: 'Stage fields retrieved successfully',
@@ -151,13 +132,6 @@ export class RecruiterPipelineService {
     notes?: string
   ): Promise<StageFieldUpdateResponse> {
     try {
-      console.log('Moving candidate to stage:', {
-        pipelineId,
-        candidateId,
-        newStage,
-        notes
-      });
-
       const response = await api.patch(
         `/api/recruiter-pipeline/${pipelineId}/candidate/${candidateId}/move`,
         {
@@ -165,9 +139,6 @@ export class RecruiterPipelineService {
           notes
         }
       );
-
-      console.log('Move candidate response:', response.data);
-
       return {
         success: true,
         message: 'Candidate moved to new stage successfully',
@@ -197,12 +168,7 @@ export class RecruiterPipelineService {
    */
   static async getPipelineEntry(pipelineId: string): Promise<StageFieldUpdateResponse> {
     try {
-      console.log('Getting pipeline entry:', { pipelineId });
-
       const response = await api.get(`/api/recruiter-pipeline/${pipelineId}`);
-
-      console.log('Pipeline entry response:', response.data);
-
       return {
         success: true,
         message: 'Pipeline entry retrieved successfully',

@@ -254,7 +254,6 @@ export function RecruiterPipeline() {
         interviewDate: extras?.interviewDate,
         interviewMeetingLink: extras?.interviewMeetingLink,
       };
-      console.log('updateCandidateStageAPI request body:', requestBody);
       const response = await updateCandidateStageAPI(jobId, candidateId, requestBody);
 
       if (!response.success) {
@@ -316,15 +315,12 @@ export function RecruiterPipeline() {
 
   const handlePipelineCreated = async (jobIds: string[], jobData?: any[]) => {
     if (!jobData || jobData.length === 0) {
-      console.log("No job data provided");
       return;
     }
 
     try {
       // Jobs have already been added to the pipeline via the create pipeline API
-      toast.success(`Successfully created pipeline with ${jobData.length} job(s)`);
-      console.log("Created pipeline with jobs:", jobData);
-      
+      toast.success(`Successfully created pipeline with ${jobData.length} job(s)`); 
       // Refresh the pipeline data to show the newly created entries
       await refetchPipelines();
     } catch (error) {

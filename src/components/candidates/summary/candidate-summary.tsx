@@ -499,10 +499,10 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
         </Collapsible>
         
         {/* Candidate Team Info Section */}
-        <CandidateTeamInfoSection
+        {/* <CandidateTeamInfoSection
           candidateDetails={localCandidate}
           handleUpdateField={(fieldKey) => (value) => handleSave(fieldKey, value)}
-        />
+        /> */}
       </div>
 
       {/* Resume Upload Dialog */}

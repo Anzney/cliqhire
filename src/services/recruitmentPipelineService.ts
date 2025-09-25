@@ -562,19 +562,10 @@ export const convertTempCandidateToReal = async (
   candidateData: ConvertTempCandidateRequest
 ): Promise<ConvertTempCandidateResponse> => {
   try {
-    console.log('Converting temp candidate to real:', {
-      pipelineId,
-      tempCandidateId,
-      candidateData
-    });
-
     const response = await api.post(
       `/api/recruiter-pipeline/${pipelineId}/candidate/${tempCandidateId}/convert-to-real`,
       candidateData
     );
-
-    console.log('Temp candidate conversion response:', response.data);
-
     return {
       success: true,
       message: 'Temp candidate converted to real candidate successfully',

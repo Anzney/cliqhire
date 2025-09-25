@@ -190,8 +190,6 @@ export function PipelineJobCard({
     
     // Notify the parent component about the update
     onCandidateUpdate?.(job.id, updatedCandidate);
-    
-    console.log('Candidate updated in pipeline job card:', updatedCandidate);
   };
 
   const handleStageChange = (candidate: Candidate, newStage: string) => {
@@ -307,9 +305,6 @@ export function PipelineJobCard({
   };
 
   const handleCreateCandidateSubmit = (values: CreateCandidateValues) => {
-    console.log('Create candidate for job:', job.id, values);
-    console.log('Job object:', job);
-    console.log('Job ID type:', typeof job.id);
     // TODO: integrate API call
   };
 
@@ -403,8 +398,6 @@ export function PipelineJobCard({
   };
 
   const handleViewResume = (candidate: Candidate) => {
-    console.log('Viewing resume for candidate:', candidate.name);
-    console.log('Resume URL:', candidate.resume);
     setPdfViewer({
       isOpen: true,
       pdfUrl: candidate.resume || null,
@@ -449,8 +442,6 @@ export function PipelineJobCard({
   const handleConfirmDisqualification = async (data: DisqualificationData) => {
     if (disqualificationDialog.candidate) {
       try {
-        console.log('Disqualifying candidate:', disqualificationDialog.candidate.name, data);
-        
         // Single API call to update candidate status with all disqualification data
         await updateCandidateStatus(job.id, disqualificationDialog.candidate.id, {
           status: 'Disqualified',
@@ -477,12 +468,7 @@ export function PipelineJobCard({
   };
 
   const handleAutoCreateCandidateSubmit = async (candidate: any) => {
-    try {
-      console.log('Auto-create candidate for temp candidate:', autoCreateCandidateDialog.candidate?.name, candidate);
-      
-      // The conversion is now handled by the CreateCandidateForm itself
-      // We just need to refresh the job data after successful conversion
-      
+    try {  
       // Notify the parent component about the update
       onCandidateUpdate?.(job.id, candidate);
       

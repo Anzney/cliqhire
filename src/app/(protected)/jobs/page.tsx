@@ -87,9 +87,6 @@ export default function JobsPage() {
     queryFn: () => getJobs(),
     placeholderData: (prev) => prev, // keep previous page data while fetching
   });
-
-  console.log("jobsData:", jobsData);
-
   // Support both PaginatedJobResponse { jobs, total, pages } and JobResponse { data, count }
   const jobs = (jobsData as any)?.jobs ?? (jobsData as any)?.data ?? [];
   const totalJobs = (jobsData as any)?.total ?? (jobsData as any)?.count ?? jobs.length;

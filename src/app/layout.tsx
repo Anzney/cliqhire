@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes"
 import { AuthProvider } from "@/contexts/AuthContext"
 import '@/lib/axios-config'; // Initialize global axios interceptors
+import { QueryProvider } from "@/contexts/query-provider";
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -23,8 +24,10 @@ export default function RootLayout({
       <body className={inter.className } suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
-            <Toaster />
-            {children}
+            <QueryProvider>
+              <Toaster />
+              {children}
+            </QueryProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

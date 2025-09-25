@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import Dashboardheader from "@/components/dashboard-header";
 import { UserAccessTabs } from "@/components/user-Access/user-access-tabs";
 
@@ -8,10 +9,11 @@ const UserAccess = () => {
   const [open, setOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [initialLoading, setInitialLoading] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const queryClient = useQueryClient();
 
   const handleCreateSuccess = () => {
-    setRefreshTrigger(prev => prev + 1); // Trigger refresh
+    // Invalidate teams list to refetch after creating a team
+    queryClient.invalidateQueries({ queryKey: ["teams"] });
   };
 
   return (
@@ -26,8 +28,7 @@ const UserAccess = () => {
 
       {/* Tabbed Interface */}
       <div className="flex-1">
-        <UserAccessTabs 
-          refreshTrigger={refreshTrigger} 
+        <UserAccessTabs
           addTeamDialogOpen={open}
           setAddTeamDialogOpen={setOpen}
           onTeamCreated={handleCreateSuccess}

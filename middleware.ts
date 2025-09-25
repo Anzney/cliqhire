@@ -3,9 +3,6 @@ import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-
-  console.log('🔒 Middleware running for path:', pathname)
-
   // Define public routes that don't require authentication
   const publicRoutes = ['/login', '/register', '/forgot-password']
   const isPublicRoute = publicRoutes.includes(pathname)
@@ -17,8 +14,6 @@ export function middleware(request: NextRequest) {
   // For now, allow all routes and let the client-side handle auth
   // This is a simplified approach - in production you might want to
   // implement server-side session validation
-  
-  console.log('✅ Allowing access to:', pathname)
   return NextResponse.next()
 }
 

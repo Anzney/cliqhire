@@ -91,9 +91,6 @@ export function RegisterUserDialog({
         email,
         password,
       };
-
-      console.log("Registering user:", registrationData);
-
       // Use the service function to register the team member
       const result = await registerTeamMember(registrationData);
 
@@ -138,7 +135,7 @@ export function RegisterUserDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

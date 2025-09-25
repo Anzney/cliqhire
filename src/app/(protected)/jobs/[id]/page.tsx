@@ -28,9 +28,6 @@ export default function JobPage({ params }: PageProps) {
     select: (res: any) => (Array.isArray(res?.data) ? res.data[0] : res?.data) as JobData | undefined,
     placeholderData: (prev) => prev,
   })
-
-  console.log("job (react-query):", job)
-
   if (isLoading) {
     return <div className="flex items-center justify-center h-screen">
       <div className="flex items-center justify-center gap-2 flex-col">

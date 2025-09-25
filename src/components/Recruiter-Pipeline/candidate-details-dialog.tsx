@@ -48,33 +48,21 @@ export function CandidateDetailsDialog({
   const [localCandidate, setLocalCandidate] = useState<any>(candidate);
   
   // Reset state when dialog closes
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isOpen) {
       setSelectedStage(undefined);
     }
   }, [isOpen]);
 
   // Update local candidate when prop changes
-  React.useEffect(() => {
+  useEffect(() => {
     setLocalCandidate(candidate);
-    // Debug logging for disqualified candidates
-    if (candidate?.status === 'Disqualified') {
-      console.log('Disqualified candidate data:', {
-        candidateName: candidate.name,
-        status: candidate.status,
-        currentStage: candidate.currentStage,
-        disqualified: candidate.disqualified,
-        disqualificationStatus: candidate.disqualified?.disqualificationStatus,
-        fullCandidate: candidate
-      });
-    }
   }, [candidate]);
 
   const handleUpdateCandidate = (updatedCandidate: any) => {
     setLocalCandidate(updatedCandidate);
     // Notify parent component about the update
     onCandidateUpdate?.(updatedCandidate);
-    console.log('Updated candidate:', updatedCandidate);
   };
 
   if (!localCandidate) return null;
@@ -215,13 +203,6 @@ export function CandidateDetailsDialog({
            {/* Disqualification Details - Show for all disqualified candidates */}
            {(() => {
              if (localCandidate.status === 'Disqualified') {
-               console.log('Showing disqualification section for:', {
-                 status: localCandidate.status,
-                 hasDisqualified: !!localCandidate.disqualified,
-                 disqualificationStage: localCandidate.disqualified?.disqualificationStage,
-                 disqualificationReason: localCandidate.disqualified?.disqualificationReason,
-                 currentStage: localCandidate.currentStage
-               });
                return (
              <div className="mt-6 bg-red-50 border border-red-200 rounded-xl p-6">
                <div className="flex items-center mb-4">
@@ -253,14 +234,6 @@ export function CandidateDetailsDialog({
                      <p className="text-sm font-medium text-red-900">Disqualification Status</p>
                      <p className="text-sm text-red-700">
                        {(() => {
-                         console.log('Disqualification Status Debug:', {
-                           candidateName: localCandidate.name,
-                           hasDisqualified: !!localCandidate.disqualified,
-                           disqualificationStatus: localCandidate.disqualified?.disqualificationStatus,
-                           type: typeof localCandidate.disqualified?.disqualificationStatus,
-                           fullDisqualifiedObject: localCandidate.disqualified,
-                           fullCandidateObject: localCandidate
-                         });
                          return localCandidate.disqualified?.disqualificationStatus || 'Not specified';
                        })()}
                      </p>

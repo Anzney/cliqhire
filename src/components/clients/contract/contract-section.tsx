@@ -70,14 +70,6 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
   // Function to map contract data to form data structure
   const mapContractDataToFormData = (contractData: any, businessType: string) => {
     const formType = getFormType(businessType);
-
-    // Debug: Log the original contract data
-    console.log("Mapping contract data:", {
-      businessType,
-      formType,
-      contractData
-    });
-
     if (formType === "business") {
       return {
         contractStartDate: contractData?.contractStartDate
@@ -157,11 +149,7 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
         ...(contractData?.createdAt && { createdAt: contractData.createdAt }),
         ...(contractData?.updatedAt && { updatedAt: contractData.updatedAt }),
         ...(contractData?.createdBy && { createdBy: contractData.createdBy }),
-      };
-      
-      // Debug: Log the mapped data for consulting contracts
-      console.log("Mapped consulting contract data:", mappedData);
-      
+      }; 
       return mappedData;
     }
 
@@ -202,20 +190,10 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
     try {
       // Get the backend contract type (mapped value) to send to API
       const contractKey = CONTRACT_MAPPING[editDialogOpen as keyof typeof CONTRACT_MAPPING];
-      
-      // Debug: Log what's being sent
-      console.log("Updating contract with data:", {
-        clientId,
-        contractKey,
-        updatedFormData,
-        editDialogOpen
-      });
-      
+  
       await updateContract(clientId, contractKey, updatedFormData);
-
       toast.success(`${editDialogOpen} contract updated successfully!`);
       setEditDialogOpen(null);
-
       // Optional: Refresh client data to show updated values
       // You might want to call a refresh function here or update local state
     } catch (error) {

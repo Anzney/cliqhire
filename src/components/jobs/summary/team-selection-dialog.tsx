@@ -91,22 +91,30 @@ export function TeamSelectionDialog({
   };
 
   const handleSave = () => {
+    // Some backends may return IDs as strings instead of populated objects. Guard at runtime.
+    const hiringManagerObj = selectedTeam && typeof (selectedTeam as any).hiringManagerId === "object"
+      ? (selectedTeam as any).hiringManagerId
+      : undefined;
+    const teamLeadObj = selectedTeam && typeof (selectedTeam as any).teamLeadId === "object"
+      ? (selectedTeam as any).teamLeadId
+      : undefined;
+
     const selections = {
       team: selectedTeam ? { id: selectedTeam._id, name: selectedTeam.teamName } : undefined,
-      hiringManager: selectedTeam?.hiringManagerId
+      hiringManager: hiringManagerObj
         ? {
-            id: selectedTeam.hiringManagerId._id,
-            name: selectedTeam.hiringManagerId.name,
-            email: selectedTeam.hiringManagerId.email,
-            phone: selectedTeam.hiringManagerId.phone,
+            id: hiringManagerObj._id,
+            name: hiringManagerObj.name,
+            email: hiringManagerObj.email,
+            phone: hiringManagerObj.phone,
           }
         : undefined,
-      teamLead: selectedTeam?.teamLeadId
+      teamLead: teamLeadObj
         ? {
-            id: selectedTeam.teamLeadId._id,
-            name: selectedTeam.teamLeadId.name,
-            email: selectedTeam.teamLeadId.email,
-            phone: selectedTeam.teamLeadId.phone,
+            id: teamLeadObj._id,
+            name: teamLeadObj.name,
+            email: teamLeadObj.email,
+            phone: teamLeadObj.phone,
           }
         : undefined,
       recruiters: selectedRecruiterId
@@ -172,7 +180,9 @@ export function TeamSelectionDialog({
               <Label>Hiring Manager</Label>
               <div className="p-3 bg-gray-50 rounded-md border">
                 <span className="text-sm font-medium">
-                  {selectedTeam.hiringManagerId.name}
+                  {typeof (selectedTeam as any).hiringManagerId === "object"
+                    ? (selectedTeam as any).hiringManagerId?.name
+                    : "Not assigned"}
                 </span>
               </div>
             </div>
@@ -184,7 +194,9 @@ export function TeamSelectionDialog({
               <Label>Team Lead</Label>
               <div className="p-3 bg-gray-50 rounded-md border">
                 <span className="text-sm font-medium">
-                  {selectedTeam.teamLeadId.name}
+                  {typeof (selectedTeam as any).teamLeadId === "object"
+                    ? (selectedTeam as any).teamLeadId?.name
+                    : "Not assigned"}
                 </span>
               </div>
             </div>
@@ -202,7 +214,7 @@ export function TeamSelectionDialog({
                   <SelectValue placeholder="Select a recruiter" />
                 </SelectTrigger>
                 <SelectContent>
-                  {selectedTeam.recruiters.map((recruiter) => (
+                  {selectedTeam.recruiters?.map?.((recruiter) => (
                     <SelectItem 
                       key={recruiter._id} 
                       value={recruiter._id}

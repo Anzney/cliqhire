@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +29,6 @@ import { TeamMember, TeamMemberStatus } from "@/types/teamMember";
 
 interface TeamMembersTabsProps {
   onTeamMemberClick?: (teamMemberId: string) => void;
-  refreshTrigger?: number; // Add this to trigger refresh from parent
 }
 
 const headerArr = [
@@ -108,46 +108,52 @@ const formatTeamRoleDisplay = (role: string): string => {
   return role.replace(/_/g, " ");
 };
 
-export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembersTabsProps) {
+export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
   const [activeTab, setActiveTab] = useState("all");
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [loading, setLoading] = useState(true);
   const [registerDialogOpen, setRegisterDialogOpen] = useState(false);
   const [selectedTeamMember, setSelectedTeamMember] = useState<TeamMember | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [teamMemberToDelete, setTeamMemberToDelete] = useState<TeamMember | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [teamMemberToView, setTeamMemberToView] = useState<TeamMember | null>(null);
 
-  // Fetch team members from API
-  const fetchTeamMembers = async () => {
-    setLoading(true);
-    try {
-      const response = await getTeamMembers();
-      setTeamMembers(response.teamMembers);
-    } catch (error) {
-      console.error("Error fetching team members:", error);
-      setTeamMembers([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // React Query setup
+  const queryClient = useQueryClient();
+  const { data, isLoading } = useQuery({
+    queryKey: ["teamMembers"],
+    queryFn: () => getTeamMembers(),
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: 30_000,
+  });
+  const dataTeamMembers: TeamMember[] = data?.teamMembers ?? [];
 
-  useEffect(() => {
-    fetchTeamMembers();
-  }, [refreshTrigger]);
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteTeamMember(id),
+    onSuccess: () => {
+      // Refresh list after successful deletion
+      queryClient.invalidateQueries({ queryKey: ["teamMembers"] });
+      setDeleteDialogOpen(false);
+      setTeamMemberToDelete(null);
+    },
+  });
 
-  const handleStatusChange = (teamMemberId: string, newStatus: TeamMemberStatus) => {
-    setTeamMembers((prevTeamMembers) =>
-      prevTeamMembers.map((teamMember) =>
-        teamMember._id === teamMemberId ? { ...teamMember, status: newStatus } : teamMember,
-      ),
-    );
+  const handleStatusChange = async (teamMemberId: string, newStatus: TeamMemberStatus) => {
+    // Optimistically update cache for status changes
+    queryClient.setQueryData(["teamMembers"], (oldData: any) => {
+      if (!oldData?.teamMembers) return oldData;
+      return {
+        ...oldData,
+        teamMembers: oldData.teamMembers.map((tm: TeamMember) =>
+          tm._id === teamMemberId ? { ...tm, status: newStatus } : tm
+        ),
+      };
+    });
+    // Do not refetch here; mutation in TeamMemberStatusBadge will invalidate once
   };
 
   const handleViewTeamMember = (teamMemberId: string) => {
-    const member = teamMembers.find((tm) => tm._id === teamMemberId) || null;
+    const member = dataTeamMembers.find((tm) => tm._id === teamMemberId) || null;
     setTeamMemberToView(member);
     setViewDialogOpen(true);
   };
@@ -168,28 +174,8 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
   };
 
   const confirmDeleteTeamMember = async () => {
-    console.log('confirmDeleteTeamMember called');
-    if (!teamMemberToDelete) {
-      console.log('No team member to delete');
-      return;
-    }
-    
-    console.log('Deleting team member:', teamMemberToDelete.name, teamMemberToDelete._id);
-    setIsDeleting(true);
-    try {
-      await deleteTeamMember(teamMemberToDelete._id);
-      console.log('Team member deleted successfully');
-      setTeamMembers((prevTeamMembers) =>
-        prevTeamMembers.filter((teamMember) => teamMember._id !== teamMemberToDelete._id),
-      );
-      setDeleteDialogOpen(false);
-      setTeamMemberToDelete(null);
-    } catch (error) {
-      console.error("Error deleting team member:", error);
-      // You might want to show a toast notification here instead of alert
-    } finally {
-      setIsDeleting(false);
-    }
+    if (!teamMemberToDelete) return;
+    deleteMutation.mutate(teamMemberToDelete._id);
   };
 
   const cancelDeleteTeamMember = () => {
@@ -201,7 +187,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
 
   // Get counts for each role
   const getCountByRole = (role: string) => {
-    return teamMembers.filter(member => 
+    return dataTeamMembers.filter(member => 
       member.teamRole === role || 
       member.role === role
     ).length;
@@ -211,40 +197,40 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
   const getFilteredTeamMembers = () => {
     switch (activeTab) {
       case "all":
-        return teamMembers;
+        return dataTeamMembers;
       case "hiring-manager":
-        return teamMembers.filter(member => 
+        return dataTeamMembers.filter(member => 
           member.teamRole === "HIRING_MANAGER" || 
           member.teamRole === "Hiring Manager" ||
           member.role === "Hiring Manager"
         );
       case "team-lead":
-        return teamMembers.filter(member => 
+        return dataTeamMembers.filter(member => 
           member.teamRole === "TEAM_LEAD" || 
           member.teamRole === "Team Lead" ||
           member.role === "Team Lead"
         );
       case "recruiters":
-        return teamMembers.filter(member => 
+        return dataTeamMembers.filter(member => 
           member.teamRole === "RECRUITER" || 
           member.teamRole === "Recruiters" ||
           member.role === "Recruiters"
         );
       case "head-enter":
-        return teamMembers.filter(member => 
+        return dataTeamMembers.filter(member => 
           member.teamRole === "HEAD_HUNTER" || 
           member.teamRole === "Head Enter" ||
           member.role === "HEAD_HUNTER"
         );
       default:
-        return teamMembers;
+        return dataTeamMembers;
     }
   };
 
   const filteredTeamMembers = getFilteredTeamMembers();
 
   const renderTeamMembersTable = (members: TeamMember[]) => {
-    if (loading) {
+    if (isLoading) {
       return (
         <TableRow>
           <TableCell colSpan={headerArr.length} className="h-[calc(100vh-240px)] text-center">
@@ -351,7 +337,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
             <Users className="h-4 w-4" />
             All
             <Badge variant="secondary" className="ml-1 text-xs">
-              {teamMembers.length}
+              {dataTeamMembers.length}
             </Badge>
           </TabsTrigger>
           <TabsTrigger
@@ -507,14 +493,24 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
           onOpenChange={setDeleteDialogOpen}
           teamMemberName={teamMemberToDelete?.name || ""}
           onConfirm={confirmDeleteTeamMember}
-          isLoading={isDeleting}
+          isLoading={deleteMutation.isPending}
         />
         <ViewEditTeamMemberDialog
           open={viewDialogOpen}
           onOpenChange={setViewDialogOpen}
           teamMember={teamMemberToView}
           onUpdated={(updated) => {
-            setTeamMembers(prev => prev.map(tm => tm._id === updated._id ? updated : tm));
+            queryClient.setQueryData(["teamMembers"], (oldData: any) => {
+              if (!oldData?.teamMembers) return oldData;
+              return {
+                ...oldData,
+                teamMembers: oldData.teamMembers.map((tm: TeamMember) =>
+                  tm._id === updated._id ? updated : tm
+                ),
+              };
+            });
+            // Ensure fresh data from server
+            queryClient.invalidateQueries({ queryKey: ["teamMembers"] });
           }}
         />
      </div>

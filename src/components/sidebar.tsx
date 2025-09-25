@@ -66,7 +66,12 @@ export function Sidebar() {
       <nav className="flex-1 px-2">
         <ul>
           {menuItems
-            .filter(item => isAdmin || item.permission === "HOME" || finalPermissions.includes(item.permission))
+            .filter(item => {
+              // Hide "Today's Tasks" for Admins
+              if (isAdmin && item.permission === 'TODAY_TASKS') return false;
+              // Admins see everything else; non-admins see based on permissions (HOME always visible)
+              return isAdmin || item.permission === "HOME" || finalPermissions.includes(item.permission);
+            })
             .map((item, index) => (
               <li key={index}>
                 <Link

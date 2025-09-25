@@ -35,15 +35,15 @@ export function ViewTeamDialog({
          [
            { label: "Team Name", value: team.teamName, isBadge: false },
            { label: "Team Status", value: team.teamStatus || "Inactive", isBadge: true },
-           { label: "Created", value: new Date(team.createdAt).toLocaleDateString(), isBadge: false },
+           { label: "Created", value: team.createdAt ? new Date(team.createdAt).toLocaleDateString() : "—", isBadge: false },
          ],
          [
-           { label: "Hiring Manager", value: team.hiringManagerId.name, isBadge: false },
-           { label: "Team Lead", value: team.teamLeadId.name, isBadge: false },
+           { label: "Hiring Manager", value: team.hiringManagerId?.name || "—", isBadge: false },
+           { label: "Team Lead", value: team.teamLeadId?.name || "—", isBadge: false },
            { label: "", value: "", isBadge: false },
          ],
          [
-           { label: "Recruiters", value: team.recruiters.map(recruiter => recruiter.name).join(", "), isBadge: false },
+           { label: "Recruiters", value: (team.recruiters && team.recruiters.length > 0) ? team.recruiters.map(recruiter => recruiter.name).join(", ") : "—", isBadge: false },
          ]
        ]
     },
