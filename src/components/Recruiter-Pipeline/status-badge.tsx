@@ -11,28 +11,29 @@ import {
 import { ChevronDown } from "lucide-react";
 
 // Define status types for each stage
-export type SourcingStatus = "LinkedIn Connections Sent" | "LinkedIn Connections Accepted" | "CV Received" | "Disqualified";
+export type SourcingStatus = "Connections Sent" | "Connections Accepted" | "CV Received" | "Disqualified";
 export type ScreeningStatus = "AEMS Interview" | "Submission Pending" | "CV Submitted" | "Disqualified";
-export type ClientScreeningStatus = "Client Shortlisted" | "Disqualified By Client";
-export type InterviewStatus = "Client Interviewed" | "Client Selected" | "Disqualified By Client";
-export type VerificationStatus = "Document Pending" | "Document Verified" | "Offer Letter Sent" | "Offer Accepted" | "Offer Rejected/Disqualified";
+export type ClientScreeningStatus = "Client Shortlisted" | "Disqualified";
+export type InterviewStatus = "Client Interviewed" | "Client Selected" | "Disqualified";
+export type VerificationStatus = "Document Pending" | "Document Verified" | "Offer Letter Sent" | "Offer Accepted" | "Offer Rejected" | "Disqualified";
+
 
 export type StatusType = SourcingStatus | ScreeningStatus | ClientScreeningStatus | InterviewStatus | VerificationStatus;
 
 // Status options for each stage
 const statusOptions: Record<string, StatusType[]> = {
-  "Sourcing": ["LinkedIn Connections Sent", "LinkedIn Connections Accepted", "CV Received", "Disqualified"],
+  "Sourcing": ["Connections Sent", "Connections Accepted", "CV Received", "Disqualified"],
   "Screening": ["AEMS Interview", "Submission Pending", "CV Submitted", "Disqualified"],
-  "Client Review": ["Client Shortlisted", "Disqualified By Client"],
-  "Interview": ["Client Interviewed", "Client Selected", "Disqualified By Client"],
-  "Verification": ["Document Pending", "Document Verified", "Offer Letter Sent", "Offer Accepted", "Offer Rejected/Disqualified"]
+  "Client Review": ["Client Shortlisted", "Disqualified"],
+  "Interview": ["Client Interviewed", "Client Selected", "Disqualified"],
+  "Verification": ["Document Pending", "Document Verified", "Offer Letter Sent", "Offer Accepted", "Offer Rejected", "Disqualified"]
 };
 
 // Status colors
 const statusColors: Record<StatusType, string> = {
   // Sourcing statuses
-  "LinkedIn Connections Sent": "bg-blue-100 text-blue-800 border-blue-200",
-  "LinkedIn Connections Accepted": "bg-green-100 text-green-800 border-green-200",
+  "Connections Sent": "bg-blue-100 text-blue-800 border-blue-200",
+  "Connections Accepted": "bg-green-100 text-green-800 border-green-200",
   "CV Received": "bg-purple-100 text-purple-800 border-purple-200",
   
   // Screening statuses
@@ -42,7 +43,7 @@ const statusColors: Record<StatusType, string> = {
   
   // Client Review statuses
   "Client Shortlisted": "bg-green-100 text-green-800 border-green-200",
-  "Disqualified By Client": "bg-red-100 text-red-800 border-red-200",
+
   
   // Interview statuses
   "Client Interviewed": "bg-blue-100 text-blue-800 border-blue-200",
@@ -53,9 +54,9 @@ const statusColors: Record<StatusType, string> = {
   "Document Verified": "bg-green-100 text-green-800 border-green-200",
   "Offer Letter Sent": "bg-blue-100 text-blue-800 border-blue-200",
   "Offer Accepted": "bg-green-100 text-green-800 border-green-200",
-  "Offer Rejected/Disqualified": "bg-red-100 text-red-800 border-red-200",
+  "Offer Rejected": "bg-red-100 text-red-800 border-red-200",
   
-  // Disqualified status (available for Sourcing and Screening stages)
+  // Disqualified status (available for all stages except Hired and Onboarding)
   "Disqualified": "bg-red-100 text-red-800 border-red-200"
 };
 
@@ -123,7 +124,7 @@ export function StatusBadge({
                 variant="secondary" 
                 className={`${statusColors[statusOption]} border-none`}
               >
-                {statusOption}
+                {statusOption === "Client Shortlisted" ? "Shortlisted" : statusOption}
               </Badge>
             </DropdownMenuItem>
           ))}
@@ -139,7 +140,7 @@ export function StatusBadge({
         variant="secondary" 
         className={`${statusColors[status]} border-none`}
       >
-        {status}
+        {status === "Client Shortlisted" ? "Shortlisted" : status}
       </Badge>
     );
   }
@@ -155,7 +156,7 @@ export function StatusBadge({
             variant="secondary" 
             className={`${statusColors[status]} border-none flex items-center gap-1`}
           >
-            {status}
+            {status === "Client Shortlisted" ? "Shortlisted" : status}
             <ChevronDown className="h-3 w-3" />
           </Badge>
         </Button>
@@ -171,7 +172,7 @@ export function StatusBadge({
               variant="secondary" 
               className={`${statusColors[statusOption]} border-none`}
             >
-              {statusOption}
+              {statusOption === "Client Shortlisted" ? "Shortlisted" : statusOption}
             </Badge>
           </DropdownMenuItem>
         ))}

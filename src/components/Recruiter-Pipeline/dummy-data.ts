@@ -4,11 +4,11 @@
 export type ConnectionType = "LinkedIn" | "Indeed" | "Referral" | "Direct" | "Other";
 
 // Define status types for each stage
-export type SourcingStatus = "LinkedIn Connections Sent" | "LinkedIn Connections Accepted" | "CV Received";
-export type ScreeningStatus = "Submission Pending" | "CV Submitted" | "AEMS Interview";
-export type ClientScreeningStatus = "Client Shortlisted" | "Disqualified By Client";
-export type InterviewStatus = "Client Interviewed" | "Client Selected" | "Disqualified By Client";
-export type VerificationStatus = "Document Pending" | "Document Verified" | "Offer Letter Sent" | "Offer Accepted" | "Offer Rejected/Disqualified";
+export type SourcingStatus = "Connections Sent" | "Connections Accepted" | "CV Received" | "Disqualified";
+export type ScreeningStatus = "Submission Pending" | "CV Submitted" | "AEMS Interview" | "Disqualified";
+export type ClientScreeningStatus = "Client Shortlisted" | "Disqualified";
+export type InterviewStatus = "Client Interviewed" | "Client Selected" | "Disqualified";
+export type VerificationStatus = "Document Pending" | "Document Verified" | "Offer Letter Sent" | "Offer Accepted" | "Offer Rejected" | "Disqualified";
 
 export type StatusType = SourcingStatus | ScreeningStatus | ClientScreeningStatus | InterviewStatus | VerificationStatus;
 

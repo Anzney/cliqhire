@@ -486,11 +486,12 @@ export function RecruiterPipeline() {
 
   const handleCandidateUpdate = async (jobId: string, updatedCandidate: any) => {
     try {
-      // Refresh the jobs data to reflect the updated candidate
-      await loadJobs();
+      // Only refresh the specific job data instead of all pipeline jobs
+      // This prevents the entire page from refreshing
+      await loadPipelineEntryDetails(jobId);
       toast.success("Candidate updated successfully");
     } catch (error: any) {
-      console.error('Error refreshing jobs after candidate update:', error);
+      console.error('Error refreshing job data after candidate update:', error);
       toast.error("Failed to refresh candidate data");
     }
   };
