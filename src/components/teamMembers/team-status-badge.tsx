@@ -53,6 +53,13 @@ export function TeamMemberStatusBadge({
 
   const currentStatus = statusOptions.find((option) => option.value === status);
 
+  const statusClasses: Record<TeamMemberStatus, string> = {
+    Active: "bg-green-100 text-green-800 border-green-200",
+    Inactive: "bg-gray-100 text-gray-700 border-gray-200",
+    "On Leave": "bg-amber-100 text-amber-800 border-amber-200",
+    Terminated: "bg-red-100 text-red-800 border-red-200",
+  };
+
   const handleStatusChange = (newStatus: TeamMemberStatus) => {
     if (newStatus === status) return;
 
@@ -102,8 +109,8 @@ export function TeamMemberStatusBadge({
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-auto p-0 hover:bg-transparent" disabled={isUpdating}>
             <Badge
-              variant={currentStatus?.variant || "default"}
-              className="cursor-pointer hover:opacity-80"
+              variant={status === "Terminated" ? "destructive" : "outline"}
+              className={`cursor-pointer hover:opacity-80 ${statusClasses[status]}`}
             >
               {currentStatus?.label || status}
               <ChevronDown className="ml-1 h-3 w-3" />
@@ -118,7 +125,10 @@ export function TeamMemberStatusBadge({
               disabled={option.value === status || isUpdating}
               className="cursor-pointer"
             >
-              <Badge variant={option.variant} className="mr-2">
+              <Badge
+                variant={option.value === "Terminated" ? "destructive" : "outline"}
+                className={`${statusClasses[option.value]} mr-2`}
+              >
                 {option.label}
               </Badge>
             </DropdownMenuItem>

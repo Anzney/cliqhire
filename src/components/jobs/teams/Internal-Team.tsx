@@ -9,15 +9,17 @@ import { type RecruitmentManager, type TeamLead, type Recruiter } from "@/data/t
 export function InternalTeam() {
   const [isTeamDialogOpen, setIsTeamDialogOpen] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<{
-    recruitmentManager?: RecruitmentManager;
-    teamLead?: TeamLead;
-    recruiter?: Recruiter;
+    team?: { id: string; name: string };
+    hiringManager?: { id: string; name: string };
+    teamLead?: { id: string; name: string };
+    recruiters?: { id: string; name: string }[];
   } | null>(null);
 
   const handleTeamSelectionSave = (selections: {
-    recruitmentManager?: RecruitmentManager;
-    teamLead?: TeamLead;
-    recruiter?: Recruiter;
+    team?: { id: string; name: string };
+    hiringManager?: { id: string; name: string };
+    teamLead?: { id: string; name: string };
+    recruiters?: { id: string; name: string }[];
   }) => {
     setSelectedTeam(selections);
     setIsTeamDialogOpen(false);
@@ -25,7 +27,7 @@ export function InternalTeam() {
 
   const renderTeamMemberCard = (
     title: string,
-    member: RecruitmentManager | TeamLead | Recruiter | undefined,
+    member: { id: string; name: string } | undefined,
     roleColor: string,
   ) => {
     if (!member) return null;
@@ -35,17 +37,27 @@ export function InternalTeam() {
         <div className={`text-xs font-medium uppercase tracking-wide ${roleColor}`}>{title}</div>
         <div className="space-y-1">
           <div className="font-medium text-gray-900">{member.name}</div>
-          <div className="text-sm text-gray-600">{member.email}</div>
-          <div className="text-sm text-gray-600">{member.phone}</div>
-          {"teamSize" in member && (
-            <div className="text-sm text-gray-500">Team Size: {member.teamSize}</div>
-          )}
-          {"managerId" in member && member.managerId && (
-            <div className="text-sm text-gray-500">Manager ID: {member.managerId}</div>
-          )}
-          {"teamLeadId" in member && member.teamLeadId && (
-            <div className="text-sm text-gray-500">Team Lead ID: {member.teamLeadId}</div>
-          )}
+          <div className="text-sm text-gray-500">ID: {member.id}</div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderRecruitersCard = (recruiters: { id: string; name: string }[] | undefined) => {
+    if (!recruiters || recruiters.length === 0) return null;
+
+    return (
+      <div className="border rounded-lg p-4 space-y-2">
+        <div className="text-xs font-medium uppercase tracking-wide text-purple-600">Recruiters</div>
+        <div className="space-y-1">
+          {recruiters.map((recruiter, index) => (
+            <div key={recruiter.id} className="flex items-center justify-between">
+              <div>
+                <div className="font-medium text-gray-900">{recruiter.name}</div>
+                <div className="text-sm text-gray-500">ID: {recruiter.id}</div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -62,7 +74,7 @@ export function InternalTeam() {
           onClick={() => setIsTeamDialogOpen(true)}
         >
           {selectedTeam &&
-          (selectedTeam.recruitmentManager || selectedTeam.teamLead || selectedTeam.recruiter) ? (
+          (selectedTeam.hiringManager || selectedTeam.teamLead || selectedTeam.recruiters?.length) ? (
             <>
               <Pencil className="h-4 w-4 mr-2" />
               Edit Internal Team
@@ -85,14 +97,14 @@ export function InternalTeam() {
 
           <div className="grid gap-4">
             {renderTeamMemberCard(
-              "Recruitment Manager",
-              selectedTeam.recruitmentManager,
+              "Hiring Manager",
+              selectedTeam.hiringManager,
               "text-blue-600",
             )}
 
             {renderTeamMemberCard("Team Lead", selectedTeam.teamLead, "text-green-600")}
 
-            {renderTeamMemberCard("Recruiter", selectedTeam.recruiter, "text-purple-600")}
+            {renderRecruitersCard(selectedTeam.recruiters)}
           </div>
         </div>
       )}
@@ -112,9 +124,10 @@ export function InternalTeam() {
         onClose={() => setIsTeamDialogOpen(false)}
         onSave={handleTeamSelectionSave}
         initialSelections={{
-          recruitmentManagerId: selectedTeam?.recruitmentManager?.id,
+          teamId: selectedTeam?.team?.id,
+          hiringManagerId: selectedTeam?.hiringManager?.id,
           teamLeadId: selectedTeam?.teamLead?.id,
-          recruiterId: selectedTeam?.recruiter?.id,
+          recruiterIds: selectedTeam?.recruiters?.map(r => r.id) || [],
         }}
       />
     </div>

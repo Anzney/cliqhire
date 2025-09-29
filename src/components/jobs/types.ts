@@ -34,6 +34,79 @@ export interface JobData {
   keySkills: string;
   jobDescriptionByInternalTeam: string;
   workVisa: { workVisa: string; visaCountries: string[] };
-  reportingTo: string
+  reportingTo: string;
+  // Team assignment fields
+  teamId?: string | {
+    _id: string;
+    teamName: string;
+    teamStatus: string;
+  };
+  teamName?: string;
+  teamAssignment?: string; // JSON string containing team data
+  recruitmentManagerId?: string;
+  recruitmentManager?: string;
+  teamLeadId?: string;
+  teamLead?: string;
+  recruiterId?: string;
+  recruiter?: string;
+  // Backend internalTeam structure (legacy)
+  internalTeam?: {
+    hiringManager?: string | {
+      _id: string;
+      name: string;
+      email: string;
+      teamRole: string;
+      phone: string;
+      department: string;
+    };
+    teamLead?: string | {
+      _id: string;
+      name: string;
+      email: string;
+      teamRole: string;
+      phone: string;
+      department: string;
+    };
+    recruiter?: string | {
+      _id: string;
+      name: string;
+      email: string;
+      teamRole: string;
+      phone: string;
+      department: string;
+    };
+  };
+  // Backend jobTeamInfo structure (new)
+  jobTeamInfo?: {
+    teamId?: {
+      _id: string;
+      teamName: string;
+      teamStatus: string;
+    };
+    hiringManager?: {
+      _id: string;
+      name: string;
+      email: string;
+      teamRole: string;
+      phone: string;
+      department: string;
+    };
+    teamLead?: {
+      _id: string;
+      name: string;
+      email: string;
+      teamRole: string;
+      phone: string;
+      department: string;
+    };
+    recruiter?: {
+      _id: string;
+      name: string;
+      email: string;
+      teamRole: string;
+      phone: string;
+      department: string;
+    };
+  };
   _id: string;
 }

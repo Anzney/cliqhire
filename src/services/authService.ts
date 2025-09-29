@@ -1,4 +1,5 @@
 import axios, { AxiosError } from "axios";
+import { api, setAccessToken, clearAccessToken } from "@/lib/axios-config";
 
 // Types for authentication data
 export interface RegisterUserData {
@@ -14,11 +15,17 @@ export interface LoginUserData {
 }
 
 export interface User {
+  id?: string;
   _id?: string;
   name: string;
   email: string;
+  role?: string;
+  isActive?: boolean;
+  lastLogin?: string;
   createdAt?: string;
   updatedAt?: string;
+  permissions?: string[];
+  defaultPermissions?: string[];
 }
 
 // API Response interfaces
@@ -50,18 +57,18 @@ export interface LoginResponse {
   token?: string;
 }
 
-
-
 class AuthService {
-  private baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  private baseURL = process.env.NEXT_PUBLIC_API_URL ;
+  
+  constructor() {
+    // AuthService initialization
+  }
 
   /**
    * Register a new user
    */
   async register(userData: RegisterUserData): Promise<RegisterResponse> {
     try {
-      console.log('Registering user with data:', userData);
-      
       // Create payload with plain passwords
       const payload = {
         name: userData.name,
@@ -70,16 +77,27 @@ class AuthService {
         confirmPassword: userData.confirmPassword,
       };
       
-      console.log('Sending plain password data to API');
-      
-      // Make real API call
-      const response = await axios.post(`${this.baseURL}/api/auth/register`, payload, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      // Make real API call to Express backend using the configured api instance
+      const response = await api.post('/auth/register', payload);
 
-      return response.data;
+      // Extract data from response - your API returns accessToken and user
+      const { accessToken, user } = response.data.data;
+      
+      // Store token in memory and localStorage for persistence
+      setAccessToken(accessToken);
+      
+      // Store token in localStorage for persistence (in development)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('authToken', accessToken);
+        localStorage.setItem('userData', JSON.stringify(user));
+      }
+
+      return {
+        success: true,
+        message: 'Registration successful',
+        user: user,
+        token: accessToken
+      };
     } catch (error) {
       console.error('Error registering user:', error);
       
@@ -87,15 +105,18 @@ class AuthService {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError;
         const errorData = axiosError.response?.data as any;
-        throw new Error(
-          errorData?.message || 
-          axiosError.message || 
-          'Registration failed'
-        );
+        
+        return {
+          success: false,
+          message: errorData?.message || axiosError.message || 'Registration failed'
+        };
       }
       
       // Handle other errors
-      throw new Error(error instanceof Error ? error.message : 'Registration failed');
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Registration failed'
+      };
     }
   }
 
@@ -104,40 +125,52 @@ class AuthService {
    */
   async login(userData: LoginUserData): Promise<LoginResponse> {
     try {
-      console.log('Logging in user with data:', userData);
-      
       // Create payload with plain password
       const payload = {
         email: userData.email,
         password: userData.password,
       };
       
-      console.log('Sending plain password data to API');
-      
-      // Make real API call
-      const response = await axios.post(`${this.baseURL}/api/auth/login`, payload, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      // Make real API call to Express backend using the configured api instance
+      const response = await api.post('/api/auth/login', payload);
 
-      return response.data;
+      // Extract data from response - your API returns accessToken and user
+      const { accessToken, user } = response.data.data;
+      
+      // Store token in memory and localStorage for persistence
+      setAccessToken(accessToken);
+      
+      // Store token in localStorage for persistence (in development)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('authToken', accessToken);
+        localStorage.setItem('userData', JSON.stringify(user));
+      }
+
+      return {
+        success: true,
+        message: 'Login successful',
+        user: user,
+        token: accessToken
+      };
     } catch (error) {
-      console.error('Error logging in user:', error);
+      console.error('AuthService: Error logging in user:', error);
       
       // Handle axios errors
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError;
         const errorData = axiosError.response?.data as any;
-        throw new Error(
-          errorData?.message || 
-          axiosError.message || 
-          'Login failed'
-        );
+        
+        return {
+          success: false,
+          message: errorData?.message || axiosError.message || 'Login failed'
+        };
       }
       
       // Handle other errors
-      throw new Error(error instanceof Error ? error.message : 'Login failed');
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Login failed'
+      };
     }
   }
 
@@ -146,135 +179,65 @@ class AuthService {
    */
   async logout(): Promise<{ success: boolean; message: string }> {
     try {
-      // Simulate API call with dummy data
-      console.log('Logging out user');
+      // Make logout request to Express backend using the configured api instance
+      // This will clear the refresh token cookie on the server
+      await api.post('/api/auth/logout');
       
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Clear access token from memory
+      clearAccessToken();
       
-      // Simulate successful logout
-      const mockResponse = {
+      // Clear user data and token from localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('userData');
+        localStorage.removeItem('authToken');
+      }
+      
+      return {
         success: true,
-        message: 'User logged out successfully',
+        message: 'Logout successful'
       };
-
-      // Simulate API call using axios (commented out for dummy implementation)
-      /*
-      const response = await axios.post(`${this.baseURL}/api/auth/logout`, {}, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, // Add token from localStorage or context
-        },
-      });
-
-      return response.data;
-      */
-
-      return mockResponse;
     } catch (error) {
-      console.error('Error logging out user:', error);
+      console.error('Error during logout:', error);
       
-      // Handle axios errors
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError;
-        const errorData = axiosError.response?.data as any;
-        throw new Error(
-          errorData?.message || 
-          axiosError.message || 
-          'Logout failed'
-        );
+      // Even if the API call fails, clear local data
+      clearAccessToken();
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('userData');
+        localStorage.removeItem('authToken');
       }
       
-      // Handle other errors
-      throw new Error(error instanceof Error ? error.message : 'Logout failed');
+      return {
+        success: false,
+        message: 'Logout completed (local cleanup)'
+      };
     }
   }
 
   /**
-   * Get current user profile
+   * Get user data from localStorage
    */
-  async getCurrentUser(): Promise<User> {
-    try {
-      // Simulate API call with dummy data
-      console.log('Fetching current user profile');
-      
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Simulate successful user fetch
-      const mockUser: User = {
-        _id: 'mock-user-id',
-        name: 'John Doe',
-        email: 'john@example.com',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      // Simulate API call using axios (commented out for dummy implementation)
-      /*
-      const response = await axios.get(`${this.baseURL}/api/auth/me`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, // Add token from localStorage or context
-        },
-      });
-
-      return response.data.data;
-      */
-
-      return mockUser;
-    } catch (error) {
-      console.error('Error fetching current user:', error);
-      
-      // Handle axios errors
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError;
-        const errorData = axiosError.response?.data as any;
-        throw new Error(
-          errorData?.message || 
-          axiosError.message || 
-          'Failed to fetch user profile'
-        );
+  getUserData(): User | null {
+    if (typeof window !== 'undefined') {
+      const userData = localStorage.getItem('userData');
+      if (userData) {
+        try {
+          return JSON.parse(userData);
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+          return null;
+        }
       }
-      
-      // Handle other errors
-      throw new Error(error instanceof Error ? error.message : 'Failed to fetch user profile');
     }
+    return null;
   }
 
   /**
-   * Validate token
+   * Check if user is authenticated
    */
-  async validateToken(token: string): Promise<boolean> {
-    try {
-      // Simulate API call with dummy data
-      console.log('Validating token');
-      
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Simulate successful token validation
-      const isValid = true; // Mock validation result
-
-      // Simulate API call using axios (commented out for dummy implementation)
-      /*
-      const response = await axios.post(`${this.baseURL}/api/auth/validate-token`, { token }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      return response.data.valid;
-      */
-
-      return isValid;
-    } catch (error) {
-      console.error('Error validating token:', error);
-      return false;
-    }
+  isAuthenticated(): boolean {
+    return this.getUserData() !== null;
   }
 }
 
-// Export singleton instance
+// Export a singleton instance
 export const authService = new AuthService();
-export default authService;

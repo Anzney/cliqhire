@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import CandidateSummary from '@/components/candidates/summary/candidate-summary';
 import { CandidateNotesContent } from '@/components/candidates/notes/notes-content';
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { JobsContent, JobsContentRef } from '@/components/candidates/jobs/jobs-c
 import { AddToJobDialog } from '@/components/candidates/add-to-job-dialog';
 import { candidateService } from '@/services/candidateService';
 import { toast } from "sonner";
+import { initializeAuth } from '@/lib/axios-config';
 
 
 interface Tab {
@@ -30,24 +31,54 @@ interface Candidate {
   status?: string;
 }
 
-export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Candidate, tabs: Tab[] }) {
+export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId: string, tabs: Tab[] }) {
   const [activeTab, setActiveTab] = useState("Summary");
-  const [localCandidate, setLocalCandidate] = useState(candidate);
+  const [candidate, setCandidate] = useState<Candidate | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const jobsContentRef = useRef<JobsContentRef>(null);
 
+  // Fetch candidate data on component mount
+  useEffect(() => {
+    const fetchCandidate = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Ensure authentication is initialized
+        await initializeAuth();
+        
+        const candidateData = await candidateService.getCandidateById(candidateId);
+        setCandidate(candidateData);
+      } catch (error) {
+        console.error('Error fetching candidate:', error);
+        setError('Failed to load candidate data');
+        toast.error("Failed to load candidate data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
+    if (candidateId) {
+      fetchCandidate();
+    }
+  }, [candidateId]);
 
   const handleRefresh = async () => {
     try {
-      if (candidate._id) {
-        // Re-fetch candidate data from the API
-        const refreshedCandidate = await candidateService.getCandidateById(candidate._id);
-        setLocalCandidate(refreshedCandidate);
-        toast.success("Data refreshed successfully");
-      }
+      setIsLoading(true);
+      
+      // Ensure authentication is initialized
+      await initializeAuth();
+      
+      const refreshedCandidate = await candidateService.getCandidateById(candidateId);
+      setCandidate(refreshedCandidate);
+      toast.success("Data refreshed successfully");
     } catch (error) {
       console.error('Error refreshing candidate data:', error);
       toast.error("Failed to refresh data");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -62,9 +93,36 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
     }
   };
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center justify-center gap-2 flex-col">
+          <RefreshCcw className="size-6 animate-spin" />
+          <div className="text-center">Loading candidate data...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error || !candidate) {
+    return (
+      <div className="min-h-[400px] font-sans w-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-gray-500 text-lg mb-4">{error || 'Candidate not found.'}</div>
+          <Button onClick={handleRefresh} variant="outline">
+            <RefreshCcw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // Enhanced dummy data for better display
   const enhancedCandidate = {
-    ...localCandidate,
+    ...candidate,
     // Additional fields that would come from API
     currentRole: "Senior Software Engineer",
     company: "Tech Corp",
@@ -100,7 +158,7 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
   const handleCandidateUpdate = async (updatedCandidate: any, fieldKey?: string) => {
     try {
       // Update local state immediately for optimistic UI
-      setLocalCandidate(updatedCandidate);
+      setCandidate(updatedCandidate);
       
       // Make API call to persist changes
       if (candidate._id) {
@@ -150,7 +208,7 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
           try {
             if (candidate._id) {
               const refreshedCandidate = await candidateService.getCandidateById(candidate._id);
-              setLocalCandidate(refreshedCandidate);
+              setCandidate(refreshedCandidate);
             }
           } catch (refreshError) {
             console.error('Error refreshing candidate data:', refreshError);
@@ -161,7 +219,7 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
       console.error('Error updating candidate:', error);
       toast.error("Failed to update candidate");
       // Revert local state on error
-      setLocalCandidate(candidate);
+      setCandidate(candidate);
     }
   };
 
@@ -198,7 +256,7 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
       {/* Button Bar */}
       <div className="flex items-center justify-between p-4 border-b">
         <AddToJobDialog 
-          candidateId={candidate._id || ""} 
+          candidateId={candidateId} 
           candidateName={enhancedCandidate.name || "Unknown Candidate"}
           onJobsAdded={handleJobsAdded}
           trigger={
@@ -301,7 +359,7 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
 
         <TabsContent value="Summary" className="p-4">
           <CandidateSummary 
-            candidate={localCandidate} 
+            candidate={candidate} 
             onCandidateUpdate={handleCandidateUpdate}
           />
         </TabsContent>
@@ -309,7 +367,7 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
         <TabsContent value="Jobs">
           <JobsContent 
             ref={jobsContentRef}
-            candidateId={candidate._id || ""} 
+            candidateId={candidateId} 
             candidateName={enhancedCandidate.name || "Unknown Candidate"} 
           />
         </TabsContent>
@@ -347,11 +405,11 @@ export default function ClientCandidateTabs({ candidate, tabs }: { candidate: Ca
         </TabsContent>
 
         <TabsContent value="Notes" className="p-4">
-          <CandidateNotesContent candidateId={candidate._id || ""} />
+          <CandidateNotesContent candidateId={candidateId} />
         </TabsContent>
 
         <TabsContent value="Attachments" className="p-4">
-          <AttachmentsContent candidateId={candidate._id || ""} />
+          <AttachmentsContent candidateId={candidateId} />
         </TabsContent>
 
         <TabsContent value="ClientTeam" className="p-4">
