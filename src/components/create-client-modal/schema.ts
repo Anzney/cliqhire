@@ -37,19 +37,23 @@ export const clientContactInfoSchema = z.object({
     .min(1, "At least one email is required"),
   phoneNumber: z.string().min(1, "Client landline number is required"),
   address: z.string().min(1, "Client address is required"),
-  website: z
-    .string()
-    .min(1, "Client website is required")
-    .regex(urlRegex, "Please enter a valid website URL"),
-  linkedInProfile: z
-    .string()
-    .min(1, "Client LinkedIn profile is required")
-    .regex(urlRegex, "Please enter a valid LinkedIn URL"),
-  location: z.string().optional(),
-  googleMapsLink: z
-    .string()
-    .min(1, "Google Maps link is required")
-    .regex(urlRegex, "Please enter a valid Google Maps URL"),
+  // website: z
+  //   .string()
+  //   .min(1, "Client website is required")
+  //   .regex(urlRegex, "Please enter a valid website URL"),
+  // website: z.string().regex(urlRegex, "Please enter a valid website URL").optional(),
+  website: z.string().optional(),
+  // linkedInProfile: z
+  //   .string()
+  //   .min(1, "Client LinkedIn profile is required")
+  //   .regex(urlRegex, "Please enter a valid LinkedIn URL"),
+  // location: z.string().optional(),
+  linkedInProfile: z.string().optional(),
+  // googleMapsLink: z
+  //   .string()
+  //   .min(1, "Google Maps link is required")
+  //   .regex(urlRegex, "Please enter a valid Google Maps URL"),
+  googleMapsLink: z.string().optional(),
   countryOfBusiness: z.string().optional(),
   primaryContacts: z.array(primaryContactSchema).min(1, "At least one primary contact is required"),
 });

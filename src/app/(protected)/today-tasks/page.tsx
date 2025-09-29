@@ -216,8 +216,6 @@ export default function TodayTasksPage() {
           job.id === jobId ? { ...job, status: newStatus } : job
         )
       );
-      
-      console.log(`Job ${jobId} status updated to ${newStatus}`);
     } catch (error) {
       console.error('Error updating job status:', error);
       // You might want to show a toast notification here

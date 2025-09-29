@@ -354,8 +354,8 @@ export function AddTemplateDialog({
               {(!content || content.trim() === '') && (
                 <div className="absolute top-4 left-4 text-gray-500 pointer-events-none">
                   Dear {`{{clientName}}`}, <br /><br />
-                  Thank you for your interest in working with us. We're excited about the opportunity to partner with {`{{clientCompany}}`}.<br /><br />
-                  Best regards,<br />
+                  Thank you for your interest in working with us. We are excited about the opportunity to partner with {`{{clientCompany}}`}.<br /><br />
+                  Best regards<br />
                   {`{{senderName}}`}
                 </div>
               )}

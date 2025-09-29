@@ -1,21 +1,18 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Plus, LayoutGrid, List, SlidersHorizontal, RefreshCcw, MoreVertical, Loader2, Loader } from "lucide-react";
-import { JobsEmptyState } from "./empty-state";
-import { useState, useEffect } from "react";
+import { Plus, SlidersHorizontal, RefreshCcw, MoreVertical, Loader } from "lucide-react";
+import { useState } from "react";
 // import { CreateJobModal } from "@/components/jobs/create-job-modal"
 import {  
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { useRouter } from "next/navigation";
 import { JobStageBadge } from "@/components/jobs/job-stage-badge";
 import { JobStage } from "@/types/job";
-import type { Job as ServiceJob } from "@/services/jobService";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,7 +28,7 @@ import Tableheader from "@/components/table-header";
 import { CreateJobRequirementForm } from "@/components/new-jobs/create-jobs-form";
 import ClientPaginationControls from "@/components/clients/ClientPaginationControls";
 import { getJobs, updateJobStage } from "@/services/jobService";
-import { getClientNames } from "@/services/clientService";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const columsArr = [
   "Position Name",
@@ -71,14 +68,7 @@ function ConfirmStageChangeDialog({
   );
 }
 
-type Client = {
-  _id: string;
-  name: string;
-};
-
 export default function JobsPage() {
-  const [jobs, setJobs] = useState<ServiceJob[]>([]);
-  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -86,73 +76,26 @@ export default function JobsPage() {
     jobId: string;
     newStage: JobStage;
   } | null>(null);
-  const [clientList, setClientList] = useState<Client[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalJobs, setTotalJobs] = useState(0);
 
   const router = useRouter();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const loadJobs = async () => {
-      try {
-        const response = await getJobs();
-        if (response.success && response.data && Array.isArray(response.data)) {
-          setJobs(response.data);
-          setTotalJobs(response.data.length);
-          setTotalPages(Math.ceil(response.data.length / pageSize) || 1);
-        }
-      } catch (error) {
-        console.error("Error fetching jobs:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const loadClients = async () => {
-      try {
-        // For now, let's use a simple approach - we'll get client names
-        // and create a mapping. In a real scenario, you might want to get full client objects
-        const clientNames = await getClientNames();
-        console.log('Client names received:', clientNames);
-        
-        // Since we only have names, we'll create a simple mapping
-        // In a production app, you'd want to get full client objects with IDs
-        const clients = clientNames.map((name, index) => ({
-          _id: `temp-${index}`, // Temporary ID since we only have names
-          name: name
-        }));
-        setClientList(clients);
-      } catch (error) {
-        console.error("Error fetching clients:", error);
-      }
-    };
-
-    loadClients();
-    loadJobs();
-  }, [pageSize]);
-
-  useEffect(() => {
-    setTotalPages(Math.ceil(jobs.length / pageSize) || 1);
-    setTotalJobs(jobs.length);
-    if (currentPage > Math.ceil(jobs.length / pageSize)) {
-      setCurrentPage(1);
-    }
-  }, [jobs, pageSize]);
+  const { data: jobsData, isLoading, isFetching, refetch } = useQuery({
+    queryKey: ["jobs", currentPage, pageSize],
+    queryFn: () => getJobs(),
+    placeholderData: (prev) => prev, // keep previous page data while fetching
+  });
+  // Support both PaginatedJobResponse { jobs, total, pages } and JobResponse { data, count }
+  const jobs = (jobsData as any)?.jobs ?? (jobsData as any)?.data ?? [];
+  const totalJobs = (jobsData as any)?.total ?? (jobsData as any)?.count ?? jobs.length;
+  const totalPages = (jobsData as any)?.pages ?? (totalJobs ? Math.max(1, Math.ceil(totalJobs / pageSize)) : 1);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
     }
-  };
-
-  // Paginate jobs
-  const paginatedJobs = jobs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-
-  const getClientName = (clientId: string) => {
-    const client = clientList.find((client) => client._id === clientId);
-    return client ? client.name : "Unknown";
   };
 
   // Ensure we always pass a valid JobStage to components expecting it
@@ -179,28 +122,22 @@ export default function JobsPage() {
     const { jobId, newStage } = pendingStageChange;
 
     try {
-      // Update local state immediately for better UX
-      setJobs((prev) => prev.map((job) => (job._id === jobId ? { ...job, stage: newStage } : job)));
-
-      // Make API call to update the stage using jobService
       const response = await updateJobStage(jobId, newStage);
 
       if (!response.success) {
         throw new Error("Failed to update job stage");
       }
+      // Refresh jobs list
+      await queryClient.invalidateQueries({ queryKey: ["jobs"] });
     } catch (error) {
       console.error("Error updating job stage:", error);
-      // Revert the local state if the API call fails
-      setJobs((prev) =>
-        prev.map((job) => (job._id === jobId ? { ...job, stage: job.stage } : job)),
-      );
     } finally {
       setPendingStageChange(null);
       setConfirmOpen(false);
     }
   };
 
-  if (loading) {
+  if (isLoading && jobs.length === 0) {
     return (
       <div className="flex flex-col h-full">
         {/* Header */}
@@ -220,7 +157,7 @@ export default function JobsPage() {
               <SlidersHorizontal className="h-4 w-4 mr-2" />
               Filters
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
               <RefreshCcw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
@@ -258,7 +195,7 @@ export default function JobsPage() {
         <Dashboardheader
           setOpen={setOpen}
           setFilterOpen={setFilterOpen}
-          initialLoading={loading}
+          initialLoading={isLoading || isFetching}
           heading="Jobs"
           buttonText="Create Job Requirement"
         />
@@ -270,8 +207,8 @@ export default function JobsPage() {
                 <Tableheader tableHeadArr={columsArr} className="sticky top-0 z-20 bg-white" />
               </TableHeader>
               <TableBody>
-                {paginatedJobs.length > 0 ? (
-                  paginatedJobs.map((job) => (
+                {jobs.length > 0 ? (
+                  jobs.map((job:any) => (
                     <TableRow
                       key={job._id}
                       className="hover:bg-muted/50 cursor-pointer"
@@ -279,7 +216,7 @@ export default function JobsPage() {
                     >
                       <TableCell className="text-sm font-medium">{job.jobTitle}</TableCell>
                       <TableCell className="text-sm capitalize">{job.jobType}</TableCell>
-                      <TableCell className="text-sm">{job.location}</TableCell>
+                      <TableCell className="text-sm">{Array.isArray(job.location) ? job.location.join(", ") : job.location ?? ""}</TableCell>
                       <TableCell className="text-sm">{job.headcount}</TableCell>
                       <TableCell className="text-sm"
                        onClick={(e)=>e.stopPropagation()}
@@ -292,9 +229,7 @@ export default function JobsPage() {
                       <TableCell className="text-sm">{job.minimumSalary}</TableCell>
                       <TableCell className="text-sm">{job.maximumSalary}</TableCell>
                       <TableCell className="text-sm">
-                        {typeof job.client === "string"
-                          ? getClientName(job.client)
-                          : job.client?.name ?? "Unknown"}
+                        {job.client}
                       </TableCell>
                     </TableRow>
                   ))
@@ -318,7 +253,7 @@ export default function JobsPage() {
               pageSize={pageSize}
               setPageSize={setPageSize}
               handlePageChange={handlePageChange}
-              clientsLength={paginatedJobs.length}
+              clientsLength={jobs.length}
             />
           </div>
         </div>

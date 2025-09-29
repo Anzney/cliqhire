@@ -1,21 +1,17 @@
 "use client";
 import { Candidate, candidateService } from "@/services/candidateService";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableHeader, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Loader } from "lucide-react";
-import { CandidatesEmptyState } from "./empty-states";
-import { CreateCandidate } from "@/components/candidates/create-candidate";
+import { CandidatesEmptyState } from "../../../components/candidates/empty-states";
 // import Link from 'next/link'
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CreateFolder } from "@/components/candidates/create-folder";
-import { AdvanceSearch } from "@/components/candidates/AdvSearch";
 import Dashboardheader from "@/components/dashboard-header";
 import Tableheader from "@/components/table-header";
 import { CreateCandidateModal } from "@/components/candidates/create-candidate-modal";
 import { CandidateStatusBadge } from "@/components/candidate-status-badge";
 import { toast } from "sonner";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const columsArr = [
   "Candidate Name",
@@ -29,45 +25,30 @@ const columsArr = [
 
 export default function CandidatesPage() {
   const router = useRouter();
-  // Add candidates state
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [initialLoading, setInitialLoading] = useState(true);
-
-  useEffect(() => {
-    setInitialLoading(true);
-    candidateService.getCandidates().then(response => {
-      setCandidates(response.candidates);
-      setInitialLoading(false);
-    }).catch(error => {
-      console.error('Error fetching candidates:', error);
-      setCandidates([]);
-      setInitialLoading(false);
-    });
-  }, []);
-  // const [selected, setSelected] = useState("candidate");
+  const queryClient = useQueryClient();
+  const { data, isLoading: initialLoading } = useQuery({
+    queryKey: ["candidates"],
+    queryFn: () => candidateService.getCandidates(),
+  });
+  const candidates: Candidate[] = data?.candidates ?? [];
   const [open, setOpen] = useState(false);
-  const [filterOpen, setFilterOpen] = useState(false);
+  // const [selected, setSelected] = useState("candidate");
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ candidateId, newStatus }: { candidateId: string; newStatus: string }) => {
+      return candidateService.updateCandidate(candidateId, { status: newStatus });
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["candidates"] });
+      toast.success(`Candidate status updated to ${variables.newStatus}`);
+    },
+    onError: () => {
+      toast.error("Failed to update candidate status");
+    },
+  });
 
   const handleStatusChange = async (candidateId: string, newStatus: string) => {
-    try {
-      // Update the candidate status in the backend
-      await candidateService.updateCandidate(candidateId, { status: newStatus });
-      
-      // Update the local state
-      setCandidates(prev => 
-        prev.map(candidate => 
-          candidate._id === candidateId 
-            ? { ...candidate, status: newStatus }
-            : candidate
-        )
-      );
-      
-      // Show success toast
-      toast.success(`Candidate status updated to ${newStatus}`);
-    } catch (error) {
-      console.error('Error updating candidate status:', error);
-      toast.error('Failed to update candidate status');
-    }
+    await updateStatusMutation.mutateAsync({ candidateId, newStatus });
   };
 
   return (
@@ -75,7 +56,11 @@ export default function CandidatesPage() {
       <CreateCandidateModal
         isOpen={open}
         onClose={() => setOpen(false)}
-        onCandidateCreated={(candidate) => setCandidates((prev) => [candidate, ...prev])}
+        onCandidateCreated={async () => {
+          // Refetch the list after creating a candidate
+          await queryClient.invalidateQueries({ queryKey: ["candidates"] });
+          setOpen(false);
+        }}
       />
 
       {/* Header */}
@@ -87,7 +72,6 @@ export default function CandidatesPage() {
         heading="Candidates"
         buttonText="Create Candidate"
       />
-
 
       <div className="flex-1">
         {initialLoading ? (
@@ -120,28 +104,28 @@ export default function CandidatesPage() {
                   className="cursor-pointer hover:bg-gray-100"
                   onClick={(e) => {
                     // Don't navigate if clicking on the status badge
-                    if (!(e.target as HTMLElement).closest('.candidate-status-badge')) {
+                    if (!(e.target as HTMLElement).closest(".candidate-status-badge")) {
                       router.push(`/candidates/${candidate._id}`);
                     }
                   }}
                 >
-                  <TableCell className="text-sm font-medium">{candidate.name || 'N/A'}</TableCell>
-                  <TableCell className="text-sm">{candidate.email || 'N/A'}</TableCell>
-                  <TableCell className="text-sm">{candidate.phone || 'N/A'}</TableCell>
-                  <TableCell className="text-sm">{candidate.location || 'N/A'}</TableCell>
+                  <TableCell className="text-sm font-medium">{candidate.name || "N/A"}</TableCell>
+                  <TableCell className="text-sm">{candidate.email || "N/A"}</TableCell>
+                  <TableCell className="text-sm">{candidate.phone || "N/A"}</TableCell>
+                  <TableCell className="text-sm">{candidate.location || "N/A"}</TableCell>
                   <TableCell className="text-sm">
-                    <CandidateStatusBadge 
-                      id={candidate._id} 
-                      status={(candidate.status as any) || 'Active'} 
+                    <CandidateStatusBadge
+                      id={candidate._id}
+                      status={(candidate.status as any) || "Active"}
                       onStatusChange={handleStatusChange}
                     />
                   </TableCell>
-                  <TableCell className="text-sm">{candidate.experience || 'N/A'}</TableCell>
+                  <TableCell className="text-sm">{candidate.experience || "N/A"}</TableCell>
                   <TableCell className="text-sm">
                     {candidate.resume ? (
-                      <a 
-                        href={candidate.resume} 
-                        target="_blank" 
+                      <a
+                        href={candidate.resume}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:underline"
                         onClick={(e) => e.stopPropagation()}
@@ -149,7 +133,7 @@ export default function CandidatesPage() {
                         View Resume
                       </a>
                     ) : (
-                      'N/A'
+                      "N/A"
                     )}
                   </TableCell>
                 </TableRow>

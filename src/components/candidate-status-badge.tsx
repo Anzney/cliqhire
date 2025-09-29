@@ -130,10 +130,21 @@ export function CandidateStatusBadge({ id, status, onStatusChange }: CandidateSt
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={handleCancelStatusChange}>
+            <Button
+              variant="outline"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCancelStatusChange();
+              }}
+            >
               Cancel
             </Button>
-            <Button onClick={handleConfirmStatusChange}>
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleConfirmStatusChange();
+              }}
+            >
               Confirm
             </Button>
           </DialogFooter>

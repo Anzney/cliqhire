@@ -24,10 +24,6 @@ export interface TempCandidate {
 
 export const tempCandidateService = {
   async createTempCandidate(data: CreateTempCandidateRequest): Promise<TempCandidate> {
-    console.log('Service: API_BASE_URL:', API_BASE_URL);
-    console.log('Service: Full URL:', `${API_BASE_URL}/api/temp-candidates`);
-    console.log('Service: Request data:', data);
-    
     const response = await axios.post(`${API_BASE_URL}/api/temp-candidates`, data);
     return response.data;
   },

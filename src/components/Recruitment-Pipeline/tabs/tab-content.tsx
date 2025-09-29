@@ -86,14 +86,12 @@ export const TabContent: React.FC<TabContentProps> = ({ value }) => {
               </DropdownMenuItem>
               <DropdownMenuItem onClick={(e) => {
                 e.stopPropagation();
-                console.log("Move to next round:", candidate.candidateName);
               }}>
                 <CheckCircle className="mr-2 h-4 w-4" />
                 Move To Next Round
               </DropdownMenuItem>
               <DropdownMenuItem onClick={(e) => {
                 e.stopPropagation();
-                console.log("Assign new recruiter:", candidate.candidateName);
               }}>
                 <Users className="mr-2 h-4 w-4" />
                 Assign New Recruiter
@@ -101,7 +99,6 @@ export const TabContent: React.FC<TabContentProps> = ({ value }) => {
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
-                  console.log("Delete candidate:", candidate.candidateName);
                 }}
                 className="text-red-600"
               >

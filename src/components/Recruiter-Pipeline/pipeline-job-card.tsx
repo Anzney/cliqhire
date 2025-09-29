@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { ChevronDown, ChevronRight, Users, MapPin, CircleDollarSign , Building2, Loader2, Plus, X, Table as TableIcon} from "lucide-react";
+import { useRef, useState } from "react";
+import { ChevronDown, ChevronRight, Users, MapPin, HandCoins , Building2, Loader2, Plus, Table as TableIcon} from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,12 +11,9 @@ import { CreateCandidateDialog, type CreateCandidateValues } from "./create-cand
 import { CreateCandidateModal } from "@/components/candidates/create-candidate-modal";
 import { Button } from "@/components/ui/button";
 import { deleteCandidateFromPipeline, updateCandidateStatus } from "@/services/recruitmentPipelineService";
-import { RecruiterPipelineService } from "@/services/recruiterPipelineService";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
-  pipelineStages, 
-  getStageColor, 
   type Job,
-  type JobTeamInfo,
   type Candidate,
   mapUIStageToBackendStage
 } from "./dummy-data";
@@ -24,9 +21,9 @@ import { CandidateDetailsDialog } from "./candidate-details-dialog";
 import { StatusChangeConfirmationDialog } from "./status-change-confirmation-dialog";
 import { useStageStore } from "./stage-store";
 import { useRouter } from "next/navigation";
-import { PipelineCandidatesTable } from "./PipelineCandidatesTable";
+import { PipelineJobExpanded } from "./PipelineJobExpanded";
 import { PDFViewer } from "@/components/ui/pdf-viewer";
-import { validateTempCandidateStageChange, isTempCandidate, validateTempCandidateStatusChange } from "@/lib/temp-candidate-validation";
+import { validateTempCandidateStageChange, validateTempCandidateStatusChange } from "@/lib/temp-candidate-validation";
 import { TempCandidateAlertDialog } from "./temp-candidate-alert-dialog";
 import { DisqualificationDialog, type DisqualificationData } from "./disqualification-dialog";
 import { InterviewDetailsDialog } from "./interview-details-dialog";
@@ -42,6 +39,7 @@ interface PipelineJobCardProps {
     extras?: { interviewDate?: string; interviewMeetingLink?: string }
   ) => Promise<void>;
   onCandidateUpdate?: (jobId: string, updatedCandidate: Candidate) => void;
+  isHighlighted?: boolean;
 }
 
 export function PipelineJobCard({ 
@@ -49,16 +47,22 @@ export function PipelineJobCard({
   loadingJobId, 
   onToggleExpansion, 
   onUpdateCandidateStage,
-  onCandidateUpdate
+  onCandidateUpdate,
+  isHighlighted = false,
 }: PipelineJobCardProps) {
   const router = useRouter();
-  const [selectedCandidate, setSelectedCandidate] = React.useState<Candidate | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const [isAddCandidateOpen, setIsAddCandidateOpen] = React.useState(false);
-  const [isCreateCandidateOpen, setIsCreateCandidateOpen] = React.useState(false);
+  const cardRef =useRef<HTMLDivElement | null>(null);
+  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAddCandidateOpen, setIsAddCandidateOpen]= useState(false);
+  const [isCreateCandidateOpen, setIsCreateCandidateOpen]= useState(false);
+  // Consolidated UI state
+  const [isAddExistingOpen, setIsAddExistingOpen] = useState(false);
+  const [selectedStageFilter, setSelectedStageFilter] = useState<string | null>(null);
+  
   
   // Status change confirmation dialog state
-  const [statusChangeDialog, setStatusChangeDialog] = React.useState<{
+  const [statusChangeDialog, setStatusChangeDialog] =useState<{
     isOpen: boolean;
     candidate: Candidate | null;
     newStatus: string | null;
@@ -69,7 +73,7 @@ export function PipelineJobCard({
   });
 
   // Interview details dialog state
-  const [interviewDialog, setInterviewDialog] = React.useState<{
+  const [interviewDialog, setInterviewDialog] = useState<{
     isOpen: boolean;
     candidate: Candidate | null;
   }>({
@@ -78,7 +82,7 @@ export function PipelineJobCard({
   });
 
   // Stage change confirmation dialog state
-  const [stageChangeDialog, setStageChangeDialog] = React.useState<{
+  const [stageChangeDialog, setStageChangeDialog] = useState<{
     isOpen: boolean;
     candidate: Candidate | null;
     currentStage: string;
@@ -91,7 +95,7 @@ export function PipelineJobCard({
   });
 
   // Delete candidate confirmation dialog state
-  const [deleteCandidateDialog, setDeleteCandidateDialog] = React.useState<{
+  const [deleteCandidateDialog, setDeleteCandidateDialog] =useState<{
     isOpen: boolean;
     candidate: Candidate | null;
   }>({
@@ -100,7 +104,7 @@ export function PipelineJobCard({
   });
 
   // PDF viewer state
-  const [pdfViewer, setPdfViewer] = React.useState<{
+  const [pdfViewer, setPdfViewer] = useState<{
     isOpen: boolean;
     pdfUrl: string | null;
     candidateName: string | null;
@@ -111,7 +115,7 @@ export function PipelineJobCard({
   });
 
   // Temp candidate alert dialog state
-  const [tempCandidateAlert, setTempCandidateAlert] = React.useState<{
+  const [tempCandidateAlert, setTempCandidateAlert] = useState<{
     isOpen: boolean;
     candidateName: string | null;
     message: string | null;
@@ -122,7 +126,7 @@ export function PipelineJobCard({
   });
 
   // Auto-create candidate dialog state for temp candidates
-  const [autoCreateCandidateDialog, setAutoCreateCandidateDialog] = React.useState<{
+  const [autoCreateCandidateDialog, setAutoCreateCandidateDialog] =useState<{
     isOpen: boolean;
     candidate: Candidate | null;
   }>({
@@ -131,7 +135,7 @@ export function PipelineJobCard({
   });
 
   // Disqualification dialog state
-  const [disqualificationDialog, setDisqualificationDialog] = React.useState<{
+  const [disqualificationDialog, setDisqualificationDialog] =useState<{
     isOpen: boolean;
     candidate: Candidate | null;
     newStatus: string | null;
@@ -144,23 +148,25 @@ export function PipelineJobCard({
   // Local stage store
   const { updateCandidateStage, getCandidateStage } = useStageStore();
 
-  // Function to calculate updated stage counts considering local changes
-  const getUpdatedStageCounts = () => {
-    const stageCounts: { [key: string]: number } = {};
-    
-    // Initialize counts for all stages
-    pipelineStages.forEach(stage => {
-      stageCounts[stage] = 0;
-    });
-    
-    // Count candidates based on their current stage (including local changes)
-    job.candidates.forEach(candidate => {
-      const currentStage = getCandidateStage(job.id, candidate.id) || candidate.currentStage;
-      stageCounts[currentStage] = (stageCounts[currentStage] || 0) + 1;
-    });
-    
-    return stageCounts;
-  };
+  // React Query client and mutations
+  const queryClient = useQueryClient();
+
+  const deleteCandidateMutation = useMutation({
+    mutationFn: (vars: { jobId: string; candidateId: string }) =>
+      deleteCandidateFromPipeline(vars.jobId, vars.candidateId),
+    onSuccess: () => {
+      // Invalidate any cached pipeline/job data
+      queryClient.invalidateQueries({ queryKey: ["pipeline", job.id] });
+    },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: (vars: { candidateId: string; payload: any }) =>
+      updateCandidateStatus(job.id, vars.candidateId, vars.payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pipeline", job.id] });
+    },
+  });
 
   const handleViewCandidate = (candidate: Candidate) => {
     setSelectedCandidate(candidate);
@@ -178,8 +184,6 @@ export function PipelineJobCard({
     
     // Notify the parent component about the update
     onCandidateUpdate?.(job.id, updatedCandidate);
-    
-    console.log('Candidate updated in pipeline job card:', updatedCandidate);
   };
 
   const handleStageChange = (candidate: Candidate, newStage: string) => {
@@ -260,8 +264,11 @@ export function PipelineJobCard({
   const handleConfirmDeleteCandidate = async () => {
     if (deleteCandidateDialog.candidate) {
       try {
-        // Call API to remove candidate from pipeline
-        await deleteCandidateFromPipeline(job.id, deleteCandidateDialog.candidate.id);
+        // Call API to remove candidate from pipeline via React Query
+        await deleteCandidateMutation.mutateAsync({
+          jobId: job.id,
+          candidateId: deleteCandidateDialog.candidate.id,
+        });
         
         // Close the dialog
         setDeleteCandidateDialog({ isOpen: false, candidate: null });
@@ -294,39 +301,22 @@ export function PipelineJobCard({
     setIsCreateCandidateOpen(true);
   };
 
-  const handleCreateCandidateSubmit = (values: CreateCandidateValues) => {
-    console.log('Create candidate for job:', job.id, values);
-    console.log('Job object:', job);
-    console.log('Job ID type:', typeof job.id);
-    // TODO: integrate API call
+  const handleCreateCandidateSubmit = async (_values: CreateCandidateValues) => {
+    try {
+      // Ask parent to refresh this job and list
+      onCandidateUpdate?.(job.id, {} as any);
+      // Invalidate the broader list query used by parent: ["pipelineEntries", userId]
+      await queryClient.invalidateQueries({ predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "pipelineEntries" });
+      // Force revalidation for any server-rendered segments
+      router.refresh();
+    } catch (e) {
+      console.error('Error after creating new candidate:', e);
+    }
   };
 
-  const [isAddExistingOpen, setIsAddExistingOpen] = React.useState(false);
   
-  // Filter state for stage filtering
-  const [selectedStageFilter, setSelectedStageFilter] = React.useState<string | null>(null);
 
-  // Function to get filtered candidates based on selected stage
-  const getFilteredCandidates = () => {
-    if (!selectedStageFilter) {
-      return job.candidates;
-    }
-    return job.candidates.filter(candidate => {
-      const currentStage = getCandidateStage(job.id, candidate.id) || candidate.currentStage;
-      return currentStage === selectedStageFilter;
-    });
-  };
-
-  // Function to handle stage badge click
-  const handleStageBadgeClick = (stage: string) => {
-    if (selectedStageFilter === stage) {
-      // If clicking the same stage, clear the filter
-      setSelectedStageFilter(null);
-    } else {
-      // Filter by the selected stage
-      setSelectedStageFilter(stage);
-    }
-  };
+  // Filtering is handled in child via selectedStageFilter
 
   // Function to handle status change
   const handleStatusChange = (candidate: Candidate, newStatus: any) => {
@@ -357,6 +347,7 @@ export function PipelineJobCard({
       setDisqualificationDialog({
         isOpen: true,
         candidate,
+        newStatus,
       });
       return;
     }
@@ -372,10 +363,13 @@ export function PipelineJobCard({
   const handleConfirmStatusChange = async () => {
     if (statusChangeDialog.candidate && statusChangeDialog.newStatus) {
       try {
-        await updateCandidateStatus(job.id, statusChangeDialog.candidate.id, {
-          status: statusChangeDialog.newStatus,
-          stage: mapUIStageToBackendStage(statusChangeDialog.candidate.currentStage),
-          notes: `Status updated to ${statusChangeDialog.newStatus}`,
+        await updateStatusMutation.mutateAsync({
+          candidateId: statusChangeDialog.candidate.id,
+          payload: {
+            status: statusChangeDialog.newStatus,
+            stage: mapUIStageToBackendStage(statusChangeDialog.candidate.currentStage),
+            notes: `Status updated to ${statusChangeDialog.newStatus}`,
+          },
         });
         
         // Notify the parent component about the update
@@ -394,8 +388,6 @@ export function PipelineJobCard({
   };
 
   const handleViewResume = (candidate: Candidate) => {
-    console.log('Viewing resume for candidate:', candidate.name);
-    console.log('Resume URL:', candidate.resume);
     setPdfViewer({
       isOpen: true,
       pdfUrl: candidate.resume || null,
@@ -441,16 +433,18 @@ export function PipelineJobCard({
   const handleConfirmDisqualification = async (data: DisqualificationData) => {
     if (disqualificationDialog.candidate) {
       try {
-        console.log('Disqualifying candidate:', disqualificationDialog.candidate.name, data);
-        // Single API call to update candidate status with all disqualification data
-        await updateCandidateStatus(job.id, disqualificationDialog.candidate.id, {
-          status: 'Disqualified',
-          stage: mapUIStageToBackendStage(disqualificationDialog.candidate.currentStage),
-          notes: `Disqualified: ${data.disqualificationReason}`,
-          disqualificationStage: data.disqualificationStage,
-          disqualificationStatus: data.disqualificationStatus,
-          disqualificationReason: data.disqualificationReason,
-          disqualificationFeedback: data.disqualificationFeedback || "",
+        // Single API call to update candidate status with all disqualification data via React Query
+        await updateStatusMutation.mutateAsync({
+          candidateId: disqualificationDialog.candidate.id,
+          payload: {
+            status: 'Disqualified',
+            stage: mapUIStageToBackendStage(disqualificationDialog.candidate.currentStage),
+            notes: `Disqualified: ${data.disqualificationReason}`,
+            disqualificationStage: data.disqualificationStage,
+            disqualificationStatus: data.disqualificationStatus,
+            disqualificationReason: data.disqualificationReason,
+            disqualificationFeedback: data.disqualificationFeedback || "",
+          },
         });
         
         // Notify the parent component about the update
@@ -469,14 +463,13 @@ export function PipelineJobCard({
   };
 
   const handleAutoCreateCandidateSubmit = async (candidate: any) => {
-    try {
-      console.log('Auto-create candidate for temp candidate:', autoCreateCandidateDialog.candidate?.name, candidate);
-      
-      // The conversion is now handled by the CreateCandidateForm itself
-      // We just need to refresh the job data after successful conversion
-      
+    try {  
       // Notify the parent component about the update
       onCandidateUpdate?.(job.id, candidate);
+      // Invalidate pipeline list/details queries to refetch latest data after create/convert
+      await queryClient.invalidateQueries({ predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "pipelineEntries" });
+      // Force revalidation for any server-rendered segments
+      // router.refresh();
       
       handleCloseAutoCreateDialog();
     } catch (error) {
@@ -487,7 +480,12 @@ export function PipelineJobCard({
 
   return (
     <>
-      <Card className="overflow-hidden shadow-sm border-gray-200">
+      <Card 
+        ref={cardRef}
+        className={`overflow-hidden shadow-sm border-gray-200 transition-all ${
+          isHighlighted ? 'ring-2 ring-blue-400 border-blue-300 bg-blue-50/40' : ''
+        }`}
+      >
         {/* Job Header - Clickable */}
         <CardHeader 
           className="cursor-pointer hover:bg-gray-50 transition-colors"
@@ -519,7 +517,7 @@ export function PipelineJobCard({
                     <span>{job.location}</span>
                   </div>
                   <div className="flex items-center space-x-1">
-                    <CircleDollarSign  className="h-4 w-4 text-yellow-500" />
+                    <HandCoins  className="h-4 w-4 text-yellow-500" />
                     <span>{typeof job.salaryRange === 'string' ? job.salaryRange : String(job.salaryRange || '')}</span>
                   </div>
                   <Badge variant="outline" className="bg-gray-100 text-gray-700">
@@ -569,66 +567,17 @@ export function PipelineJobCard({
         {/* Expanded Content */}
         {job.isExpanded && (
           <CardContent className="pt-0">
-            
-            {/* Pipeline Stage Badges - Clickable filters */}
-            <div className="flex flex-wrap gap-2 mb-6 ml-6">
-              {(() => {
-                const updatedCounts = getUpdatedStageCounts();
-                return pipelineStages.map((stage) => {
-                  const count = updatedCounts[stage] || 0;
-                  const isActive = selectedStageFilter === stage;
-                  return (
-                    <Badge 
-                      key={stage}
-                      variant="outline" 
-                      className={`${getStageColor(stage)} border cursor-pointer hover:opacity-80 transition-opacity ${
-                        isActive ? 'ring-2 ring-blue-500 ring-offset-2' : ''
-                      }`}
-                      onClick={() => handleStageBadgeClick(stage)}
-                    >
-                      {stage}: {count}
-                    </Badge>
-                  );
-                });
-              })()}
-              {selectedStageFilter && (
-                <Badge 
-                  variant="outline" 
-                  className="bg-gray-100 text-gray-600 border-gray-300 cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => setSelectedStageFilter(null)}
-                >
-                  <X className="text-red-500 h-3 w-3 mr-1" />
-                  Clear Filter
-                </Badge>
-              )}
-            </div>
-
-            {/* Candidates Table - Reusable component with sticky header within scroll container */}
-            <div className="border-2 border-blue-200 rounded-md bg-gray-50 max-h-[300px] overflow-hidden">
-              {selectedStageFilter && (
-                <div className="px-4 py-2 bg-blue-50 border-b border-blue-200 text-sm text-blue-700 ">
-                  Showing candidates in: <span className="font-semibold">{selectedStageFilter}</span>
-                  <span className="ml-2 text-blue-500">({getFilteredCandidates().length} candidates)</span>
-                </div>
-              )}
-              <div className="overflow-y-auto max-h-[300px]" style={{
-                scrollbarWidth: 'thin',
-                scrollbarColor: '#d1d5db #f3f4f6'
-              }}>
-                <PipelineCandidatesTable
-                  job={job}
-                  candidates={getFilteredCandidates().map((c) => ({
-                    ...c,
-                    currentStage: getCandidateStage(job.id, c.id) || c.currentStage,
-                  }))}
-                  onStageChange={handleStageChange}
-                  onStatusChange={handleStatusChange as any}
-                  onViewCandidate={handleViewCandidate}
-                  onViewResume={handleViewResume}
-                  onDeleteCandidate={handleDeleteCandidate}
-                />
-              </div>
-            </div>
+            <PipelineJobExpanded
+              job={job}
+              selectedStageFilter={selectedStageFilter}
+              onChangeStageFilter={setSelectedStageFilter}
+              resolveCurrentStage={(c) => getCandidateStage(job.id, c.id) || c.currentStage}
+              onStageChange={handleStageChange}
+              onStatusChange={handleStatusChange as any}
+              onViewCandidate={handleViewCandidate}
+              onViewResume={handleViewResume}
+              onDeleteCandidate={handleDeleteCandidate}
+            />
           </CardContent>
         )}
       </Card>
@@ -670,8 +619,12 @@ export function PipelineJobCard({
         isPipeline={true}
         pipelineId={job.id}
         onCandidatesAdded={() => {
-          // Refresh the job data or trigger a reload
-          console.log('Candidates added to pipeline, refreshing...');
+          // Ask parent to refresh this job and list
+          onCandidateUpdate?.(job.id, {} as any);
+          // Invalidate the broader list query used by parent: ["pipelineEntries", userId]
+          queryClient.invalidateQueries({ predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "pipelineEntries" });
+          // Force revalidation for any server-rendered segments
+          // router.refresh();
         }}
       />
 

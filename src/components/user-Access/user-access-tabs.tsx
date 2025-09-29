@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Users, Shield, MoreVertical, Eye, Trash2, Edit } from "lucide-react";
-import { createPortal } from "react-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,7 +47,6 @@ import { getTeamMembers } from "@/services/teamMembersService";
 import { getTeams, deleteTeam, updateTeamStatus, Team } from "@/services/teamService";
 
 interface UserAccessTabsProps {
-  refreshTrigger?: number;
   addTeamDialogOpen?: boolean;
   setAddTeamDialogOpen?: (open: boolean) => void;
   onTeamCreated?: () => void;
@@ -56,60 +55,83 @@ interface UserAccessTabsProps {
 
 
 export function UserAccessTabs({ 
-  refreshTrigger, 
   addTeamDialogOpen, 
   setAddTeamDialogOpen, 
   onTeamCreated 
 }: UserAccessTabsProps) {
   const [activeTab, setActiveTab] = useState("teams");
   const [internalDialogOpen, setInternalDialogOpen] = useState(false);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [loadingTeamMembers, setLoadingTeamMembers] = useState(false);
-  const [loadingTeams, setLoadingTeams] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [teamToView, setTeamToView] = useState<Team | null>(null);
-  const [teamId, setTeamId] = useState<string>();
-  const [newStatus, setNewStatus] = useState<string>();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingChange, setPendingChange] = useState<{ teamId: string; status: string } | null>(null);
+  const queryClient = useQueryClient();
+
+  // React Query: fetch teams and team members
+  const teamsQuery = useQuery({
+    queryKey: ["teams"],
+    queryFn: getTeams,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+  const teamMembersQuery = useQuery({
+    queryKey: ["teamMembers"],
+    queryFn:() => getTeamMembers(),
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+
+  const teams: Team[] = teamsQuery.data?.teams ?? [];
+  const teamMembers: TeamMember[] = teamMembersQuery.data?.teamMembers ?? [];
 
   // Use external dialog state if provided, otherwise use internal state
   const dialogOpen = addTeamDialogOpen !== undefined ? addTeamDialogOpen : internalDialogOpen;
   const setDialogOpen = setAddTeamDialogOpen || setInternalDialogOpen;
 
-  // Fetch team members and teams when component mounts
-  useEffect(() => {
-    fetchTeamMembers();
-    fetchTeams();
-  }, [refreshTrigger]);
+  // Mutations: update team status and delete team with optimistic updates
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ teamId, status }: { teamId: string; status: string }) => updateTeamStatus(teamId, status),
+    onMutate: async ({ teamId, status }) => {
+      await queryClient.cancelQueries({ queryKey: ["teams"] });
+      const previous = queryClient.getQueryData<{ teams: Team[] }>(["teams"]);
+      queryClient.setQueryData<{ teams: Team[] }>(["teams"], (old) => {
+        const current = old?.teams ?? [];
+        return { teams: current.map(t => t._id === teamId ? { ...t, teamStatus: status } as Team : t) };
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["teams"], context.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+    },
+  });
 
-  const fetchTeamMembers = async () => {
-    setLoadingTeamMembers(true);
-    try {
-      const response = await getTeamMembers();
-      setTeamMembers(response.teamMembers);
-    } catch (error) {
-      // Handle error silently or show user feedback
-    } finally {
-      setLoadingTeamMembers(false);
-    }
-  };
-
-  const fetchTeams = async () => {
-    setLoadingTeams(true);
-    try {
-      const response = await getTeams();
-      setTeams(response.teams);
-    } catch (error) {
-      // Handle error silently or show user feedback
-    } finally {
-      setLoadingTeams(false);
-    }
-  };
+  const deleteTeamMutation = useMutation({
+    mutationFn: (id: string) => deleteTeam(id),
+    onMutate: async (id: string) => {
+      await queryClient.cancelQueries({ queryKey: ["teams"] });
+      const previous = queryClient.getQueryData<{ teams: Team[] }>(["teams"]);
+      queryClient.setQueryData<{ teams: Team[] }>(["teams"], (old) => {
+        const current = old?.teams ?? [];
+        return { teams: current.filter(t => t._id !== id) };
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["teams"], context.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+    },
+  });
 
   const teamsHeaderArr = [
     "Team Name",
@@ -120,19 +142,9 @@ export function UserAccessTabs({
     "Action",
   ];
 
-  const getTeamMemberById = (id: string) => {
-    return teamMembers.find(member => member._id === id);
-  };
-
-  const getTeamMemberName = (id: string) => {
-    const member = getTeamMemberById(id);
-    return member ? member.name : "Unknown";
-  };
-
   const handleAddTeamSuccess = (teamData: any) => {
-    // The teamData should already be in the correct format from the API
-    setTeams(prev => [...prev, teamData]);
-    
+    // Ensure fresh teams list from server
+    queryClient.invalidateQueries({ queryKey: ["teams"] });
     // Call the parent callback if provided
     if (onTeamCreated) {
       onTeamCreated();
@@ -146,49 +158,15 @@ export function UserAccessTabs({
 
   const handleConfirmChange = async () => {
     if (!pendingChange) return;
-
-    setTeamId(pendingChange.teamId);
-    setNewStatus(pendingChange.status);
-    setTeams(prev => prev.map(team => 
-      team._id === pendingChange.teamId ? { ...team, teamStatus: pendingChange.status } : team
-    ));
+    updateStatusMutation.mutate({ teamId: pendingChange.teamId, status: pendingChange.status });
     setShowConfirmDialog(false);
+    setPendingChange(null);
   };
 
   const handleCancelChange = () => {
     setPendingChange(null);
     setShowConfirmDialog(false);
   };
-
-  useEffect(() => {
-    const updateTeamStatusHandler = async () => {
-      if (!teamId || !newStatus) return;
-  
-      try {
-        setIsLoading(true);
-  
-        const updatedTeam = await updateTeamStatus(teamId, newStatus);
-        
-        // Update the teams list with the updated team data
-        setTeams(prev => prev.map(team => 
-          team._id === teamId ? updatedTeam : team
-        ));
-
-      } catch (error) {
-        console.error('Failed to update team status:', error);
-        // Revert the local state if the API call fails
-        setTeams(prev => prev.map(team => 
-          team._id === teamId ? { ...team, teamStatus: team.teamStatus } : team
-        ));
-      } finally {
-        setIsLoading(false);
-        setTeamId(undefined);
-        setNewStatus(undefined);
-      }
-    };
-  
-    updateTeamStatusHandler();
-  }, [teamId, newStatus]);
 
   const handleViewTeam = (team: Team) => {
     setTeamToView(team);
@@ -202,14 +180,15 @@ export function UserAccessTabs({
 
   const confirmDeleteTeam = async () => {
     if (teamToDelete) {
-      try {
-        await deleteTeam(teamToDelete._id);
-        setTeams(prev => prev.filter(team => team._id !== teamToDelete._id));
-        setDeleteDialogOpen(false);
-        setTeamToDelete(null);
-      } catch (error) {
-        alert('Failed to delete team. Please try again.');
-      }
+      deleteTeamMutation.mutate(teamToDelete._id, {
+        onSuccess: () => {
+          setDeleteDialogOpen(false);
+          setTeamToDelete(null);
+        },
+        onError: () => {
+          alert('Failed to delete team. Please try again.');
+        }
+      });
     }
   };
 
@@ -219,7 +198,7 @@ export function UserAccessTabs({
   };
 
   const renderTeamsTable = () => {
-    if (isLoading) {
+    if (teamsQuery.isLoading) {
       return <div>Loading...</div>;
     }
 
@@ -250,8 +229,8 @@ export function UserAccessTabs({
     return teams.map((team) => (
       <TableRow key={team._id} className="hover:bg-muted/50">
         <TableCell className="text-sm font-medium">{team.teamName}</TableCell>
-        <TableCell className="text-sm">{team.hiringManagerId.name}</TableCell>
-        <TableCell className="text-sm">{team.teamLeadId.name}</TableCell>
+        <TableCell className="text-sm">{team.hiringManagerId?.name || "—"}</TableCell>
+        <TableCell className="text-sm">{team.teamLeadId?.name || "—"}</TableCell>
         <TableCell className="text-sm">{team.recruiterCount}</TableCell>
         <TableCell className="text-sm">
           <TeamStatusBadge 
@@ -263,24 +242,24 @@ export function UserAccessTabs({
           <div className="relative">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-gray-100 border border-gray-200">
-                  <MoreVertical className="h-4 w-4" />
+                <Button variant="outline" className="h-8 w-8 p-0 hover:bg-gray-100 border border-gray-200">
+                  <MoreVertical className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent 
                 align="end" 
                 side="bottom" 
-                className="z-[9999] min-w-[120px] bg-white border border-gray-200 shadow-lg"
-                style={{ position: 'absolute', zIndex: 9999 }}
+                // className="z-[9999] min-w-[120px] bg-white border border-gray-200 shadow-lg"
+                // style={{ position: 'absolute', zIndex: 9999 }}
               >
                 <DropdownMenuItem onClick={() => handleViewTeam(team)}>
                   <Eye className="mr-2 h-4 w-4" />
                   View
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleViewTeam(team)}>
+                {/* <DropdownMenuItem onClick={() => handleViewTeam(team)}>
                   <Edit className="mr-2 h-4 w-4" />
                   Edit
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
                 <DropdownMenuItem
                   onClick={() => handleDeleteTeam(team)}
                   className="text-red-600"
@@ -344,10 +323,9 @@ export function UserAccessTabs({
         <TabsContent value="user-permission" className="p-0 mt-0">
           <div className="flex-1">
             <UserPermissionTab 
-              refreshTrigger={refreshTrigger} 
               teamMembers={teamMembers}
-              loading={loadingTeamMembers}
-              onRefresh={fetchTeamMembers}
+              loading={teamMembersQuery.isLoading}
+              onRefresh={teamMembersQuery.refetch}
             />
           </div>
         </TabsContent>
@@ -394,7 +372,7 @@ export function UserAccessTabs({
             <Button variant="outline" onClick={cancelDeleteTeam}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmDeleteTeam}>
+            <Button variant="destructive" onClick={confirmDeleteTeam} disabled={deleteTeamMutation.isPending}>
               Delete Team
             </Button>
           </DialogFooter>

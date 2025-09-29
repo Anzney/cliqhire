@@ -13,113 +13,13 @@ import { FileUploadModal } from "../modals/file-upload-modal";
 import { Plus, Pencil, ChevronsUpDown, X } from "lucide-react";
 import { SalesInfo } from "./sales/salesInfo";
 import { toast } from "sonner";
-
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import ContractOverview from "./contract-overview";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { getFileType ,ClientDetails ,PrimaryContact , TeamMemberType ,ContactType} from "./summaryType";
+import { api } from "@/lib/axios-config";
+import { useQueryClient } from "@tanstack/react-query";
 
-// Helper function to detect file type
-const getFileType = (fileName: string): "pdf" | "docx" | "image" | "other" => {
-  if (!fileName) return "other";
-
-  const extension = fileName.toLowerCase().split(".").pop();
-
-  switch (extension) {
-    case "pdf":
-      return "pdf";
-    case "docx":
-    case "doc":
-      return "docx";
-    case "jpg":
-    case "jpeg":
-    case "png":
-    case "gif":
-    case "webp":
-    case "svg":
-      return "image";
-    default:
-      return "other";
-  }
-};
-
-interface ClientDetails {
-  clientPriority: string;
-  clientSegment: string;
-  name: string;
-  website?: string;
-  industry?: string;
-  location?: string;
-  address?: string;
-  incorporationDate?: string;
-  countryOfRegistration?: string;
-  lineOfBusiness?: string;
-  registrationNumber?: string;
-  countryOfBusiness?: string;
-  description?: string;
-  salesLead?: string;
-  referredBy?: string;
-  linkedInProfile?: string;
-  clientLinkedInPage?: string;
-  linkedInPage?: string;
-  clientProfileImage?: string;
-  profileImage?: string;
-  crCopy?: {
-    url: string;
-    fileName: string;
-  };
-  vatCopy?: {
-    url: string;
-    fileName: string;
-  };
-  gstTinDocument?: {
-    url: string;
-    fileName: string;
-  };
-  phoneNumber?: string;
-  googleMapsLink?: string;
-  position?: string;
-  email?: string;
-  primaryContacts?: PrimaryContact[];
-  labelType?: {
-    seniorLevel?: string;
-    executives?: string;
-    nonExecutives?: string;
-    other?: string;
-  };
-  seniorLevel?: string;
-  executives?: string;
-  nonExecutives?: string;
-  other?: string;
-  contractStartDate?: string;
-  contractEndDate?: string;
-  emails?: string[];
-}
-
-interface PrimaryContact {
-  firstName: string;
-  lastName: string;
-  gender: string;
-  email: string;
-  phone: string;
-  countryCode: string;
-  position: string;
-  linkedin: string;
-}
-
-interface TeamMemberType {
-  name: string;
-  role: string;
-  email: string;
-  isActive?: boolean;
-}
-
-interface ContactType {
-  name: string;
-  email: string;
-  phone: string;
-  countryCode: string;
-  position: string;
-}
 
 export function SummaryContent({
   clientId,
@@ -130,24 +30,7 @@ export function SummaryContent({
   clientData?: any;
   onTabSwitch?: (tabValue: string) => void;
 }) {
-  const [clientDetails, setClientDetails] = useState<ClientDetails>(() => {
-    // Initialize with clientData and map primary contacts
-    const mappedContacts = (clientData?.primaryContacts || []).map((c: any) => ({
-      firstName: c.firstName || (c.name ? c.name.split(" ")[0] : ""),
-      lastName: c.lastName || (c.name ? c.name.split(" ").slice(1).join(" ") : ""),
-      gender: c.gender || "",
-      email: c.email || "",
-      phone: c.phone || "",
-      countryCode: c.countryCode || "",
-      position: c.position || c.designation || "",
-      linkedin: c.linkedin || "",
-    }));
-
-    return {
-      ...clientData,
-      primaryContacts: mappedContacts,
-    };
-  });
+  const queryClient = useQueryClient();
 
   const [teamMembers, setTeamMembers] = useState<TeamMemberType[]>([
     { name: "Shaswat singh", role: "Admin", email: "shaswat@example.com", isActive: true },
@@ -158,34 +41,24 @@ export function SummaryContent({
   const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
   const [previewFileUrl, setPreviewFileUrl] = useState("");
   const [previewFileName, setPreviewFileName] = useState("");
-  const [error, setError] = useState("");
+  // Removed unused error state
 
   // File upload modal states
   const [isFileUploadModalOpen, setIsFileUploadModalOpen] = useState(false);
   const [currentUploadField, setCurrentUploadField] = useState<keyof ClientDetails | null>(null);
   const [currentUploadTitle, setCurrentUploadTitle] = useState("");
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
   const updateClientDetails = async (
     fieldName: string,
     value: string | string[] | PrimaryContact | { url: string; fileName: string },
   ) => {
     try {
-      const response = await fetch(`https://aems-backend.onrender.com/api/clients/${clientId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ [fieldName]: value }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Update failed:", response.status, errorText);
-        toast.error("Failed to update client details");
-      }
-
-      setClientDetails((prev) => ({
-        ...prev,
+      const response = await api.patch(`/api/clients/${clientId}`, { [fieldName]: value });
+      // Optimistically update React Query cache
+      queryClient.setQueryData(["clientsData", clientId], (old: any) => ({
+        ...(old || {}),
         [fieldName]: value,
       }));
       toast.success("Client details updated successfully");
@@ -210,29 +83,10 @@ export function SummaryContent({
       formData.append("file", file);
       formData.append("field", currentUploadField);
 
-      const response = await fetch(
-        `https://aems-backend.onrender.com/api/clients/${clientId}/upload`,
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Upload failed");
-      }
-
-      const result = await response.json();
+      const response = await api.post(`/api/clients/${clientId}/upload`, formData);
+      const result = response.data;
       const fileUrl = result.data?.filePath || file.name;
-
-      setClientDetails((prev) => ({
-        ...prev,
-        [currentUploadField]: {
-          url: fileUrl,
-          fileName: file.name,
-        },
-      }));
-
+      // Update cache and backend
       await updateClientDetails(currentUploadField, {
         url: fileUrl,
         fileName: file.name,
@@ -254,35 +108,14 @@ export function SummaryContent({
           formData.append("file", file); // The file itself
           formData.append("field", field); // The field name (e.g., "vatCopy" or "crCopy")
 
-          const response = await fetch(
-            `https://aems-backend.onrender.com/api/clients/${clientId}/upload`,
-            {
-              method: "POST",
-              body: formData,
-            },
-          );
-
-          if (!response.ok) {
-            toast.error("Failed to upload file");
-          }
-
-          const result = await response.json();
+          const response = await api.post(`/api/clients/${clientId}/upload`, formData);
+          const result = response.data;
           const fileUrl = result.data?.filePath || file.name;
-
-          setClientDetails((prev) => ({
-            ...prev,
-            [field]: fileUrl,
-          }));
           toast.success("File uploaded successfully");
 
           await updateClientDetails(field, fileUrl);
         } catch (error) {
           console.error(`Error uploading ${field}:`, error);
-          setClientDetails((prev) => ({
-            ...prev,
-            [field]: file?.name || "",
-          }));
-          setError(`Failed to upload ${field} to server. File name stored locally.`);
           toast.error("Failed to upload file");
         }
       })();
@@ -297,25 +130,19 @@ export function SummaryContent({
   };
 
   const handleAddContact = (contact: PrimaryContact) => {
-    setClientDetails((prev) => ({
-      ...prev,
-      primaryContacts: [...(prev.primaryContacts || []), contact],
-    }));
-    updateClientDetails("primaryContacts", contact);
+    const nextContacts = [...(clientData?.primaryContacts || []), contact];
+    updateClientDetails("primaryContacts", nextContacts as unknown as PrimaryContact);
   };
 
   const handleUpdateDescription = (description: string) => {
-    setClientDetails((prev) => ({ ...prev, description }));
     updateClientDetails("description", description);
   };
 
   const handleUpdateContact = (index: number, field: keyof PrimaryContact, value: string) => {
-    setClientDetails((prev) => ({
-      ...prev,
-      primaryContacts: prev.primaryContacts?.map((contact, i) =>
-        i === index ? { ...contact, [field]: value } : contact,
-      ),
-    }));
+    const updated = (clientData?.primaryContacts || []).map((c: any, i: number) =>
+      i === index ? { ...c, [field]: value } : c,
+    );
+    updateClientDetails("primaryContacts", updated as unknown as PrimaryContact);
   };
 
   const handlePreviewFile = (fileName: string, displayName?: string) => {
@@ -326,7 +153,7 @@ export function SummaryContent({
 
     const fileUrl = fileName.startsWith("https")
       ? fileName
-      : `https://aems-backend.onrender.com/${fileName}`;
+      : `${API_URL}/${fileName}`;
 
     const fileType = getFileType(fileName);
 
@@ -351,7 +178,7 @@ export function SummaryContent({
     if (fileName) {
       const fileUrl = fileName.startsWith("https")
         ? fileName
-        : `https://aems-backend.onrender.com/${fileName}`;
+        : `${API_URL}/${fileName}`;
       try {
         const response = await fetch(fileUrl);
         if (!response.ok) throw new Error("Network response was not ok.");
@@ -379,7 +206,6 @@ export function SummaryContent({
       .map((e) => e.trim())
       .filter(Boolean);
     updateClientDetails("emails", emailsArray);
-    setClientDetails((prev) => ({ ...prev, emails: emailsArray }));
   };
 
   const positionOptions = [
@@ -407,18 +233,18 @@ export function SummaryContent({
             <div className="space-y-3">
               <DetailRow
                 label="Sales Lead (Internal)"
-                value={clientDetails.salesLead}
+                value={clientData?.salesLead}
                 onUpdate={handleUpdateField("salesLead")}
               />
               <DetailRow
                 label="Referred By (External)"
-                value={clientDetails.referredBy}
+                value={clientData?.referredBy}
                 onUpdate={handleUpdateField("referredBy")}
               />
 
               <DetailRow
                 label="Client Priority"
-                value={clientDetails.clientPriority}
+                value={clientData?.clientPriority}
                 onUpdate={handleUpdateField("clientPriority")}
                 options={[
                   { value: "1", label: "1" },
@@ -430,7 +256,7 @@ export function SummaryContent({
               />
               <DetailRow
                 label="Client Segment"
-                value={clientDetails.clientSegment}
+                value={clientData?.clientSegment}
                 onUpdate={handleUpdateField("clientSegment")}
                 options={[
                   { value: "A", label: "A" },
@@ -442,12 +268,12 @@ export function SummaryContent({
               />
               <DetailRow
                 label="Client Name"
-                value={clientDetails.name}
+                value={clientData?.name}
                 onUpdate={handleUpdateField("name")}
               />
               <DetailRow
                 label="Client Phone Number"
-                value={clientDetails.phoneNumber}
+                value={clientData?.phoneNumber}
                 onUpdate={handleUpdateField("phoneNumber")}
               />
             </div>
@@ -456,43 +282,43 @@ export function SummaryContent({
             <div className="space-y-3">
               <DetailRow
                 label="Client Email(s)"
-                value={clientDetails.emails?.join(", ") || ""}
+                value={clientData?.emails?.join(", ") || ""}
                 onUpdate={handleUpdateEmails}
                 alwaysShowEdit={true}
               />
               <DetailRow
                 label="Client Industry"
-                value={clientDetails.industry}
+                value={clientData?.industry}
                 onUpdate={handleUpdateField("industry")}
               />
               <DetailRow
                 label="Client Website"
-                value={clientDetails.website}
+                value={clientData?.website}
                 onUpdate={handleUpdateField("website")}
               />
               <DetailRow
                 label="Google Maps Link"
-                value={clientDetails.googleMapsLink}
+                value={clientData?.googleMapsLink}
                 onUpdate={handleUpdateField("googleMapsLink")}
               />
               <DetailRow
                 label="Client Location"
-                value={clientDetails.location}
+                value={clientData?.location}
                 onUpdate={handleUpdateField("location")}
               />
               <DetailRow
                 label="Client Address"
-                value={clientDetails.address}
+                value={clientData?.address}
                 onUpdate={handleUpdateField("address")}
               />
               <DetailRow
                 label="Country of Business"
-                value={clientDetails.countryOfBusiness}
+                value={clientData?.countryOfBusiness}
                 onUpdate={handleUpdateField("countryOfBusiness")}
               />
               <DetailRow
                 label="LinkedIn Profile"
-                value={clientDetails.linkedInProfile}
+                value={clientData?.linkedInProfile}
                 onUpdate={handleUpdateField("linkedInProfile")}
                 optional
               />
@@ -502,15 +328,15 @@ export function SummaryContent({
                 className="border-b"
                 onFileSelect={handleFileUpload("vatCopy")}
                 onUploadClick={() => handleOpenFileUploadModal("vatCopy", "VAT Copy")}
-                docUrl={clientDetails?.vatCopy?.url}
-                currentFileName={clientDetails?.vatCopy?.fileName}
+                docUrl={clientData?.vatCopy?.url}
+                currentFileName={clientData?.vatCopy?.fileName}
                 onPreview={() =>
                   handlePreviewFile(
-                    clientDetails?.vatCopy?.url || "",
-                    clientDetails?.vatCopy?.fileName,
+                    clientData?.vatCopy?.url || "",
+                    clientData?.vatCopy?.fileName,
                   )
                 }
-                onDownload={() => handleDownloadFile(clientDetails?.vatCopy?.url || "")}
+                onDownload={() => handleDownloadFile(clientData?.vatCopy?.url || "")}
               />
               <FileUploadRow
                 id="cr-copy-upload"
@@ -518,15 +344,15 @@ export function SummaryContent({
                 className="border-b"
                 onFileSelect={handleFileUpload("crCopy")}
                 onUploadClick={() => handleOpenFileUploadModal("crCopy", "CR Copy")}
-                docUrl={clientDetails?.crCopy?.url}
-                currentFileName={clientDetails?.crCopy?.fileName}
+                docUrl={clientData?.crCopy?.url}
+                currentFileName={clientData?.crCopy?.fileName}
                 onPreview={() =>
                   handlePreviewFile(
-                    clientDetails?.crCopy?.url || "",
-                    clientDetails?.crCopy?.fileName,
+                    clientData?.crCopy?.url || "",
+                    clientData?.crCopy?.fileName,
                   )
                 }
-                onDownload={() => handleDownloadFile(clientDetails?.crCopy?.url || "")}
+                onDownload={() => handleDownloadFile(clientData?.crCopy?.url || "")}
               />
               <FileUploadRow
                 id="gst-tin-document-upload"
@@ -535,15 +361,15 @@ export function SummaryContent({
                 onUploadClick={() =>
                   handleOpenFileUploadModal("gstTinDocument", "GST TIN Document")
                 }
-                docUrl={clientDetails?.gstTinDocument?.url}
-                currentFileName={clientDetails?.gstTinDocument?.fileName}
+                docUrl={clientData?.gstTinDocument?.url}
+                currentFileName={clientData?.gstTinDocument?.fileName}
                 onPreview={() =>
                   handlePreviewFile(
-                    clientDetails?.gstTinDocument?.url || "",
-                    clientDetails?.gstTinDocument?.fileName,
+                    clientData?.gstTinDocument?.url || "",
+                    clientData?.gstTinDocument?.fileName,
                   )
                 }
-                onDownload={() => handleDownloadFile(clientDetails?.gstTinDocument?.url || "")}
+                onDownload={() => handleDownloadFile(clientData?.gstTinDocument?.url || "")}
               />
             </div>
           </CollapsibleContent>
@@ -568,27 +394,11 @@ export function SummaryContent({
           </CollapsibleContent>
         </Collapsible>
 
-        {/* <Collapsible className="rounded-lg border shadow-sm">
-          <div className="flex items-center justify-between p-4">
-            <h4 className="text-sm font-semibold">Company Related Information</h4>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="text-xs p-1">
-                Show Complete Details
-                <ChevronsUpDown />
-              </Button>
-            </CollapsibleTrigger>
-          </div>
-          <CollapsibleContent className="px-4 pb-4">
-            <SalesInfo />
-          </CollapsibleContent>
-        </Collapsible> */}
-
-
         <div className="bg-white rounded-lg border shadow-sm p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold">Description</h2>
             <Button variant="outline" size="sm" onClick={() => setIsDescriptionModalOpen(true)}>
-              {clientDetails.description ? (
+              {clientData?.description ? (
                 <>
                   <Pencil className="h-4 w-4 mr-2" />
                   Edit
@@ -602,8 +412,8 @@ export function SummaryContent({
             </Button>
           </div>
           <div className="space-y-3">
-            {clientDetails.description ? (
-              <p className="text-sm whitespace-pre-wrap">{clientDetails.description}</p>
+            {clientData?.description ? (
+              <p className="text-sm whitespace-pre-wrap">{clientData.description}</p>
             ) : (
               <div className="text-sm text-muted-foreground text-center py-4">
                 No description added yet
@@ -626,7 +436,7 @@ export function SummaryContent({
       <EditDescriptionModal
         open={isDescriptionModalOpen}
         onOpenChange={setIsDescriptionModalOpen}
-        currentDescription={clientDetails.description || ""}
+        currentDescription={clientData?.description || ""}
         onSave={handleUpdateDescription}
       />
 

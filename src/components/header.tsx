@@ -23,6 +23,9 @@ export function Header() {
     if (!pathname) {
       return { path: "/", label: "Back" };
     }
+    if (pathname.includes("/reactruterpipeline/")) {
+      return { path: "/reactruterpipeline", label: "Back to Recruiter Pipeline" };
+    }
     if (pathname.includes("/clients/")) {
       return { path: "/clients", label: "Back to Clients" };
     }

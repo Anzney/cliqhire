@@ -1,10 +1,9 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Plus, SlidersHorizontal, RefreshCcw, Loader } from "lucide-react"
+import { Loader } from "lucide-react"
 import { getJobById } from "@/services/jobService"
 import { notFound } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { JobTabs } from "@/components/jobs/job-tabs"
 import { JobData } from "@/components/jobs/types"
@@ -13,38 +12,22 @@ import { AddExistingCandidateDialog } from "@/components/common/add-existing-can
 interface PageProps {
   params: { id: string }
 }
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function JobPage({ params }: PageProps) {
   const { id } = params
-  const [isLoading, setIsLoading] = useState(true)
-  const [jobData, setJobData] = useState<JobData | null>(null)
-  const [error, setError] = useState<Error | null>(null)
   const [addCandidateOpen, setAddCandidateOpen] = useState(false)
   const [reloadToken, setReloadToken] = useState(0)
   const [activeTab, setActiveTab] = useState<string>("summary")
-
-  const fetchJob = async () => {
-    if (!id) return;
-    setIsLoading(true)
-    try {
-      const response = await getJobById(id)
-      const job = Array.isArray(response.data) ? response.data[0] : response.data
-      if (!job) {
-        notFound()
-        return
-      }
-      setJobData(job as unknown as JobData)
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch job'))
-      console.error("Error fetching job:", err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-  useEffect(() => {
-    fetchJob()
-  }, [id])
-
+  const queryClient = useQueryClient();
+  const { data: job, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ['job', id],
+    queryFn: () => getJobById(id),
+    enabled: !!id,
+    // Normalize API response to a single job object
+    select: (res: any) => (Array.isArray(res?.data) ? res.data[0] : res?.data) as JobData | undefined,
+    placeholderData: (prev) => prev,
+  })
   if (isLoading) {
     return <div className="flex items-center justify-center h-screen">
       <div className="flex items-center justify-center gap-2 flex-col">
@@ -54,23 +37,24 @@ export default function JobPage({ params }: PageProps) {
     </div>
   }
 
-  if (error) {
-    return <div className="flex items-center justify-center h-screen">Error: {error.message}</div>
+  if (isError) {
+    return <div className="flex items-center justify-center h-screen">Error: {error instanceof Error ? error.message : 'Failed to load job'}</div>
   }
 
-  if (!jobData) {
+  if (!job) {
     return notFound()
   }
 
   const handleRefresh = async () => {
-    await fetchJob()
+    refetch()
+    queryClient.invalidateQueries({ queryKey: ['job', id] })
   }
   
 
   // Header values from summary
-  const jobTitle = jobData.jobTitle || "Untitled Job"
-  const location = Array.isArray(jobData.location) ? jobData.location.join(", ") : (jobData.location || "No location")
-  const stage = jobData.stage || "No stage"
+  const jobTitle = job.jobTitle || "Untitled Job"
+  const location = Array.isArray(job.location) ? job.location.join(", ") : (job.location || "No location")
+  const stage = job.stage || "No stage"
 
   // Copy the stageColors mapping from JobStageBadge
   const stageColors: Record<string, string> = {
@@ -107,36 +91,10 @@ export default function JobPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Button Bar */}
-      {/* <div className="flex items-center justify-between p-4 border-b">
-        <Button size="sm" onClick={() => setAddCandidateOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Candidate
-        </Button>
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-          >
-            <SlidersHorizontal className="h-4 w-4 mr-2" />
-            Filters
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isLoading}
-          >
-            <RefreshCcw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            {isLoading ? 'Refreshing...' : 'Refresh'}
-          </Button>
-        </div>
-      </div> */}
-
       {/* Tabs */}
       <JobTabs
         jobId={id}
-        jobData={jobData}
+        jobData={job}
         reloadToken={reloadToken}
         activeTab={activeTab}
         onTabChange={setActiveTab}

@@ -9,16 +9,10 @@ import {
 } from '@/types/teamMember';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-console.log('Team Members Service - API_URL:', API_URL);
-
 // Get all team members with optional filters
 export const getTeamMembers = async (filters?: TeamMemberFilters): Promise<{ teamMembers: TeamMember[] }> => {
   try {
-    console.log('Making API call to:', `${API_URL}/api/users`);
-    
-    const response = await api.get('/api/users', { params: filters });
-    console.log('API response for team members list:', response.data);
-
+     const response = await api.get('/api/users', { params: filters });
     if (response.data && response.data.status === 'success') {
       return {
         teamMembers: response.data.data.users || []
@@ -33,22 +27,16 @@ export const getTeamMembers = async (filters?: TeamMemberFilters): Promise<{ tea
 
 // Get a single team member by ID
 export const getTeamMemberById = async (id: string): Promise<TeamMember> => {
-  try {
-    console.log('Making API call to:', `${API_URL}/api/users/${id}`);
-    
+  try { 
     const response = await api.get(`/api/users/${id}`);
-    console.log('API response:', response.data);
-    
     if (response.data && response.data.status === 'success') {
       const teamMember = response.data.data.user || response.data.data || response.data;
-      console.log('Extracted team member:', teamMember);
       return teamMember;
     }
     
     // If the response doesn't have a status field, try to extract data directly
     if (response.data) {
       const teamMember = response.data.user || response.data;
-      console.log('Extracted team member (no status):', teamMember);
       return teamMember;
     }
     
@@ -103,12 +91,7 @@ export const updateTeamMember = async (teamMemberData: UpdateTeamMemberData): Pr
       return acc;
     }, {} as any);
     
-    console.log('Making PATCH API call to:', `${API_URL}/api/users/${_id}`);
-    console.log('Update data:', filteredUpdateData);
-    
-    const response = await api.patch(`/api/users/${_id}`, filteredUpdateData);
-    console.log('Update API response:', response.data);
-    
+    const response = await api.patch(`/api/users/${_id}`, filteredUpdateData);    
     // Handle different response formats
     if (response.data) {
       // If response has success field and it's true (new API format)
@@ -185,12 +168,8 @@ export const updateTeamMember = async (teamMemberData: UpdateTeamMemberData): Pr
 
 // Delete a team member
 export const deleteTeamMember = async (id: string): Promise<void> => {
-  try {
-    console.log('Making DELETE API call to:', `${API_URL}/api/users/${id}`);
-    
+  try {  
     const response = await api.delete(`/api/users/${id}`);
-    console.log('Delete API response:', response.data);
-    
     if (!response.data || response.data.status !== 'success') {
       throw new Error(response.data?.message || 'Failed to delete team member');
     }
@@ -213,14 +192,40 @@ export const deleteTeamMember = async (id: string): Promise<void> => {
 export const updateTeamMemberStatus = async (id: string, status: string): Promise<TeamMember> => {
   try {
     const response = await api.patch(`/api/users/${id}`, { status });
-    
-    if (response.data && response.data.status === 'success') {
-      return response.data.data.user || response.data.data;
+
+    // Handle multiple possible response formats
+    if (response.data) {
+      // New API format
+      if (response.data.success === true) {
+        return response.data.data?.user || response.data.data || response.data;
+      }
+
+      // Old API format
+      if (response.data.status === 'success') {
+        return response.data.data?.user || response.data.data || response.data;
+      }
+
+      // Generic data container
+      if (response.data.data) {
+        return response.data.data.user || response.data.data;
+      }
+
+      // Direct object
+      if (response.data._id) {
+        return response.data;
+      }
     }
+
+    // If status is 200 but body is unconventional, attempt sane fallback
+    if (response.status === 200 && response.data) {
+      return response.data.data?.user || response.data.data || response.data;
+    }
+
     throw new Error(response.data?.message || 'Failed to update team member status');
   } catch (error: any) {
     console.error('Error updating team member status:', error);
-    throw new Error(error.response?.data?.message || 'Failed to update team member status');
+    const message = error?.response?.data?.message || error?.message || 'Failed to update team member status';
+    throw new Error(message);
   }
 };
 
@@ -317,15 +322,37 @@ export const registerTeamMember = async (registrationData: {
   try {
     const response = await api.post('/api/auth/register-member', registrationData);
 
-    if (response.data && response.data.success) {
+    // Normalize across possible API formats
+    const data = response?.data || {};
+
+    // New API: { success: true, data: { user }, message }
+    if (data.success === true) {
       return {
         success: true,
-        message: response.data.message || 'Team member registered successfully',
-        user: response.data.data?.user
+        message: data.message || 'Team member registered successfully',
+        user: data.data?.user || data.user,
       };
     }
 
-    throw new Error(response.data?.message || 'Failed to register team member');
+    // Old API: { status: 'success', data: { user }, message }
+    if (data.status === 'success') {
+      return {
+        success: true,
+        message: data.message || 'Team member registered successfully',
+        user: data.data?.user || data.user,
+      };
+    }
+
+    // Fallback: HTTP 200 with usable data
+    if (response.status === 200 && data) {
+      return {
+        success: true,
+        message: data.message || 'Team member registered successfully',
+        user: data.data?.user || data.user,
+      };
+    }
+
+    throw new Error(data?.message || 'Failed to register team member');
   } catch (error: any) {
     console.error('Error registering team member:', error);
     
@@ -345,6 +372,13 @@ export const registerTeamMember = async (registrationData: {
       throw new Error(error.response.data?.message || 'Invalid request data');
     }
 
+    if (error.response?.status === 200 && error.response.data) {
+      return {
+        success: false,
+        message: error.response.data?.message || 'Failed to register team member',
+      };
+    }
+
     throw new Error(error.response?.data?.message || error.message || 'Failed to register team member');
   }
-}; 
+};

@@ -2,7 +2,7 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, CircleDollarSign, MapPin, Plus, Users } from "lucide-react";
+import { Building2, HandCoins, MapPin, Plus, Users } from "lucide-react";
 import { type Job } from "./dummy-data";
 
 type Props = {
@@ -29,7 +29,7 @@ export function PipelineJobHeader({ job, onAddCandidate }: Props) {
                 <span>{job.location}</span>
               </div>
               <div className="flex items-center space-x-1">
-                <CircleDollarSign className="h-4 w-4 text-yellow-500" />
+                <HandCoins className="h-4 w-4 text-yellow-500" />
                 <span>{job.salaryRange}</span>
               </div>
               <Badge variant="outline" className="bg-gray-100 text-gray-700">

@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
 interface DisqualificationDialogProps {
@@ -32,12 +33,14 @@ export function DisqualificationDialog({
   currentStageStatus
 }: DisqualificationDialogProps) {
   const [reason, setReason] = React.useState("");
+  const [feedback, setFeedback] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   // Reset form when dialog opens/closes
   React.useEffect(() => {
     if (isOpen) {
       setReason("");
+      setFeedback("");
     }
   }, [isOpen]);
 
@@ -52,7 +55,7 @@ export function DisqualificationDialog({
         disqualificationStage: currentStage,
         disqualificationStatus: currentStageStatus || "",
         disqualificationReason: reason.trim(),
-        disqualificationFeedback: ""
+        disqualificationFeedback: feedback.trim() || undefined
       });
       onClose();
     } catch (error) {
@@ -108,17 +111,35 @@ export function DisqualificationDialog({
             <Label htmlFor="reason">
               Reason for Disqualification <span className="text-red-500">*</span>
             </Label>
+            <Select value={reason} onValueChange={(val) => setReason(val)}>
+              <SelectTrigger id="reason">
+                <SelectValue placeholder="Select a reason" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Candidate Opted Out">Candidate Opted Out</SelectItem>
+                <SelectItem value="Budget Exceeded">Budget Exceeded</SelectItem>
+                <SelectItem value="Location Preferences">Location Preferences</SelectItem>
+                <SelectItem value="Other Considerations">Other Considerations</SelectItem>
+                <SelectItem value="Need Female Candidate">Need Female Candidate</SelectItem>
+                <SelectItem value="Not Matching the Role">Not Matching the Role</SelectItem>
+                <SelectItem value="Overqualified for Function">Overqualified for Function</SelectItem>
+                <SelectItem value="Need Arabs Nationals">Need Arabs Nationals</SelectItem>
+                <SelectItem value="Need Saudi Nationals">Need Saudi Nationals</SelectItem>
+                <SelectItem value="Need Male Candidate">Need Male Candidate</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="feedback">Additional Feedback (optional)</Label>
             <Textarea
-              id="reason"
-              placeholder="Please provide a detailed reason for disqualification..."
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              rows={4}
+              id="feedback"
+              placeholder="Add any additional details (optional)"
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              rows={3}
               className="resize-none"
             />
-            <div className="text-xs text-gray-500">
-              {reason.length}/500 characters
-            </div>
           </div>
         </div>
 

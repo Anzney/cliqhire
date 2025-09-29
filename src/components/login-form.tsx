@@ -49,32 +49,23 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   const onSubmit = async (values: LoginFormValues) => {
     try {
       setIsSubmitting(true);
-      console.log('LoginForm: Starting login submission');
-      
       const success = await login(values.email, values.password);
-      console.log('LoginForm: Login result:', success);
-      
       if (success) {
-        console.log('LoginForm: Login successful, showing success message');
         toast.success("Login successful!");
-        
-        // Reset form after successful login
+         // Reset form after successful login
         form.reset();
         
         // Add a small delay to ensure state is updated
         setTimeout(() => {
-          console.log('LoginForm: Redirecting after successful login');
           // Redirect to the stored path or dashboard
           const redirectPath = sessionStorage.getItem('redirectAfterLogin') || '/dashboard';
           sessionStorage.removeItem('redirectAfterLogin');
           router.push(redirectPath);
         }, 100);
       } else {
-        console.log('LoginForm: Login failed, showing error message');
         toast.error("Invalid email or password");
       }
     } catch (error) {
-      console.error("LoginForm: Login error:", error);
       toast.error(error instanceof Error ? error.message : "Login failed");
     } finally {
       setIsSubmitting(false);

@@ -1,13 +1,11 @@
 "use client";
 import axios from "axios";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo} from "react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { CreateClientModal } from "@/components/create-client-modal/create-client-modal";
 import {
-  getClients,
   updateClientStage,
   updateClientStageStatus,
-  ClientResponse,
   ClientStageStatus,
 } from "@/services/clientService";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -20,6 +18,7 @@ import ClientTableRow from "@/components/clients/ClientTableRow";
 import ClientPaginationControls from "@/components/clients/ClientPaginationControls";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Loader } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 const columsArr = [
   "Name",
@@ -27,20 +26,20 @@ const columsArr = [
   "Location",
   "Stage",
   "Stage Status",
-  // "Client Team",
   "Client Age",
   "Job Count",
 ];
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://aems-backend.onrender.com/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ;
 
 interface Client {
+  _id?: string;
   id: string;
   name: string;
   industry: string;
-  location: string;
-  stage: "Lead" | "Engaged" | "Signed";
-  clientStageStatus: ClientStageStatus;
+  countryOfBusiness: string;
+  clientStage: "Lead" | "Engaged" | "Signed";
+  clientSubStage: ClientStageStatus;
   owner: string;
   team: string;
   createdAt: string;
@@ -48,7 +47,7 @@ interface Client {
   incorporationDate: string;
 }
 
-type SortField = "name" | "industry" | "location" | "createdAt";
+type SortField = "name" | "industry" | "countryOfBusiness" | "createdAt";
 type SortOrder = "asc" | "desc";
 
 interface SortConfig {
@@ -72,184 +71,57 @@ export default function ClientsPage() {
     maxAge: "",
   });
 
-  const [clients, setClients] = useState<Client[]>([]);
-  const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingChange, setPendingChange] = useState<{
     clientId: string;
-    stage: Client["stage"];
+    stage: Client["clientStage"];
   } | null>(null);
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     clientId: string;
     status: ClientStageStatus;
   } | null>(null);
   const [showStatusConfirmDialog, setShowStatusConfirmDialog] = useState(false);
-  const [isUpdating, setIsUpdating] = useState<boolean>(false);
-
   // Pagination states
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
-  const [totalClients, setTotalClients] = useState<number>(0);
   const [pageSize, setPageSize] = useState<number>(10); // Default to 10 per page
 
-  const fetchClients = async (page = 1, size = pageSize) => {
-    setInitialLoading(true);
-    try {
-      // Fetch all clients from the API (no pagination in the API call)
+  // Hoisted function declaration to avoid temporal dead zone issues
+  async function fetchClients(page = 1, size = pageSize): Promise<Client[]> {
+    const directResponse = await axios.get(`${API_URL}/api/clients`, {
+      params: {
+        // Don't pass page/limit to get all clients
+        ...(filters.name && { search: filters.name }),
+        ...(filters.industry && { industry: filters.industry }),
+      },
+    });
+    const data = directResponse.data.data as any[];
+    // Map legacy keys to the new interface keys to keep UI consistent
+    return (data || []).map((c) => ({
+      _id: c._id,
+      id: c.id ?? c._id,
+      name: c.name,
+      industry: c.industry,
+      countryOfBusiness: c.countryOfBusiness ?? c.location,
+      clientStage: c.clientStage ?? c.stage,
+      clientSubStage: c.clientSubStage ?? c.clientStageStatus,
+      owner: c.owner,
+      team: c.team,
+      createdAt: c.createdAt,
+      jobCount: c.jobCount,
+      incorporationDate: c.incorporationDate,
+    })) as Client[];
+  }
 
-      // First try with the service function
-      try {
-        // Fetch all clients by not providing page/limit to getClients
-        const response = await getClients({
-          ...(filters.name && { search: filters.name }),
-          ...(filters.industry && { industry: filters.industry }),
-        });
+   const { data: allClients = [], isLoading , refetch } = useQuery<Client[]>({
+    queryKey: ['clients', filters],
+    queryFn: () => fetchClients(),
+  })
 
-        if (response && response.clients && Array.isArray(response.clients)) {
-          // Extract data from response
-          const apiClients: ClientResponse[] = response.clients;
-          const total = apiClients.length;
+  
 
-          // Map API clients to our format
-          const mappedClients = apiClients.map((client: ClientResponse) => ({
-            id: client._id,
-            name: client.name || "Unnamed Client",
-            industry: client.industry || "",
-            location: client.countryOfBusiness || "",
-            stage: client.clientStage || "Lead",
-            clientStageStatus: client.clientSubStage || "Calls",
-            owner: client.clientRm || "",
-            team: client.clientTeam || "",
-            createdAt: client.createdAt,
-            incorporationDate: client.incorporationDate || "",
-            jobCount: client.jobCount || 0, // Use jobCount from backend
-          }));
+  // Note: handlePageChange moved below after we derive total pages
 
-          // Set clients state with all clients (pagination is handled client-side)
-          setClients(mappedClients as Client[]);
 
-          // Reset to first page when fetching new data
-          setCurrentPage(1);
-
-          // Save to localStorage as backup
-          if (typeof window !== "undefined") {
-            localStorage.setItem("cliqhire_clients", JSON.stringify(mappedClients));
-          }
-
-          return; // Exit early since we successfully processed the data
-        }
-      } catch (serviceError) {
-        console.error("Error using service function:", serviceError);
-        // Continue to direct API call as fallback
-      }
-
-      // Fallback: Direct API call
-      const directResponse = await axios.get(`${API_URL}/clients`, {
-        params: {
-          // Don't pass page/limit to get all clients
-          ...(filters.name && { search: filters.name }),
-          ...(filters.industry && { industry: filters.industry }),
-        },
-      });
-
-      // Process the direct API response
-      if (directResponse.data && directResponse.data.success) {
-        const apiClients: ClientResponse[] = Array.isArray(directResponse.data.data)
-          ? directResponse.data.data
-          : directResponse.data.data && Array.isArray(directResponse.data.data.clients)
-            ? directResponse.data.data.clients
-            : [];
-
-        // Map API clients to our format
-        const mappedClients = apiClients.map((client: ClientResponse) => ({
-          id: client._id,
-          name: client.name || "Unnamed Client",
-          industry: client.industry || "",
-          location: client.countryOfBusiness ||  "",
-          stage: client.clientStage || "Lead",
-          clientStageStatus: client.clientSubStage || "Calls",
-          owner: client.clientRm || "",
-          team: client.clientTeam || "",
-          createdAt: client.createdAt,
-          incorporationDate: client.incorporationDate || "",
-          jobCount: client.jobCount || 0, // Use jobCount from backend
-        }));
-
-        // Set clients state with all clients (pagination is handled client-side)
-        setClients(mappedClients as Client[]);
-
-        // Reset to first page when fetching new data
-        setCurrentPage(1);
-
-        // Save to localStorage as backup
-        if (typeof window !== "undefined") {
-          localStorage.setItem("cliqhire_clients", JSON.stringify(mappedClients));
-        }
-      } else {
-        throw new Error("Invalid API response format");
-      }
-    } catch (error) {
-      console.error("Error fetching clients:", error);
-      // Fallback to empty clients list or local storage if available
-      try {
-        // Try to get clients from localStorage if available
-        const storedClients =
-          typeof window !== "undefined"
-            ? JSON.parse(localStorage.getItem("cliqhire_clients") || "[]")
-            : [];
-
-        if (storedClients.length > 0) {
-          // Apply manual pagination to stored clients
-          const total = storedClients.length;
-          setTotalClients(total);
-
-          const pages = Math.ceil(total / size);
-          setTotalPages(pages);
-          setCurrentPage(page);
-
-          const startIndex = (page - 1) * size;
-          const endIndex = Math.min(startIndex + size, total);
-          const paginatedClients = storedClients.slice(startIndex, endIndex);
-
-          setClients(paginatedClients);
-        } else {
-          // No clients in localStorage either
-          setClients([]);
-          setTotalClients(0);
-          setTotalPages(1);
-        }
-      } catch (fallbackError) {
-        console.error("Error with fallback clients:", fallbackError);
-        setClients([]);
-        setTotalClients(0);
-        setTotalPages(1);
-      }
-    } finally {
-      setInitialLoading(false);
-    }
-  };
-
-  // Handle page change
-
-  const handlePageChange = (newPage: number) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
-      // We don't need to fetch clients here since we're now handling pagination client-side
-      // The filteredAndSortedClients will automatically update with the new page
-    }
-  };
-
-  useEffect(() => {
-    fetchClients(currentPage);
-  }, []);
-
-  // Refresh data when filters change
-  useEffect(() => {
-    // Only refetch if not the initial render
-    if (!initialLoading) {
-      fetchClients(1); // Reset to first page when filters change
-    }
-  }, [filters]);
 
   function getYearDifference(createdAt: string) {
     const createdDate = new Date(createdAt);
@@ -265,7 +137,7 @@ export default function ClientsPage() {
     return diffMonths;
   };
 
-  const handleStageChange = (clientId: string, newStage: Client["stage"]) => {
+  const handleStageChange = (clientId: string, newStage: Client["clientStage"]) => {
     setPendingChange({ clientId, stage: newStage });
     setTimeout(() => {
       setShowConfirmDialog(true);
@@ -279,23 +151,23 @@ export default function ClientsPage() {
     }, 0);
   };
 
-  const filteredAndSortedClients = useMemo(() => {
-    let result = [...clients];
+  const { pagedClients, totalClientsCalc, totalPagesCalc } = useMemo(() => {
+    let result: Client[] = isLoading ? [] : (allClients ?? []);
 
     if (filters.name) {
-      result = result.filter((client) =>
+      result = result.filter((client: Client) =>
         client.name.toLowerCase().includes(filters.name.toLowerCase()),
       );
     }
     if (filters.industry) {
-      result = result.filter((client) =>
+      result = result.filter((client: Client) =>
         client.industry.toLowerCase().includes(filters.industry.toLowerCase()),
       );
     }
     if (filters.maxAge) {
       const maxAgeMonths = parseInt(filters.maxAge);
       if (!isNaN(maxAgeMonths)) {
-        result = result.filter((client) => calculateAge(client.createdAt) <= maxAgeMonths);
+        result = result.filter((client: Client) => calculateAge(client.createdAt) <= maxAgeMonths);
       }
     }
 
@@ -310,80 +182,51 @@ export default function ClientsPage() {
       return 0;
     });
 
-    // Update total clients count based on filtered results
-    setTotalClients(result.length);
-
-    // Calculate total pages based on filtered results and current page size
-    const totalFilteredPages = Math.ceil(result.length / pageSize);
-    setTotalPages(totalFilteredPages > 0 ? totalFilteredPages : 1);
+    const totalClientsCalc = result.length;
+    const totalPagesCalcRaw = Math.ceil(totalClientsCalc / pageSize);
+    const totalPagesCalc = totalPagesCalcRaw > 0 ? totalPagesCalcRaw : 1;
 
     // Apply pagination
     const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = Math.min(startIndex + pageSize, result.length);
+    const endIndex = Math.min(startIndex + pageSize, totalClientsCalc);
+    const pagedClients = result.slice(startIndex, endIndex);
 
-    return result.slice(startIndex, endIndex);
-  }, [sortConfig, filters, clients, currentPage, pageSize]);
+    return { pagedClients, totalClientsCalc, totalPagesCalc };
+  }, [sortConfig, filters, allClients, currentPage, pageSize, isLoading]);
+
+  // Handle page change (after totals derived)
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPagesCalc) {
+      setCurrentPage(newPage);
+    }
+  };
 
   const [error, setError] = useState<string | null>(null);
 
   const handleConfirmStatusChange = async () => {
     if (!pendingStatusChange) return;
 
-    setIsUpdating(true);
     setError(null);
-    let isSuccess = false;
-
     try {
       await updateClientStageStatus(pendingStatusChange.clientId, pendingStatusChange.status);
-
-      setClients((prevClients) =>
-        prevClients.map((client) =>
-          client.id === pendingStatusChange.clientId
-            ? { ...client, clientStageStatus: pendingStatusChange.status }
-            : client,
-        ),
-      );
-      isSuccess = true;
+      refetch();
     } catch (err: any) {
-      console.error("Error updating client stage status:", err);
       setError(err.message || "An unexpected error occurred.");
     } finally {
-      setIsUpdating(false);
       setShowStatusConfirmDialog(false);
-      if (isSuccess) {
-        setPendingStatusChange(null);
-      }
     }
   };
 
   const handleConfirmChange = async () => {
     if (!pendingChange) return;
-
-    setIsUpdating(true);
     setError(null);
-    let isSuccess = false;
-
     try {
       const updatedClient = await updateClientStage(pendingChange.clientId, pendingChange.stage);
-
-      setClients((prevClients) =>
-        prevClients.map((client) =>
-          client.id === pendingChange.clientId
-            ? { ...client, stage: (updatedClient?.clientStage === "Negotiation" ? "Engaged" : updatedClient?.clientStage) || pendingChange.stage }
-            : client,
-        ),
-      );
-
-      isSuccess = true;
       setShowConfirmDialog(false);
+      refetch();
     } catch (error: any) {
       console.error("Error updating client stage:", error);
       setError(error.message || "Failed to update client stage. Please try again.");
-    } finally {
-      setIsUpdating(false);
-      if (isSuccess) {
-        setPendingChange(null);
-      }
     }
   };
 
@@ -405,7 +248,7 @@ export default function ClientsPage() {
         description="Are you sure you want to update the client stage?"
         confirmText="Confirm"
         cancelText="Cancel"
-        loading={isUpdating}
+        loading={isLoading}
         error={error}
         confirmVariant="default"
       />
@@ -423,18 +266,17 @@ export default function ClientsPage() {
         description="This will update the client's stage status."
         confirmText="Confirm"
         cancelText="Cancel"
-        loading={isUpdating}
+        loading={isLoading}
         error={error}
         confirmVariant="default"
       />
 
       <div className="flex flex-col h-full">
         {/* Header */}
-
-        <Dashboardheader
+         <Dashboardheader
           setOpen={setOpen}
           setFilterOpen={setFilterOpen}
-          initialLoading={initialLoading}
+          initialLoading={isLoading}
           heading="Clients"
           buttonText="Create Client"
         />
@@ -448,7 +290,7 @@ export default function ClientsPage() {
                 <Tableheader tableHeadArr={columsArr} className="sticky top-0 z-20 bg-white" />
               </TableHeader>
               <TableBody>
-                {initialLoading ? (
+                {isLoading ? (
                   <TableRow>
                     <TableCell colSpan={10} className="text-center h-[calc(100vh-300px)]">
                       <div className="flex items-center justify-center gap-2 flex-col">
@@ -457,7 +299,7 @@ export default function ClientsPage() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ) : filteredAndSortedClients.length === 0 ? (
+                ) : allClients.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={10} className="h-[calc(100vh-300px)] text-center">
                       <div className="py-24">
@@ -466,9 +308,9 @@ export default function ClientsPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredAndSortedClients.map((client) => (
+                  pagedClients.map((client: Client) => (
                     <ClientTableRow
-                      key={client.id}
+                      key={client.id ?? client._id}
                       client={client}
                       onStageChange={handleStageChange}
                       onStatusChange={handleStageStatusChange}
@@ -482,19 +324,19 @@ export default function ClientsPage() {
           <div className="sticky bottom-0 bg-white z-10 border-t">
             <ClientPaginationControls
               currentPage={currentPage}
-              totalPages={totalPages}
-              totalClients={totalClients}
+              totalPages={totalPagesCalc}
+              totalClients={totalClientsCalc}
               pageSize={pageSize}
               setPageSize={setPageSize}
               handlePageChange={handlePageChange}
-              clientsLength={clients.length}
+              clientsLength={allClients?.length}
             />
+
           </div>
         </div>
 
         <CreateClientModal open={open} onOpenChange={setOpen} />
       </div>
-
       {/* Filters Modal */}
       <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
         <DialogContent>

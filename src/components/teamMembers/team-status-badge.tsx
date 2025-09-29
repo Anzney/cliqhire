@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,6 +47,7 @@ export function TeamMemberStatusBadge({
   onStatusChange,
   disabled = false,
 }: TeamMemberStatusBadgeProps) {
+  const queryClient = useQueryClient();
   const [isUpdating, setIsUpdating] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<TeamMemberStatus | null>(null);
@@ -68,27 +70,35 @@ export function TeamMemberStatusBadge({
     setShowConfirmDialog(true);
   };
 
-  const handleConfirmStatusChange = async () => {
-    if (!pendingStatus) return;
-
-    setIsUpdating(true);
-    setError(null);
-
-    try {
-      const updatedTeamMember = await updateTeamMemberStatus(id, pendingStatus);
-
-      if (onStatusChange) {
-        onStatusChange(id, updatedTeamMember.status);
+  const updateStatusMutation = useMutation({
+    mutationFn: (newStatus: TeamMemberStatus) => updateTeamMemberStatus(id, newStatus),
+    onSuccess: async (updatedTeamMember) => {
+      try {
+        // Let parent update cache optimistically if provided
+        if (onStatusChange) {
+          onStatusChange(id, updatedTeamMember.status);
+        }
+      } finally {
+        // Always revalidate the list to pull fresh data
+        await queryClient.invalidateQueries({ queryKey: ["teamMembers"] });
       }
-
+    },
+    onError: (err: any) => {
+      console.error("Error updating team member status:", err);
+      setError(err?.message || "Failed to update team member status");
+    },
+    onSettled: () => {
+      setIsUpdating(false);
       setShowConfirmDialog(false);
       setPendingStatus(null);
-    } catch (err: any) {
-      console.error("Error updating team member status:", err);
-      setError(err.message || "Failed to update team member status");
-    } finally {
-      setIsUpdating(false);
     }
+  });
+
+  const handleConfirmStatusChange = async () => {
+    if (!pendingStatus) return;
+    setIsUpdating(true);
+    setError(null);
+    await updateStatusMutation.mutateAsync(pendingStatus);
   };
 
   const handleCancelStatusChange = () => {

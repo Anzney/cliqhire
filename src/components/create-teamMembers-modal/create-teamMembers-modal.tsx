@@ -14,6 +14,7 @@ import { CreateTeamMemberData, TeamMemberStatus } from "@/types/teamMember";
 import { createTeamMember, uploadResume, updateTeamMember } from "@/services/teamMembersService";
 import { PersonalInformationTab } from "./PersonalInformationTab";
 import { SkillsAndStatusTab } from "./SkillsAndStatusTab";
+import { toast } from "sonner";
 
 interface CreateTeamMemberModalProps {
   open: boolean;
@@ -69,9 +70,7 @@ export function CreateTeamMemberModal({
     if (!validateForm()) return;
 
     setIsSubmitting(true);
-    try {
-      console.log("🚀 Submitting team member data:", formData);
-      
+    try { 
       let createdTeamMember;
       
       if (resumeFile) {
@@ -104,8 +103,8 @@ export function CreateTeamMemberModal({
         // Send as regular JSON
         createdTeamMember = await createTeamMember(formData);
       }
-      
-      console.log("✅ Team member created successfully:", createdTeamMember);
+      // Show success toast
+      toast.success("Team member created successfully");
 
       // Reset form
       setFormData({
@@ -132,7 +131,7 @@ export function CreateTeamMemberModal({
     } catch (error: any) {
       console.error("❌ Error creating team member:", error);
       const errorMessage = error.message || "Failed to create team member";
-      alert(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -183,7 +182,7 @@ export function CreateTeamMemberModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) handleClose(); }}>
       <DialogContent className="max-w-2xl h-[600px] flex flex-col">
         <DialogHeader>
           <DialogTitle>Create New Team Member</DialogTitle>

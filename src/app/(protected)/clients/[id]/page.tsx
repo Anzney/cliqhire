@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Plus,
   RefreshCcw,
@@ -13,7 +13,6 @@ import {
   FilePen,
   Mail,
 } from "lucide-react";
-import { useRouter, notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 import { Badge } from "@/components/ui/badge";
@@ -25,52 +24,37 @@ import TeamContent from "@/components/clients/team/team-content";
 import { ContactsContent } from "@/components/clients/contacts/contacts-content";
 import { HistoryContent } from "@/components/clients/history/history-content";
 import { JobsContent } from "@/components/clients/jobs/jobs-content";
-import { EmailTemplatesContent } from "@/components/clients/email-templates";
-
 import { getClientById } from "@/services/clientService";
 import { ContractSection } from "@/components/clients/contract/contract-section";
 import { CreateJobRequirementForm } from "@/components/new-jobs/create-jobs-form";
+import { useQuery } from "@tanstack/react-query";
+import { EmailTemplatesContent } from "@/components/clients/email-templates";
 
 interface PageProps {
   params: { id: string };
 }
 
 export default function ClientPage({ params }: PageProps) {
-  const router = useRouter();
   const { id } = params;
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
   const [isCreateJobOpen, setIsCreateJobOpen] = useState(false);
-  const [client, setClient] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("Summary");
 
-  const fetchClientData = async () => {
-    setIsLoading(true);
-    try {
-      const response = await getClientById(id);
-      if (response) {
-        setClient(response);
-      }
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "An error occurred");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchClientData();
-  }, []);
+  const { data: client, isLoading, isError, refetch } = useQuery({
+    queryKey: ["clientsData", id],
+    queryFn: () => getClientById(id),
+    enabled: Boolean(id), // Only run the query if id is available
+  });
 
   const handleRefresh = () => {
-    router.refresh();
+    refetch();
   };
 
   const handleTabSwitch = (tabValue: string) => {
     setActiveTab(tabValue);
   };
 
-  if (error) {
+  if (isError) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="flex flex-col items-center justify-center">
@@ -162,13 +146,7 @@ export default function ClientPage({ params }: PageProps) {
             <FileIcon className="h-4 w-4" />
             Jobs
           </TabsTrigger>
-          {/* <TabsTrigger
-            value="Activities"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
-          >
-            <MessageSquare className="h-4 w-4" />
-            Activities
-          </TabsTrigger> */}
+  
           <TabsTrigger
             value="Notes"
             className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
@@ -183,13 +161,7 @@ export default function ClientPage({ params }: PageProps) {
             <Paperclip className="h-4 w-4" />
             Attachments
           </TabsTrigger>
-          {/* <TabsTrigger
-            value="ClientTeam"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
-          >
-            <Users className="h-4 w-4" />
-            Client Team
-          </TabsTrigger> */}
+        
           <TabsTrigger
             value="Contacts"
             className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
@@ -220,10 +192,6 @@ export default function ClientPage({ params }: PageProps) {
         <TabsContent value="Summary" className="p-4">
           <SummaryContent clientId={id} clientData={client} onTabSwitch={handleTabSwitch} />
         </TabsContent>
-
-        {/* <TabsContent value="Activities" className="p-4">
-          <ActivitiesContent clientId={id} />
-        </TabsContent> */}
 
         <TabsContent value="Notes" className="p-4">
           <NotesContent clientId={id} />

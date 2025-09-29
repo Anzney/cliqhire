@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import CandidateSummary from '@/components/candidates/summary/candidate-summary';
 import { CandidateNotesContent } from '@/components/candidates/notes/notes-content';
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { AddToJobDialog } from '@/components/candidates/add-to-job-dialog';
 import { candidateService } from '@/services/candidateService';
 import { toast } from "sonner";
 import { initializeAuth } from '@/lib/axios-config';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 
 interface Tab {
@@ -33,65 +34,59 @@ interface Candidate {
 
 export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId: string, tabs: Tab[] }) {
   const [activeTab, setActiveTab] = useState("Summary");
-  const [candidate, setCandidate] = useState<Candidate | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const jobsContentRef = useRef<JobsContentRef>(null);
+  const queryClient = useQueryClient();
 
-  // Fetch candidate data on component mount
-  useEffect(() => {
-    const fetchCandidate = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        // Ensure authentication is initialized
-        await initializeAuth();
-        
-        const candidateData = await candidateService.getCandidateById(candidateId);
-        setCandidate(candidateData);
-      } catch (error) {
-        console.error('Error fetching candidate:', error);
-        setError('Failed to load candidate data');
-        toast.error("Failed to load candidate data");
-      } finally {
-        setIsLoading(false);
+  const { data: candidate, isLoading, isError, error, refetch } = useQuery<Candidate | null, any>({
+    queryKey: ["candidate", candidateId],
+    enabled: !!candidateId,
+    queryFn: async () => {
+      await initializeAuth();
+      return candidateService.getCandidateById(candidateId);
+    },
+  });
+
+  // Fetching handled by React Query above
+
+  // Mutation for updating candidate with optimistic cache update (must be before early returns)
+  const updateCandidateMutation = useMutation({
+    mutationFn: async ({ id, updatedCandidate }: { id: string; updatedCandidate: any }) => {
+      await initializeAuth();
+      return candidateService.updateCandidate(id, updatedCandidate);
+    },
+    onMutate: async ({ updatedCandidate }) => {
+      await queryClient.cancelQueries({ queryKey: ["candidate", candidateId] });
+      const previous = queryClient.getQueryData(["candidate", candidateId]);
+      queryClient.setQueryData(["candidate", candidateId], (old: any) => ({ ...(old || {}), ...(updatedCandidate || {}) }));
+      return { previous } as { previous: any };
+    },
+    onError: (err: any, _vars, context) => {
+      if ((context as any)?.previous) {
+        queryClient.setQueryData(["candidate", candidateId], (context as any).previous);
       }
-    };
-
-    if (candidateId) {
-      fetchCandidate();
-    }
-  }, [candidateId]);
+      // Show helpful error messages; global axios interceptors will handle 401 redirects if needed
+      if (err?.response?.status === 401) {
+        toast.error("Authentication failed. Please log in again.");
+      } else {
+        toast.error("Failed to update candidate");
+      }
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["candidate", candidateId] });
+    },
+  });
 
   const handleRefresh = async () => {
     try {
-      setIsLoading(true);
-      
-      // Ensure authentication is initialized
       await initializeAuth();
-      
-      const refreshedCandidate = await candidateService.getCandidateById(candidateId);
-      setCandidate(refreshedCandidate);
+      await refetch();
       toast.success("Data refreshed successfully");
     } catch (error) {
       console.error('Error refreshing candidate data:', error);
       toast.error("Failed to refresh data");
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const handleJobsAdded = async (jobIds: string[], jobData?: any[]) => {
-    try {
-      // Add the jobs to the candidate's job list
-      if (jobsContentRef.current) {
-        await jobsContentRef.current.addJobsToCandidate(jobIds, jobData);
-      }
-    } catch (error) {
-      console.error('Error adding jobs to candidate:', error);
-    }
-  };
 
   // Show loading state
   if (isLoading) {
@@ -106,11 +101,11 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
   }
 
   // Show error state
-  if (error || !candidate) {
+  if (isError || !candidate) {
     return (
       <div className="min-h-[400px] font-sans w-full flex items-center justify-center">
         <div className="text-center">
-          <div className="text-gray-500 text-lg mb-4">{error || 'Candidate not found.'}</div>
+          <div className="text-gray-500 text-lg mb-4">{(error as any)?.message || 'Candidate not found.'}</div>
           <Button onClick={handleRefresh} variant="outline">
             <RefreshCcw className="h-4 w-4 mr-2" />
             Retry
@@ -155,85 +150,49 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
     }
   };
 
+
   const handleCandidateUpdate = async (updatedCandidate: any, fieldKey?: string) => {
     try {
-      // Update local state immediately for optimistic UI
-      setCandidate(updatedCandidate);
-      
-      // Make API call to persist changes
-      if (candidate._id) {
-        // Ensure authentication is initialized before making the API call
-        await initializeAuth();
-        
-        await candidateService.updateCandidate(candidate._id, updatedCandidate);
-        
-        // Show success toast message based on API response
-        if (fieldKey) {
-          const allFields = [
-            { key: "name", label: "Candidate Name" },
-            { key: "location", label: "Location" },
-            { key: "experience", label: "Experience" },
-            { key: "totalRelevantExperience", label: "Total Relevant Years of Experience" },
-            { key: "noticePeriod", label: "Notice Period" },
-            { key: "skills", label: "Skills" },
-            { key: "resume", label: "Resume" },
-            { key: "status", label: "Status" },
-            { key: "referredBy", label: "Referred By" },
-            { key: "gender", label: "Gender" },
-            { key: "dateOfBirth", label: "Date of Birth" },
-            { key: "maritalStatus", label: "Marital Status" },
-            { key: "country", label: "Country" },
-            { key: "nationality", label: "Nationality" },
-            { key: "universityName", label: "University Name" },
-            { key: "educationDegree", label: "Education Degree/Certificate" },
-            { key: "primaryLanguage", label: "Primary Language" },
-            { key: "willingToRelocate", label: "Are you willing to relocate?" },
-            { key: "phone", label: "Phone Number" },
-            { key: "email", label: "Email" },
-            { key: "otherPhone", label: "Other Phone Number" },
-            { key: "linkedin", label: "LinkedIn" },
-            { key: "previousCompanyName", label: "Previous Company Name" },
-            { key: "currentJobTitle", label: "Current Job Title" },
-            { key: "reportingTo", label: "Reporting To" },
-            { key: "totalStaffReporting", label: "Total Number of Staff Reporting to You" },
-            { key: "softSkill", label: "Soft Skill" },
-            { key: "technicalSkill", label: "Technical Skill" }
-          ];
-          const fieldLabel = allFields.find(field => field.key === fieldKey)?.label || fieldKey || 'Field';
-          
-          // Show success toast message
-          toast.success(`${fieldLabel} updated successfully`);
-        }
-        
-        // Re-fetch the latest data to ensure UI shows the most up-to-date information
-        // Use setTimeout to ensure toast is displayed before re-fetching
-        setTimeout(async () => {
-          try {
-            if (candidate._id) {
-              const refreshedCandidate = await candidateService.getCandidateById(candidate._id);
-              setCandidate(refreshedCandidate);
-            }
-          } catch (refreshError) {
-            console.error('Error refreshing candidate data:', refreshError);
-          }
-        }, 100);
+      const id = candidate?._id;
+      if (!id) throw new Error('Missing candidate id');
+      await updateCandidateMutation.mutateAsync({ id, updatedCandidate });
+      if (fieldKey) {
+        const allFields = [
+          { key: "name", label: "Candidate Name" },
+          { key: "location", label: "Location" },
+          { key: "experience", label: "Experience" },
+          { key: "totalRelevantExperience", label: "Total Relevant Years of Experience" },
+          { key: "noticePeriod", label: "Notice Period" },
+          { key: "skills", label: "Skills" },
+          { key: "resume", label: "Resume" },
+          { key: "status", label: "Status" },
+          { key: "referredBy", label: "Referred By" },
+          { key: "gender", label: "Gender" },
+          { key: "dateOfBirth", label: "Date of Birth" },
+          { key: "maritalStatus", label: "Marital Status" },
+          { key: "country", label: "Country" },
+          { key: "nationality", label: "Nationality" },
+          { key: "universityName", label: "University Name" },
+          { key: "educationDegree", label: "Education Degree/Certificate" },
+          { key: "primaryLanguage", label: "Primary Language" },
+          { key: "willingToRelocate", label: "Are you willing to relocate?" },
+          { key: "phone", label: "Phone Number" },
+          { key: "email", label: "Email" },
+          { key: "otherPhone", label: "Other Phone Number" },
+          { key: "linkedin", label: "LinkedIn" },
+          { key: "previousCompanyName", label: "Previous Company Name" },
+          { key: "currentJobTitle", label: "Current Job Title" },
+          { key: "reportingTo", label: "Reporting To" },
+          { key: "totalStaffReporting", label: "Total Number of Staff Reporting to You" },
+          { key: "softSkill", label: "Soft Skill" },
+          { key: "technicalSkill", label: "Technical Skill" }
+        ];
+        const fieldLabel = allFields.find(field => field.key === fieldKey)?.label || fieldKey || 'Field';
+        toast.success(`${fieldLabel} updated successfully`);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating candidate:', error);
-      
-      // Check if it's an authentication error
-      if (error.response?.status === 401) {
-        toast.error("Authentication failed. Please log in again.");
-        // Redirect to login page
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
-      } else {
-        toast.error("Failed to update candidate");
-      }
-      
-      // Revert local state on error
-      setCandidate(candidate);
+      // onError in mutation handles auth and revert
     }
   };
 
@@ -267,41 +226,7 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
         </div>
       </div>
 
-      {/* Button Bar */}
-      {/* <div className="flex items-center justify-between p-4 border-b">
-        <AddToJobDialog 
-          candidateId={candidateId} 
-          candidateName={enhancedCandidate.name || "Unknown Candidate"}
-          onJobsAdded={handleJobsAdded}
-          trigger={
-            <Button className="bg-black text-white hover:bg-gray-800 rounded-md flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Add to Job
-            </Button>
-          }
-        />
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border rounded-md flex items-center gap-2"
-            onClick={() => console.log("Open Filters")}
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-            Filters
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border rounded-md flex items-center gap-2"
-            onClick={handleRefresh}
-          >
-            <RefreshCcw className="h-4 w-4" />
-            Refresh
-          </Button>
-        </div>
-      </div> */}
+     
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -322,14 +247,6 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
             Jobs
           </TabsTrigger>
 
-          {/* <TabsTrigger
-            value="Activities"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
-          >
-            <Activity className="h-4 w-4" />
-            Activities
-          </TabsTrigger> */}
-
           <TabsTrigger
             value="Notes"
             className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
@@ -345,30 +262,6 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
             <Paperclip className="h-4 w-4" />
             Attachments
           </TabsTrigger>
-
-          {/* <TabsTrigger
-            value="ClientTeam"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
-          >
-            <Users className="h-4 w-4" />
-            Client Team
-          </TabsTrigger> */}
-
-          {/* <TabsTrigger
-            value="Contacts"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
-          >
-            <User className="h-4 w-4" />
-            Contacts
-          </TabsTrigger> */}
-
-          {/* <TabsTrigger
-            value="History"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
-          >
-            <Clock className="h-4 w-4" />
-            History
-          </TabsTrigger> */}
         </TabsList>
 
         <TabsContent value="Summary" className="p-4">

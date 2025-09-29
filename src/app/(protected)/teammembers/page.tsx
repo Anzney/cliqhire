@@ -1,22 +1,22 @@
 "use client";
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import Dashboardheader from "@/components/dashboard-header";
 import { TeamMembersTabs } from "@/components/teamMembers/team-members-tabs";
 import { CreateTeamMemberModal } from "@/components/create-teamMembers-modal/create-teamMembers-modal";
-import { getTeamMembers } from "@/services/teamMembersService";
-import { TeamMember } from "@/types/teamMember";
 
 export default function TeamMembersPage() {
   const [open, setOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [initialLoading, setInitialLoading] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const handleCreateSuccess = () => {
-    setRefreshTrigger(prev => prev + 1); // Trigger refresh
+    // Invalidate team members list to refetch after create
+    queryClient.invalidateQueries({ queryKey: ["teamMembers"] });
   };
 
   const handleTeamMemberClick = (teamMemberId: string) => {
@@ -35,7 +35,7 @@ export default function TeamMembersPage() {
 
       {/* Tabbed Interface */}
       <div className="flex-1">
-        <TeamMembersTabs onTeamMemberClick={handleTeamMemberClick} refreshTrigger={refreshTrigger} />
+        <TeamMembersTabs onTeamMemberClick={handleTeamMemberClick} />
       </div>
 
       <CreateTeamMemberModal open={open} onOpenChange={setOpen} onSuccess={handleCreateSuccess} />

@@ -61,7 +61,6 @@ export function AddTaskForm({ onClose, onSubmit, initialValues }: AddTaskFormPro
       onSubmit(formData);
     } else {
       // Default behavior - just log and close
-      console.log('New task:', formData);
     }
     onClose();
   };

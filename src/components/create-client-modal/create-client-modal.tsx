@@ -71,27 +71,27 @@ export function CreateClientModal({
   const watchedContactInfo = form.watch("clientContactInfo");
 
   // Location suggestions
-  useEffect(() => {
-    const fetchLocationSuggestions = async () => {
-      if (!watchedContactInfo.location || watchedContactInfo.location.length < 3) {
-        setLocationSuggestions([]);
-        return;
-      }
-      try {
-        const response = await axios.get(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-            watchedContactInfo.location,
-          )}`,
-        );
-        setLocationSuggestions(response.data);
-        setShowLocationSuggestions(true);
-      } catch (error) {
-        console.error("Error fetching location suggestions:", error);
-      }
-    };
-    const debounceTimer = setTimeout(fetchLocationSuggestions, 300);
-    return () => clearTimeout(debounceTimer);
-  }, [watchedContactInfo.location]);
+  // useEffect(() => {
+  //   const fetchLocationSuggestions = async () => {
+  //     if (!watchedContactInfo.location || watchedContactInfo.location.length < 3) {
+  //       setLocationSuggestions([]);
+  //       return;
+  //     }
+  //     try {
+  //       const response = await axios.get(
+  //         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+  //           watchedContactInfo.location,
+  //         )}`,
+  //       );
+  //       setLocationSuggestions(response.data);
+  //       setShowLocationSuggestions(true);
+  //     } catch (error) {
+  //       console.error("Error fetching location suggestions:", error);
+  //     }
+  //   };
+  //   const debounceTimer = setTimeout(fetchLocationSuggestions, 300);
+  //   return () => clearTimeout(debounceTimer);
+  // }, [watchedContactInfo.location]);
 
   // URL validation
   const validateUrl = (url: string): boolean => {
@@ -258,15 +258,15 @@ export function CreateClientModal({
     const { clientContactInfo } = formData;
     submissionFormData.append("name", clientContactInfo.name.trim() || "");
     submissionFormData.append("emails", JSON.stringify(clientContactInfo.emails));
-    submissionFormData.append("website", clientContactInfo.website.trim() || "");
+    submissionFormData.append("website", clientContactInfo.website?.trim() || "");
     submissionFormData.append("phoneNumber", clientContactInfo.phoneNumber.trim() || "");
     submissionFormData.append("address", clientContactInfo.address.trim() || "");
     submissionFormData.append(
       "countryOfBusiness",
       clientContactInfo.countryOfBusiness?.trim() || "",
     );
-    submissionFormData.append("linkedInProfile", clientContactInfo.linkedInProfile.trim() || "");
-    submissionFormData.append("googleMapsLink", clientContactInfo.googleMapsLink.trim() || "");
+    submissionFormData.append("linkedInProfile", clientContactInfo.linkedInProfile?.trim() || "");
+    submissionFormData.append("googleMapsLink", clientContactInfo.googleMapsLink?.trim() || "");
     submissionFormData.append("primaryContacts", JSON.stringify(clientContactInfo.primaryContacts));
 
     // Client Contract Info
