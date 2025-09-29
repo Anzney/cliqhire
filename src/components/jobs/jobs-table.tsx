@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { JobStageBadge } from './job-stage-badge'
-import { Job } from '@/types/job'
+import { Job, JobStage } from '@/types/job'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { api } from "@/lib/axios-config";
 import { initializeAuth } from "@/lib/axios-config";
@@ -18,7 +18,7 @@ interface JobsTableProps {
 export function JobsTable({ jobs, clientName, onJobsUpdate }: JobsTableProps) {
   const [filteredJobs, setFilteredJobs] = useState<Job[]>(jobs)
   const [localJobs, setLocalJobs] = useState<Job[]>(jobs)
-  const [pendingChange, setPendingChange] = useState<{ jobId: string; newStage: string } | null>(null)
+  const [pendingChange, setPendingChange] = useState<{ jobId: string; newStage: JobStage } | null>(null)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -27,7 +27,7 @@ export function JobsTable({ jobs, clientName, onJobsUpdate }: JobsTableProps) {
     setLocalJobs(jobs)
   }, [jobs])
 
-  const handleStageChange = (jobId: string, newStage: string) => {
+  const handleStageChange = (jobId: string, newStage: JobStage) => {
     setPendingChange({ jobId, newStage })
     setShowConfirmDialog(true)
   }

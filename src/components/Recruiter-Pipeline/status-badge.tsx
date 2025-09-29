@@ -11,27 +11,29 @@ import {
 import { ChevronDown } from "lucide-react";
 
 // Define status types for each stage
-export type SourcingStatus = "Connections Sent" | "Connections Accepted" | "CV Received" | "Disqualified";
+export type SourcingStatus = "Pending" | "Connections Sent" | "Connections Accepted" | "CV Received" | "Disqualified";
 export type ScreeningStatus = "AEMS Interview" | "Submission Pending" | "CV Submitted" | "Disqualified";
-export type ClientScreeningStatus = "Client Shortlisted" | "Disqualified";
-export type InterviewStatus = "Client Interviewed" | "Client Selected" | "Disqualified";
+export type ClientScreeningStatus = "Pending" | "Client Shortlisted" | "Disqualified";
+export type InterviewStatus = "Pending" | "Client Interviewed" | "Client Selected" | "Disqualified";
 export type VerificationStatus = "Document Pending" | "Document Verified" | "Offer Letter Sent" | "Offer Accepted" | "Offer Rejected" | "Disqualified";
+export type OnboardingStatus = "Pending" | "Completed";
+export type StatusType = SourcingStatus | ScreeningStatus | ClientScreeningStatus | InterviewStatus | VerificationStatus | OnboardingStatus;
 
-
-export type StatusType = SourcingStatus | ScreeningStatus | ClientScreeningStatus | InterviewStatus | VerificationStatus;
 
 // Status options for each stage
 const statusOptions: Record<string, StatusType[]> = {
-  "Sourcing": ["Connections Sent", "Connections Accepted", "CV Received", "Disqualified"],
+  "Sourcing": ["Pending", "Connections Sent", "Connections Accepted", "CV Received", "Disqualified"],
   "Screening": ["AEMS Interview", "Submission Pending", "CV Submitted", "Disqualified"],
-  "Client Review": ["Client Shortlisted", "Disqualified"],
-  "Interview": ["Client Interviewed", "Client Selected", "Disqualified"],
-  "Verification": ["Document Pending", "Document Verified", "Offer Letter Sent", "Offer Accepted", "Offer Rejected", "Disqualified"]
+  "Client Review": ["Pending", "Client Shortlisted", "Disqualified"],
+  "Interview": ["Pending", "Client Interviewed", "Client Selected", "Disqualified"],
+  "Verification": ["Document Pending", "Document Verified", "Offer Letter Sent", "Offer Accepted", "Offer Rejected", "Disqualified"],
+  "Onboarding": ["Pending", "Completed"],
 };
 
 // Status colors
 const statusColors: Record<StatusType, string> = {
   // Sourcing statuses
+  "Pending": "bg-gray-100 text-gray-700 border-gray-200",
   "Connections Sent": "bg-blue-100 text-blue-800 border-blue-200",
   "Connections Accepted": "bg-green-100 text-green-800 border-green-200",
   "CV Received": "bg-purple-100 text-purple-800 border-purple-200",
@@ -48,6 +50,8 @@ const statusColors: Record<StatusType, string> = {
   // Interview statuses
   "Client Interviewed": "bg-blue-100 text-blue-800 border-blue-200",
   "Client Selected": "bg-green-100 text-green-800 border-green-200",
+  // Onboarding statuses
+  "Completed": "bg-emerald-100 text-emerald-800 border-emerald-200",
   
   // Verification statuses
   "Document Pending": "bg-yellow-100 text-yellow-800 border-yellow-200",
@@ -58,6 +62,21 @@ const statusColors: Record<StatusType, string> = {
   
   // Disqualified status (available for all stages except Hired and Onboarding)
   "Disqualified": "bg-red-100 text-red-800 border-red-200"
+};
+
+// Display label mapper to keep underlying values intact while changing UI labels
+const getDisplayLabel = (status: StatusType | string) => {
+  switch (status) {
+    case "Connections Sent":
+      return "Communications Sent";
+    case "Connections Accepted":
+      return "Communications Acknowledged";
+    case "Client Shortlisted":
+      // Existing UX choice to display shorter label
+      return "Shortlisted";
+    default:
+      return status as string;
+  }
 };
 
 interface StatusBadgeProps {
@@ -74,6 +93,15 @@ export function StatusBadge({
   isReadOnly = false 
 }: StatusBadgeProps) {
   const availableStatuses = statusOptions[stage] || [];
+  // Default status mapping for stages with default "Pending"
+  const defaultStatusByStage: Record<string, StatusType | undefined> = {
+    "Sourcing": "Pending",
+    "Client Review": "Pending",
+    "Interview": "Pending",
+    "Onboarding": "Pending",
+  };
+
+  const effectiveStatus = (status ?? defaultStatusByStage[stage]) || null;
 
   const handleClick = (statusOption: StatusType) => {
     return (event: React.MouseEvent) => {
@@ -84,8 +112,8 @@ export function StatusBadge({
     };
   };
 
-  // If no status is set, show a placeholder
-  if (!status) {
+  // If no explicit status is set and there's no default, show a placeholder
+  if (!effectiveStatus) {
     if (isReadOnly) {
       return (
         <Badge 
@@ -124,7 +152,7 @@ export function StatusBadge({
                 variant="secondary" 
                 className={`${statusColors[statusOption]} border-none`}
               >
-                {statusOption === "Client Shortlisted" ? "Shortlisted" : statusOption}
+                {getDisplayLabel(statusOption)}
               </Badge>
             </DropdownMenuItem>
           ))}
@@ -138,9 +166,9 @@ export function StatusBadge({
     return (
       <Badge 
         variant="secondary" 
-        className={`${statusColors[status]} border-none`}
+        className={`${statusColors[effectiveStatus]} border-none`}
       >
-        {status === "Client Shortlisted" ? "Shortlisted" : status}
+        {getDisplayLabel(effectiveStatus)}
       </Badge>
     );
   }
@@ -154,9 +182,9 @@ export function StatusBadge({
         >
           <Badge 
             variant="secondary" 
-            className={`${statusColors[status]} border-none flex items-center gap-1`}
+            className={`${statusColors[effectiveStatus]} border-none flex items-center gap-1`}
           >
-            {status === "Client Shortlisted" ? "Shortlisted" : status}
+            {getDisplayLabel(effectiveStatus)}
             <ChevronDown className="h-3 w-3" />
           </Badge>
         </Button>
@@ -172,7 +200,7 @@ export function StatusBadge({
               variant="secondary" 
               className={`${statusColors[statusOption]} border-none`}
             >
-              {statusOption === "Client Shortlisted" ? "Shortlisted" : statusOption}
+              {getDisplayLabel(statusOption)}
             </Badge>
           </DropdownMenuItem>
         ))}

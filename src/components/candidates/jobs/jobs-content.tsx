@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { Job } from "@/services/jobService";
 import { Loader } from "lucide-react";
-import { api } from "@/lib/axios-config";
+import { api, initializeAuth } from "@/lib/axios-config";
 import { mapBackendStageToUIStage } from "@/components/Recruiter-Pipeline/dummy-data";
 
 export interface JobsContentRef {
@@ -48,41 +48,42 @@ export const JobsContent = forwardRef<JobsContentRef, JobsContentProps>(
       
       const response = await api.get(`/api/candidates/${candidateId}/jobs`);
       
-      if (response.data.status === "success" && Array.isArray(response.data.data)) {
-        // Transform the API response to match our interface
+      if (response.data?.status === "success" && Array.isArray(response.data?.data)) {
+        // Transform the API response to match our interface, preferring provided fields
         const transformedJobs: CandidateJobApplication[] = await Promise.all(
-          response.data.data.map(async (job: any) => {
-            let clientName = "";
-            
-            // Try to get client name if client ID is provided
-            if (job.client && typeof job.client === 'string') {
-              try {
-                const clientResponse = await api.get(`/api/clients/${job.client}`);
-                if (clientResponse.data.status === "success") {
-                  clientName = clientResponse.data.data?.name || job.client;
-                } else {
-                  clientName = job.client; // Fallback to client ID if fetch fails
+          response.data.data.map(async (job: any, idx: number) => {
+            // Prefer clientName from API; only fallback if missing
+            let clientName = job.clientName ?? "";
+            if (!clientName) {
+              if (job.client && typeof job.client === 'string') {
+                try {
+                  const clientResponse = await api.get(`/api/clients/${job.client}`);
+                  if (clientResponse.data?.status === "success") {
+                    clientName = clientResponse.data?.data?.name || job.client;
+                  } else {
+                    clientName = job.client; // Fallback to client ID if fetch fails
+                  }
+                } catch (error) {
+                  console.error("Error fetching client name:", error);
+                  clientName = job.client; // Fallback to client ID
                 }
-              } catch (error) {
-                console.error("Error fetching client name:", error);
-                clientName = job.client; // Fallback to client ID
+              } else if (job.client && typeof job.client === 'object' && job.client.name) {
+                clientName = job.client.name;
               }
-            } else if (job.client && typeof job.client === 'object' && job.client.name) {
-              // If client is already an object with name
-              clientName = job.client.name;
-            } else {
-              clientName = job.client || "";
             }
-            
+
+            const idCandidate = job._id || job.id || job.jobId || `${job.jobTitle || 'job'}-${clientName || 'client'}-${idx}`;
+            const navId = job.jobId || job._id || job.id || "";
+
             return {
-              _id: job._id,
-              jobId: job._id, // Use the job ID for navigation
+              _id: String(idCandidate),
+              jobId: String(navId),
               jobTitle: job.jobTitle || "",
               clientName: clientName,
               location: job.location || "",
               jobType: job.jobType || "",
-              minimumSalary: job.minimumSalary?.toString() || "0",
-              maximumSalary: job.maximumSalary?.toString() || "0",
+              minimumSalary: (job.minimumSalary ?? "0").toString(),
+              maximumSalary: (job.maximumSalary ?? "0").toString(),
               experience: job.experience || "",
               stage: mapBackendStageToUIStage(job.stage || ""),
             };
@@ -147,7 +148,11 @@ export const JobsContent = forwardRef<JobsContentRef, JobsContentProps>(
             <div
               key={job._id}
               className="border-b hover:bg-gray-50 py-3 px-4 cursor-pointer"
-              onClick={() => router.push(`/jobs/${job.jobId}`)}
+              onClick={() => {
+                if (job.jobId) {
+                  router.push(`/jobs/${job.jobId}`);
+                }
+              }}
             >
               <div className="flex items-center">
                 <div className="grid grid-cols-8 w-full">

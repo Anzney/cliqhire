@@ -17,7 +17,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { StatsOverview } from "@/components/today-tasks/StatsOverview";
 import { AssignedJobs } from "@/components/today-tasks/AssignedJobs";
 import { Interviews } from "@/components/today-tasks/Interviews";
-import { UpcomingInterviews } from "@/components/today-tasks/UpcomingInterviews";
 import { PersonalTasks } from "@/components/today-tasks/PersonalTasks";
 import { AddTaskForm } from "@/components/today-tasks/AddTaskForm";
 import { 
@@ -27,15 +26,13 @@ import {
 } from "@/components/today-tasks/types";
 import { JobStatus } from "@/components/today-tasks/StatusDropdown";
 import { 
-  dummyInterviews, 
-  dummyUpcomingInterviews,
-  dummyPersonalTasks 
+  dummyInterviews 
 } from "@/components/today-tasks/dummyData";
 import { taskService, AssignedJobApiResponse } from "@/services/taskService";
 
 
 export default function TodayTasksPage() {
-  const { tasks, createTask, updateTask, deleteTask, completeTask, updateFollowUpStatus, fetchTasks } = useAuth();
+  const { completeTask, updateFollowUpStatus } = useAuth();
   
   // State management - using real API data
   const [assignedJobs, setAssignedJobs] = useState<AssignedJob[]>([]);
@@ -43,9 +40,8 @@ export default function TodayTasksPage() {
   const [personalTasks, setPersonalTasks] = useState<PersonalTask[]>([]);
   const [personalTasksLoading, setPersonalTasksLoading] = useState(true);
 
-  // Fetch tasks and assigned jobs when component mounts
+  // Fetch assigned jobs and personal tasks when component mounts
   useEffect(() => {
-    fetchTasks();
     fetchAssignedJobs();
     fetchPersonalTasks();
   }, []); // Empty dependency array ensures this runs only once
@@ -113,7 +109,7 @@ export default function TodayTasksPage() {
   };
 
   const [interviews, setInterviews] = useState<Interview[]>(dummyInterviews);
-  const [upcomingInterviews, setUpcomingInterviews] = useState<Interview[]>(dummyUpcomingInterviews);
+  
 
 
   const [completedTasks, setCompletedTasks] = useState<Set<string>>(new Set());
@@ -186,15 +182,7 @@ export default function TodayTasksPage() {
     );
   };
 
-  const updateUpcomingInterviewStatus = (interviewId: string, status: Interview['status']) => {
-    setUpcomingInterviews(prev =>
-      prev.map(interview =>
-        interview.id === interviewId
-          ? { ...interview, status }
-          : interview
-      )
-    );
-  };
+  
 
   // Filter functions
   const filteredPersonalTasks = personalTasks.filter(task => {
@@ -210,7 +198,7 @@ export default function TodayTasksPage() {
     return interviewDate === today;
   });
 
-  // upcomingInterviews is now managed as separate state with dummyUpcomingInterviews
+  
 
   // Handler functions
   const handleJobStatusChange = async (jobId: string, newStatus: JobStatus) => {
@@ -257,7 +245,7 @@ export default function TodayTasksPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Today's Tasks</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Today&apos;s Tasks</h1>
           <p className="text-gray-600 mt-1">
             Manage your assigned jobs, interviews, and personal tasks
           </p>
@@ -312,11 +300,7 @@ export default function TodayTasksPage() {
         onUpdateInterviewStatus={updateInterviewStatus}
       />
 
-      {/* Upcoming Interviews */}
-      <UpcomingInterviews 
-        upcomingInterviews={upcomingInterviews}
-        onUpdateInterviewStatus={updateUpcomingInterviewStatus}
-      />
+      
 
       {/* Personal Tasks */}
       <PersonalTasks

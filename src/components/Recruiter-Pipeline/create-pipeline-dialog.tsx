@@ -126,9 +126,48 @@ export function CreatePipelineDialog({ trigger, onPipelineCreated }: CreatePipel
       // Get the selected job data
       const selectedJobs = jobs.filter(job => selectedJobIds.includes(job._id));
       
+      // Validate team assignment for each selected job
+      const hasTeamAssignment = (job: Job) => {
+        const anyFromJobTeamInfo = (() => {
+          const jti: any = (job as any).jobTeamInfo;
+          return !!(jti && (jti.hiringManager || jti.recruiter || jti.teamLead || jti.recruitmentManager));
+        })();
+
+        const anyFromFlatFields = !!(
+          (job as any).recruiterId || (job as any).recruiter ||
+          (job as any).teamLeadId || (job as any).teamLead ||
+          (job as any).recruitmentManagerId || (job as any).recruitmentManager
+        );
+
+        let anyFromTeamAssignment = false;
+        const ta: any = (job as any).teamAssignment;
+        if (ta && typeof ta === 'string') {
+          try {
+            const parsed = JSON.parse(ta);
+            anyFromTeamAssignment = !!(parsed && (parsed.hiringManager || parsed.recruiter || parsed.teamLead || parsed.recruitmentManager));
+          } catch {}
+        } else if (ta && typeof ta === 'object') {
+          anyFromTeamAssignment = !!(ta.hiringManager || ta.recruiter || ta.teamLead || ta.recruitmentManager);
+        }
+
+        return anyFromJobTeamInfo || anyFromFlatFields || anyFromTeamAssignment;
+      };
+
+      const jobsWithTeam = selectedJobs.filter(hasTeamAssignment);
+      const jobsWithoutTeam = selectedJobs.filter(j => !hasTeamAssignment(j));
+
+      if (jobsWithoutTeam.length > 0) {
+        const names = jobsWithoutTeam.map(j => j.jobTitle).join(', ');
+        toast.error(`Team Assignment required. The following job(s) have no team set: ${names}`);
+        if (jobsWithTeam.length === 0) {
+          setCreatingPipeline(false);
+          return;
+        }
+      }
+
       // Create pipeline entries for each selected job
       const results = await Promise.allSettled(
-        selectedJobIds.map(jobId => createPipeline({ jobId }))
+        jobsWithTeam.map(job => createPipeline({ jobId: job._id }))
       );
       
       // Check results
@@ -137,9 +176,9 @@ export function CreatePipelineDialog({ trigger, onPipelineCreated }: CreatePipel
       
       results.forEach((result, index) => {
         if (result.status === 'fulfilled' && result.value.success) {
-          successfulJobs.push(selectedJobs[index]);
+          successfulJobs.push(jobsWithTeam[index]);
         } else {
-          failedJobs.push(selectedJobs[index].jobTitle);
+          failedJobs.push(jobsWithTeam[index].jobTitle);
         }
       });
       

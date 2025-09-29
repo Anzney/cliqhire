@@ -84,7 +84,6 @@ export function PDFViewer({ isOpen, onClose, pdfUrl, candidateName }: PDFViewerP
         disableStream: false,
         disableRange: false,
         disableFontFace: false,
-        disableCreateObjectURL: false,
         cMapUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/cmaps/`,
         cMapPacked: true,
         standardFontDataUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/standard_fonts/`,
@@ -101,11 +100,15 @@ export function PDFViewer({ isOpen, onClose, pdfUrl, candidateName }: PDFViewerP
       setLoading(false);
     } catch (err) {
       console.error('Error loading PDF:', err);
-      console.error('Error details:', {
-        message: err.message,
-        name: err.name,
-        stack: err.stack
-      });
+      if (err instanceof Error) {
+        console.error('Error details:', {
+          message: err.message,
+          name: err.name,
+          stack: err.stack,
+        });
+      } else {
+        console.error('Error details (non-Error):', err);
+      }
       
       // Try iframe fallback for CORS issues
       console.log('PDF.js failed, trying iframe fallback...');
@@ -348,7 +351,7 @@ export function PDFViewer({ isOpen, onClose, pdfUrl, candidateName }: PDFViewerP
               <div>
                 <p className="text-lg font-semibold text-gray-700">No Resume Available</p>
                 <p className="text-sm text-gray-600 mt-2">
-                  This candidate doesn't have a resume uploaded yet.
+                  This candidate doesn&apos;t have a resume uploaded yet.
                 </p>
               </div>
             </div>

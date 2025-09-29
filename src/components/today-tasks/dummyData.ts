@@ -506,7 +506,7 @@ export const dummyPersonalTasks: PersonalTask[] = [
     priority: "high",
     dueDate: "2024-01-10",
     dueTime: "10:00",
-    status: "pending",
+    status: "to-do",
     category: "follow-up",
     followUpType: "cv-received",
     followUpStatus: "pending",
@@ -522,7 +522,7 @@ export const dummyPersonalTasks: PersonalTask[] = [
     priority: "high",
     dueDate: "2024-01-10",
     dueTime: "12:00",
-    status: "in-progress",
+    status: "inprogress",
     category: "admin",
     createdAt: "2024-01-08"
   },
@@ -533,7 +533,7 @@ export const dummyPersonalTasks: PersonalTask[] = [
     priority: "medium",
     dueDate: "2024-01-10",
     dueTime: "14:00",
-    status: "pending",
+    status: "to-do",
     category: "follow-up",
     followUpType: "candidate-response",
     followUpStatus: "pending",
@@ -548,7 +548,7 @@ export const dummyPersonalTasks: PersonalTask[] = [
     description: "Explore LinkedIn Recruiter alternatives and new job boards",
     priority: "low",
     dueDate: "2024-01-12",
-    status: "pending",
+    status: "to-do",
     category: "research",
     createdAt: "2024-01-07"
   }

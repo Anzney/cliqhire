@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/table";
 import { useRouter } from "next/navigation";
 import { JobStageBadge } from "@/components/jobs/job-stage-badge";
-import { Job, JobStage } from "@/types/job";
+import { JobStage } from "@/types/job";
+import type { Job as ServiceJob } from "@/services/jobService";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -76,7 +77,7 @@ type Client = {
 };
 
 export default function JobsPage() {
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobs, setJobs] = useState<ServiceJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -152,6 +153,19 @@ export default function JobsPage() {
   const getClientName = (clientId: string) => {
     const client = clientList.find((client) => client._id === clientId);
     return client ? client.name : "Unknown";
+  };
+
+  // Ensure we always pass a valid JobStage to components expecting it
+  const toJobStage = (stage?: string): JobStage => {
+    const validStages: JobStage[] = [
+      "Open",
+      "Hired",
+      "On Hold",
+      "Closed",
+      "Active",
+      "Onboarding",
+    ];
+    return validStages.includes(stage as JobStage) ? (stage as JobStage) : "Open";
   };
 
   const handleStageChange = (jobId: string, newStage: JobStage) => {
@@ -271,13 +285,17 @@ export default function JobsPage() {
                        onClick={(e)=>e.stopPropagation()}
                       >
                         <JobStageBadge
-                          stage={job.stage}
+                          stage={toJobStage(job.stage)}
                           onStageChange={(newStage) => handleStageChange(job._id, newStage)}
                         />
                       </TableCell>
                       <TableCell className="text-sm">{job.minimumSalary}</TableCell>
                       <TableCell className="text-sm">{job.maximumSalary}</TableCell>
-                      <TableCell className="text-sm">{job.client}</TableCell>
+                      <TableCell className="text-sm">
+                        {typeof job.client === "string"
+                          ? getClientName(job.client)
+                          : job.client?.name ?? "Unknown"}
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (

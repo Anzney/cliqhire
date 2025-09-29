@@ -140,7 +140,7 @@ export function FollowUpStatusDropdown({
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Status Change</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to change the status of "{taskTitle}" from{" "}
+              Are you sure you want to change the status of `@quot;{taskTitle}@quot;` from{" "}
               <span className="font-medium">{getStatusLabel(currentStatus)}</span> to{" "}
               <span className="font-medium">{pendingStatus ? getStatusLabel(pendingStatus) : ''}</span>?
             </AlertDialogDescription>

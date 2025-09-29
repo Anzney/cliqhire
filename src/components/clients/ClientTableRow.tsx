@@ -55,8 +55,8 @@ export const ClientTableRow: React.FC<ClientTableRowProps> = ({
           onStatusChange={onStatusChange}
         />
       </TableCell>
-      <TableCell className="text-sm">{client.owner}</TableCell>
-      <TableCell className="text-sm">{client.team}</TableCell>
+      {/* <TableCell className="text-sm">{client.owner}</TableCell> */}
+      {/* <TableCell className="text-sm">{client.team}</TableCell> */}
       <TableCell className="text-sm">
         {client.incorporationDate
           ? `${getYearDifference(client.incorporationDate)} years`

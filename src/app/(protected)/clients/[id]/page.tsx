@@ -100,10 +100,10 @@ export default function ClientPage({ params }: PageProps) {
           <div>
             <h1 className="text-2xl font-bold">{client.name || "Unnamed Client"}</h1>
             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-              <span>{client.industry || "Investment Management"}</span>
-              <span>•</span>
-              <span>{client.location || "Riyadh Region, Saudi Arabia"}</span>
-              <span>•</span>
+              {client.industry && <span>{client.industry}</span>}
+              {client.industry && (client.address || client.location) && <span>•</span>}
+              {(client.address || client.location) && <span>{client.address || client.location}</span>}
+              {(client.industry || client.address || client.location) && <span>•</span>}
               <Badge variant="outline" className="bg-blue-100 text-blue-800 hover:bg-blue-100">
                 Lead
               </Badge>
@@ -255,8 +255,12 @@ export default function ClientPage({ params }: PageProps) {
       </Tabs>
 
       {/* Create Job Modal */}
-      <CreateJobRequirementForm open={isCreateJobOpen} onOpenChange={setIsCreateJobOpen} />
+      <CreateJobRequirementForm
+        open={isCreateJobOpen}
+        onOpenChange={setIsCreateJobOpen}
+        lockedClientId={id}
+        lockedClientName={client?.name || ""}
+      />
     </div>
   );
 }
-

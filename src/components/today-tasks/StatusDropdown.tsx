@@ -110,7 +110,7 @@ export function StatusDropdown({ currentStatus, onStatusChange, jobTitle }: Stat
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Status Change</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to change the status of <strong>"{jobTitle}"</strong> from{" "}
+            Are you sure you want to change the status of <strong>{`"${jobTitle}"`}</strong> from{" "}
               <Badge className={`${statusColors[currentStatus]} border-none`}>{currentStatus}</Badge> to{" "}
               <Badge className={`${statusColors[pendingStatus!]} border-none`}>{pendingStatus}</Badge>?
             </AlertDialogDescription>

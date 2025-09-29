@@ -11,15 +11,10 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  tasks: Task[];
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   refreshAuth: () => Promise<void>;
-  fetchTasks: () => Promise<void>;
-  createTask: (taskData: any) => Promise<Task>;
-  updateTask: (taskData: any) => Promise<Task>;
-  deleteTask: (taskId: string) => Promise<void>;
   completeTask: (taskId: string) => Promise<Task>;
   updateFollowUpStatus: (taskId: string, status: 'pending' | 'in-progress' | 'completed') => Promise<Task>;
 }
@@ -34,23 +29,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isFetchingTasksRef = useRef(false);
   const router = useRouter();
 
-  const fetchTasks = useCallback(async () => {
-    // Prevent multiple simultaneous calls
-    if (isFetchingTasksRef.current) {
-      return;
-    }
-    
-    try {
-      isFetchingTasksRef.current = true;
-      const userTasks = await taskService.getMyTasks();
-      setTasks(userTasks);
-    } catch (error) {
-      console.error('AuthContext: Error fetching tasks:', error);
-      // Don't throw error, just log it - tasks are not critical for authentication
-    } finally {
-      isFetchingTasksRef.current = false;
-    }
-  }, []);
 
   const checkAuth = async () => {
     try {
@@ -100,12 +78,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Initialize axios authentication after successful login
         await initializeAuth();
         
-        // Set tasks from login response if available, otherwise empty array
-        if (response.tasks) {
-          setTasks(response.tasks);
-        } else {
-          setTasks([]);
-        }
+        // Do not fetch or set tasks during login
+        setTasks([]);
         
         return true;
       } else {
@@ -167,38 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Task management functions
-  const createTask = async (taskData: any): Promise<Task> => {
-    try {
-      const newTask = await taskService.createTask(taskData);
-      setTasks(prev => [...prev, newTask]);
-      return newTask;
-    } catch (error) {
-      console.error('AuthContext: Error creating task:', error);
-      throw error;
-    }
-  };
-
-  const updateTask = async (taskData: any): Promise<Task> => {
-    try {
-      const updatedTask = await taskService.updateTask(taskData);
-      setTasks(prev => prev.map(task => task.id === updatedTask.id ? updatedTask : task));
-      return updatedTask;
-    } catch (error) {
-      console.error('AuthContext: Error updating task:', error);
-      throw error;
-    }
-  };
-
-  const deleteTask = async (taskId: string): Promise<void> => {
-    try {
-      await taskService.deleteTask(taskId);
-      setTasks(prev => prev.filter(task => task.id !== taskId));
-    } catch (error) {
-      console.error('AuthContext: Error deleting task:', error);
-      throw error;
-    }
-  };
+  // Task management functions (subset retained in context)
 
   const completeTask = async (taskId: string): Promise<Task> => {
     try {
@@ -231,15 +174,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     isAuthenticated,
     isLoading,
-    tasks,
     login,
     logout,
     checkAuth,
     refreshAuth,
-    fetchTasks,
-    createTask,
-    updateTask,
-    deleteTask,
     completeTask,
     updateFollowUpStatus,
   };

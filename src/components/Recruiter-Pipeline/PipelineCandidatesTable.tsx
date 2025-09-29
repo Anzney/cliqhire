@@ -79,6 +79,7 @@ export function PipelineCandidatesTable({
                   "Client Review",
                   "Interview",
                   "Verification",
+                  "Onboarding",
                 ];
                 if (stagesWithStatus.includes(candidate.currentStage)) {
                   return (

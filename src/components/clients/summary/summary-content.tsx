@@ -568,7 +568,7 @@ export function SummaryContent({
           </CollapsibleContent>
         </Collapsible>
 
-        <Collapsible className="rounded-lg border shadow-sm">
+        {/* <Collapsible className="rounded-lg border shadow-sm">
           <div className="flex items-center justify-between p-4">
             <h4 className="text-sm font-semibold">Company Related Information</h4>
             <CollapsibleTrigger asChild>
@@ -581,29 +581,8 @@ export function SummaryContent({
           <CollapsibleContent className="px-4 pb-4">
             <SalesInfo />
           </CollapsibleContent>
-        </Collapsible>
+        </Collapsible> */}
 
-        <div className="bg-white rounded-lg border shadow-sm p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold">Team</h2>
-            <Button variant="outline" size="sm" onClick={() => setIsTeamModalOpen(true)}>
-              + Add
-            </Button>
-          </div>
-          <div className="space-y-3">
-            <div className="text-xs text-muted-foreground mb-2">
-              {teamMembers.length} team member{teamMembers.length !== 1 ? "s" : ""}
-            </div>
-            {teamMembers.map((member, index) => (
-              <TeamMember
-                key={index}
-                name={member.name}
-                role={member.role}
-                isActive={member.isActive}
-              />
-            ))}
-          </div>
-        </div>
 
         <div className="bg-white rounded-lg border shadow-sm p-4">
           <div className="flex items-center justify-between mb-4">
