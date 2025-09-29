@@ -2,17 +2,35 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { UserPlus, Users } from "lucide-react";
+
+interface OptionCardProps {
+  icon: React.ReactNode;
+  title: string;
+  onClick: () => void;
+}
+
+function OptionCard({ icon, title, onClick }: OptionCardProps) {
+  return (
+    <Button
+      variant="outline"
+      className="h-auto flex flex-col items-center gap-6 p-8 hover:border-gray-400 hover:bg-gray-200"
+      onClick={onClick}
+    >
+      <div className="w-16 h-16 flex items-center justify-center bg-gray-100 rounded-lg">
+        {icon}
+      </div>
+      <span className="text-lg font-semibold text-gray-800">{title}</span>
+    </Button>
+  );
+}
 
 interface AddCandidateDialogProps {
   open: boolean;
@@ -41,37 +59,28 @@ export function AddCandidateDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Add Candidate</DialogTitle>
+          <DialogTitle className="text-xl sticky">Add Candidate</DialogTitle>
           <DialogDescription>
             {jobTitle
               ? `Choose how you want to add a candidate to ${jobTitle}.`
               : "Choose how you want to add a candidate."}
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-row gap-2">
-             <Button
-                variant="outline"
-                onClick={handleExistingClick}
-                className="h-10 w-full"
-              >
-                <Users className="h-4 w-4 mr-2" />
-                Add Existing Candidate
-              </Button>
-              <Button onClick={handleNewClick} className="h-10 w-full">
-                <UserPlus className="h-4 w-4 mr-2" />
-                Add New Candidate
-              </Button>
-             </div>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="secondary">Cancel</Button>
-          </DialogClose>
-        </DialogFooter>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+          <OptionCard
+            icon={<Users className="w-8 h-8 text-gray-600" />}
+            title="Attach Existing Candidate"
+            onClick={handleExistingClick}
+          />
+          <OptionCard
+            icon={<UserPlus className="w-8 h-8 text-gray-600" />}
+            title="Add New Candidate"
+            onClick={handleNewClick}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );
 }
-
-

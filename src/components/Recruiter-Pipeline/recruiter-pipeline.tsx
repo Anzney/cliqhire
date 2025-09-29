@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { KPISection } from "./kpi-section";
 import { CreatePipelineDialog } from "./create-pipeline-dialog";
 import { PipelineJobCard } from "./pipeline-job-card";
-import { type Job } from "./dummy-data";
+import { type Job, mapUIStageToBackendStage, mapBackendStageToUIStage } from "./dummy-data";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,9 +42,11 @@ const convertPipelineListDataToJob = (pipelineData: PipelineListItem, isExpanded
     headcount: pipelineData.jobId.numberOfPositions || 1,
     jobType: pipelineData.jobId.jobType || "Full-time",
     isExpanded,
+    // Preserve the entire jobId object for access to jobTeamInfo
+    jobId: pipelineData.jobId,
     candidates: [], // Will be populated when expanded
     // Pipeline-specific data from new API structure
-    pipelineStatus: pipelineData.status,
+    // Note: pipelineStatus is now derived from jobId.stage
     priority: pipelineData.priority,
     notes: pipelineData.notes,
     assignedDate: pipelineData.assignedDate,
@@ -93,13 +95,15 @@ const convertPipelineDataToJob = (pipelineData: any, isExpanded: boolean = false
     headcount: pipelineData.jobId.headcount || 1,
     jobType: pipelineData.jobId.jobType || "Full-time",
     isExpanded,
+    // Preserve the entire jobId object for access to jobTeamInfo
+    jobId: pipelineData.jobId,
     candidates: pipelineData.candidateIdArray.map((candidateData: any) => {
       const candidate = candidateData.candidateId;
       return {
         id: candidate._id,
         name: candidate.name,
         source: candidate.referredBy || "Pipeline",
-        currentStage: candidateData.currentStage || "Sourcing",
+        currentStage: mapBackendStageToUIStage(candidateData.currentStage || "Sourcing"),
         avatar: undefined,
         experience: candidate.experience,
         currentSalary: candidate.currentSalary,
@@ -133,6 +137,7 @@ const convertPipelineDataToJob = (pipelineData: any, isExpanded: boolean = false
         primaryLanguage: candidate.primaryLanguage,
         resume: candidate.resume,
         // Pipeline-specific data
+        status: candidateData.status,
         subStatus: candidateData.status,
         priority: candidateData.priority,
         notes: candidateData.notes,
@@ -144,11 +149,16 @@ const convertPipelineDataToJob = (pipelineData: any, isExpanded: boolean = false
         verification: candidateData.verification,
         onboarding: candidateData.onboarding,
         hired: candidateData.hired,
-        disqualified: candidateData.disqualified
+        disqualified: candidateData.disqualified,
+        // Additional pipeline fields
+        connection: candidateData.connection,
+        hiringManager: candidateData.hiringManager,
+        recruiter: candidateData.recruiter,
+        isTempCandidate: candidate.isTempCandidate || false,
       };
     }),
     // Pipeline-specific data from new API structure
-    pipelineStatus: pipelineData.status,
+    // Note: pipelineStatus is now derived from jobId.stage
     priority: pipelineData.priority,
     notes: pipelineData.notes,
     assignedDate: pipelineData.assignedDate,
@@ -308,8 +318,8 @@ export function RecruiterPipeline() {
   // Calculate KPI data from jobs and overall summary
   const calculateKPIData = () => {
     const totalJobs = jobs.length;
-    const activeJobs = jobs.filter(job => job.pipelineStatus !== "Closed").length;
-    const inactiveJobs = jobs.filter(job => job.pipelineStatus === "Closed").length;
+    const activeJobs = jobs.filter(job => job.jobId?.stage && job.jobId.stage.toLowerCase() !== "closed").length;
+    const inactiveJobs = jobs.filter(job => job.jobId?.stage && job.jobId.stage.toLowerCase() === "closed").length;
     
     // Use overall candidate summary if available, otherwise calculate from jobs
     let appliedCandidates = 0;
@@ -374,11 +384,15 @@ export function RecruiterPipeline() {
       filteredJobs = filteredJobs.filter(job => {
         switch (statusFilter) {
           case "active":
-            return job.pipelineStatus !== "Closed";
+            return job.jobId?.stage && job.jobId.stage.toLowerCase() !== "closed";
           case "completed":
-            return job.pipelineStatus === "Closed";
+            return job.jobId?.stage && job.jobId.stage.toLowerCase() === "closed";
           case "paused":
-            return job.pipelineStatus === "On Hold" || job.pipelineStatus === "Paused";
+            return job.jobId?.stage && (
+              job.jobId.stage.toLowerCase().includes("hold") || 
+              job.jobId.stage.toLowerCase().includes("pause") ||
+              job.jobId.stage.toLowerCase().includes("suspended")
+            );
           default:
             return true;
         }
@@ -437,8 +451,9 @@ export function RecruiterPipeline() {
       }));
 
       // Make API call to update the candidate stage
+      const backendStage = mapUIStageToBackendStage(newStage);
       const response = await updateCandidateStageAPI(jobId, candidateId, {
-        newStage,
+        newStage: backendStage,
         notes: `Stage changed to ${newStage}`
       });
 
@@ -466,6 +481,17 @@ export function RecruiterPipeline() {
       }));
       
       toast.error(error.message || 'Failed to update candidate stage');
+    }
+  };
+
+  const handleCandidateUpdate = async (jobId: string, updatedCandidate: any) => {
+    try {
+      // Refresh the jobs data to reflect the updated candidate
+      await loadJobs();
+      toast.success("Candidate updated successfully");
+    } catch (error: any) {
+      console.error('Error refreshing jobs after candidate update:', error);
+      toast.error("Failed to refresh candidate data");
     }
   };
 
@@ -564,6 +590,7 @@ export function RecruiterPipeline() {
             loadingJobId={loadingJobId}
             onToggleExpansion={toggleJobExpansion}
             onUpdateCandidateStage={updateCandidateStage}
+            onCandidateUpdate={handleCandidateUpdate}
           />
         ))
       ) : (

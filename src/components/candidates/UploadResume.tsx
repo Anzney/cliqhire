@@ -3,6 +3,8 @@
 import React, { useRef, useState } from "react";
 import { X, CloudUpload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { api } from "@/lib/axios-config";
+import { initializeAuth } from "@/lib/axios-config";
 
 interface UploadResumeProps {
   open: boolean;
@@ -75,27 +77,39 @@ export const UploadResume: React.FC<UploadResumeProps> = ({
     setIsUploading(true);
     setError(null);
     try {
+      // Ensure authentication is initialized before making the API call
+      await initializeAuth();
+      
       const formData = new FormData();
       formData.append("resume", selectedFile);
       
-      // Use the correct API endpoint for updating candidate resume
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/candidates/${candidateId}`, {
-        method: "PATCH",
-        body: formData,
+      // Use the configured axios instance with authentication
+      const response = await api.patch(`/api/candidates/${candidateId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
       
-      if (!response.ok) throw new Error("Upload failed");
-      const data = await response.json();
-      
       // Extract the resume URL from the response
-      const resumeUrl = data.data?.resume || data.resume;
+      const resumeUrl = response.data.data?.resume || response.data.resume;
       if (onUploaded && resumeUrl) {
         onUploaded(resumeUrl);
       }
       setSelectedFile(null);
       if (onClose) onClose();
     } catch (err: any) {
-      setError(err.message || "Failed to upload");
+      console.error('Error uploading resume:', err);
+      
+      // Check if it's an authentication error
+      if (err.response?.status === 401) {
+        setError("Authentication failed. Please log in again.");
+        // Redirect to login page
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+      } else {
+        setError(err.response?.data?.message || err.message || "Failed to upload");
+      }
     } finally {
       setIsUploading(false);
     }

@@ -417,6 +417,41 @@ export interface DeleteCandidateResponse {
   };
 }
 
+// Interface for add candidate to pipeline request
+export interface AddCandidateToPipelineRequest {
+  candidateId: string;
+}
+
+// Interface for add candidate to pipeline response
+export interface AddCandidateToPipelineResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    pipelineId: string;
+    candidateId: string;
+    addedAt: string;
+  };
+}
+
+/**
+ * Add a candidate to the recruitment pipeline
+ */
+export const addCandidateToPipeline = async (
+  pipelineId: string,
+  candidateId: string
+): Promise<AddCandidateToPipelineResponse> => {
+  try {
+    const response = await api.post(
+      `/api/recruiter-pipeline/${pipelineId}/add-candidate`,
+      { candidateId }
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error('Error adding candidate to pipeline:', error);
+    throw new Error(error.response?.data?.message || 'Failed to add candidate to pipeline');
+  }
+};
+
 /**
  * Remove a candidate from the recruitment pipeline
  */
@@ -432,6 +467,125 @@ export const deleteCandidateFromPipeline = async (
   } catch (error: any) {
     console.error('Error deleting candidate from pipeline:', error);
     throw new Error(error.response?.data?.message || 'Failed to delete candidate from pipeline');
+  }
+};
+
+// Interface for updating candidate status request
+export interface UpdateCandidateStatusRequest {
+  status: string;
+  stage: string;
+  notes?: string;
+}
+
+// Interface for updating candidate status response
+export interface UpdateCandidateStatusResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    candidateId: string;
+    status: string;
+    stage: string;
+    updatedAt: string;
+  };
+}
+
+/**
+ * Update a candidate's status in the recruitment pipeline
+ */
+export const updateCandidateStatus = async (
+  pipelineId: string,
+  candidateId: string,
+  request: UpdateCandidateStatusRequest
+): Promise<UpdateCandidateStatusResponse> => {
+  try {
+    const response = await api.patch(
+      `/api/recruiter-pipeline/${pipelineId}/candidate/${candidateId}/status`,
+      request
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error('Error updating candidate status:', error);
+    throw new Error(error.response?.data?.message || 'Failed to update candidate status');
+  }
+};
+
+// Interface for converting temp candidate to real candidate
+export interface ConvertTempCandidateRequest {
+  name: string;
+  email: string;
+  phone: string;
+  location?: string;
+  experience?: string;
+  skills?: string[];
+  description?: string;
+  gender?: string;
+  dateOfBirth?: string;
+  country?: string;
+  nationality?: string;
+  willingToRelocate?: string;
+  currentJobTitle?: string;
+  currentCompanyName?: string;
+  previousCompanyName?: string;
+  currentSalary?: number;
+  currentSalaryCurrency?: string;
+  expectedSalary?: number;
+  expectedSalaryCurrency?: string;
+  linkedin?: string;
+  reportingTo?: string;
+  educationDegree?: string;
+  primaryLanguage?: string;
+  softSkill?: string[];
+  technicalSkill?: string[];
+}
+
+export interface ConvertTempCandidateResponse {
+  success: boolean;
+  message: string;
+  data?: any;
+  error?: string;
+}
+
+/**
+ * Convert a temp candidate to a real candidate in the pipeline
+ */
+export const convertTempCandidateToReal = async (
+  pipelineId: string,
+  tempCandidateId: string,
+  candidateData: ConvertTempCandidateRequest
+): Promise<ConvertTempCandidateResponse> => {
+  try {
+    console.log('Converting temp candidate to real:', {
+      pipelineId,
+      tempCandidateId,
+      candidateData
+    });
+
+    const response = await api.post(
+      `/api/recruiter-pipeline/${pipelineId}/candidate/${tempCandidateId}/convert-to-real`,
+      candidateData
+    );
+
+    console.log('Temp candidate conversion response:', response.data);
+
+    return {
+      success: true,
+      message: 'Temp candidate converted to real candidate successfully',
+      data: response.data
+    };
+  } catch (error: any) {
+    console.error('Error converting temp candidate:', error);
+    console.error('Error details:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message
+    });
+    
+    return {
+      success: false,
+      message: 'Failed to convert temp candidate',
+      error: error.response?.data?.message || error.message || 'Unknown error occurred'
+    };
   }
 };
 

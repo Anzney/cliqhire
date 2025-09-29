@@ -34,13 +34,15 @@ interface CandidateDetailsDialogProps {
   isOpen: boolean;
   onClose: () => void;
   pipelineId?: string;
+  onCandidateUpdate?: (updatedCandidate: Candidate) => void;
 }
 
 export function CandidateDetailsDialog({ 
   candidate, 
   isOpen, 
   onClose,
-  pipelineId
+  pipelineId,
+  onCandidateUpdate
 }: CandidateDetailsDialogProps) {
   const [selectedStage, setSelectedStage] = useState<string | undefined>(undefined);
   const [localCandidate, setLocalCandidate] = useState<any>(candidate);
@@ -59,7 +61,8 @@ export function CandidateDetailsDialog({
 
   const handleUpdateCandidate = (updatedCandidate: any) => {
     setLocalCandidate(updatedCandidate);
-    // Here you would typically also call an API to save the changes
+    // Notify parent component about the update
+    onCandidateUpdate?.(updatedCandidate);
     console.log('Updated candidate:', updatedCandidate);
   };
 
@@ -106,7 +109,7 @@ export function CandidateDetailsDialog({
                  <span className="text-xs text-gray-500 italic">Click any stage to view details</span>
                  <div className="flex items-center space-x-2">
                    <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
-                   <span className="text-sm text-gray-600">Active</span>
+                   <span className="text-sm text-gray-600">{localCandidate.status || 'No Status'}</span>
                  </div>
                </div>
              </div>
@@ -138,12 +141,12 @@ export function CandidateDetailsDialog({
                            isCompleted 
                              ? 'bg-white text-blue-500 ring-2 ring-blue-200' 
                              : 'bg-gray-200 text-gray-400'
-                         } ${isSelected ? 'ring-4 ring-blue-300 scale-110' : ''} group-hover:scale-105`}>
+                         } ${isSelected ? 'ring-4 ring-blue-300 scale-110' : ''} `}>
                            {isCompleted && <Check className="h-3 w-3" />}
                          </div>
                          <span className={`text-xs font-semibold transition-all duration-200 ${
                            isCurrent ? 'text-white drop-shadow-sm' : isCompleted ? 'text-white drop-shadow-sm' : 'text-gray-500'
-                         } ${isSelected ? 'text-blue-100 font-bold' : ''} group-hover:text-blue-100`}>
+                         } ${isSelected ? 'text-blue-100 font-bold' : ''} `}>
                            {stage}
                          </span>
                        </div>

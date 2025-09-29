@@ -1,6 +1,17 @@
 // Types and utilities for Recruiter Pipeline
 // Updated to match the new API response structure
 
+export type ConnectionType = "LinkedIn" | "Indeed" | "Referral" | "Direct" | "Other";
+
+// Define status types for each stage
+export type SourcingStatus = "LinkedIn Connections Sent" | "LinkedIn Connections Accepted" | "CV Received";
+export type ScreeningStatus = "Submission Pending" | "CV Submitted" | "AEMS Interview";
+export type ClientScreeningStatus = "Client Shortlisted" | "Rejected by Client";
+export type InterviewStatus = "Client Interviewed" | "Client Selected" | "Rejected by Client";
+export type VerificationStatus = "Document Pending" | "Document Verified" | "Offer Letter Sent" | "Offer Accepted" | "Offer Rejected";
+
+export type StatusType = SourcingStatus | ScreeningStatus | ClientScreeningStatus | InterviewStatus | VerificationStatus;
+
 export interface Candidate {
   id: string;
   name: string;
@@ -15,6 +26,7 @@ export interface Candidate {
   currentJobTitle?: string;
   previousCompanyName?: string;
   currentCompanyName?: string;
+  status?: StatusType;
   subStatus?: string;
   // Additional fields from new API structure
   applicationId?: string;
@@ -52,6 +64,34 @@ export interface Candidate {
   onboarding?: any;
   hired?: any;
   disqualified?: any;
+  // Additional pipeline fields
+  connection?: ConnectionType;
+  hiringManager?: string;
+  recruiter?: string;
+  // Temp candidate flag
+  isTempCandidate?: boolean;
+}
+
+export interface JobTeamInfo {
+  teamId?: {
+    _id: string;
+    teamName: string;
+  };
+  hiringManager?: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  teamLead?: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  recruiter?: {
+    _id: string;
+    name: string;
+    email: string;
+  };
 }
 
 export interface Job {
@@ -65,7 +105,7 @@ export interface Job {
   isExpanded: boolean;
   candidates: Candidate[];
   // Pipeline-specific fields from new API structure
-  pipelineStatus?: string;
+  // Note: pipelineStatus is now derived from jobId.stage
   priority?: string;
   notes?: string;
   assignedDate?: string;
@@ -78,6 +118,25 @@ export interface Job {
   // Recruiter information
   recruiterName?: string;
   recruiterEmail?: string;
+  // Job ID object containing job details and team info
+  jobId?: {
+    _id?: string;
+    jobTitle?: string;
+    jobTeamInfo?: JobTeamInfo;
+    client?: any;
+    location?: string;
+    headcount?: number;
+    stage?: string;
+    minimumSalary?: number;
+    maximumSalary?: number;
+    salaryCurrency?: string;
+    jobType?: string;
+    experience?: string;
+    department?: string;
+    [key: string]: any;
+  };
+  // Job team information from API (legacy - now accessed via jobId)
+  jobTeamInfo?: JobTeamInfo;
   // Job details from API
   jobPosition?: string;
   department?: string;
@@ -106,7 +165,7 @@ export interface Job {
 export const pipelineStages = [
     "Sourcing",
     "Screening", 
-    "Client Screening",
+    "Client Status",
     "Interview",
     "Verification",
     "Onboarding",
@@ -119,11 +178,11 @@ export const getStageColor = (stage: string) => {
   const colors = {
     "Sourcing": "bg-purple-100 text-purple-800 border-purple-200",
     "Screening": "bg-orange-100 text-orange-800 border-orange-200",
-    "Client Screening": "bg-green-100 text-green-800 border-green-200",
+    "Client Status": "bg-green-100 text-green-800 border-green-200",
     "Interview": "bg-blue-100 text-blue-800 border-blue-200",
     "Verification": "bg-yellow-100 text-yellow-800 border-yellow-200",
     "Onboarding": "bg-green-100 text-green-800 border-green-200",
-    "Hired": "bg-red-100 text-red-800 border-red-200",
+    "Hired": "bg-emerald-100 text-emerald-800 border-emerald-200",
     "Disqualified": "bg-red-100 text-red-800 border-red-200"
   };
   return colors[stage as keyof typeof colors] || "bg-gray-100 text-gray-800 border-gray-200";
@@ -132,4 +191,24 @@ export const getStageColor = (stage: string) => {
 // Helper function to get candidate count by stage
 export const getCandidateCountByStage = (candidates: Candidate[], stage: string) => {
   return candidates.filter(candidate => candidate.currentStage === stage).length;
+};
+
+// Helper function to map UI stage names to backend stage names
+export const mapUIStageToBackendStage = (uiStage: string): string => {
+  const stageMapping: Record<string, string> = {
+    "Client Status": "Client Screening",
+    // Add other mappings here if needed in the future
+  };
+  
+  return stageMapping[uiStage] || uiStage;
+};
+
+// Helper function to map backend stage names to UI stage names
+export const mapBackendStageToUIStage = (backendStage: string): string => {
+  const stageMapping: Record<string, string> = {
+    "Client Screening": "Client Status",
+    // Add other mappings here if needed in the future
+  };
+  
+  return stageMapping[backendStage] || backendStage;
 };

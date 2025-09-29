@@ -1,41 +1,62 @@
 "use client";
 
 import React from "react";
-import { ChevronDown, EllipsisVertical, ChevronRight, Users, MapPin, DollarSign, Briefcase, Building2, Tag, Pin, Loader2, Eye, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, EllipsisVertical, ChevronRight, Users, MapPin, CircleDollarSign , Briefcase, Building2, Tag, Pin, Loader2, Eye, Plus, Trash2, X, Table as TableIcon} from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AddCandidateDialog } from "./add-candidate-dialog";
 import { AddExistingCandidateDialog } from "@/components/common/add-existing-candidate-dialog";
 import { CreateCandidateDialog, type CreateCandidateValues } from "./create-candidate-dialog";
+import { CreateCandidateModal } from "@/components/candidates/create-candidate-modal";
 import { Button } from "@/components/ui/button";
-import { deleteCandidateFromPipeline } from "@/services/recruitmentPipelineService";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { deleteCandidateFromPipeline, updateCandidateStatus } from "@/services/recruitmentPipelineService";
+import { RecruiterPipelineService } from "@/services/recruiterPipelineService";
 import { 
   pipelineStages, 
   getStageColor, 
   type Job,
-  type Candidate 
+  type JobTeamInfo,
+  type Candidate,
+  mapUIStageToBackendStage
 } from "./dummy-data";
 import { CandidateDetailsDialog } from "./candidate-details-dialog";
 import { StatusChangeConfirmationDialog } from "./status-change-confirmation-dialog";
 import { useStageStore } from "./stage-store";
+import { useRouter } from "next/navigation";
+import { PipelineStageBadge } from "./pipeline-stage-badge";
+import { StatusBadge } from "./status-badge";
+import { PDFViewer } from "@/components/ui/pdf-viewer";
+import { validateTempCandidateStageChange, isTempCandidate, validateTempCandidateStatusChange } from "@/lib/temp-candidate-validation";
+import { TempCandidateAlertDialog } from "./temp-candidate-alert-dialog";
+import { DisqualificationDialog, type DisqualificationData } from "./disqualification-dialog";
 
 interface PipelineJobCardProps {
   job: Job;
   loadingJobId: string | null;
   onToggleExpansion: (jobId: string) => void;
   onUpdateCandidateStage: (jobId: string, candidateId: string, newStage: string) => Promise<void>;
+  onCandidateUpdate?: (jobId: string, updatedCandidate: Candidate) => void;
 }
 
 export function PipelineJobCard({ 
   job, 
   loadingJobId, 
   onToggleExpansion, 
-  onUpdateCandidateStage 
+  onUpdateCandidateStage,
+  onCandidateUpdate
 }: PipelineJobCardProps) {
+  const router = useRouter();
   const [selectedCandidate, setSelectedCandidate] = React.useState<Candidate | null>(null);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [isAddCandidateOpen, setIsAddCandidateOpen] = React.useState(false);
@@ -43,6 +64,17 @@ export function PipelineJobCard({
   
   // Status change confirmation dialog state
   const [statusChangeDialog, setStatusChangeDialog] = React.useState<{
+    isOpen: boolean;
+    candidate: Candidate | null;
+    newStatus: string | null;
+  }>({
+    isOpen: false,
+    candidate: null,
+    newStatus: null,
+  });
+
+  // Stage change confirmation dialog state
+  const [stageChangeDialog, setStageChangeDialog] = React.useState<{
     isOpen: boolean;
     candidate: Candidate | null;
     currentStage: string;
@@ -56,6 +88,46 @@ export function PipelineJobCard({
 
   // Delete candidate confirmation dialog state
   const [deleteCandidateDialog, setDeleteCandidateDialog] = React.useState<{
+    isOpen: boolean;
+    candidate: Candidate | null;
+  }>({
+    isOpen: false,
+    candidate: null,
+  });
+
+  // PDF viewer state
+  const [pdfViewer, setPdfViewer] = React.useState<{
+    isOpen: boolean;
+    pdfUrl: string | null;
+    candidateName: string | null;
+  }>({
+    isOpen: false,
+    pdfUrl: null,
+    candidateName: null,
+  });
+
+  // Temp candidate alert dialog state
+  const [tempCandidateAlert, setTempCandidateAlert] = React.useState<{
+    isOpen: boolean;
+    candidateName: string | null;
+    message: string | null;
+  }>({
+    isOpen: false,
+    candidateName: null,
+    message: null,
+  });
+
+  // Auto-create candidate dialog state for temp candidates
+  const [autoCreateCandidateDialog, setAutoCreateCandidateDialog] = React.useState<{
+    isOpen: boolean;
+    candidate: Candidate | null;
+  }>({
+    isOpen: false,
+    candidate: null,
+  });
+
+  // Disqualification dialog state
+  const [disqualificationDialog, setDisqualificationDialog] = React.useState<{
     isOpen: boolean;
     candidate: Candidate | null;
   }>({
@@ -94,8 +166,40 @@ export function PipelineJobCard({
     setSelectedCandidate(null);
   };
 
+  const handleCandidateUpdate = async (updatedCandidate: Candidate) => {
+    // Update the local selected candidate
+    setSelectedCandidate(updatedCandidate);
+    
+    // Notify the parent component about the update
+    onCandidateUpdate?.(job.id, updatedCandidate);
+    
+    console.log('Candidate updated in pipeline job card:', updatedCandidate);
+  };
+
   const handleStageChange = (candidate: Candidate, newStage: string) => {
-    setStatusChangeDialog({
+    // Validate if candidate can change stage (check for temp candidate)
+    const validation = validateTempCandidateStageChange(candidate);
+    
+    if (!validation.canChangeStage) {
+      // Show temp candidate alert instead of stage change dialog
+      setTempCandidateAlert({
+        isOpen: true,
+        candidateName: candidate.name,
+        message: validation.message || null,
+      });
+      return;
+    }
+
+    // If changing to Disqualified, show disqualification dialog
+    if (newStage === 'Disqualified') {
+      setDisqualificationDialog({
+        isOpen: true,
+        candidate,
+      });
+      return;
+    }
+
+    setStageChangeDialog({
       isOpen: true,
       candidate,
       currentStage: candidate.currentStage,
@@ -104,20 +208,20 @@ export function PipelineJobCard({
   };
 
   const handleConfirmStageChange = async () => {
-    if (statusChangeDialog.candidate) {
+    if (stageChangeDialog.candidate) {
       // Update local store
-      updateCandidateStage(job.id, statusChangeDialog.candidate.id, statusChangeDialog.newStage);
+      updateCandidateStage(job.id, stageChangeDialog.candidate.id, stageChangeDialog.newStage);
       
       // Call the parent's update function (which now includes API integration)
-      await onUpdateCandidateStage(job.id, statusChangeDialog.candidate.id, statusChangeDialog.newStage);
+      await onUpdateCandidateStage(job.id, stageChangeDialog.candidate.id, stageChangeDialog.newStage);
       
       // Close the dialog
-      setStatusChangeDialog({ isOpen: false, candidate: null, currentStage: '', newStage: '' });
+      setStageChangeDialog({ isOpen: false, candidate: null, currentStage: '', newStage: '' });
     }
   };
 
   const handleCancelStageChange = () => {
-    setStatusChangeDialog({ isOpen: false, candidate: null, currentStage: '', newStage: '' });
+    setStageChangeDialog({ isOpen: false, candidate: null, currentStage: '', newStage: '' });
   };
 
   const handleDeleteCandidate = (candidate: Candidate) => {
@@ -136,9 +240,12 @@ export function PipelineJobCard({
         // Close the dialog
         setDeleteCandidateDialog({ isOpen: false, candidate: null });
         
-        // TODO: Refresh the job data or trigger a reload
+        // Notify the parent component about the candidate deletion
+        // This will trigger a refresh of the job data
+        onCandidateUpdate?.(job.id, deleteCandidateDialog.candidate);
       } catch (error) {
         console.error('Error deleting candidate:', error);
+        // You might want to show an error message to the user here
       }
     }
   };
@@ -169,6 +276,181 @@ export function PipelineJobCard({
   };
 
   const [isAddExistingOpen, setIsAddExistingOpen] = React.useState(false);
+  
+  // Filter state for stage filtering
+  const [selectedStageFilter, setSelectedStageFilter] = React.useState<string | null>(null);
+
+  // Function to get filtered candidates based on selected stage
+  const getFilteredCandidates = () => {
+    if (!selectedStageFilter) {
+      return job.candidates;
+    }
+    return job.candidates.filter(candidate => {
+      const currentStage = getCandidateStage(job.id, candidate.id) || candidate.currentStage;
+      return currentStage === selectedStageFilter;
+    });
+  };
+
+  // Function to handle stage badge click
+  const handleStageBadgeClick = (stage: string) => {
+    if (selectedStageFilter === stage) {
+      // If clicking the same stage, clear the filter
+      setSelectedStageFilter(null);
+    } else {
+      // Filter by the selected stage
+      setSelectedStageFilter(stage);
+    }
+  };
+
+  // Function to handle status change
+  const handleStatusChange = (candidate: Candidate, newStatus: any) => {
+    // Validate if candidate can change status (check for temp candidate)
+    const validation = validateTempCandidateStatusChange(candidate, newStatus);
+    
+    if (!validation.canChangeStage) {
+      // Show temp candidate alert instead of status change dialog
+      setTempCandidateAlert({
+        isOpen: true,
+        candidateName: candidate.name,
+        message: validation.message || null,
+      });
+      return;
+    }
+
+    // If this is a temp candidate changing to "CV Received", open create dialog
+    if (validation.shouldOpenCreateDialog) {
+      setAutoCreateCandidateDialog({
+        isOpen: true,
+        candidate: candidate,
+      });
+      return;
+    }
+
+    setStatusChangeDialog({
+      isOpen: true,
+      candidate,
+      newStatus,
+    });
+  };
+
+
+  const handleConfirmStatusChange = async () => {
+    if (statusChangeDialog.candidate && statusChangeDialog.newStatus) {
+      try {
+        await updateCandidateStatus(job.id, statusChangeDialog.candidate.id, {
+          status: statusChangeDialog.newStatus,
+          stage: mapUIStageToBackendStage(statusChangeDialog.candidate.currentStage),
+          notes: `Status updated to ${statusChangeDialog.newStatus}`,
+        });
+        
+        // Notify the parent component about the update
+        onCandidateUpdate?.(job.id, {
+          ...statusChangeDialog.candidate,
+          subStatus: statusChangeDialog.newStatus,
+        });
+        
+        setStatusChangeDialog({ isOpen: false, candidate: null, newStatus: null });
+      } catch (error) {
+        console.error('Error updating candidate status:', error);
+      }
+    }
+  };
+
+  const handleViewResume = (candidate: Candidate) => {
+    console.log('Viewing resume for candidate:', candidate.name);
+    console.log('Resume URL:', candidate.resume);
+    setPdfViewer({
+      isOpen: true,
+      pdfUrl: candidate.resume || null,
+      candidateName: candidate.name || null,
+    });
+  };
+
+  const handleCancelStatusChange = () => {
+    setStatusChangeDialog({ isOpen: false, candidate: null, newStatus: null });
+  };
+
+  const handleClosePdfViewer = () => {
+    setPdfViewer({
+      isOpen: false,
+      pdfUrl: null,
+      candidateName: null,
+    });
+  };
+
+  const handleCloseTempCandidateAlert = () => {
+    setTempCandidateAlert({
+      isOpen: false,
+      candidateName: null,
+      message: null,
+    });
+  };
+
+  const handleCloseAutoCreateDialog = () => {
+    setAutoCreateCandidateDialog({
+      isOpen: false,
+      candidate: null,
+    });
+  };
+
+  const handleCloseDisqualificationDialog = () => {
+    setDisqualificationDialog({
+      isOpen: false,
+      candidate: null,
+    });
+  };
+
+  const handleConfirmDisqualification = async (data: DisqualificationData) => {
+    if (disqualificationDialog.candidate) {
+      try {
+        console.log('Disqualifying candidate:', disqualificationDialog.candidate.name, data);
+        
+        // First, call API to update disqualification fields
+        const fieldsUpdateResult = await RecruiterPipelineService.updateStageFields(
+          job.id,
+          disqualificationDialog.candidate.id,
+          'Disqualified',
+          {
+            fields: {
+              disqualificationStage: data.disqualificationStage,
+              disqualificationStatus: data.disqualificationStatus,
+              disqualificationReason: data.disqualificationReason,
+            },
+            notes: `Disqualified: ${data.disqualificationReason}`
+          }
+        );
+
+        if (!fieldsUpdateResult.success) {
+          throw new Error(fieldsUpdateResult.error || 'Failed to update disqualification fields');
+        }
+
+        // Then call API to update candidate stage to Disqualified
+        await onUpdateCandidateStage(job.id, disqualificationDialog.candidate.id, 'Disqualified');
+        
+        handleCloseDisqualificationDialog();
+      } catch (error) {
+        console.error('Error disqualifying candidate:', error);
+        // You might want to show an error message to the user here
+      }
+    }
+  };
+
+  const handleAutoCreateCandidateSubmit = async (candidate: any) => {
+    try {
+      console.log('Auto-create candidate for temp candidate:', autoCreateCandidateDialog.candidate?.name, candidate);
+      
+      // The conversion is now handled by the CreateCandidateForm itself
+      // We just need to refresh the job data after successful conversion
+      
+      // Notify the parent component about the update
+      onCandidateUpdate?.(job.id, candidate);
+      
+      handleCloseAutoCreateDialog();
+    } catch (error) {
+      console.error('Error handling temp candidate conversion:', error);
+      // Handle error appropriately
+    }
+  };
 
   return (
     <>
@@ -204,7 +486,7 @@ export function PipelineJobCard({
                     <span>{job.location}</span>
                   </div>
                   <div className="flex items-center space-x-1">
-                    <DollarSign className="h-4 w-4 text-yellow-500" />
+                    <CircleDollarSign  className="h-4 w-4 text-yellow-500" />
                     <span>{typeof job.salaryRange === 'string' ? job.salaryRange : String(job.salaryRange || '')}</span>
                   </div>
                   <Badge variant="outline" className="bg-gray-100 text-gray-700">
@@ -214,44 +496,40 @@ export function PipelineJobCard({
                     <Users className="h-4 w-4 text-purple-500" />
                     <span>{job.totalCandidates || job.candidates.length} candidates</span>
                   </div>
-                  {job.pipelineStatus && (
+                  {job.jobId?.stage && (
                     <Badge 
                       variant="outline" 
-                      className={`${
-                        job.pipelineStatus === 'Active' ? 'bg-green-100 text-green-700 border-green-200' :
-                        job.pipelineStatus === 'Closed' ? 'bg-red-100 text-red-700 border-red-200' :
-                        job.pipelineStatus === 'On Hold' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
-                        'bg-gray-100 text-gray-700 border-gray-200'
-                      }`}
+                      className="bg-gray-100 text-gray-700 border-gray-200"
                     >
-                      {job.pipelineStatus}
+                      {job.jobId.stage}
                     </Badge>
                   )}
-                  {/* {job.priority && (
-                    <Badge 
-                      variant="outline" 
-                      className={`${
-                        job.priority === 'High' ? 'bg-red-100 text-red-700 border-red-200' :
-                        job.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
-                        'bg-green-100 text-green-700 border-green-200'
-                      }`}
-                    >
-                      {job.priority}
-                    </Badge>
-                  )} */}
                 </div>
               </div>
             </div>
             
-            {/* Add Candidate Button */}
-            <Button
-              onClick={handleAddCandidate}
-              size="sm"
-              className="ml-4  text-white"
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Add Candidate
-            </Button>
+            {/* View Table + Add Candidate (horizontal) */}
+            <div className="flex items-center gap-2 ml-4">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/reactruterpipeline/${job.id}`);
+                }}
+              >
+                <TableIcon className="size-4 mr-1" />
+                View Table
+              </Button>
+              <Button
+                onClick={handleAddCandidate}
+                size="sm"
+                variant="outline"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Attach Candidate
+              </Button>
+            </div>
           </div>
         </CardHeader>
 
@@ -259,43 +537,163 @@ export function PipelineJobCard({
         {job.isExpanded && (
           <CardContent className="pt-0">
             
-            {/* Pipeline Stage Badges - Updated counts considering local changes */}
-            <div className="flex flex-wrap gap-2 mb-6">
+            {/* Pipeline Stage Badges - Clickable filters */}
+            <div className="flex flex-wrap gap-2 mb-6 ml-6">
               {(() => {
                 const updatedCounts = getUpdatedStageCounts();
                 return pipelineStages.map((stage) => {
                   const count = updatedCounts[stage] || 0;
+                  const isActive = selectedStageFilter === stage;
                   return (
                     <Badge 
                       key={stage}
                       variant="outline" 
-                      className={`${getStageColor(stage)} border`}
+                      className={`${getStageColor(stage)} border cursor-pointer hover:opacity-80 transition-opacity ${
+                        isActive ? 'ring-2 ring-blue-500 ring-offset-2' : ''
+                      }`}
+                      onClick={() => handleStageBadgeClick(stage)}
                     >
                       {stage}: {count}
                     </Badge>
                   );
                 });
               })()}
+              {selectedStageFilter && (
+                <Badge 
+                  variant="outline" 
+                  className="bg-gray-100 text-gray-600 border-gray-300 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setSelectedStageFilter(null)}
+                >
+                  <X className="text-red-500 h-3 w-3 mr-1" />
+                  Clear Filter
+                </Badge>
+              )}
             </div>
 
-            {/* Candidate Cards - Fixed height with scrollable content */}
-            <div className="max-h-[300px] overflow-y-auto border-2 border-blue-200 rounded-md p-2 bg-gray-50" style={{
-              scrollbarWidth: 'thin',
-              scrollbarColor: '#d1d5db #f3f4f6'
-            }}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pb-4">
-                {job.candidates.map((candidate) => (
-                  <CandidateCard
-                    key={candidate.id}
-                    candidate={candidate}
-                    jobId={job.id}
-                    onStageChange={handleStageChange}
-                    onViewCandidate={handleViewCandidate}
-                    onViewResume={(candidate) => console.log('View resume for:', candidate.name)}
-                    onDeleteCandidate={handleDeleteCandidate}
-                    getCurrentStage={getCandidateStage}
-                  />
-                ))}
+            {/* Candidates Table - Single table with sticky header */}
+            <div className="border-2 border-blue-200 rounded-md bg-gray-50 max-h-[300px] overflow-hidden">
+              {selectedStageFilter && (
+                <div className="px-4 py-2 bg-blue-50 border-b border-blue-200 text-sm text-blue-700 ">
+                  Showing candidates in: <span className="font-semibold">{selectedStageFilter}</span>
+                  <span className="ml-2 text-blue-500">({getFilteredCandidates().length} candidates)</span>
+                </div>
+              )}
+              <div className="overflow-y-auto max-h-[300px]" style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#d1d5db #f3f4f6'
+              }}>
+                <Table>
+                  <TableHeader className="sticky top-0 bg-white z-10">
+                    <TableRow>
+                      <TableHead className="w-[44px]"></TableHead>
+                      <TableHead>Candidate</TableHead>
+                      <TableHead>Current Position</TableHead>
+                      <TableHead className="w-[200px]">Stage</TableHead>
+                      <TableHead className="w-[120px]">Status</TableHead>
+                      <TableHead className="w-[140px]">Hiring Manager</TableHead>
+                      <TableHead className="w-[120px]">Recruiter</TableHead>
+                      <TableHead className="w-[90px]">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {getFilteredCandidates().map((candidate) => (
+                      <TableRow key={candidate.id} className="bg-white">
+                        <TableCell>
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={candidate.avatar} />
+                            <AvatarFallback className="text-xs bg-gray-200">
+                              {candidate.name ? candidate.name.split(' ').map(n => n[0]).join('') : 'NA'}
+                            </AvatarFallback>
+                          </Avatar>
+                        </TableCell>
+                        <TableCell className="font-medium truncate max-w-[220px]">
+                          {candidate.name || 'Unknown Candidate'}
+                        </TableCell>
+                        <TableCell className="truncate max-w-[260px] text-gray-700">
+                          {candidate.currentJobTitle || 'Position not specified'}
+                        </TableCell>
+                        <TableCell>
+                          <PipelineStageBadge
+                            stage={getCandidateStage(job.id, candidate.id) || candidate.currentStage}
+                            onStageChange={(newStage) => handleStageChange(candidate, newStage)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {(() => {
+                            const currentStage = getCandidateStage(job.id, candidate.id) || candidate.currentStage;
+                            const stagesWithStatus = ['Sourcing', 'Screening', 'Client Status', 'Interview', 'Verification'];
+                            if (stagesWithStatus.includes(currentStage)) {
+                              return (
+                                <StatusBadge
+                                  status={(candidate.status as any) || null}
+                                  stage={currentStage}
+                                  onStatusChange={(newStatus) => handleStatusChange(candidate, newStatus)}
+                                />
+                              );
+                            } else {
+                              return (
+                                <span className="text-sm text-gray-500">N/A</span>
+                              );
+                            }
+                          })()}
+                        </TableCell>
+                        <TableCell className="text-sm text-gray-700">
+                          {(job as any).jobId?.jobTeamInfo?.hiringManager?.name || 'Not assigned'}
+                        </TableCell>
+                        <TableCell className="text-sm text-gray-700">
+                          {(job as any).jobId?.jobTeamInfo?.recruiter?.name || 'Not assigned'}
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                                onClick={(e) => e.stopPropagation()}
+                                title="More options"
+                              >
+                                <EllipsisVertical className="h-4 w-4" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-50">
+                              <DropdownMenuItem 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleViewCandidate(candidate);
+                                }}
+                                className="cursor-pointer"
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                View & Edit Details
+                              </DropdownMenuItem>
+                              {candidate.resume && (
+                                <DropdownMenuItem 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewResume(candidate);
+                                  }}
+                                  className="cursor-pointer"
+                                >
+                                  <Briefcase className="h-4 w-4 mr-2" />
+                                  View Resume
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteCandidate(candidate);
+                                }}
+                                className="cursor-pointer"
+                              >
+                                <Trash2 className="size-4 mr-2 text-red-500" />
+                                Delete Candidate
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             </div>
           </CardContent>
@@ -308,16 +706,17 @@ export function PipelineJobCard({
         isOpen={isDialogOpen}
         onClose={handleCloseDialog}
         pipelineId={job.id}
+        onCandidateUpdate={handleCandidateUpdate}
       />
       
       {/* Status Change Confirmation Dialog */}
       <StatusChangeConfirmationDialog
-        isOpen={statusChangeDialog.isOpen}
+        isOpen={stageChangeDialog.isOpen}
         onClose={handleCancelStageChange}
         onConfirm={handleConfirmStageChange}
-        candidateName={statusChangeDialog.candidate?.name || ''}
-        currentStage={statusChangeDialog.currentStage}
-        newStage={statusChangeDialog.newStage}
+        candidateName={stageChangeDialog.candidate?.name || ''}
+        currentStage={stageChangeDialog.currentStage}
+        newStage={stageChangeDialog.newStage}
       />
 
       {/* Add Candidate Dialog */}
@@ -379,122 +778,78 @@ export function PipelineJobCard({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Status Change Confirmation Dialog */}
+      <Dialog open={statusChangeDialog.isOpen} onOpenChange={(open) => setStatusChangeDialog(prev => ({ ...prev, isOpen: open }))}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Update Status</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to update the status for <strong>{statusChangeDialog.candidate?.name}</strong> to <strong>{statusChangeDialog.newStatus}</strong>?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelStatusChange}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleConfirmStatusChange}
+            >
+              Update Status
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* PDF Viewer */}
+      <PDFViewer
+        isOpen={pdfViewer.isOpen}
+        onClose={handleClosePdfViewer}
+        pdfUrl={pdfViewer.pdfUrl || undefined}
+        candidateName={pdfViewer.candidateName || undefined}
+      />
+
+      {/* Temp Candidate Alert Dialog */}
+      <TempCandidateAlertDialog
+        isOpen={tempCandidateAlert.isOpen}
+        onClose={handleCloseTempCandidateAlert}
+        candidateName={tempCandidateAlert.candidateName || undefined}
+        message={tempCandidateAlert.message || undefined}
+      />
+
+      {/* Auto-Create Candidate Dialog for Temp Candidates */}
+      <CreateCandidateModal
+        isOpen={autoCreateCandidateDialog.isOpen}
+        onClose={handleCloseAutoCreateDialog}
+        onCandidateCreated={handleAutoCreateCandidateSubmit}
+        tempCandidateData={autoCreateCandidateDialog.candidate ? {
+          name: autoCreateCandidateDialog.candidate.name,
+          email: autoCreateCandidateDialog.candidate.email,
+          phone: autoCreateCandidateDialog.candidate.phone,
+          location: autoCreateCandidateDialog.candidate.location,
+          description: autoCreateCandidateDialog.candidate.description,
+          gender: autoCreateCandidateDialog.candidate.gender,
+          dateOfBirth: autoCreateCandidateDialog.candidate.dateOfBirth,
+          country: autoCreateCandidateDialog.candidate.country,
+          nationality: autoCreateCandidateDialog.candidate.nationality,
+          willingToRelocate: autoCreateCandidateDialog.candidate.willingToRelocate,
+        } : undefined}
+        isTempCandidateConversion={true}
+        pipelineId={job.id}
+        tempCandidateId={autoCreateCandidateDialog.candidate?.id}
+      />
+
+      {/* Disqualification Dialog */}
+      <DisqualificationDialog
+        isOpen={disqualificationDialog.isOpen}
+        onClose={handleCloseDisqualificationDialog}
+        onConfirm={handleConfirmDisqualification}
+        candidateName={disqualificationDialog.candidate?.name || ''}
+        currentStage={disqualificationDialog.candidate?.currentStage || ''}
+        currentStageStatus={disqualificationDialog.candidate?.status || ''}
+      />
     </>
   );
 }
 
-interface CandidateCardProps {
-  candidate: Candidate;
-  jobId: string;
-  onStageChange: (candidate: Candidate, newStage: string) => void;
-  onViewCandidate: (candidate: Candidate) => void;
-  onViewResume: (candidate: Candidate) => void;
-  onDeleteCandidate: (candidate: Candidate) => void;
-  getCurrentStage: (jobId: string, candidateId: string) => string | null;
-}
-
-function CandidateCard({ candidate, jobId, onStageChange, onViewCandidate, onViewResume, onDeleteCandidate, getCurrentStage }: CandidateCardProps) {
-  return (
-    <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-100">
-      {/* Top Section */}
-      <div className="flex items-start justify-between mb-3">
-        {/* Left side - Avatar, Name, Current Position */}
-        <div className="flex items-start space-x-2 flex-1 min-w-0">
-          <Avatar className="h-8 w-8 flex-shrink-0">
-            <AvatarImage src={candidate.avatar} />
-            <AvatarFallback className="text-xs bg-gray-200">
-              {candidate.name ? candidate.name.split(' ').map(n => n[0]).join('') : 'NA'}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {candidate.name || 'Unknown Candidate'}
-            </p>
-            <p className="text-xs text-gray-600 truncate">
-              {candidate.currentJobTitle || 'Position not specified'}
-            </p>
-          </div>
-        </div>
-        
-                 {/* Right side - Three-dot menu */}
-         <DropdownMenu>
-           <DropdownMenuTrigger asChild>
-             <button
-               className="p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
-               onClick={(e) => e.stopPropagation()}
-               title="More options"
-             >
-              <EllipsisVertical className="h-4 w-4" />
-             </button>
-           </DropdownMenuTrigger>
-           <DropdownMenuContent align="end" className="w-40">
-             <DropdownMenuItem 
-               onClick={(e) => {
-                 e.stopPropagation();
-                 onViewCandidate(candidate);
-               }}
-               className="cursor-pointer"
-             >
-               <Eye className="h-4 w-4 mr-2" />
-               View & Edit Details
-             </DropdownMenuItem>
-             <DropdownMenuItem 
-               onClick={(e) => {
-                 e.stopPropagation();
-                 onViewResume(candidate);
-               }}
-               className="cursor-pointer"
-             >
-               <Briefcase className="h-4 w-4 mr-2" />
-               View Resume
-             </DropdownMenuItem>
-                           <DropdownMenuItem 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteCandidate(candidate);
-                }}
-                className="cursor-pointer"
-              >
-                                <Trash2 className="size-4 mr-2 text-red-500" />
-                                Delete Candidate
-                              </DropdownMenuItem>
-           </DropdownMenuContent>
-         </DropdownMenu>
-      </div>
-      
-      {/* Bottom Section */}
-      <div className="flex items-center justify-between">
-        {/* Left side - Status dropdowns */}
-        <div className="flex items-center space-x-2 flex-1">
-          <Select
-            value={getCurrentStage(jobId, candidate.id) || candidate.currentStage}
-            onValueChange={(value) => onStageChange(candidate, value)}
-          >
-            <SelectTrigger className="h-6 text-xs px-2">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {pipelineStages.map((stage) => (
-                <SelectItem key={stage} value={stage} className="text-xs">
-                  {stage}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        {/* Right side - Two avatars */}
-        <div className="flex items-center space-x-1 flex-shrink-0 ml-1">
-          <Avatar className="h-6 w-6">
-            <AvatarImage src="/api/placeholder/24/24" />
-            <AvatarFallback className="text-xs bg-blue-200">JD</AvatarFallback>
-          </Avatar>
-          <Avatar className="h-6 w-6">
-            <AvatarImage src="/api/placeholder/24/24" />
-            <AvatarFallback className="text-xs bg-green-200">HR</AvatarFallback>
-          </Avatar>
-        </div>
-      </div>
-    </div>
-  );
-}
+// Candidate card view removed and replaced by table rendering above

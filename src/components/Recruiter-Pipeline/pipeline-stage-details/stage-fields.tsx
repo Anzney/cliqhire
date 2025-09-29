@@ -54,8 +54,8 @@ const getStageData = (candidate: any, stageName: string) => {
   // Handle different naming conventions for stage keys
   let stageKey = stageName.toLowerCase().replace(/\s+/g, '');
   
-  // Special handling for "Client Screening" -> "clientScreening"
-  if (stageName === "Client Screening") {
+  // Special handling for "Client Status" -> "clientScreening"
+  if (stageName === "Client Status") {
     stageKey = "clientScreening";
   }
   
@@ -191,6 +191,14 @@ export const getStageFields = (stage: string, candidate: any): StageField[] => {
           type: "date"
         },
         {
+          key: "cvSubmissionDate",
+          label: "CV Submission Date",
+          value: formatApiDate(screeningData.cvSubmissionDate),
+          icon: <FileText className="h-4 w-4" />,
+          color: "bg-indigo-50 text-indigo-600",
+          type: "date"
+        },
+        {
           key: "aemsInterviewDate",
           label: "AEMS Interview Date",
           value: formatApiDateTime(screeningData.aemsInterviewDate),
@@ -279,12 +287,12 @@ export const getStageFields = (stage: string, candidate: any): StageField[] => {
         }
       ];
 
-    case "Client Screening":
-      const clientScreeningData = getStageData(candidate, "Client Screening");
+    case "Client Status":
+      const clientScreeningData = getStageData(candidate, "Client Status");
       return [
         {
           key: "clientScreeningDate",
-          label: "Client Screening Date",
+          label: "Client Status Date",
           value: formatApiDate(clientScreeningData.clientScreeningDate),
           icon: <CalendarDays className="h-4 w-4" />,
           color: "bg-blue-50 text-blue-600",
@@ -457,18 +465,28 @@ export const getStageFields = (stage: string, candidate: any): StageField[] => {
       const disqualifiedData = getStageData(candidate, "Disqualified");
       return [
         {
-          key: "disqualificationDate",
-          label: "Disqualification Date",
-          value: formatApiDate(disqualifiedData.disqualificationDate),
-          icon: <CalendarDays className="h-4 w-4" />,
+          key: "disqualificationStage",
+          label: "Disqualification Stage",
+          value: disqualifiedData.disqualificationStage || candidate.currentStage || "Not set",
+          icon: <Target className="h-4 w-4" />,
           color: "bg-red-50 text-red-600",
-          type: "date"
+          type: "text",
+          placeholder: "Enter the stage where disqualification occurred"
+        },
+        {
+          key: "disqualificationStatus",
+          label: "Disqualification Status",
+          value: disqualifiedData.disqualificationStatus || candidate.status || "Not set",
+          icon: <XCircle className="h-4 w-4" />,
+          color: "bg-red-50 text-red-600",
+          type: "text",
+          placeholder: "Enter the status at time of disqualification"
         },
         {
           key: "disqualificationReason",
           label: "Reason",
           value: disqualifiedData.disqualificationReason || "Not set",
-          icon: <XCircle className="h-4 w-4" />,
+          icon: <MessageSquare className="h-4 w-4" />,
           color: "bg-red-50 text-red-600",
           type: "textarea",
           placeholder: "Enter disqualification reason..."
@@ -494,7 +512,7 @@ export const getStageColor = (stage: string) => {
   const colors = {
     "Sourcing": "bg-purple-100 text-purple-800 border-purple-200",
     "Screening": "bg-orange-100 text-orange-800 border-orange-200",
-    "Client Screening": "bg-green-100 text-green-800 border-green-200",
+    "Client Status": "bg-green-100 text-green-800 border-green-200",
     "Interview": "bg-blue-100 text-blue-800 border-blue-200",
     "Verification": "bg-yellow-100 text-yellow-800 border-yellow-200",
     "Onboarding": "bg-green-100 text-green-800 border-green-200",

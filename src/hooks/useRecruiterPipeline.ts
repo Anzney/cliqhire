@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { RecruiterPipelineService, StageFieldUpdate } from '@/services/recruiterPipelineService';
+import { mapUIStageToBackendStage } from '@/components/Recruiter-Pipeline/dummy-data';
 import { toast } from 'sonner';
 
 export interface UseRecruiterPipelineProps {
@@ -28,10 +29,11 @@ export const useRecruiterPipeline = ({ pipelineId, candidateId }: UseRecruiterPi
         notes: notes || `Updated ${fieldKey} to: ${fieldValue}`
       };
 
+      const backendStage = mapUIStageToBackendStage(stageName);
       const response = await RecruiterPipelineService.updateStageFields(
         pipelineId,
         candidateId,
-        stageName,
+        backendStage,
         updateData
       );
 
@@ -84,10 +86,11 @@ export const useRecruiterPipeline = ({ pipelineId, candidateId }: UseRecruiterPi
     setError(null);
 
     try {
+      const backendStage = mapUIStageToBackendStage(newStage);
       const response = await RecruiterPipelineService.moveCandidateToStage(
         pipelineId,
         candidateId,
-        newStage,
+        backendStage,
         notes
       );
 

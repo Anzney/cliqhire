@@ -40,18 +40,36 @@ interface CreateCandidateDialogProps {
   onOpenChange: (open: boolean) => void;
   pipelineId: string;
   onSubmit?: (values: CreateCandidateValues) => void;
+  tempCandidateData?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    profileLink?: string;
+  };
 }
 
-export function CreateCandidateDialog({ open, onOpenChange, pipelineId, onSubmit }: CreateCandidateDialogProps) {
+export function CreateCandidateDialog({ open, onOpenChange, pipelineId, onSubmit, tempCandidateData }: CreateCandidateDialogProps) {
   const form = useForm<CreateCandidateValues>({
     resolver: zodResolver(CreateCandidateSchema),
     defaultValues: {
-      name: "",
-      profileLink: "",
-      email: "",
-      phone: "",
+      name: tempCandidateData?.name || "",
+      profileLink: tempCandidateData?.profileLink || "",
+      email: tempCandidateData?.email || "",
+      phone: tempCandidateData?.phone || "",
     },
   });
+
+  // Reset form when tempCandidateData changes
+  React.useEffect(() => {
+    if (tempCandidateData) {
+      form.reset({
+        name: tempCandidateData.name || "",
+        profileLink: tempCandidateData.profileLink || "",
+        email: tempCandidateData.email || "",
+        phone: tempCandidateData.phone || "",
+      });
+    }
+  }, [tempCandidateData, form]);
 
   const handleSubmit = async (values: CreateCandidateValues) => {
     try {
