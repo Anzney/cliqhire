@@ -7,6 +7,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { Job } from "@/services/jobService";
 import { Loader } from "lucide-react";
+import { api } from "@/lib/axios-config";
+import { mapBackendStageToUIStage } from "@/components/Recruiter-Pipeline/dummy-data";
 
 export interface JobsContentRef {
   addJobsToCandidate: (jobIds: string[], jobData?: any[]) => Promise<void>;
@@ -41,28 +43,23 @@ export const JobsContent = forwardRef<JobsContentRef, JobsContentProps>(
   const fetchCandidateJobs = async () => {
     setLoading(true);
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
-      const response = await fetch(`${API_URL}/api/candidates/${candidateId}/jobs`);
+      // Ensure authentication is initialized
+      await initializeAuth();
       
-      if (!response.ok) {
-        throw new Error("Failed to fetch candidate jobs");
-      }
+      const response = await api.get(`/api/candidates/${candidateId}/jobs`);
       
-      const result = await response.json();
-      
-      if (result.status === "success" && Array.isArray(result.data)) {
+      if (response.data.status === "success" && Array.isArray(response.data.data)) {
         // Transform the API response to match our interface
         const transformedJobs: CandidateJobApplication[] = await Promise.all(
-          result.data.map(async (job: any) => {
+          response.data.data.map(async (job: any) => {
             let clientName = "";
             
             // Try to get client name if client ID is provided
             if (job.client && typeof job.client === 'string') {
               try {
-                const clientResponse = await fetch(`${API_URL}/api/clients/${job.client}`);
-                if (clientResponse.ok) {
-                  const clientData = await clientResponse.json();
-                  clientName = clientData.data?.name || job.client;
+                const clientResponse = await api.get(`/api/clients/${job.client}`);
+                if (clientResponse.data.status === "success") {
+                  clientName = clientResponse.data.data?.name || job.client;
                 } else {
                   clientName = job.client; // Fallback to client ID if fetch fails
                 }
@@ -87,7 +84,7 @@ export const JobsContent = forwardRef<JobsContentRef, JobsContentProps>(
               minimumSalary: job.minimumSalary?.toString() || "0",
               maximumSalary: job.maximumSalary?.toString() || "0",
               experience: job.experience || "",
-              stage: job.stage || "",
+              stage: mapBackendStageToUIStage(job.stage || ""),
             };
           })
         );

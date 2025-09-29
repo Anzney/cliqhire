@@ -17,9 +17,11 @@ import {
   DollarSign,
   Mail,
   Route,
-  LockKeyhole
+  LockKeyhole,
+  ListTodo
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 const menuItems = [
   { name: "Home", icon: Home, href: "/" },
@@ -43,6 +45,21 @@ const menuItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { user } = useAuth();
+
+  // Check if user is admin
+  const isAdmin = user?.role === 'ADMIN';
+
+  // Determine which permissions to use
+  // If user has custom permissions, use those; otherwise use default permissions
+  let finalPermissions = (user?.permissions && user.permissions.length > 0) 
+    ? user.permissions 
+    : user?.defaultPermissions || [];
+  
+  // Ensure TODAY_TASKS permission is available for all non-admin users
+  if (!isAdmin && !finalPermissions.includes('TODAY_TASKS')) {
+    finalPermissions = [...finalPermissions, 'TODAY_TASKS'];
+  }
 
   return (
     <div className="w-[240px] border-r bg-gray-50/40 flex flex-col">
@@ -51,33 +68,35 @@ export function Sidebar() {
       </div>
       <nav className="flex-1 px-2">
         <ul>
-          {menuItems.map((item, index) => (
-            <li key={index}>
-              <Link
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-gray-900",
-                  (item.href === "/" ? pathname === "/" : pathname?.startsWith(item.href))
-                    ? "bg-blue-100 text-blue-600 font-medium"
-                    : "text-gray-500 hover:bg-gray-100",
-                )}
-              >
-                <item.icon
+          {menuItems
+            .filter(item => isAdmin || item.permission === "HOME" || finalPermissions.includes(item.permission))
+            .map((item, index) => (
+              <li key={index}>
+                <Link
+                  href={item.href}
                   className={cn(
-                    "h-4 w-4",
+                    "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-gray-900",
                     (item.href === "/" ? pathname === "/" : pathname?.startsWith(item.href))
-                      ? "text-blue-600"
-                      : "text-gray-500",
+                      ? "bg-blue-100 text-blue-600 font-medium"
+                      : "text-gray-500 hover:bg-gray-100",
                   )}
-                />
-                {item.name}
-              </Link>
-              {/* Add horizontal line after "Candidates" and "Inbox" */}
-              {(item.name === "Candidates" || item.name === "Inbox") && (
-                <hr className="my-2 border-gray-200" />
-              )}
-            </li>
-          ))}
+                >
+                  <item.icon
+                    className={cn(
+                      "h-4 w-4",
+                      (item.href === "/" ? pathname === "/" : pathname?.startsWith(item.href))
+                        ? "text-blue-600"
+                        : "text-gray-500",
+                    )}
+                  />
+                  {item.name}
+                </Link>
+                {/* Add horizontal line after "Candidates" and "Inbox" */}
+                {(item.name === "Candidates" || item.name === "Inbox") && (
+                  <hr className="my-2 border-gray-200" />
+                )}
+              </li>
+            ))}
         </ul>
       </nav>
     </div>

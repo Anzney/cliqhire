@@ -1,63 +1,56 @@
 "use client"
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-
-import { Job } from "@/types/job"
+import React, { useState, useEffect } from 'react'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
-import { JobStageBadge } from "./job-stage-badge"
-import { useEffect, useState } from "react"
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ;
+import { JobStageBadge } from './job-stage-badge'
+import { Job } from '@/types/job'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import { api } from "@/lib/axios-config";
+import { initializeAuth } from "@/lib/axios-config";
 
 interface JobsTableProps {
   jobs: Job[]
-  clientId?: string
   clientName?: string
+  onJobsUpdate?: (updatedJobs: Job[]) => void
 }
 
-export function JobsTable({ jobs, clientId, clientName }: JobsTableProps) {
-  const [localJobs, setLocalJobs] = useState(jobs)
-  const [jobId, setJobId] = useState<string>()
-  const [newStage, setNewStage] = useState<string>()
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+export function JobsTable({ jobs, clientName, onJobsUpdate }: JobsTableProps) {
+  const [filteredJobs, setFilteredJobs] = useState<Job[]>(jobs)
+  const [localJobs, setLocalJobs] = useState<Job[]>(jobs)
+  const [pendingChange, setPendingChange] = useState<{ jobId: string; newStage: string } | null>(null)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
-  const [pendingChange, setPendingChange] = useState<{ jobId: string; stage: Job['stage'] } | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
-  // Filter jobs if clientId is provided
-  const filteredJobs = clientId 
-    ? localJobs.filter(job => job.client === clientId)
-    : localJobs
+  useEffect(() => {
+    setFilteredJobs(jobs)
+    setLocalJobs(jobs)
+  }, [jobs])
 
-  const handleStageChange = (jobId: string, newStage: Job['stage']) => {
-    setPendingChange({ jobId, stage: newStage })
+  const handleStageChange = (jobId: string, newStage: string) => {
+    setPendingChange({ jobId, newStage })
     setShowConfirmDialog(true)
   }
 
   const handleConfirmChange = async () => {
     if (!pendingChange) return
 
-    setJobId(pendingChange.jobId)
-    setNewStage(pendingChange.stage)
+    const { jobId, newStage } = pendingChange
+
+    // Optimistically update the UI
     setLocalJobs(prev => prev.map(job => 
-      job._id === pendingChange.jobId ? { ...job, stage: pendingChange.stage } : job
+      job._id === jobId ? { ...job, stage: newStage } : job
     ))
+    setFilteredJobs(prev => prev.map(job => 
+      job._id === jobId ? { ...job, stage: newStage } : job
+    ))
+
+    // Update the parent component
+    onJobsUpdate?.(localJobs.map(job => 
+      job._id === jobId ? { ...job, stage: newStage } : job
+    ))
+
+    setPendingChange(null)
     setShowConfirmDialog(false)
   }
 
@@ -68,33 +61,40 @@ export function JobsTable({ jobs, clientId, clientName }: JobsTableProps) {
 
   useEffect(() => {
     const updateJobStage = async () => {
-      if (!jobId || !newStage) return;
+      if (!pendingChange) return;
   
       try {
         setIsLoading(true);
+        
+        // Ensure authentication is initialized
+        await initializeAuth();
   
-        const response = await fetch(`${API_URL}/api/jobs/${jobId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ stage: newStage }),
+        const response = await api.patch(`/api/jobs/${pendingChange.jobId}`, {
+          stage: pendingChange.newStage
         });
   
-        if (!response.ok) {
+        if (response.data.status !== "success") {
           throw new Error('Failed to update job stage');
         }
 
       } catch (error) {
+        console.error('Error updating job stage:', error);
         // Revert the local state if the API call fails
         setLocalJobs(prev => prev.map(job => 
-          job._id === jobId ? { ...job, stage: job.stage } : job
+          job._id === pendingChange.jobId ? { ...job, stage: job.stage } : job
+        ))
+        setFilteredJobs(prev => prev.map(job => 
+          job._id === pendingChange.jobId ? { ...job, stage: job.stage } : job
         ))
       } finally {
         setIsLoading(false);
       }
     };
   
-    updateJobStage();
-  }, [jobId, newStage]);
+    if (pendingChange) {
+      updateJobStage();
+    }
+  }, [pendingChange]);
 
   if(isLoading) {
     return <div>Loading...</div>

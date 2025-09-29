@@ -11,11 +11,13 @@ interface SkillsAndStatusTabProps {
   formData: CreateTeamMemberData;
   setFormData: React.Dispatch<React.SetStateAction<CreateTeamMemberData>>;
   errors: Record<string, string>;
+  onResumeFileChange?: (file: File | null) => void;
 }
 
-export function SkillsAndStatusTab({ formData, setFormData, errors }: SkillsAndStatusTabProps) {
+export function SkillsAndStatusTab({ formData, setFormData, errors, onResumeFileChange }: SkillsAndStatusTabProps) {
   const [skillsInput, setSkillsInput] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
 
   const handleInputChange = (field: keyof CreateTeamMemberData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -36,17 +38,17 @@ export function SkillsAndStatusTab({ formData, setFormData, errors }: SkillsAndS
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        alert('File size must be less than 5MB');
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit per API specification
+        alert('File size must be less than 10MB');
         return;
       }
       if (!file.type.includes('pdf') && !file.type.includes('doc') && !file.type.includes('docx')) {
         alert('Please upload a PDF, DOC, or DOCX file');
         return;
       }
-      // For now, we'll just store the file name as a string
-      // In a real implementation, you'd handle file upload
-      setFormData(prev => ({ ...prev, resume: file.name }));
+      // Store the actual file and show the file name
+      setResumeFile(file);
+      onResumeFileChange?.(file);
     }
   };
 
@@ -55,7 +57,8 @@ export function SkillsAndStatusTab({ formData, setFormData, errors }: SkillsAndS
   };
 
   const handleRemoveFile = () => {
-    setFormData(prev => ({ ...prev, resume: undefined }));
+    setResumeFile(null);
+    onResumeFileChange?.(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -110,9 +113,9 @@ export function SkillsAndStatusTab({ formData, setFormData, errors }: SkillsAndS
           />
           <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
           <div className="text-sm text-gray-600">
-            {formData.resume ? (
+            {resumeFile ? (
               <div className="flex items-center justify-center gap-2">
-                <span className="text-green-600 font-medium">{formData.resume}</span>
+                <span className="text-green-600 font-medium">{resumeFile.name}</span>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -128,7 +131,7 @@ export function SkillsAndStatusTab({ formData, setFormData, errors }: SkillsAndS
               <>
                 <span className="font-medium text-gray-900">Click to upload</span>
                 <br />
-                <span className="text-gray-500">PDF, DOC, DOCX (max 5MB)</span>
+                <span className="text-gray-500">PDF, DOC, DOCX (max 10MB)</span>
               </>
             )}
           </div>

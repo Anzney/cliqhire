@@ -20,15 +20,58 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { UserPermissionDialog } from "./user-permission-dialog";
 import { TeamMember } from "@/types/teamMember";
-import { getTeamMembers } from "@/services/teamMembersService";
+import { permissionService, UserPermissions } from "@/services/permissionService";
+import { toast } from "sonner";
+
+// Team role color classes for custom styling - matching status badge style
+const getTeamRoleColorClass = (role: string): string => {
+  const normalizedRole = role?.toLowerCase() || "";
+  
+  switch (normalizedRole) {
+    case "admin":
+    case "administrator":
+      return "bg-blue-100 text-blue-800 border-blue-200";
+    case "hiring manager":
+    case "hiring_manager":
+    case "hir":
+      return "bg-sky-100 text-sky-800 border-sky-200";
+    case "team lead":
+    case "team_lead":
+    case "lead":
+      return "bg-emerald-100 text-emerald-800 border-emerald-200";
+    case "recruiter":
+    case "recruiters":
+    case "rec":
+      return "bg-teal-100 text-teal-800 border-teal-200";
+    case "head hunter":
+    case "head_hunter":
+    case "head enter":
+    case "headenter":
+      return "bg-purple-100 text-purple-800 border-purple-200";
+    default:
+      return "bg-gray-100 text-gray-700 border-gray-200";
+  }
+};
+
+// Function to format team role display - replace underscores with spaces
+const formatTeamRoleDisplay = (role: string): string => {
+  if (!role) return "Not Assigned";
+  return role.replace(/_/g, " ");
+};
 
 interface UserPermissionTabProps {
   refreshTrigger?: number;
+  teamMembers?: TeamMember[];
+  loading?: boolean;
+  onRefresh?: () => void;
 }
 
-export function UserPermissionTab({ refreshTrigger }: UserPermissionTabProps) {
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [loading, setLoading] = useState(false);
+export function UserPermissionTab({ 
+  refreshTrigger, 
+  teamMembers = [], 
+  loading = false,
+  onRefresh
+}: UserPermissionTabProps) {
   const [permissionDialogOpen, setPermissionDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<TeamMember | null>(null);
 
@@ -40,26 +83,16 @@ export function UserPermissionTab({ refreshTrigger }: UserPermissionTabProps) {
     "Action",
   ];
 
-  // Fetch team members when component mounts
-  useEffect(() => {
-    fetchTeamMembers();
-  }, [refreshTrigger]);
-
-  const fetchTeamMembers = async () => {
-    setLoading(true);
-    try {
-      const response = await getTeamMembers();
-      setTeamMembers(response.teamMembers);
-    } catch (error) {
-      console.error("Error fetching team members:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleUserPermission = (user: TeamMember) => {
     setSelectedUser(user);
     setPermissionDialogOpen(true);
+  };
+
+  const handlePermissionsUpdated = () => {
+    // Trigger refresh in parent component
+    if (onRefresh) {
+      onRefresh();
+    }
   };
 
   const renderUserPermissionTable = () => {
@@ -90,16 +123,22 @@ export function UserPermissionTab({ refreshTrigger }: UserPermissionTabProps) {
       );
     }
 
-    return teamMembers.map((member) => (
-      <TableRow key={member._id} className="hover:bg-muted/50">
-        <TableCell className="text-sm font-medium">{member.name}</TableCell>
-        <TableCell className="text-sm">{member.email}</TableCell>
-        <TableCell className="text-sm">{member.phone}</TableCell>
-        <TableCell className="text-sm">
-          <Badge variant="outline" className="text-xs">
-            {member.role || "Not Assigned"}
-          </Badge>
-        </TableCell>
+    return teamMembers.map((user) => (
+      <TableRow key={user._id} className="hover:bg-muted/50">
+        <TableCell className="text-sm font-medium">{user.name}</TableCell>
+        <TableCell className="text-sm">{user.email}</TableCell>
+        <TableCell className="text-sm">{user.phone}</TableCell>
+                 <TableCell className="text-sm">
+           <span 
+             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getTeamRoleColorClass(user.teamRole || "")}`}
+             style={{ 
+               transition: 'none',
+               pointerEvents: 'none'
+             }}
+           >
+             {formatTeamRoleDisplay(user.teamRole || "")}
+           </span>
+         </TableCell>
         <TableCell className="text-sm">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -108,14 +147,14 @@ export function UserPermissionTab({ refreshTrigger }: UserPermissionTabProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleUserPermission(member)}>
+              <DropdownMenuItem onClick={() => handleUserPermission(user)}>
                 <Shield className="mr-2 h-4 w-4" />
                 User Permission
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600">
+              {/* <DropdownMenuItem className="text-red-600">
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
             </DropdownMenuContent>
           </DropdownMenu>
         </TableCell>
@@ -144,6 +183,7 @@ export function UserPermissionTab({ refreshTrigger }: UserPermissionTabProps) {
         open={permissionDialogOpen}
         onOpenChange={setPermissionDialogOpen}
         user={selectedUser}
+        onPermissionsUpdated={handlePermissionsUpdated}
       />
     </div>
   );

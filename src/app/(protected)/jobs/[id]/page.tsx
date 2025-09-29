@@ -8,7 +8,7 @@ import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { JobTabs } from "@/components/jobs/job-tabs"
 import { JobData } from "@/components/jobs/types"
-import { AddCandidateDialog } from "@/components/jobs/candidates/add-candidate-dialog"
+import { AddExistingCandidateDialog } from "@/components/common/add-existing-candidate-dialog"
 
 interface PageProps {
   params: { id: string }
@@ -108,7 +108,7 @@ export default function JobPage({ params }: PageProps) {
       </div>
 
       {/* Button Bar */}
-      <div className="flex items-center justify-between p-4 border-b">
+      {/* <div className="flex items-center justify-between p-4 border-b">
         <Button size="sm" onClick={() => setAddCandidateOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Add Candidate
@@ -131,7 +131,7 @@ export default function JobPage({ params }: PageProps) {
             {isLoading ? 'Refreshing...' : 'Refresh'}
           </Button>
         </div>
-      </div>
+      </div> */}
 
       {/* Tabs */}
       <JobTabs
@@ -142,8 +142,8 @@ export default function JobPage({ params }: PageProps) {
         onTabChange={setActiveTab}
       />
 
-      {/* Add Candidate Dialog (controlled) */}
-      <AddCandidateDialog
+      {/* Add Candidate Dialog (Existing Candidate selection) */}
+      <AddExistingCandidateDialog
         jobId={id}
         jobTitle={jobTitle}
         open={addCandidateOpen}

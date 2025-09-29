@@ -1,0 +1,272 @@
+"use client";
+
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import { authService, User } from '@/services/authService';
+import { taskService, Task } from '@/services/taskService';
+import { initializeAuth } from '@/lib/axios-config';
+import { useRouter } from 'next/navigation';
+import { Loader } from 'lucide-react';
+
+interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  tasks: Task[];
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
+  checkAuth: () => Promise<void>;
+  refreshAuth: () => Promise<void>;
+  fetchTasks: () => Promise<void>;
+  createTask: (taskData: any) => Promise<Task>;
+  updateTask: (taskData: any) => Promise<Task>;
+  deleteTask: (taskId: string) => Promise<void>;
+  completeTask: (taskId: string) => Promise<Task>;
+  updateFollowUpStatus: (taskId: string, status: 'pending' | 'in-progress' | 'completed') => Promise<Task>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with true to show loading state
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const isFetchingTasksRef = useRef(false);
+  const router = useRouter();
+
+  const fetchTasks = useCallback(async () => {
+    // Prevent multiple simultaneous calls
+    if (isFetchingTasksRef.current) {
+      return;
+    }
+    
+    try {
+      isFetchingTasksRef.current = true;
+      const userTasks = await taskService.getMyTasks();
+      setTasks(userTasks);
+    } catch (error) {
+      console.error('AuthContext: Error fetching tasks:', error);
+      // Don't throw error, just log it - tasks are not critical for authentication
+    } finally {
+      isFetchingTasksRef.current = false;
+    }
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      setIsLoading(true); // Set loading to true when starting auth check
+      
+      // Check if we have user data in localStorage (this indicates previous login)
+      const userData = authService.getUserData();
+      
+      if (userData) {
+        // Set user immediately for faster UI response
+        setUser(userData);
+        setIsAuthenticated(true);
+        
+        // Also initialize axios authentication
+        await initializeAuth();
+        
+        // Get tasks from localStorage only (no API call)
+        const storedTasks = authService.getUserTasks();
+        if (storedTasks) {
+          setTasks(storedTasks);
+        } else {
+          setTasks([]);
+        }
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+        setTasks([]);
+      }
+    } catch (error) {
+      console.error('AuthContext: Error checking authentication:', error);
+      setUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false); // Set loading to false when auth check completes
+    }
+  };
+
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      setIsLoading(true); // Show loading during login
+      const response = await authService.login({ email, password });
+      
+      if (response.success && response.user && response.token) {
+        setUser(response.user);
+        setIsAuthenticated(true);
+        
+        // Initialize axios authentication after successful login
+        await initializeAuth();
+        
+        // Set tasks from login response if available, otherwise empty array
+        if (response.tasks) {
+          setTasks(response.tasks);
+        } else {
+          setTasks([]);
+        }
+        
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      console.error('AuthContext: Login error:', error);
+      return false;
+    } finally {
+      setIsLoading(false); // Hide loading after login attempt
+    }
+  };
+
+  const logout = async () => {
+    try {
+      setIsLoading(true); // Show loading during logout
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+      setIsAuthenticated(false);
+      setTasks([]);
+      setIsLoading(false); // Hide loading after logout
+    }
+  };
+
+  const refreshAuth = async () => {
+    try {
+      setIsLoading(true); // Show loading during refresh
+      
+      // Check if we have user data in localStorage
+      const userData = authService.getUserData();
+      if (userData) {
+        setUser(userData);
+        setIsAuthenticated(true);
+        
+        // Also initialize axios authentication
+        await initializeAuth();
+        
+        // Get tasks from localStorage only (no API call)
+        const storedTasks = authService.getUserTasks();
+        if (storedTasks) {
+          setTasks(storedTasks);
+        } else {
+          setTasks([]);
+        }
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+        setTasks([]);
+      }
+    } catch (error) {
+      console.error('Error refreshing authentication:', error);
+      setUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false); // Hide loading after refresh
+    }
+  };
+
+  // Task management functions
+  const createTask = async (taskData: any): Promise<Task> => {
+    try {
+      const newTask = await taskService.createTask(taskData);
+      setTasks(prev => [...prev, newTask]);
+      return newTask;
+    } catch (error) {
+      console.error('AuthContext: Error creating task:', error);
+      throw error;
+    }
+  };
+
+  const updateTask = async (taskData: any): Promise<Task> => {
+    try {
+      const updatedTask = await taskService.updateTask(taskData);
+      setTasks(prev => prev.map(task => task.id === updatedTask.id ? updatedTask : task));
+      return updatedTask;
+    } catch (error) {
+      console.error('AuthContext: Error updating task:', error);
+      throw error;
+    }
+  };
+
+  const deleteTask = async (taskId: string): Promise<void> => {
+    try {
+      await taskService.deleteTask(taskId);
+      setTasks(prev => prev.filter(task => task.id !== taskId));
+    } catch (error) {
+      console.error('AuthContext: Error deleting task:', error);
+      throw error;
+    }
+  };
+
+  const completeTask = async (taskId: string): Promise<Task> => {
+    try {
+      const completedTask = await taskService.completeTask(taskId);
+      setTasks(prev => prev.map(task => task.id === completedTask.id ? completedTask : task));
+      return completedTask;
+    } catch (error) {
+      console.error('AuthContext: Error completing task:', error);
+      throw error;
+    }
+  };
+
+  const updateFollowUpStatus = async (taskId: string, status: 'pending' | 'in-progress' | 'completed'): Promise<Task> => {
+    try {
+      const updatedTask = await taskService.updateFollowUpStatus(taskId, status);
+      setTasks(prev => prev.map(task => task.id === updatedTask.id ? updatedTask : task));
+      return updatedTask;
+    } catch (error) {
+      console.error('AuthContext: Error updating follow-up status:', error);
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    // Check authentication on component mount
+    checkAuth();
+  }, []);
+
+  const value: AuthContextType = {
+    user,
+    isAuthenticated,
+    isLoading,
+    tasks,
+    login,
+    logout,
+    checkAuth,
+    refreshAuth,
+    fetchTasks,
+    createTask,
+    updateTask,
+    deleteTask,
+    completeTask,
+    updateFollowUpStatus,
+  };
+
+  // Show loading spinner while authentication is being checked
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center gap-2 flex-col">
+          <Loader className="size-6 animate-spin" />
+          <div className="text-center">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}

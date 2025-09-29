@@ -71,6 +71,13 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
   const mapContractDataToFormData = (contractData: any, businessType: string) => {
     const formType = getFormType(businessType);
 
+    // Debug: Log the original contract data
+    console.log("Mapping contract data:", {
+      businessType,
+      formType,
+      contractData
+    });
+
     if (formType === "business") {
       return {
         contractStartDate: contractData?.contractStartDate
@@ -121,18 +128,41 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
         financialProposalDocument = contractData?.financialProposalDocument || null;
       }
 
-      return {
+      // Create mapped data with all necessary fields
+      const mappedData = {
+        // Core contract fields
         contractStartDate: contractData?.contractStartDate
           ? new Date(contractData.contractStartDate)
           : null,
         contractEndDate: contractData?.contractEndDate
           ? new Date(contractData.contractEndDate)
           : null,
+        
+        // Proposal notes
         technicalProposalNotes: contractData?.technicalProposalNotes || "",
         financialProposalNotes: contractData?.financialProposalNotes || "",
+        
+        // Proposal documents
         technicalProposalDocument,
         financialProposalDocument,
+        
+        // Preserve any additional fields that might exist in the original data
+        // These will be sent back to the backend even if not edited
+        ...(contractData?.contractType && { contractType: contractData.contractType }),
+        ...(contractData?.contractValue && { contractValue: contractData.contractValue }),
+        ...(contractData?.contractNumber && { contractNumber: contractData.contractNumber }),
+        ...(contractData?.businessType && { businessType: contractData.businessType }),
+        ...(contractData?.clientId && { clientId: contractData.clientId }),
+        ...(contractData?._id && { _id: contractData._id }),
+        ...(contractData?.createdAt && { createdAt: contractData.createdAt }),
+        ...(contractData?.updatedAt && { updatedAt: contractData.updatedAt }),
+        ...(contractData?.createdBy && { createdBy: contractData.createdBy }),
       };
+      
+      // Debug: Log the mapped data for consulting contracts
+      console.log("Mapped consulting contract data:", mappedData);
+      
+      return mappedData;
     }
 
     if (formType === "outsourcing") {
@@ -172,6 +202,15 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
     try {
       // Get the backend contract type (mapped value) to send to API
       const contractKey = CONTRACT_MAPPING[editDialogOpen as keyof typeof CONTRACT_MAPPING];
+      
+      // Debug: Log what's being sent
+      console.log("Updating contract with data:", {
+        clientId,
+        contractKey,
+        updatedFormData,
+        editDialogOpen
+      });
+      
       await updateContract(clientId, contractKey, updatedFormData);
 
       toast.success(`${editDialogOpen} contract updated successfully!`);

@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MoreVertical, Download, Eye, Edit, Trash2, Users, UserCheck, UserCog, Crown } from "lucide-react";
+import { MoreVertical, Trash2, Users, UserCheck, UserCog, Crown, Eye } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +21,8 @@ import {
 } from "@/components/ui/table";
 import { TeamMemberStatusBadge } from "@/components/teamMembers/team-status-badge";
 import { RegisterUserDialog } from "@/components/teamMembers/register-user-dialog";
+import ViewEditTeamMemberDialog from "@/components/teamMembers/ViewEditTeamMemberDialog";
+import { DeleteTeamMemberDialog } from "@/components/teamMembers/delete-team-member-dialog";
 import { getTeamMembers, deleteTeamMember } from "@/services/teamMembersService";
 import { TeamMember, TeamMemberStatus } from "@/types/teamMember";
 
@@ -37,10 +38,75 @@ const headerArr = [
   "Location",
   "Experience",
   "Team Role",
-  "Resume",
   "Status",
   "Actions",
 ];
+
+// Team role color mapping
+const getTeamRoleBadgeVariant = (role: string): "default" | "secondary" | "destructive" | "outline" => {
+  const normalizedRole = role?.toLowerCase() || "";
+  
+  switch (normalizedRole) {
+    case "admin":
+    case "administrator":
+      return "destructive"; // Red
+    case "hiring manager":
+    case "hiring_manager":
+    case "hir":
+      return "default"; // Blue
+    case "team lead":
+    case "team_lead":
+    case "lead":
+      return "secondary"; // Gray
+    case "recruiter":
+    case "recruiters":
+    case "rec":
+      return "outline"; // Border only
+    case "head hunter":
+    case "head_hunter":
+    case "head enter":
+    case "headenter":
+      return "destructive"; // Red
+    default:
+      return "outline"; // Default for unknown roles
+  }
+};
+
+// Team role color classes for custom styling - matching status badge style
+const getTeamRoleColorClass = (role: string): string => {
+  const normalizedRole = role?.toLowerCase() || "";
+  
+  switch (normalizedRole) {
+    case "admin":
+    case "administrator":
+      return "bg-blue-100 text-blue-800 border-blue-200";
+    case "hiring manager":
+    case "hiring_manager":
+    case "hir":
+      return "bg-sky-100 text-sky-800 border-sky-200";
+    case "team lead":
+    case "team_lead":
+    case "lead":
+      return "bg-emerald-100 text-emerald-800 border-emerald-200";
+    case "recruiter":
+    case "recruiters":
+    case "rec":
+      return "bg-teal-100 text-teal-800 border-teal-200";
+    case "head hunter":
+    case "head_hunter":
+    case "head enter":
+    case "headenter":
+      return "bg-purple-100 text-purple-800 border-purple-200";
+    default:
+      return "bg-gray-100 text-gray-700 border-gray-200";
+  }
+};
+
+// Function to format team role display - replace underscores with spaces
+const formatTeamRoleDisplay = (role: string): string => {
+  if (!role) return "Not Assigned";
+  return role.replace(/_/g, " ");
+};
 
 export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembersTabsProps) {
   const [activeTab, setActiveTab] = useState("all");
@@ -48,7 +114,11 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
   const [loading, setLoading] = useState(true);
   const [registerDialogOpen, setRegisterDialogOpen] = useState(false);
   const [selectedTeamMember, setSelectedTeamMember] = useState<TeamMember | null>(null);
-  const router = useRouter();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [teamMemberToDelete, setTeamMemberToDelete] = useState<TeamMember | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [teamMemberToView, setTeamMemberToView] = useState<TeamMember | null>(null);
 
   // Fetch team members from API
   const fetchTeamMembers = async () => {
@@ -77,11 +147,9 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
   };
 
   const handleViewTeamMember = (teamMemberId: string) => {
-    if (onTeamMemberClick) {
-      onTeamMemberClick(teamMemberId);
-    } else {
-      router.push(`/teammembers/${teamMemberId}`);
-    }
+    const member = teamMembers.find((tm) => tm._id === teamMemberId) || null;
+    setTeamMemberToView(member);
+    setViewDialogOpen(true);
   };
 
   const handleRegisterUser = (teamMember: TeamMember) => {
@@ -94,27 +162,42 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
     setSelectedTeamMember(null);
   };
 
-  const handleDeleteTeamMember = async (teamMemberId: string) => {
-    if (confirm("Are you sure you want to delete this team member?")) {
-      try {
-        await deleteTeamMember(teamMemberId);
-        setTeamMembers((prevTeamMembers) =>
-          prevTeamMembers.filter((teamMember) => teamMember._id !== teamMemberId),
-        );
-      } catch (error) {
-        console.error("Error deleting team member:", error);
-        alert("Failed to delete team member");
-      }
+  const handleDeleteTeamMember = (teamMember: TeamMember) => {
+    setTeamMemberToDelete(teamMember);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteTeamMember = async () => {
+    console.log('confirmDeleteTeamMember called');
+    if (!teamMemberToDelete) {
+      console.log('No team member to delete');
+      return;
+    }
+    
+    console.log('Deleting team member:', teamMemberToDelete.name, teamMemberToDelete._id);
+    setIsDeleting(true);
+    try {
+      await deleteTeamMember(teamMemberToDelete._id);
+      console.log('Team member deleted successfully');
+      setTeamMembers((prevTeamMembers) =>
+        prevTeamMembers.filter((teamMember) => teamMember._id !== teamMemberToDelete._id),
+      );
+      setDeleteDialogOpen(false);
+      setTeamMemberToDelete(null);
+    } catch (error) {
+      console.error("Error deleting team member:", error);
+      // You might want to show a toast notification here instead of alert
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  const handleDownloadResume = (resumeUrl: string | undefined, teamMemberName: string) => {
-    if (resumeUrl) {
-      window.open(resumeUrl, "_blank");
-    } else {
-      alert("No resume available for download");
-    }
+  const cancelDeleteTeamMember = () => {
+    setDeleteDialogOpen(false);
+    setTeamMemberToDelete(null);
   };
+
+  
 
   // Get counts for each role
   const getCountByRole = (role: string) => {
@@ -151,7 +234,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
         return teamMembers.filter(member => 
           member.teamRole === "HEAD_HUNTER" || 
           member.teamRole === "Head Enter" ||
-          member.role === "Head Enter"
+          member.role === "HEAD_HUNTER"
         );
       default:
         return teamMembers;
@@ -164,7 +247,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
     if (loading) {
       return (
         <TableRow>
-          <TableCell colSpan={9} className="h-[calc(100vh-240px)] text-center">
+          <TableCell colSpan={headerArr.length} className="h-[calc(100vh-240px)] text-center">
             <div className="py-24">
               <div className="text-center">Loading team members...</div>
             </div>
@@ -176,7 +259,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
     if (members.length === 0) {
       return (
         <TableRow>
-          <TableCell colSpan={9} className="h-[calc(100vh-240px)] text-center">
+          <TableCell colSpan={headerArr.length} className="h-[calc(100vh-240px)] text-center">
             <div className="py-24">
               <div className="text-center">No team members found in this category</div>
             </div>
@@ -188,8 +271,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
     return members.map((teamMember) => (
       <TableRow
         key={teamMember._id}
-        className="hover:bg-muted/50 cursor-pointer"
-        onClick={() => handleViewTeamMember(teamMember._id)}
+        className="hover:bg-muted/50 cursor-default"
       >
         <TableCell className="text-sm font-medium">{teamMember.name}</TableCell>
         <TableCell className="text-sm">{teamMember.email}</TableCell>
@@ -197,24 +279,17 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
         <TableCell className="text-sm">{teamMember.location}</TableCell>
         <TableCell className="text-sm">{teamMember.experience}</TableCell>
                  <TableCell className="text-sm">
-           <Badge variant="outline" className="text-xs">
-             {teamMember.teamRole || "Not Assigned"}
-           </Badge>
+           <span 
+             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getTeamRoleColorClass(teamMember.teamRole || "")}`}
+             style={{ 
+               transition: 'none',
+               pointerEvents: 'none'
+             }}
+           >
+             {formatTeamRoleDisplay(teamMember.teamRole || "")}
+           </span>
          </TableCell>
-        <TableCell className="text-sm">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDownloadResume(teamMember.resume, teamMember.name);
-            }}
-            className="h-6 px-2 text-xs"
-          >
-            <Download className="h-3 w-3 mr-1" />
-            Download
-          </Button>
-        </TableCell>
+        
         <TableCell className="text-sm">
           <TeamMemberStatusBadge
             id={teamMember._id}
@@ -236,6 +311,13 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                <DropdownMenuItem onClick={(e) => {
                  e.stopPropagation();
+                 handleViewTeamMember(teamMember._id);
+               }}>
+                 <Eye className="mr-2 h-4 w-4" />
+                 View
+               </DropdownMenuItem>
+               <DropdownMenuItem onClick={(e) => {
+                 e.stopPropagation();
                  handleRegisterUser(teamMember);
                }}>
                  <UserCheck className="mr-2 h-4 w-4" />
@@ -244,7 +326,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
                <DropdownMenuItem
                  onClick={(e) => {
                    e.stopPropagation();
-                   handleDeleteTeamMember(teamMember._id);
+                   handleDeleteTeamMember(teamMember);
                  }}
                  className="text-red-600"
                >
@@ -307,7 +389,7 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
             className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
           >
             <Crown className="h-4 w-4" />
-            Head Henter
+            Head Hunter
             <Badge variant="secondary" className="ml-1 text-xs">
               {getCountByRole("HEAD_HUNTER")}
             </Badge>
@@ -419,6 +501,22 @@ export function TeamMembersTabs({ onTeamMemberClick, refreshTrigger }: TeamMembe
             teamMemberEmail={selectedTeamMember.email}
           />
         )}
+
+        <DeleteTeamMemberDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          teamMemberName={teamMemberToDelete?.name || ""}
+          onConfirm={confirmDeleteTeamMember}
+          isLoading={isDeleting}
+        />
+        <ViewEditTeamMemberDialog
+          open={viewDialogOpen}
+          onOpenChange={setViewDialogOpen}
+          teamMember={teamMemberToView}
+          onUpdated={(updated) => {
+            setTeamMembers(prev => prev.map(tm => tm._id === updated._id ? updated : tm));
+          }}
+        />
      </div>
    );
  }
