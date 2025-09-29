@@ -621,7 +621,7 @@ export function PipelineJobCard({
                         <TableCell>
                           {(() => {
                             const currentStage = getCandidateStage(job.id, candidate.id) || candidate.currentStage;
-                            const stagesWithStatus = ['Sourcing', 'Screening', 'Client Status', 'Interview', 'Verification'];
+                            const stagesWithStatus = ['Sourcing', 'Screening', 'Client Review', 'Interview', 'Verification'];
                             if (stagesWithStatus.includes(currentStage)) {
                               return (
                                 <StatusBadge

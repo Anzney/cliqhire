@@ -1145,7 +1145,7 @@ const Page = () => {
                 </TableCell>
                 <TableCell>
                   {(() => {
-                    const stagesWithStatus = ['Sourcing', 'Screening', 'Client Status', 'Interview', 'Verification'];
+                    const stagesWithStatus = ['Sourcing', 'Screening', 'Client Review', 'Interview', 'Verification'];
                     if (stagesWithStatus.includes(candidate.currentStage)) {
                       return (
                         <StatusBadge

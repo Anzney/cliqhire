@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -11,6 +11,7 @@ import {
   DialogTrigger 
 } from "@/components/ui/dialog";
 import { Plus, Search } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Import components
 import { StatsOverview } from "@/components/today-tasks/StatsOverview";
@@ -18,100 +19,162 @@ import { AssignedJobs } from "@/components/today-tasks/AssignedJobs";
 import { Interviews } from "@/components/today-tasks/Interviews";
 import { UpcomingInterviews } from "@/components/today-tasks/UpcomingInterviews";
 import { PersonalTasks } from "@/components/today-tasks/PersonalTasks";
-import { CompletedTasks } from "@/components/today-tasks/CompletedTasks";
 import { AddTaskForm } from "@/components/today-tasks/AddTaskForm";
 import { 
   AssignedJob, 
   Interview, 
-  PersonalTask, 
-  AddTaskFormData 
+  PersonalTask
 } from "@/components/today-tasks/types";
+import { JobStatus } from "@/components/today-tasks/StatusDropdown";
 import { 
-  dummyAssignedJobs, 
   dummyInterviews, 
   dummyUpcomingInterviews,
   dummyPersonalTasks 
 } from "@/components/today-tasks/dummyData";
+import { taskService, AssignedJobApiResponse } from "@/services/taskService";
 
 
 export default function TodayTasksPage() {
-  // State management - using dummy data
-  const [assignedJobs] = useState<AssignedJob[]>(dummyAssignedJobs);
+  const { tasks, createTask, updateTask, deleteTask, completeTask, updateFollowUpStatus, fetchTasks } = useAuth();
+  
+  // State management - using real API data
+  const [assignedJobs, setAssignedJobs] = useState<AssignedJob[]>([]);
+  const [assignedJobsLoading, setAssignedJobsLoading] = useState(true);
+  const [personalTasks, setPersonalTasks] = useState<PersonalTask[]>([]);
+  const [personalTasksLoading, setPersonalTasksLoading] = useState(true);
+
+  // Fetch tasks and assigned jobs when component mounts
+  useEffect(() => {
+    fetchTasks();
+    fetchAssignedJobs();
+    fetchPersonalTasks();
+  }, []); // Empty dependency array ensures this runs only once
+
+  const fetchAssignedJobs = async () => {
+    try {
+      setAssignedJobsLoading(true);
+      const apiJobs: AssignedJobApiResponse[] = await taskService.getAssignedJobs();
+      
+      // Transform API data to match AssignedJob interface
+      const transformedJobs: AssignedJob[] = apiJobs.map(job => ({
+        id: job.id,
+        jobTitle: job.position,
+        clientName: job.clientName,
+        candidatesCount: job.candidateCount,
+        status: job.status === 'to-do' ? 'To-do' : job.status === 'inprogress' ? 'In Progress' : 'Completed',
+        content: job.content,
+        createdAt: job.createdAt,
+        updatedAt: job.updatedAt,
+        _id: job._id,
+        position: job.position,
+        jobId: job.jobId,
+        clientId: job.clientId,
+      }));
+      
+      setAssignedJobs(transformedJobs);
+    } catch (error) {
+      console.error('Error fetching assigned jobs:', error);
+      setAssignedJobs([]);
+    } finally {
+      setAssignedJobsLoading(false);
+    }
+  };
+
+  const fetchPersonalTasks = async () => {
+    try {
+      setPersonalTasksLoading(true);
+      const apiTasks = await taskService.getPersonalTasks();
+      
+      // Transform API data to match PersonalTask interface
+      const transformedTasks: PersonalTask[] = apiTasks.map(task => ({
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        priority: 'medium', // Default priority since API doesn't provide it
+        dueDate: task.dueDate,
+        dueTime: undefined, // Not provided by API
+        status: task.status, // Keep the original API status format
+        category: task.category,
+        createdAt: task.createdAt,
+        followUpType: undefined, // Not provided by API
+        followUpStatus: undefined, // Not provided by API
+        relatedCandidate: undefined, // Not provided by API
+        relatedJob: undefined, // Not provided by API
+        relatedClient: undefined, // Not provided by API
+      }));
+      
+      setPersonalTasks(transformedTasks);
+    } catch (error) {
+      console.error('Error fetching personal tasks:', error);
+      setPersonalTasks([]);
+    } finally {
+      setPersonalTasksLoading(false);
+    }
+  };
 
   const [interviews, setInterviews] = useState<Interview[]>(dummyInterviews);
   const [upcomingInterviews, setUpcomingInterviews] = useState<Interview[]>(dummyUpcomingInterviews);
 
-  const [personalTasks, setPersonalTasks] = useState<PersonalTask[]>(dummyPersonalTasks);
-  const [completedTasksList, setCompletedTasksList] = useState<PersonalTask[]>([]);
 
   const [completedTasks, setCompletedTasks] = useState<Set<string>>(new Set());
   const [newTaskOpen, setNewTaskOpen] = useState(false);
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const completeTask = (taskId: string) => {
-    setCompletedTasks(prev => new Set(prev).add(taskId));
-    
-    // Find the task and move it to completed list
-    const taskToComplete = personalTasks.find(task => task.id === taskId);
-    if (taskToComplete) {
-      const completedTask = { ...taskToComplete, status: 'completed' as const };
-      setCompletedTasksList(prev => [...prev, completedTask]);
-    }
-    
-    // Auto-remove completed tasks from personal tasks after a short delay
-    setTimeout(() => {
-      setPersonalTasks(prev => prev.filter(task => task.id !== taskId));
-      setCompletedTasks(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(taskId);
-        return newSet;
-      });
-    }, 2000); // 2 second delay to show completion animation
-  };
-
-  const updateFollowUpStatus = (taskId: string, followUpStatus: "pending" | "in-progress" | "completed") => {
-    if (followUpStatus === 'completed') {
+  const handleCompleteTask = async (taskId: string) => {
+    try {
+      await completeTask(taskId);
       setCompletedTasks(prev => new Set(prev).add(taskId));
-    }
-    
-    setPersonalTasks(prev =>
-      prev.map(task =>
-        task.id === taskId
-          ? { ...task, followUpStatus, status: followUpStatus === 'completed' ? 'completed' as const : task.status }
-          : task
-      )
-    );
-    
-    // Auto-remove if marked as completed
-    if (followUpStatus === 'completed') {
+      
+      
+      // Auto-remove completed tasks from personal tasks after a short delay
       setTimeout(() => {
-        setPersonalTasks(prev => prev.filter(task => task.id !== taskId));
         setCompletedTasks(prev => {
           const newSet = new Set(prev);
           newSet.delete(taskId);
           return newSet;
         });
-      }, 2000);
+      }, 2000); // 2 second delay to show completion animation
+    } catch (error) {
+      console.error('Error completing task:', error);
     }
   };
 
-  const deleteTask = (taskId: string) => {
-    setPersonalTasks(prev => prev.filter(task => task.id !== taskId));
-  };
-
-  const restoreTask = (taskId: string) => {
-    const taskToRestore = completedTasksList.find(task => task.id === taskId);
-    if (taskToRestore) {
-      const restoredTask = { ...taskToRestore, status: 'pending' as const };
-      setPersonalTasks(prev => [...prev, restoredTask]);
-      setCompletedTasksList(prev => prev.filter(task => task.id !== taskId));
+  const handleUpdateFollowUpStatus = async (taskId: string, followUpStatus: "pending" | "in-progress" | "completed") => {
+    try {
+      await updateFollowUpStatus(taskId, followUpStatus);
+      
+      if (followUpStatus === 'completed') {
+        setCompletedTasks(prev => new Set(prev).add(taskId));
+      }
+      
+      // Auto-remove if marked as completed
+      if (followUpStatus === 'completed') {
+        setTimeout(() => {
+          setCompletedTasks(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(taskId);
+            return newSet;
+          });
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error updating follow-up status:', error);
     }
   };
 
-  const deleteCompletedTask = (taskId: string) => {
-    setCompletedTasksList(prev => prev.filter(task => task.id !== taskId));
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      await taskService.deletePersonalTask(taskId);
+      // Refresh personal tasks after deletion
+      await fetchPersonalTasks();
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
   };
+
+
+
 
   const updateInterviewStatus = (interviewId: string, status: Interview['status']) => {
     setInterviews(prev =>
@@ -150,24 +213,43 @@ export default function TodayTasksPage() {
   // upcomingInterviews is now managed as separate state with dummyUpcomingInterviews
 
   // Handler functions
-  const handleAddTask = (taskData: AddTaskFormData) => {
-    const newTask: PersonalTask = {
-      id: Date.now().toString(),
-      title: taskData.title,
-      description: taskData.description,
-      priority: taskData.priority,
-      dueDate: taskData.dueDate,
-      dueTime: taskData.dueTime,
-      status: 'pending',
-      category: taskData.category,
-      createdAt: new Date().toISOString().split('T')[0],
-      followUpType: taskData.category === 'follow-up' ? taskData.followUpType : undefined,
-      followUpStatus: taskData.category === 'follow-up' ? 'pending' : undefined,
-      relatedCandidate: taskData.relatedCandidate,
-      relatedJob: taskData.relatedJob,
-      relatedClient: taskData.relatedClient,
-    };
-    setPersonalTasks(prev => [...prev, newTask]);
+  const handleJobStatusChange = async (jobId: string, newStatus: JobStatus) => {
+    try {
+      // Map the UI status to API status format
+      const apiStatus = newStatus === 'To-do' ? 'to-do' : 
+                       newStatus === 'In Progress' ? 'inprogress' : 
+                       'completed';
+
+      await taskService.updateAssignedJobStatus(jobId, apiStatus);
+      
+      // Update local state to reflect the change
+      setAssignedJobs(prev => 
+        prev.map(job => 
+          job.id === jobId ? { ...job, status: newStatus } : job
+        )
+      );
+      
+      console.log(`Job ${jobId} status updated to ${newStatus}`);
+    } catch (error) {
+      console.error('Error updating job status:', error);
+      // You might want to show a toast notification here
+    }
+  };
+
+  const handleAddTask = async (taskData: { title: string; description: string; category: string; dueDate: string }) => {
+    try {
+      await taskService.createPersonalTask({
+        title: taskData.title,
+        description: taskData.description,
+        dueDate: taskData.dueDate,
+        category: taskData.category,
+      });
+      
+      // Refresh personal tasks after creating a new one
+      await fetchPersonalTasks();
+    } catch (error) {
+      console.error('Error creating task:', error);
+    }
   };
 
   return (
@@ -197,7 +279,7 @@ export default function TodayTasksPage() {
                 Add Task
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg">
               <DialogHeader>
                 <DialogTitle>Add Personal Task</DialogTitle>
               </DialogHeader>
@@ -218,7 +300,11 @@ export default function TodayTasksPage() {
       />
 
       {/* Assigned Jobs - Full Width */}
-      <AssignedJobs assignedJobs={assignedJobs} />
+      <AssignedJobs 
+        assignedJobs={assignedJobs} 
+        onStatusChange={handleJobStatusChange}
+        loading={assignedJobsLoading}
+      />
 
       {/* Today's Interviews */}
       <Interviews 
@@ -236,23 +322,27 @@ export default function TodayTasksPage() {
       <PersonalTasks
         personalTasks={personalTasks}
         completedTasks={completedTasks}
-        filterPriority={filterPriority}
         searchQuery={searchQuery}
-        onSetFilterPriority={setFilterPriority}
-        onCompleteTask={completeTask}
-        onUpdateFollowUpStatus={updateFollowUpStatus}
-        onDeleteTask={deleteTask}
+        loading={personalTasksLoading}
+        onCompleteTask={handleCompleteTask}
+        onUpdateFollowUpStatus={handleUpdateFollowUpStatus}
+        onUpdateStatus={async (taskId: string, status: JobStatus) => {
+          // Map UI status to API status format
+          const apiStatus = status === 'To-do' ? 'to-do' : 
+                           status === 'In Progress' ? 'inprogress' : 
+                           'completed';
+          
+          try {
+            await taskService.updatePersonalTaskStatus(taskId, apiStatus);
+            // Refresh personal tasks after status update
+            await fetchPersonalTasks();
+          } catch (error) {
+            console.error('Error updating task status:', error);
+          }
+        }}
+        onDeleteTask={handleDeleteTask}
       />
 
-      {/* Completed Tasks */}
-      <CompletedTasks
-        completedTasks={completedTasksList}
-        filterPriority={filterPriority}
-        searchQuery={searchQuery}
-        onSetFilterPriority={setFilterPriority}
-        onRestoreTask={restoreTask}
-        onDeleteTask={deleteCompletedTask}
-      />
     </div>
   );
 }

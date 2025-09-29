@@ -55,6 +55,7 @@ export interface LoginResponse {
   message: string;
   user?: User;
   token?: string;
+  tasks?: any[]; // Add tasks to login response
 }
 
 class AuthService {
@@ -134,8 +135,8 @@ class AuthService {
       // Make real API call to Express backend using the configured api instance
       const response = await api.post('/api/auth/login', payload);
 
-      // Extract data from response - your API returns accessToken and user
-      const { accessToken, user } = response.data.data;
+      // Extract data from response - your API returns accessToken, user, and tasks
+      const { accessToken, user, tasks } = response.data.data;
       
       // Store token in memory and localStorage for persistence
       setAccessToken(accessToken);
@@ -144,13 +145,18 @@ class AuthService {
       if (typeof window !== 'undefined') {
         localStorage.setItem('authToken', accessToken);
         localStorage.setItem('userData', JSON.stringify(user));
+        // Store tasks in localStorage for immediate access
+        if (tasks) {
+          localStorage.setItem('userTasks', JSON.stringify(tasks));
+        }
       }
 
       return {
         success: true,
         message: 'Login successful',
         user: user,
-        token: accessToken
+        token: accessToken,
+        tasks: tasks
       };
     } catch (error) {
       console.error('AuthService: Error logging in user:', error);
@@ -190,6 +196,7 @@ class AuthService {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('userData');
         localStorage.removeItem('authToken');
+        localStorage.removeItem('userTasks');
       }
       
       return {
@@ -204,6 +211,7 @@ class AuthService {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('userData');
         localStorage.removeItem('authToken');
+        localStorage.removeItem('userTasks');
       }
       
       return {
@@ -211,6 +219,24 @@ class AuthService {
         message: 'Logout completed (local cleanup)'
       };
     }
+  }
+
+  /**
+   * Get user tasks from localStorage
+   */
+  getUserTasks(): any[] | null {
+    if (typeof window !== 'undefined') {
+      const userTasks = localStorage.getItem('userTasks');
+      if (userTasks) {
+        try {
+          return JSON.parse(userTasks);
+        } catch (error) {
+          console.error('Error parsing user tasks:', error);
+          return null;
+        }
+      }
+    }
+    return null;
   }
 
   /**

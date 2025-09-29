@@ -11,8 +11,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
 import { getTeams, type Team } from "@/services/teamService";
 
 interface TeamSelectionDialogProps {
@@ -39,7 +37,7 @@ export function TeamSelectionDialog({
   initialSelections,
 }: TeamSelectionDialogProps) {
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
-  const [selectedRecruiterIds, setSelectedRecruiterIds] = useState<string[]>([]);
+  const [selectedRecruiterId, setSelectedRecruiterId] = useState<string>("");
   const [teams, setTeams] = useState<Team[]>([]);
   const [isLoadingTeams, setIsLoadingTeams] = useState(false);
 
@@ -69,37 +67,27 @@ export function TeamSelectionDialog({
   useEffect(() => {
     if (initialSelections) {
       setSelectedTeamId(initialSelections.teamId || "");
-      setSelectedRecruiterIds(initialSelections.recruiterIds || []);
+      setSelectedRecruiterId(initialSelections.recruiterIds?.[0] || "");
     }
   }, [initialSelections, open]);
 
   // Reset recruiters when team changes
   useEffect(() => {
     if (selectedTeamId && !initialSelections?.recruiterIds) {
-      setSelectedRecruiterIds([]);
+      setSelectedRecruiterId("");
     }
   }, [selectedTeamId, initialSelections?.recruiterIds]);
 
   const handleTeamChange = (teamId: string) => {
     setSelectedTeamId(teamId);
-    // Reset recruiter selections when team changes (unless it's initial load)
+    // Reset recruiter selection when team changes (unless it's initial load)
     if (!initialSelections?.recruiterIds) {
-      setSelectedRecruiterIds([]);
+      setSelectedRecruiterId("");
     }
   };
 
-  const handleRecruiterToggle = (recruiterId: string) => {
-    setSelectedRecruiterIds(prev => {
-      if (prev.includes(recruiterId)) {
-        return prev.filter(id => id !== recruiterId);
-      } else {
-        return [...prev, recruiterId];
-      }
-    });
-  };
-
-  const removeRecruiter = (recruiterId: string) => {
-    setSelectedRecruiterIds(prev => prev.filter(id => id !== recruiterId));
+  const handleRecruiterChange = (recruiterId: string) => {
+    setSelectedRecruiterId(recruiterId);
   };
 
   const handleSave = () => {
@@ -113,10 +101,10 @@ export function TeamSelectionDialog({
         id: selectedTeam.teamLeadId._id,
         name: selectedTeam.teamLeadId.name
       } : undefined,
-      recruiters: selectedRecruiterIds.map(recruiterId => {
-        const recruiter = selectedTeam?.recruiters.find(r => r._id === recruiterId);
-        return recruiter ? { id: recruiter._id, name: recruiter.name } : null;
-      }).filter(Boolean) as { id: string; name: string }[],
+      recruiters: selectedRecruiterId ? (() => {
+        const recruiter = selectedTeam?.recruiters.find(r => r._id === selectedRecruiterId);
+        return recruiter ? [{ id: recruiter._id, name: recruiter.name }] : [];
+      })() : [],
     };
 
     onSave(selections);
@@ -127,10 +115,10 @@ export function TeamSelectionDialog({
     // Reset to initial values
     if (initialSelections) {
       setSelectedTeamId(initialSelections.teamId || "");
-      setSelectedRecruiterIds(initialSelections.recruiterIds || []);
+      setSelectedRecruiterId(initialSelections.recruiterIds?.[0] || "");
     } else {
       setSelectedTeamId("");
-      setSelectedRecruiterIds([]);
+      setSelectedRecruiterId("");
     }
     onClose();
   };
@@ -190,50 +178,28 @@ export function TeamSelectionDialog({
             </div>
           )}
 
-          {/* Recruiter Selection (Multiple) */}
+          {/* Recruiter Selection (Single) */}
           {selectedTeam && (
             <div className="space-y-2">
-              <Label>Recruiters</Label>
-              <div className="space-y-3">
-                {/* Selected Recruiters Display */}
-                {selectedRecruiterIds.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {selectedRecruiterIds.map(recruiterId => {
-                      const recruiter = selectedTeam.recruiters.find(r => r._id === recruiterId);
-                      return recruiter ? (
-                        <Badge key={recruiterId} variant="secondary" className="flex items-center gap-1">
-                          {recruiter.name}
-                          <X
-                            className="h-3 w-3 cursor-pointer"
-                            onClick={() => removeRecruiter(recruiterId)}
-                          />
-                        </Badge>
-                      ) : null;
-                    })}
-                  </div>
-                )}
-
-                {/* Recruiter Selection Dropdown */}
-                <Select
-                  value=""
-                  onValueChange={handleRecruiterToggle}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select recruiters" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {selectedTeam.recruiters.map((recruiter) => (
-                      <SelectItem 
-                        key={recruiter._id} 
-                        value={recruiter._id}
-                      >
-                        {recruiter.name}
-                        {selectedRecruiterIds.includes(recruiter._id) && " ✓"}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <Label>Recruiter</Label>
+              <Select
+                value={selectedRecruiterId}
+                onValueChange={handleRecruiterChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a recruiter" />
+                </SelectTrigger>
+                <SelectContent>
+                  {selectedTeam.recruiters.map((recruiter) => (
+                    <SelectItem 
+                      key={recruiter._id} 
+                      value={recruiter._id}
+                    >
+                      {recruiter.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
         </div>

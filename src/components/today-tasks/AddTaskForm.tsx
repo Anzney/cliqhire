@@ -10,27 +10,50 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { AddTaskFormData } from "./types";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface AddTaskFormProps {
   onClose: () => void;
-  onSubmit?: (taskData: AddTaskFormData) => void;
+  onSubmit?: (taskData: { title: string; description: string; category: string; dueDate: string }) => void;
+  initialValues?: { title: string; description: string; category: string; dueDate: string };
 }
 
-export function AddTaskForm({ onClose, onSubmit }: AddTaskFormProps) {
-  const [formData, setFormData] = useState<AddTaskFormData>({
-    title: '',
-    description: '',
-    priority: 'medium',
-    category: 'other',
-    dueDate: '',
-    dueTime: '',
-    // Follow-up specific fields
-    followUpType: 'other',
-    relatedCandidate: '',
-    relatedJob: '',
-    relatedClient: ''
+export function AddTaskForm({ onClose, onSubmit, initialValues }: AddTaskFormProps) {
+  const [formData, setFormData] = useState({
+    title: initialValues?.title || '',
+    description: initialValues?.description || '',
+    category: initialValues?.category || 'other',
+    dueDate: initialValues?.dueDate || '',
   });
+
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    initialValues?.dueDate ? new Date(initialValues.dueDate) : undefined
+  );
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    if (date) {
+      setFormData(prev => ({ 
+        ...prev, 
+        dueDate: format(date, 'yyyy-MM-dd') 
+      }));
+    } else {
+      setFormData(prev => ({ 
+        ...prev, 
+        dueDate: '' 
+      }));
+    }
+    setIsDatePickerOpen(false);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,130 +80,59 @@ export function AddTaskForm({ onClose, onSubmit }: AddTaskFormProps) {
       </div>
       
       <div>
-        <Label htmlFor="description">Description (Optional)</Label>
+        <Label htmlFor="description">Description</Label>
         <Textarea
           id="description"
           value={formData.description}
           onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
           placeholder="Enter task description..."
           rows={3}
+          required
         />
       </div>
       
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="priority">Priority</Label>
-          <Select value={formData.priority} onValueChange={(value: 'high' | 'medium' | 'low') => 
-            setFormData(prev => ({ ...prev, priority: value }))
-          }>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="high">High</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="low">Low</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div>
-          <Label htmlFor="category">Category</Label>
-          <Select value={formData.category} onValueChange={(value: 'follow-up' | 'admin' | 'research' | 'meeting' | 'other') => 
-            setFormData(prev => ({ ...prev, category: value }))
-          }>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="follow-up">Follow-up</SelectItem>
-              <SelectItem value="admin">Admin</SelectItem>
-              <SelectItem value="research">Research</SelectItem>
-              <SelectItem value="meeting">Meeting</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <div>
+        <Label htmlFor="category">Category</Label>
+        <Select value={formData.category} onValueChange={(value: 'follow-up' | 'admin' | 'research' | 'meeting' | 'other') => 
+          setFormData(prev => ({ ...prev, category: value }))
+        }>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="follow-up">Follow-up</SelectItem>
+            <SelectItem value="admin">Admin</SelectItem>
+            <SelectItem value="research">Research</SelectItem>
+            <SelectItem value="meeting">Meeting</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       
-      {/* Follow-up specific fields */}
-      {formData.category === 'follow-up' && (
-        <div className="space-y-4 p-4 bg-blue-50 rounded-lg">
-          <h4 className="font-medium text-blue-900">Follow-up Details</h4>
-          
-          <div>
-            <Label htmlFor="followUpType">Follow-up Type</Label>
-            <Select value={formData.followUpType} onValueChange={(value: 'cv-received' | 'candidate-response' | 'client-feedback' | 'interview-scheduled' | 'offer-sent' | 'other') => 
-              setFormData(prev => ({ ...prev, followUpType: value }))
-            }>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cv-received">CV Received</SelectItem>
-                <SelectItem value="candidate-response">Candidate Response</SelectItem>
-                <SelectItem value="client-feedback">Client Feedback</SelectItem>
-                <SelectItem value="interview-scheduled">Interview Scheduled</SelectItem>
-                <SelectItem value="offer-sent">Offer Sent</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <Label htmlFor="relatedCandidate">Related Candidate (Optional)</Label>
-              <Input
-                id="relatedCandidate"
-                value={formData.relatedCandidate}
-                onChange={(e) => setFormData(prev => ({ ...prev, relatedCandidate: e.target.value }))}
-                placeholder="Candidate name..."
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="relatedJob">Related Job (Optional)</Label>
-              <Input
-                id="relatedJob"
-                value={formData.relatedJob}
-                onChange={(e) => setFormData(prev => ({ ...prev, relatedJob: e.target.value }))}
-                placeholder="Job title..."
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="relatedClient">Related Client (Optional)</Label>
-              <Input
-                id="relatedClient"
-                value={formData.relatedClient}
-                onChange={(e) => setFormData(prev => ({ ...prev, relatedClient: e.target.value }))}
-                placeholder="Client name..."
-              />
-            </div>
-          </div>
-        </div>
-      )}
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="dueDate">Due Date (Optional)</Label>
-          <Input
-            id="dueDate"
-            type="date"
-            value={formData.dueDate}
-            onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
-          />
-        </div>
-        
-        <div>
-          <Label htmlFor="dueTime">Due Time (Optional)</Label>
-          <Input
-            id="dueTime"
-            type="time"
-            value={formData.dueTime}
-            onChange={(e) => setFormData(prev => ({ ...prev, dueTime: e.target.value }))}
-          />
-        </div>
+      <div>
+        <Label>Due Date (Optional)</Label>
+        <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !selectedDate && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={handleDateSelect}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
       </div>
       
       <div className="flex justify-end gap-2 pt-4">
@@ -188,7 +140,7 @@ export function AddTaskForm({ onClose, onSubmit }: AddTaskFormProps) {
           Cancel
         </Button>
         <Button type="submit">
-          Add Task
+          {initialValues ? 'Update Task' : 'Add Task'}
         </Button>
       </div>
     </form>

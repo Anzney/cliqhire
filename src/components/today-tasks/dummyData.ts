@@ -13,7 +13,7 @@ export const dummyAssignedJobs: AssignedJob[] = [
     deadline: "2024-01-15",
     aemsDeadline: "2024-01-12",
     candidatesCount: 8,
-    status: "active",
+    status: "In Progress",
     recruiter: "John Smith"
   },
   {
@@ -25,7 +25,7 @@ export const dummyAssignedJobs: AssignedJob[] = [
     deadline: "2024-01-20",
     aemsDeadline: "2024-01-17",
     candidatesCount: 5,
-    status: "active",
+    status: "To-do",
     recruiter: "Sarah Johnson"
   },
   {
@@ -37,7 +37,7 @@ export const dummyAssignedJobs: AssignedJob[] = [
     deadline: "2024-01-25",
     aemsDeadline: "2024-01-22",
     candidatesCount: 12,
-    status: "paused",
+    status: "To-do",
     recruiter: "Mike Chen"
   },
   {
@@ -49,7 +49,7 @@ export const dummyAssignedJobs: AssignedJob[] = [
     deadline: "2024-01-18",
     aemsDeadline: "2024-01-15",
     candidatesCount: 6,
-    status: "active",
+    status: "In Progress",
     recruiter: "Emily Davis"
   },
   {
@@ -61,7 +61,7 @@ export const dummyAssignedJobs: AssignedJob[] = [
     deadline: "2024-01-22",
     aemsDeadline: "2024-01-19",
     candidatesCount: 9,
-    status: "active",
+    status: "In Progress",
     recruiter: "Alex Rodriguez"
   },
   {
@@ -73,7 +73,7 @@ export const dummyAssignedJobs: AssignedJob[] = [
     deadline: "2024-01-28",
     aemsDeadline: "2024-01-25",
     candidatesCount: 4,
-    status: "paused",
+    status: "To-do",
     recruiter: "Lisa Wang"
   },
   {
@@ -85,7 +85,7 @@ export const dummyAssignedJobs: AssignedJob[] = [
     deadline: "2024-01-16",
     aemsDeadline: "2024-01-13",
     candidatesCount: 11,
-    status: "active",
+    status: "In Progress",
     recruiter: "David Kim"
   },
   {
@@ -97,7 +97,7 @@ export const dummyAssignedJobs: AssignedJob[] = [
     deadline: "2024-01-24",
     aemsDeadline: "2024-01-21",
     candidatesCount: 7,
-    status: "completed",
+    status: "Completed",
     recruiter: "Maria Garcia"
   },
   {
@@ -109,7 +109,7 @@ export const dummyAssignedJobs: AssignedJob[] = [
     deadline: "2024-01-19",
     aemsDeadline: "2024-01-16",
     candidatesCount: 15,
-    status: "active",
+    status: "In Progress",
     recruiter: "Tom Wilson"
   },
   {
@@ -121,7 +121,7 @@ export const dummyAssignedJobs: AssignedJob[] = [
     deadline: "2024-01-26",
     aemsDeadline: "2024-01-23",
     candidatesCount: 9,
-    status: "active",
+    status: "In Progress",
     recruiter: "Jennifer Lee"
   },
   {
@@ -133,7 +133,7 @@ export const dummyAssignedJobs: AssignedJob[] = [
     deadline: "2024-01-17",
     aemsDeadline: "2024-01-14",
     candidatesCount: 6,
-    status: "paused",
+    status: "To-do",
     recruiter: "Robert Brown"
   },
   {
@@ -145,7 +145,7 @@ export const dummyAssignedJobs: AssignedJob[] = [
     deadline: "2024-01-30",
     aemsDeadline: "2024-01-27",
     candidatesCount: 4,
-    status: "active",
+    status: "In Progress",
     recruiter: "Amanda Taylor"
   },
   {
@@ -157,7 +157,7 @@ export const dummyAssignedJobs: AssignedJob[] = [
     deadline: "2024-01-21",
     aemsDeadline: "2024-01-18",
     candidatesCount: 8,
-    status: "active",
+    status: "In Progress",
     recruiter: "Kevin Martinez"
   },
   {
@@ -169,7 +169,7 @@ export const dummyAssignedJobs: AssignedJob[] = [
     deadline: "2024-01-23",
     aemsDeadline: "2024-01-20",
     candidatesCount: 12,
-    status: "active",
+    status: "In Progress",
     recruiter: "Rachel Green"
   },
   {
@@ -181,7 +181,7 @@ export const dummyAssignedJobs: AssignedJob[] = [
     deadline: "2024-01-27",
     aemsDeadline: "2024-01-24",
     candidatesCount: 7,
-    status: "completed",
+    status: "Completed",
     recruiter: "James White"
   },
   {
@@ -193,7 +193,7 @@ export const dummyAssignedJobs: AssignedJob[] = [
     deadline: "2024-02-01",
     aemsDeadline: "2024-01-29",
     candidatesCount: 5,
-    status: "paused",
+    status: "To-do",
     recruiter: "Michelle Adams"
   },
   {
@@ -205,7 +205,7 @@ export const dummyAssignedJobs: AssignedJob[] = [
     deadline: "2024-02-05",
     aemsDeadline: "2024-02-02",
     candidatesCount: 3,
-    status: "active",
+    status: "In Progress",
     recruiter: "Daniel Clark"
   },
   {
@@ -217,7 +217,7 @@ export const dummyAssignedJobs: AssignedJob[] = [
     deadline: "2024-01-29",
     aemsDeadline: "2024-01-26",
     candidatesCount: 10,
-    status: "active",
+    status: "In Progress",
     recruiter: "Stephanie Hall"
   },
   {
@@ -229,7 +229,7 @@ export const dummyAssignedJobs: AssignedJob[] = [
     deadline: "2024-01-25",
     aemsDeadline: "2024-01-22",
     candidatesCount: 6,
-    status: "active",
+    status: "In Progress",
     recruiter: "Christopher Young"
   },
   {
@@ -241,7 +241,7 @@ export const dummyAssignedJobs: AssignedJob[] = [
     deadline: "2024-02-03",
     aemsDeadline: "2024-01-31",
     candidatesCount: 8,
-    status: "paused",
+    status: "To-do",
     recruiter: "Nicole King"
   }
 ];

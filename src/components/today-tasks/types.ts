@@ -4,13 +4,16 @@ export interface AssignedJob {
   id: string;
   jobTitle: string;
   clientName: string;
-  location: string;
-  priority: "high" | "medium" | "low";
-  deadline: string;
-  aemsDeadline?: string; // Optional AEMS deadline field
   candidatesCount: number;
-  status: "active" | "paused" | "completed";
-  recruiter: string;
+  status: "To-do" | "In Progress" | "Completed";
+  // Additional fields from API
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  _id: string;
+  position: string;
+  jobId: string;
+  clientId: string;
 }
 
 export interface Interview {
@@ -36,8 +39,8 @@ export interface PersonalTask {
   priority: "high" | "medium" | "low";
   dueDate?: string;
   dueTime?: string;
-  status: "pending" | "in-progress" | "completed";
-  category: "follow-up" | "admin" | "research" | "meeting" | "other";
+  status: "to-do" | "inprogress" | "completed";
+  category: string; // Allow any string since API can return different categories
   createdAt: string;
   // Follow-up specific fields
   followUpType?: "cv-received" | "candidate-response" | "client-feedback" | "interview-scheduled" | "offer-sent" | "other";
