@@ -130,9 +130,11 @@ export function PipelineJobCard({
   const [disqualificationDialog, setDisqualificationDialog] = React.useState<{
     isOpen: boolean;
     candidate: Candidate | null;
+    newStatus: string | null;
   }>({
     isOpen: false,
     candidate: null,
+    newStatus: null,
   });
 
   // Local stage store
@@ -186,15 +188,6 @@ export function PipelineJobCard({
         isOpen: true,
         candidateName: candidate.name,
         message: validation.message || null,
-      });
-      return;
-    }
-
-    // If changing to Disqualified, show disqualification dialog
-    if (newStage === 'Disqualified') {
-      setDisqualificationDialog({
-        isOpen: true,
-        candidate,
       });
       return;
     }
@@ -326,6 +319,16 @@ export function PipelineJobCard({
       return;
     }
 
+    // If changing to any disqualification status, show disqualification dialog
+    if (newStatus === 'Disqualified' || newStatus === 'Disqualified By Client' || newStatus === 'Offer Rejected/Disqualified') {
+      setDisqualificationDialog({
+        isOpen: true,
+        candidate,
+        newStatus,
+      });
+      return;
+    }
+
     setStatusChangeDialog({
       isOpen: true,
       candidate,
@@ -397,6 +400,7 @@ export function PipelineJobCard({
     setDisqualificationDialog({
       isOpen: false,
       candidate: null,
+      newStatus: null,
     });
   };
 
@@ -409,7 +413,7 @@ export function PipelineJobCard({
         const fieldsUpdateResult = await RecruiterPipelineService.updateStageFields(
           job.id,
           disqualificationDialog.candidate.id,
-          'Disqualified',
+          disqualificationDialog.candidate.currentStage,
           {
             fields: {
               disqualificationStage: data.disqualificationStage,
@@ -424,8 +428,20 @@ export function PipelineJobCard({
           throw new Error(fieldsUpdateResult.error || 'Failed to update disqualification fields');
         }
 
-        // Then call API to update candidate stage to Disqualified
-        await onUpdateCandidateStage(job.id, disqualificationDialog.candidate.id, 'Disqualified');
+        // Then call API to update candidate status to Disqualified (keeping the same stage)
+        // Note: We always send "Disqualified" to the backend regardless of the specific UI status
+        await updateCandidateStatus(job.id, disqualificationDialog.candidate.id, {
+          status: 'Disqualified',
+          stage: mapUIStageToBackendStage(disqualificationDialog.candidate.currentStage),
+          notes: `Disqualified: ${data.disqualificationReason}`
+        });
+        
+        // Notify the parent component about the update with the specific UI status
+        onCandidateUpdate?.(job.id, {
+          ...disqualificationDialog.candidate,
+          status: disqualificationDialog.newStatus! as any,
+          subStatus: disqualificationDialog.newStatus!
+        });
         
         handleCloseDisqualificationDialog();
       } catch (error) {
