@@ -217,7 +217,7 @@ export function TemplatesList({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Email Template</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{deleteTemplate?.name}"? This action cannot be undone.
+              Are you sure you want to delete &quot;{deleteTemplate?.name}&quot;? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

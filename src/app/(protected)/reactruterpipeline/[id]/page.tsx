@@ -299,7 +299,7 @@ const Page = () => {
       setDisqualificationDialog({
         isOpen: true,
         candidate,
-
+        newStatus,
       });
       return;
     }

@@ -347,6 +347,7 @@ export function PipelineJobCard({
       setDisqualificationDialog({
         isOpen: true,
         candidate,
+        newStatus,
       });
       return;
     }

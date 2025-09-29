@@ -15,7 +15,6 @@ import {
   BarChart,
   Search,
   DollarSign,
-  Mail,
   Route,
   LockKeyhole,
   ListTodo
@@ -24,23 +23,21 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
 const menuItems = [
-  { name: "Home", icon: Home, href: "/" },
-  { name: "Clients", icon: Building2, href: "/clients" },
-  { name: "Jobs", icon: Briefcase, href: "/jobs" },
-  { name: "Candidates", icon: Users, href: "/candidates" }, // Line after "Candidates"
-  { name: "Team Members", icon: Users, href: "/teammembers" },
-  { name: "Recruitment Pipeline", icon: Route, href: "/reactruterpipeline" },
-  { name: "Email", icon: Mail, href: "/emails" },
-  { name: "User Access", icon: LockKeyhole, href: "/user-access" },
-
-  // { name: "Placements", icon: UserCheck, href: "/placements" },
-  // { name: "Activities", icon: Calendar, href: "/activities" },
-
-  // { name: "Inbox", icon: MessageSquare, href: "/inbox" }, // Line after "Inbox"
-  // { name: "Account & Finance", icon: DollarSign, href: "/finance" },
-  // { name: "Reports", icon: BarChart, href: "/reports" },
-  // { name: "Settings", icon: Settings, href: "/settings" },
-  // { name: "Administration", icon: Lock, href: "/admin" },
+  { name: "Home", icon: Home, href: "/", permission: "HOME" },
+  { name: "Today's Tasks", icon: ListTodo , href: "/today-tasks", permission: "TODAY_TASKS" },
+  { name: "Clients", icon: Building2, href: "/clients", permission: "CLIENTS" },
+  { name: "Jobs", icon: Briefcase, href: "/jobs", permission: "JOBS" },
+  { name: "Candidates", icon: Users, href: "/candidates", permission: "CANDIDATE" },
+  { name: "Recruitment Pipeline", icon: Route, href: "/reactruterpipeline", permission: "RECRUITMENT_PIPELINE" },
+  { name: "Team Members", icon: Users, href: "/teammembers", permission: "TEAM_MEMBERS" },
+  { name: "User Access", icon: LockKeyhole, href: "/user-access", permission: "USER_ACCESS" },
+  // { name: "Placements", icon: UserCheck, href: "/placements", permission: "PLACEMENTS" },
+  // { name: "Activities", icon: Calendar, href: "/activities", permission: "ACTIVITIES" },
+  // { name: "Inbox", icon: MessageSquare, href: "/inbox", permission: "INBOX" },
+  // { name: "Account & Finance", icon: DollarSign, href: "/finance", permission: "FINANCE" },
+  // { name: "Reports", icon: BarChart, href: "/reports", permission: "REPORTS" },
+  // { name: "Settings", icon: Settings, href: "/settings", permission: "SETTINGS" },
+  // { name: "Administration", icon: Lock, href: "/admin", permission: "ADMIN" },
 ];
 
 export function Sidebar() {
@@ -69,12 +66,7 @@ export function Sidebar() {
       <nav className="flex-1 px-2">
         <ul>
           {menuItems
-            .filter(item => {
-              // Hide "Today's Tasks" for Admins
-              if (isAdmin && item.permission === 'TODAY_TASKS') return false;
-              // Admins see everything else; non-admins see based on permissions (HOME always visible)
-              return isAdmin || item.permission === "HOME" || finalPermissions.includes(item.permission);
-            })
+            .filter(item => isAdmin || item.permission === "HOME" || finalPermissions.includes(item.permission))
             .map((item, index) => (
               <li key={index}>
                 <Link

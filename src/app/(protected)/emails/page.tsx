@@ -328,7 +328,7 @@ export default function EmailsPage() {
                           +
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-gray-900">Add "{emailInput}"</div>
+                          <div className="text-sm font-medium text-gray-900">Add &quot;{emailInput}&quot;</div>
                           <div className="text-xs text-gray-500">Press Enter to add</div>
                         </div>
                       </button>

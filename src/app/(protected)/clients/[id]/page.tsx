@@ -28,6 +28,7 @@ import { getClientById } from "@/services/clientService";
 import { ContractSection } from "@/components/clients/contract/contract-section";
 import { CreateJobRequirementForm } from "@/components/new-jobs/create-jobs-form";
 import { useQuery } from "@tanstack/react-query";
+import { EmailTemplatesContent } from "@/components/clients/email-templates";
 
 interface PageProps {
   params: { id: string };
