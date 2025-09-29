@@ -119,9 +119,11 @@ export function PipelineJobCard({
   const [disqualificationDialog, setDisqualificationDialog] = React.useState<{
     isOpen: boolean;
     candidate: Candidate | null;
+    newStatus: string | null;
   }>({
     isOpen: false,
     candidate: null,
+    newStatus: null,
   });
 
   // Local stage store
@@ -388,6 +390,7 @@ export function PipelineJobCard({
     setDisqualificationDialog({
       isOpen: false,
       candidate: null,
+      newStatus: null,
     });
   };
 
@@ -395,7 +398,6 @@ export function PipelineJobCard({
     if (disqualificationDialog.candidate) {
       try {
         console.log('Disqualifying candidate:', disqualificationDialog.candidate.name, data);
-        
         // Single API call to update candidate status with all disqualification data
         await updateCandidateStatus(job.id, disqualificationDialog.candidate.id, {
           status: 'Disqualified',
@@ -411,6 +413,7 @@ export function PipelineJobCard({
         onCandidateUpdate?.(job.id, {
           ...disqualificationDialog.candidate,
           status: 'Disqualified',
+
         });
         
         handleCloseDisqualificationDialog();

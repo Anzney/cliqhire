@@ -105,9 +105,11 @@ const Page = () => {
   const [disqualificationDialog, setDisqualificationDialog] = React.useState<{
     isOpen: boolean;
     candidate: Candidate | null;
+    newStatus: string | null;
   }>({
     isOpen: false,
     candidate: null,
+    newStatus: null,
   });
 
   // Filter state for stage filtering
@@ -273,6 +275,7 @@ const Page = () => {
       setDisqualificationDialog({
         isOpen: true,
         candidate,
+
       });
       return;
     }
@@ -354,6 +357,7 @@ const Page = () => {
     setDisqualificationDialog({
       isOpen: false,
       candidate: null,
+      newStatus: null,
     });
   };
 
@@ -396,6 +400,7 @@ const Page = () => {
             )
           };
         });
+
         
         handleCloseDisqualificationDialog();
       } catch (error: any) {
