@@ -11,7 +11,6 @@ import {
   TriangleAlert,
   Loader,
   FilePen,
-  Mail,
 } from "lucide-react";
 import { useRouter, notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -25,7 +24,6 @@ import TeamContent from "@/components/clients/team/team-content";
 import { ContactsContent } from "@/components/clients/contacts/contacts-content";
 import { HistoryContent } from "@/components/clients/history/history-content";
 import { JobsContent } from "@/components/clients/jobs/jobs-content";
-import { EmailTemplatesContent } from "@/components/clients/email-templates";
 
 import { getClientById } from "@/services/clientService";
 import { ContractSection } from "@/components/clients/contract/contract-section";
@@ -204,13 +202,6 @@ export default function ClientPage({ params }: PageProps) {
             <Clock className="h-4 w-4" />
             History
           </TabsTrigger>
-          <TabsTrigger
-            value="EmailTemplates"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
-          >
-            <Mail className="h-4 w-4" />
-            Email Templates
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="Jobs" className="p-0 mt-0">
@@ -247,10 +238,6 @@ export default function ClientPage({ params }: PageProps) {
 
         <TabsContent value="Contract" className="p-4">
           <ContractSection clientId={id} clientData={client} />
-        </TabsContent>
-
-        <TabsContent value="EmailTemplates" className="p-4">
-          <EmailTemplatesContent clientId={id} clientData={client} />
         </TabsContent>
       </Tabs>
 
