@@ -435,7 +435,7 @@ export const getStageFields = (stage: string, candidate: any): StageField[] => {
       return [
         {
           key: "hireDate",
-          label: "Hire Date",
+          label: "Joining Date",
           value: formatApiDate(hiredData.hireDate),
           icon: <CalendarDays className="h-4 w-4" />,
           color: "bg-green-50 text-green-600",
