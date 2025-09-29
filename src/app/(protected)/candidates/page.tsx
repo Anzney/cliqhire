@@ -2,7 +2,7 @@
 import { Candidate, candidateService } from "@/services/candidateService";
 import { Table, TableHeader, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Loader } from "lucide-react";
-import { CandidatesEmptyState } from "./empty-states";
+import { CandidatesEmptyState } from "../../../components/candidates/empty-states";
 // import Link from 'next/link'
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -73,7 +73,6 @@ export default function CandidatesPage() {
         buttonText="Create Candidate"
       />
 
-
       <div className="flex-1">
         {initialLoading ? (
           <Table>
@@ -105,28 +104,28 @@ export default function CandidatesPage() {
                   className="cursor-pointer hover:bg-gray-100"
                   onClick={(e) => {
                     // Don't navigate if clicking on the status badge
-                    if (!(e.target as HTMLElement).closest('.candidate-status-badge')) {
+                    if (!(e.target as HTMLElement).closest(".candidate-status-badge")) {
                       router.push(`/candidates/${candidate._id}`);
                     }
                   }}
                 >
-                  <TableCell className="text-sm font-medium">{candidate.name || 'N/A'}</TableCell>
-                  <TableCell className="text-sm">{candidate.email || 'N/A'}</TableCell>
-                  <TableCell className="text-sm">{candidate.phone || 'N/A'}</TableCell>
-                  <TableCell className="text-sm">{candidate.location || 'N/A'}</TableCell>
+                  <TableCell className="text-sm font-medium">{candidate.name || "N/A"}</TableCell>
+                  <TableCell className="text-sm">{candidate.email || "N/A"}</TableCell>
+                  <TableCell className="text-sm">{candidate.phone || "N/A"}</TableCell>
+                  <TableCell className="text-sm">{candidate.location || "N/A"}</TableCell>
                   <TableCell className="text-sm">
-                    <CandidateStatusBadge 
-                      id={candidate._id} 
-                      status={(candidate.status as any) || 'Active'} 
+                    <CandidateStatusBadge
+                      id={candidate._id}
+                      status={(candidate.status as any) || "Active"}
                       onStatusChange={handleStatusChange}
                     />
                   </TableCell>
-                  <TableCell className="text-sm">{candidate.experience || 'N/A'}</TableCell>
+                  <TableCell className="text-sm">{candidate.experience || "N/A"}</TableCell>
                   <TableCell className="text-sm">
                     {candidate.resume ? (
-                      <a 
-                        href={candidate.resume} 
-                        target="_blank" 
+                      <a
+                        href={candidate.resume}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:underline"
                         onClick={(e) => e.stopPropagation()}
@@ -134,7 +133,7 @@ export default function CandidatesPage() {
                         View Resume
                       </a>
                     ) : (
-                      'N/A'
+                      "N/A"
                     )}
                   </TableCell>
                 </TableRow>
