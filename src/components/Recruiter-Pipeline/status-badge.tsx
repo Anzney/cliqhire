@@ -17,8 +17,8 @@ export type ClientScreeningStatus = "Pending" | "Client Shortlisted" | "Disquali
 export type InterviewStatus = "Pending" | "Client Interviewed" | "Client Selected" | "Disqualified";
 export type VerificationStatus = "Document Pending" | "Document Verified" | "Offer Letter Sent" | "Offer Accepted" | "Offer Rejected" | "Disqualified";
 export type OnboardingStatus = "Pending" | "Completed";
-
 export type StatusType = SourcingStatus | ScreeningStatus | ClientScreeningStatus | InterviewStatus | VerificationStatus | OnboardingStatus;
+
 
 // Status options for each stage
 const statusOptions: Record<string, StatusType[]> = {
@@ -45,6 +45,7 @@ const statusColors: Record<StatusType, string> = {
   
   // Client Review statuses
   "Client Shortlisted": "bg-green-100 text-green-800 border-green-200",
+
   
   // Interview statuses
   "Client Interviewed": "bg-blue-100 text-blue-800 border-blue-200",
