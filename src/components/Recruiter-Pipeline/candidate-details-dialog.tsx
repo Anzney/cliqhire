@@ -250,6 +250,17 @@ export function CandidateDetailsDialog({
                      <p className="text-sm text-red-700">{localCandidate.disqualified?.disqualificationReason || localCandidate.notes || 'Not specified'}</p>
                    </div>
                  </div>
+
+                 {/* Row 3 */}
+                 <div className="flex items-start space-x-3">
+                   <div className="w-6 h-6 bg-red-100 rounded-md flex items-center justify-center flex-shrink-0">
+                     <FileText className="h-3 w-3 text-red-600" />
+                   </div>
+                   <div>
+                     <p className="text-sm font-medium text-red-900">Disqualification Feedback</p>
+                     <p className="text-sm text-red-700">{localCandidate.disqualified?.disqualificationFeedback || 'Not specified'}</p>
+                   </div>
+                 </div>
                  
                  <div className="flex items-start space-x-3">
                    <div className="w-6 h-6 bg-red-100 rounded-md flex items-center justify-center flex-shrink-0">
