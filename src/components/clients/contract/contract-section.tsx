@@ -13,6 +13,7 @@ import { ContractInformationTab } from "@/components/contract-forms/new-contract
 import { deleteContract, updateContract, addContract } from "@/services/clientContractService";
 import { toast } from "sonner";
 import { ClientContractInfo } from "@/components/create-client-modal/type";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ContractSectionProps {
   clientId: string;
@@ -66,6 +67,7 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
     contractForms: {},
   });
   const [isAddingContract, setIsAddingContract] = useState(false);
+  const queryClient = useQueryClient();
 
   // Function to map contract data to form data structure
   const mapContractDataToFormData = (contractData: any, businessType: string) => {
@@ -194,6 +196,8 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
       await updateContract(clientId, contractKey, updatedFormData);
       toast.success(`${editDialogOpen} contract updated successfully!`);
       setEditDialogOpen(null);
+      // Invalidate client data to refetch updated contract details
+      await queryClient.invalidateQueries({ queryKey: ["clientsData", clientId] });
       // Optional: Refresh client data to show updated values
       // You might want to call a refresh function here or update local state
     } catch (error) {
@@ -216,6 +220,8 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
 
       toast.success(`${deleteDialogOpen} contract deleted successfully!`);
       setDeleteDialogOpen(null);
+      // Invalidate client data to refetch and remove deleted contract
+      await queryClient.invalidateQueries({ queryKey: ["clientsData", clientId] });
 
       // Optional: Refresh client data to remove deleted contract
       // You might want to call a refresh function here or update local state
@@ -270,8 +276,8 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
       toast.success("Contract(s) added successfully!");
       handleCloseAddContractDialog();
 
-      // Refresh the page to show new contracts
-      window.location.reload();
+      // Invalidate client data to show new contracts without page reload
+      await queryClient.invalidateQueries({ queryKey: ["clientsData", clientId] });
     } catch (error) {
       console.error("Failed to add contract:", error);
       toast.error("Failed to add contract. Please try again.");
