@@ -123,9 +123,11 @@ const Page = () => {
   const [disqualificationDialog, setDisqualificationDialog] = useState<{
     isOpen: boolean;
     candidate: Candidate | null;
+    newStatus: string | null;
   }>({
     isOpen: false,
     candidate: null,
+    newStatus: null,
   });
 
   // Filter state for stage filtering
@@ -297,6 +299,7 @@ const Page = () => {
       setDisqualificationDialog({
         isOpen: true,
         candidate,
+
       });
       return;
     }
@@ -362,6 +365,7 @@ const Page = () => {
     setDisqualificationDialog({
       isOpen: false,
       candidate: null,
+      newStatus: null,
     });
   };
 
@@ -380,6 +384,7 @@ const Page = () => {
         });
         // Refresh the job data via React Query
         await queryClient.invalidateQueries({ queryKey: ["pipeline", id] });
+
         handleCloseDisqualificationDialog();
       } catch (error: any) {
         console.error('Error disqualifying candidate:', error);

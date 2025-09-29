@@ -138,9 +138,11 @@ export function PipelineJobCard({
   const [disqualificationDialog, setDisqualificationDialog] =useState<{
     isOpen: boolean;
     candidate: Candidate | null;
+    newStatus: string | null;
   }>({
     isOpen: false,
     candidate: null,
+    newStatus: null,
   });
 
   // Local stage store
@@ -423,6 +425,7 @@ export function PipelineJobCard({
     setDisqualificationDialog({
       isOpen: false,
       candidate: null,
+      newStatus: null,
     });
   };
 
@@ -447,6 +450,7 @@ export function PipelineJobCard({
         onCandidateUpdate?.(job.id, {
           ...disqualificationDialog.candidate,
           status: 'Disqualified',
+
         });
         
         handleCloseDisqualificationDialog();
