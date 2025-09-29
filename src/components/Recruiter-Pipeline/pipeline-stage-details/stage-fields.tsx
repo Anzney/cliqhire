@@ -105,7 +105,7 @@ export const getStageFields = (stage: string, candidate: any): StageField[] => {
           icon: <Users className="h-4 w-4" />,
           color: "bg-green-50 text-green-600",
           type: "select",
-          options: ["LinkedIn", "Indeed", "Referral", "Direct", "Other"]
+          options: ["LinkedIn", "Email", "Indeed", "Referral", "Direct", "Other"]
         },
         {
           key: "referredBy",
