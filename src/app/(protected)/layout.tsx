@@ -2,6 +2,9 @@ import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
 import { AuthGuard } from "@/components/AuthGuard"
 import { QueryProvider } from "@/contexts/query-provider";
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 export default function DashboardLayout({
   children,
 }: {
