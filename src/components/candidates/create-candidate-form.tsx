@@ -503,9 +503,9 @@ export default function CreateCandidateForm({
                 ></textarea>
               </div>
 
-              {/* Upload Your CV */}
+              {/* Upload CV */}
               <div className="space-y-2">
-                <Label htmlFor="cv">Upload Your CV</Label>
+                <Label htmlFor="cv">Upload CV</Label>
                 <div 
                   className="relative border-2 border-dashed border-gray-300 rounded-md p-6 text-center cursor-pointer hover:border-gray-400 transition-colors"
                   onClick={handleFileClick}
