@@ -118,7 +118,7 @@ export function ContactDetailsTab({ form, setIsContactModalOpen }: ContactDetail
           render={({ field }) => (
             <FormItem className="space-y-1 ml-2">
               <FormLabel>
-                Client Website<span className="text-red-700">*</span>
+                Client Website
               </FormLabel>
               <FormControl>
                 <Input
@@ -140,7 +140,7 @@ export function ContactDetailsTab({ form, setIsContactModalOpen }: ContactDetail
           render={({ field }) => (
             <FormItem className="space-y-1">
               <FormLabel>
-                Client LinkedIn Profile<span className="text-red-700">*</span>
+                Client LinkedIn Profile
               </FormLabel>
               <FormControl>
                 <Input
@@ -161,7 +161,7 @@ export function ContactDetailsTab({ form, setIsContactModalOpen }: ContactDetail
           render={({ field }) => (
             <FormItem className="space-y-1 ml-2">
               <FormLabel>
-                Google Maps Link<span className="text-red-700">*</span>
+                Google Maps Link
               </FormLabel>
               <FormControl>
                 <Input {...field} placeholder="https://maps.google.com/..." className="w-full" />

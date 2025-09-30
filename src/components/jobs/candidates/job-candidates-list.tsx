@@ -105,7 +105,7 @@ export const JobCandidatesList = forwardRef<JobCandidatesListRef, JobCandidatesL
           ) : (
             <div className="flex flex-col items-center justify-center h-48 text-gray-500 gap-3">
               <div>No candidates have been added to this job yet.</div>
-              <AddExistingCandidateDialog
+              {/* <AddExistingCandidateDialog
                 jobId={jobId}
                 jobTitle={jobTitle}
                 onCandidatesAdded={async () => {
@@ -117,7 +117,7 @@ export const JobCandidatesList = forwardRef<JobCandidatesListRef, JobCandidatesL
                     Add Candidate
                   </Button>
                 }
-              />
+              /> */}
             </div>
           )}
         </div>
