@@ -13,6 +13,8 @@ import { CandidateStatusBadge } from "@/components/candidate-status-badge";
 import { toast } from "sonner";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import CandidatePaginationControls from "@/components/candidates/CandidatePaginationControls";
+import CandidateFiltersInline from "@/components/candidates/CandidateFiltersInline";
+import { CandidateFilterState } from "@/components/candidates/CandidateFilters";
 
 const columsArr = [
   "Candidate Name",
@@ -33,15 +35,28 @@ export default function CandidatesPage() {
   });
   const candidates: Candidate[] = data?.candidates ?? [];
   const [open, setOpen] = useState(false);
+  const [filters, setFilters] = useState<CandidateFilterState>({ name: "", email: "", status: "" });
   // const [selected, setSelected] = useState("candidate");
 
   // Pagination state (client-side, similar to clients page)
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
 
-  // Derive paged candidates and totals (client-side pagination)
+  // Derive filtered + paged candidates and totals (client-side)
   const { pagedCandidates, totalCandidatesCalc, totalPagesCalc } = useMemo(() => {
-    const result: Candidate[] = initialLoading ? [] : candidates;
+    let result: Candidate[] = initialLoading ? [] : candidates;
+    // Apply filters
+    if (filters.name) {
+      const q = filters.name.toLowerCase();
+      result = result.filter((c) => (c.name || "").toLowerCase().includes(q));
+    }
+    if (filters.email) {
+      const q = filters.email.toLowerCase();
+      result = result.filter((c) => (c.email || "").toLowerCase().includes(q));
+    }
+    if (filters.status) {
+      result = result.filter((c) => (c.status || "").toLowerCase() === filters.status.toLowerCase());
+    }
     const totalCandidatesCalc = result.length;
     const totalPagesCalcRaw = Math.ceil(totalCandidatesCalc / pageSize);
     const totalPagesCalc = totalPagesCalcRaw > 0 ? totalPagesCalcRaw : 1;
@@ -51,7 +66,7 @@ export default function CandidatesPage() {
     const pagedCandidates = result.slice(startIndex, endIndex);
 
     return { pagedCandidates, totalCandidatesCalc, totalPagesCalc };
-  }, [candidates, currentPage, pageSize, initialLoading]);
+  }, [candidates, currentPage, pageSize, initialLoading, filters]);
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ candidateId, newStatus }: { candidateId: string; newStatus: string }) => {
@@ -90,7 +105,11 @@ export default function CandidatesPage() {
         initialLoading={false}
         heading="Candidates"
         buttonText="Create Candidate"
+        showFilterButton={false}
+        rightContent={<CandidateFiltersInline filters={filters} onChange={setFilters} />}
       />
+
+      {/* Inline filters injected into header via rightContent below */}
 
       {/* Table + Pagination */}
       <div className="flex-1 flex flex-col min-h-0">
@@ -174,7 +193,7 @@ export default function CandidatesPage() {
             handlePageChange={(page) => {
               if (page >= 1 && page <= totalPagesCalc) setCurrentPage(page);
             }}
-            candidatesLength={candidates.length}
+            candidatesLength={totalCandidatesCalc}
           />
         </div>
       </div>

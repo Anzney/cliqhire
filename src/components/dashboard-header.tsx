@@ -5,10 +5,12 @@ import { useState , useEffect } from 'react'
 
 type DashboardHeaderProps = {
   setOpen: (open: boolean) => void; 
-    setFilterOpen: (open: boolean) => void;
-    initialLoading: boolean;
-    heading: string;
-    buttonText: string;
+  setFilterOpen: (open: boolean) => void;
+  initialLoading: boolean;
+  heading: string;
+  buttonText: string;
+  showFilterButton?: boolean;
+  rightContent?: React.ReactNode;
 }
 
 const  Dashboardheader= ({
@@ -17,6 +19,8 @@ const  Dashboardheader= ({
     initialLoading,
     heading,
     buttonText,
+    showFilterButton = true,
+    rightContent,
 }:DashboardHeaderProps)=> {
 
   return (
@@ -35,10 +39,16 @@ const  Dashboardheader= ({
             {buttonText}
           </Button>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setFilterOpen(true)}>
-              <SlidersHorizontal className="h-4 w-4 mr-2" />
-              Filters
-            </Button>
+            {rightContent ? (
+              rightContent
+            ) : (
+              showFilterButton && (
+                <Button variant="outline" size="sm" onClick={() => setFilterOpen(true)}>
+                  <SlidersHorizontal className="h-4 w-4 mr-2" />
+                  Filters
+                </Button>
+              )
+            )}
             <Button 
               variant="outline" 
               size="sm" 
