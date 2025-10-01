@@ -258,6 +258,14 @@ class CandidateService {
       return apiResponse.data || apiResponse as any;
     } catch (error) {
       console.error('Error creating candidate:', error);
+      // Surface backend validation messages (e.g., duplicate email/phone)
+      if (axios.isAxiosError(error)) {
+        const respData: any = error.response?.data;
+        const backendMessage =
+          (respData && (respData.message || respData.error || respData.errors?.[0]?.message)) ||
+          error.message;
+        throw new Error(backendMessage);
+      }
       throw error;
     }
   }
