@@ -11,6 +11,7 @@ type DashboardHeaderProps = {
   buttonText: string;
   showFilterButton?: boolean;
   rightContent?: React.ReactNode;
+  onRefresh?: () => void;
 }
 
 const  Dashboardheader= ({
@@ -21,6 +22,7 @@ const  Dashboardheader= ({
     buttonText,
     showFilterButton = true,
     rightContent,
+    onRefresh,
 }:DashboardHeaderProps)=> {
 
   return (
@@ -52,8 +54,8 @@ const  Dashboardheader= ({
             <Button 
               variant="outline" 
               size="sm" 
-            //   onClick={() => fetchClients(currentPage, pageSize)}
-            //   disabled={initialLoading}
+              onClick={onRefresh}
+              disabled={initialLoading}
             >
               {initialLoading ? (
                 <>

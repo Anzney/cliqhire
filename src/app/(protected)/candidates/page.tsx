@@ -29,7 +29,7 @@ const columsArr = [
 export default function CandidatesPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data, isLoading: initialLoading } = useQuery({
+  const { data, isLoading: initialLoading, isFetching, refetch } = useQuery({
     queryKey: ["candidates"],
     queryFn: () => candidateService.getCandidates(),
   });
@@ -102,11 +102,15 @@ export default function CandidatesPage() {
       <Dashboardheader
         setOpen={setOpen}
         setFilterOpen={() => {}}
-        initialLoading={false}
+        initialLoading={isFetching}
         heading="Candidates"
         buttonText="Create Candidate"
         showFilterButton={false}
         rightContent={<CandidateFiltersInline filters={filters} onChange={setFilters} />}
+        onRefresh={() => {
+          // Ensure we reset to first page optionally if desired in future
+          refetch();
+        }}
       />
 
       {/* Inline filters injected into header via rightContent below */}
