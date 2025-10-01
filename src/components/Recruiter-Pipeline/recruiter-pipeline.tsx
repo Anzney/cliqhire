@@ -209,12 +209,18 @@ export function RecruiterPipeline() {
     const job = jobs.find((j) => j.id === jobId);
     if (!job) return;
 
-    if (!job.isExpanded && job.candidates.length === 0) {
-      // Load detailed data when expanding for the first time using React Query mutation
-      loadEntryMutation.mutate(jobId);
+    const willExpand = !job.isExpanded;
+
+    if (willExpand) {
+      // Optimistically expand immediately
+      setJobs((prev) => prev.map((j) => (j.id === jobId ? { ...j, isExpanded: true } : j)));
+      // If details not loaded yet, fetch in background
+      if ((job.candidates?.length || 0) === 0) {
+        loadEntryMutation.mutate(jobId);
+      }
     } else {
-      // Simply toggle the expansion state
-      setJobs((prev) => prev.map((job) => (job.id === jobId ? { ...job, isExpanded: !job.isExpanded } : job)));
+      // Collapse
+      setJobs((prev) => prev.map((j) => (j.id === jobId ? { ...j, isExpanded: false } : j)));
     }
   };
 
