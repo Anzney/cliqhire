@@ -108,7 +108,7 @@ export function CreateCandidateDialog({ open, onOpenChange, pipelineId, onSubmit
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>Name <span className="text-red-700">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="Full name" {...field} />
                   </FormControl>
@@ -122,7 +122,7 @@ export function CreateCandidateDialog({ open, onOpenChange, pipelineId, onSubmit
               name="profileLink"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Profile Link</FormLabel>
+                  <FormLabel>Profile Link <span className="text-red-700">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="LinkedIn or Profile URL" {...field} />
                   </FormControl>
