@@ -371,9 +371,12 @@ export function CreateClientModal({
       form.reset();
       setLoading(false);
       toast.success("Client created successfully");
-    } catch (error) {
+    } catch (error: any) {
       setLoading(false);
-      toast.error("Error creating client");
+      const message =
+        (error && typeof error === "object" && "message" in error && (error as Error).message) ||
+        "Error creating client";
+      toast.error(message);
     }
   };
 
