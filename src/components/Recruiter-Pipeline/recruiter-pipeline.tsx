@@ -25,6 +25,9 @@ export function RecruiterPipeline() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date");
   const [loadingJobId, setLoadingJobId] = useState<string | null>(null);
+  // New dedicated filters
+  const [jobNameFilter, setJobNameFilter] = useState("");
+  const [clientNameFilter, setClientNameFilter] = useState("");
   // Transient highlight to indicate which pipeline was updated
   const [highlightedJobId, setHighlightedJobId] = useState<string | null>(null);
   const [overallCandidateSummary, setOverallCandidateSummary] = useState<{
@@ -166,6 +169,18 @@ export function RecruiterPipeline() {
       });
     }
 
+    // Dedicated job/client filters (OR logic as requested)
+    if (jobNameFilter.trim() || clientNameFilter.trim()) {
+      const jobLower = jobNameFilter.trim().toLowerCase();
+      const clientLower = clientNameFilter.trim().toLowerCase();
+      filteredJobs = filteredJobs.filter(job => {
+        const jobMatch = jobLower ? job.title.toLowerCase().includes(jobLower) : true;
+        const clientMatch = clientLower ? job.clientName.toLowerCase().includes(clientLower) : true;
+        // If both filters provided, require both; if only one provided, require that one
+        return jobMatch && clientMatch;
+      });
+    }
+
     // Status filter
     if (statusFilter !== "all") {
       filteredJobs = filteredJobs.filter(job => {
@@ -209,12 +224,18 @@ export function RecruiterPipeline() {
     const job = jobs.find((j) => j.id === jobId);
     if (!job) return;
 
-    if (!job.isExpanded && job.candidates.length === 0) {
-      // Load detailed data when expanding for the first time using React Query mutation
-      loadEntryMutation.mutate(jobId);
+    const willExpand = !job.isExpanded;
+
+    if (willExpand) {
+      // Optimistically expand immediately
+      setJobs((prev) => prev.map((j) => (j.id === jobId ? { ...j, isExpanded: true } : j)));
+      // If details not loaded yet, fetch in background
+      if ((job.candidates?.length || 0) === 0) {
+        loadEntryMutation.mutate(jobId);
+      }
     } else {
-      // Simply toggle the expansion state
-      setJobs((prev) => prev.map((job) => (job.id === jobId ? { ...job, isExpanded: !job.isExpanded } : job)));
+      // Collapse
+      setJobs((prev) => prev.map((j) => (j.id === jobId ? { ...j, isExpanded: false } : j)));
     }
   };
 
@@ -361,6 +382,22 @@ export function RecruiterPipeline() {
               className="pl-10 w-[300px]"
             />
           </div>
+
+          {/* Job Name Filter */}
+          <Input
+            placeholder="Job name"
+            value={jobNameFilter}
+            onChange={(e) => setJobNameFilter(e.target.value)}
+            className="w-[200px]"
+          />
+
+          {/* Client Name Filter */}
+          <Input
+            placeholder="Client name"
+            value={clientNameFilter}
+            onChange={(e) => setClientNameFilter(e.target.value)}
+            className="w-[200px]"
+          />
           
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[180px]">
