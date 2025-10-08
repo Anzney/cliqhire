@@ -24,7 +24,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const menuItems = [
   { name: "Home", icon: Home, href: "/", permission: "HOME" },
-  { name: "Today's Tasks", icon: ListTodo , href: "/today-tasks", permission: "TODAY_TASKS" },
+  // { name: "Today's Tasks", icon: ListTodo , href: "/today-tasks", permission: "TODAY_TASKS" },
   { name: "Clients", icon: Building2, href: "/clients", permission: "CLIENTS" },
   { name: "Jobs", icon: Briefcase, href: "/jobs", permission: "JOBS" },
   { name: "Candidates", icon: Users, href: "/candidates", permission: "CANDIDATE" },
