@@ -21,6 +21,18 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  Sidebar as UISidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarFooter,
+  SidebarRail,
+} from "@/components/ui/sidebar";
 
 const menuItems = [
   { name: "Home", icon: Home, href: "/", permission: "HOME" },
@@ -59,48 +71,56 @@ export function Sidebar() {
   }
 
   return (
-    <div className="w-[240px] border-r bg-gray-50/40 flex flex-col">
-      <div className="p-6">
-        <h1 className="text-xl font-semibold">Cliqhire</h1>
-      </div>
-      <nav className="flex-1 px-2">
-        <ul>
-          {menuItems
-            .filter(item => {
-              // Hide Today's Tasks for admins
-              if (isAdmin && item.permission === 'TODAY_TASKS') return false;
-              // For everyone else: show if has permission or it's Home; admins otherwise see all
-              return isAdmin || item.permission === "HOME" || finalPermissions.includes(item.permission);
-            })
-            .map((item, index) => (
-              <li key={index}>
-                <Link
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-gray-900",
-                    (item.href === "/" ? pathname === "/" : pathname?.startsWith(item.href))
-                      ? "bg-blue-100 text-blue-600 font-medium"
-                      : "text-gray-500 hover:bg-gray-100",
-                  )}
-                >
-                  <item.icon
-                    className={cn(
-                      "h-4 w-4",
-                      (item.href === "/" ? pathname === "/" : pathname?.startsWith(item.href))
-                        ? "text-blue-600"
-                        : "text-gray-500",
-                    )}
-                  />
-                  {item.name}
-                </Link>
-                {/* Add horizontal line after "Candidates" and "Inbox" */}
-                {(item.name === "Candidates" || item.name === "Inbox") && (
-                  <hr className="my-2 border-gray-200" />
-                )}
-              </li>
-            ))}
-        </ul>
-      </nav>
-    </div>
+    <UISidebar
+      collapsible="icon"
+      className="border-r"
+      data-variant="sidebar"
+      style={{ ["--sidebar-width" as any]: "13rem", ["--sidebar-width-icon" as any]: "2.5rem" }}
+    >
+      <SidebarHeader className="border-b group-data-[collapsible=icon]:hidden">
+        <div className="p-2">
+          <h1 className="text-xl font-semibold">Cliqhire</h1>
+        </div>
+      </SidebarHeader>
+      <SidebarContent >
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {menuItems
+                .filter((item) => {
+                  if (isAdmin && item.permission === 'TODAY_TASKS') return false;
+                  return isAdmin || item.permission === "HOME" || finalPermissions.includes(item.permission);
+                })
+                .map((item, index) => {
+                  const active = (item.href === "/" ? pathname === "/" : pathname?.startsWith(item.href));
+                  const Icon = item.icon;
+                  return (
+                    <SidebarMenuItem key={index}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={!!active}
+                        tooltip={{
+                          children: item.name,
+                          className: "bg-green-100 text-green-700 border border-green-200"
+                        }}
+                        className={cn(
+                          active && "bg-blue-100 text-blue-600 data-[active=true]:bg-blue-100 data-[active=true]:text-blue-600"
+                        )}
+                      >
+                        <Link href={item.href} className={cn(active ? "font-medium" : undefined)}>
+                          <Icon />
+                          <span>{item.name}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter />
+      <SidebarRail />
+    </UISidebar>
   );
 }
