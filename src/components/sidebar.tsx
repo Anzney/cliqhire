@@ -75,17 +75,15 @@ export function Sidebar() {
       collapsible="icon"
       className="border-r"
       data-variant="sidebar"
-      style={{ ["--sidebar-width" as any]: "13rem", ["--sidebar-width-icon" as any]: "2.5rem" }}
+      style={{ ["--sidebar-width" as any]: "13rem", ["--sidebar-width-icon" as any]: "3rem" }}
     >
-      <SidebarHeader className="border-b group-data-[collapsible=icon]:hidden">
-        <div className="p-2">
+      <SidebarHeader className=" group-data-[collapsible=icon]:hidden">
           <h1 className="text-xl font-semibold">Cliqhire</h1>
-        </div>
       </SidebarHeader>
       <SidebarContent >
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="group-data-[collapsible=icon]:gap-2">
               {menuItems
                 .filter((item) => {
                   if (isAdmin && item.permission === 'TODAY_TASKS') return false;
@@ -104,7 +102,7 @@ export function Sidebar() {
                           className: "bg-green-100 text-green-700 border border-green-200"
                         }}
                         className={cn(
-                          active && "bg-blue-100 text-blue-600 data-[active=true]:bg-blue-100 data-[active=true]:text-blue-600"
+                          active && " bg-blue-100 text-blue-600 data-[active=true]:bg-blue-100 data-[active=true]:text-blue-600"
                         )}
                       >
                         <Link href={item.href} className={cn(active ? "font-medium" : undefined)}>

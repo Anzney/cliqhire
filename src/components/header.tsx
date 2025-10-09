@@ -64,7 +64,7 @@ export function Header() {
   return (
     <>
       <header className="border-b">
-        <div className="flex h-16 items-center px-4 gap-4">
+        <div className="flex h-12 items-center px-4 gap-4">
           <SidebarTrigger />
           {isOnIdPage && (
             <Button
