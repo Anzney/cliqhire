@@ -15,7 +15,7 @@ export default function DashboardLayout({
     <AuthGuard>
       <QueryProvider>
         <SidebarProvider
-          style={{ ["--sidebar-width" as any]: "13rem", ["--sidebar-width-icon" as any]: "2.5rem" }}
+          style={{ ["--sidebar-width" as any]: "13rem", ["--sidebar-width-icon" as any]: "3rem" }}
         >
           <Sidebar />
           <SidebarInset>
