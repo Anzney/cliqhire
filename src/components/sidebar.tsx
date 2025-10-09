@@ -77,8 +77,8 @@ export function Sidebar() {
       data-variant="sidebar"
       style={{ ["--sidebar-width" as any]: "13rem", ["--sidebar-width-icon" as any]: "2.5rem" }}
     >
-      <SidebarHeader className="border-b">
-        <div className="px-4 py-8">
+      <SidebarHeader className="border-b group-data-[collapsible=icon]:hidden">
+        <div className="p-2">
           <h1 className="text-xl font-semibold">Cliqhire</h1>
         </div>
       </SidebarHeader>
