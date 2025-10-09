@@ -8,6 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { UserProfileDialog } from "@/components/user-profile/user-profile-dialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export function Header() {
   const pathname = usePathname();
@@ -64,6 +65,7 @@ export function Header() {
     <>
       <header className="border-b">
         <div className="flex h-16 items-center px-4 gap-4">
+          <SidebarTrigger />
           {isOnIdPage && (
             <Button
               variant="ghost"
