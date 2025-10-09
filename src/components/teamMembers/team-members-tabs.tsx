@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MoreVertical, Trash2, Users, UserCheck, UserCog, Crown, Eye } from "lucide-react";
+import { MoreVertical, Trash2, Users, UserCheck, UserCog, Crown, Eye, Shield } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,6 +67,10 @@ const getTeamRoleBadgeVariant = (role: string): "default" | "secondary" | "destr
     case "head enter":
     case "headenter":
       return "destructive"; // Red
+    case "sales team":
+    case "sales_team":
+    case "sales":
+      return "secondary"; // Gray
     default:
       return "outline"; // Default for unknown roles
   }
@@ -97,6 +101,10 @@ const getTeamRoleColorClass = (role: string): string => {
     case "head enter":
     case "headenter":
       return "bg-purple-100 text-purple-800 border-purple-200";
+    case "sales team":
+    case "sales_team":
+    case "sales":
+      return "bg-amber-100 text-amber-800 border-amber-200";
     default:
       return "bg-gray-100 text-gray-700 border-gray-200";
   }
@@ -187,9 +195,20 @@ export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
 
   // Get counts for each role
   const getCountByRole = (role: string) => {
+    const normalize = (r?: string) => {
+      const base = (r || "").toLowerCase().replace(/\s+/g, "_");
+      if (["admin", "administrator"].includes(base)) return "admin";
+      if (["hiring_manager", "hiring", "hir"].includes(base)) return "hiring_manager";
+      if (["team_lead", "lead"].includes(base)) return "team_lead";
+      if (["recruiter", "recruiters", "rec"].includes(base)) return "recruiter";
+      if (["head_hunter", "head_enter", "headenter"].includes(base)) return "head_hunter";
+      if (["sales_team", "sales"].includes(base)) return "sales_team";
+      return base;
+    };
+    const target = normalize(role);
     return dataTeamMembers.filter(member => 
-      member.teamRole === role || 
-      member.role === role
+      normalize(member.teamRole) === target ||
+      normalize((member as any).role) === target
     ).length;
   };
 
@@ -198,6 +217,14 @@ export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
     switch (activeTab) {
       case "all":
         return dataTeamMembers;
+      case "admin":
+        return dataTeamMembers.filter(member => 
+          member.teamRole === "ADMIN" ||
+          member.teamRole === "Admin" ||
+          (member as any).role === "Admin" ||
+          (member as any).role === "ADMIN" ||
+          (member as any).role === "Administrator"
+        );
       case "hiring-manager":
         return dataTeamMembers.filter(member => 
           member.teamRole === "HIRING_MANAGER" || 
@@ -215,6 +242,12 @@ export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
           member.teamRole === "RECRUITER" || 
           member.teamRole === "Recruiters" ||
           member.role === "Recruiters"
+        );
+      case "sales-team":
+        return dataTeamMembers.filter(member => 
+          member.teamRole === "SALES_TEAM" ||
+          member.teamRole === "Sales Team" ||
+          member.role === "Sales Team"
         );
       case "head-enter":
         return dataTeamMembers.filter(member => 
@@ -341,6 +374,16 @@ export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
             </Badge>
           </TabsTrigger>
           <TabsTrigger
+            value="admin"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+          >
+            <Shield className="h-4 w-4" />
+            Admin
+            <Badge variant="secondary" className="ml-1 text-xs">
+              {getCountByRole("ADMIN")}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger
             value="hiring-manager"
             className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
           >
@@ -371,6 +414,16 @@ export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
             </Badge>
           </TabsTrigger>
           <TabsTrigger
+            value="sales-team"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+          >
+            <Users className="h-4 w-4" />
+            Sales Team
+            <Badge variant="secondary" className="ml-1 text-xs">
+              {getCountByRole("SALES_TEAM")}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger
             value="head-enter"
             className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
           >
@@ -383,6 +436,25 @@ export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
         </TabsList>
 
         <TabsContent value="all" className="p-0 mt-0">
+          <div className="flex-1">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {headerArr.map((header, index) => (
+                    <TableHead key={index} className="text-sm font-medium">
+                      {header}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {renderTeamMembersTable(filteredTeamMembers)}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="admin" className="p-0 mt-0">
           <div className="flex-1">
             <Table>
               <TableHeader>
@@ -440,6 +512,25 @@ export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
         </TabsContent>
 
         <TabsContent value="recruiters" className="p-0 mt-0">
+          <div className="flex-1">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {headerArr.map((header, index) => (
+                    <TableHead key={index} className="text-sm font-medium">
+                      {header}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {renderTeamMembersTable(filteredTeamMembers)}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="sales-team" className="p-0 mt-0">
           <div className="flex-1">
             <Table>
               <TableHeader>
