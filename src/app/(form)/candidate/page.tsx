@@ -1,15 +1,16 @@
 "use client";
 
-import * as React from "react";
+import  React, { useState } from "react";
 import { z } from "zod";
 import { User, Mail, Phone, Globe, MapPin, Calendar, FileText, Badge as BadgeIcon } from "lucide-react";
 import { Toaster, toast } from "sonner";
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Calendar as CalendarUI } from "@/components/ui/calendar";
 import {
   Select,
   SelectTrigger,
@@ -17,14 +18,13 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { TagsInput } from "@/components/tags-input";
 
 const Schema = z.object({
   name: z.string().min(1, "Name is required"),
   location: z.string().optional().default(""),
   skills: z.array(z.string()).default([]),
-  resume: z.string().url().optional().or(z.literal("")),
+  resume: z.union([z.instanceof(File), z.string().url(), z.literal("")]).optional(),
   status: z.enum(["Active", "Inactive"]).default("Active"),
   gender: z.enum(["male", "female", "other"]).optional(),
   dateOfBirth: z.union([z.string(), z.date()]).optional(),
@@ -59,7 +59,9 @@ const initialData: FormValues = {
 };
 
 export default function ProtectedCandidateFormPage() {
-  const [formData, setFormData] = React.useState<FormValues>(initialData);
+  const [formData, setFormData] = useState<FormValues>(initialData);
+  const [resumeName, setResumeName] = useState<string>("");
+  const [dobOpen, setDobOpen] = useState(false);
 
   const toDateInputValue = (d?: string | Date) => {
     if (!d) return "";
@@ -87,7 +89,7 @@ export default function ProtectedCandidateFormPage() {
     toast.success("Candidate saved", { description: "Your changes have been saved successfully." });
   };
 
-  const { skills, softSkill, technicalSkill, gender, willingToRelocate, status } = formData;
+  const { softSkill, technicalSkill, gender, willingToRelocate, } = formData;
 
   return (
     <div className="w-full bg-gradient-to-b from-purple-50 via-sky-50 to-emerald-50">
@@ -167,7 +169,7 @@ export default function ProtectedCandidateFormPage() {
                     />
                   </div>
 
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label htmlFor="resume" className="flex items-center gap-2"><FileText className="h-4 w-4" /> Resume URL</Label>
                     <Input
                       id="resume"
@@ -175,18 +177,52 @@ export default function ProtectedCandidateFormPage() {
                       value={formData.resume || ""}
                       onChange={(e) => setFormData((p) => ({ ...p, resume: e.target.value }))}
                     />
-                  </div>
+                  </div> */}
 
                   <div className="space-y-2">
                     <Label htmlFor="dateOfBirth" className="flex items-center gap-2"><Calendar className="h-4 w-4" /> Date of Birth</Label>
-                    <Input
-                      id="dateOfBirth"
-                      type="date"
-                      value={toDateInputValue(formData.dateOfBirth)}
-                      onChange={(e) => setFormData((p) => ({ ...p, dateOfBirth: e.target.value }))}
-                    />
+                    <Popover open={dobOpen} onOpenChange={setDobOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          id="dateOfBirth"
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal"
+                        >
+                          {(() => {
+                            const d = typeof formData.dateOfBirth === "string"
+                              ? new Date(formData.dateOfBirth)
+                              : formData.dateOfBirth;
+                            return d && !isNaN(d.getTime())
+                              ? d.toLocaleDateString()
+                              : "Pick a date";
+                          })()}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarUI
+                          mode="single"
+                          selected={(() => {
+                            const d = typeof formData.dateOfBirth === "string"
+                              ? new Date(formData.dateOfBirth)
+                              : formData.dateOfBirth;
+                            return d && !isNaN(d.getTime()) ? d : undefined;
+                          })()}
+                          onSelect={(date) => {
+                            if (date && !isNaN(date.getTime())) {
+                              setFormData((p) => ({ ...p, dateOfBirth: date }));
+                              setDobOpen(false);
+                            } else {
+                              setFormData((p) => ({ ...p, dateOfBirth: undefined }));
+                            }
+                          }}
+                          captionLayout="dropdown"
+                          fromYear={1950}
+                          toYear={new Date().getFullYear()}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                      </Popover>
                   </div>
-
 
                   <div className="space-y-2">
                     <Label className="block">Gender</Label>
@@ -224,22 +260,38 @@ export default function ProtectedCandidateFormPage() {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="resume" className="flex items-center gap-2"><FileText className="h-4 w-4" /> Upload Resume</Label>
+                    <Input
+                      id="resume"
+                      name="resume"
+                      onChange={(e) => {
+                        const file = e.target.files && e.target.files[0];
+                        setResumeName(file ? file.name : "");
+                        if (file) {
+                          setFormData((p) => ({ ...p, resume: file }));
+                        } else {
+                          setFormData((p) => ({ ...p, resume: "" }));
+                        }
+                      }}
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                    //   placeholder="Select file"
+                    />
+                    {/* {resumeName && (
+                      <p className="text-xs text-muted-foreground">{resumeName}</p>
+                    )}                                                                               */}
+                    <p className="text-xs text-muted-foreground">Only document files up to 5 MB are allowed.</p>
+                  </div>
+
                 </section>
               </div>
 
               <div>
                 <h4 className="text-sm font-medium text-neutral-500 mb-3">Skills & Summary</h4>
                 <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* <div className="space-y-2">
-                    <Label>Skills</Label>
-                    <TagsInput
-                      name="skills"
-                      value={skills}
-                      onChange={(v) => setFormData((p) => ({ ...p, skills: v }))}
-                      placeholder="Type a skill and press Enter"
-                    />
-                  </div> */}
-
+                 
                   <div className="space-y-2">
                     <Label>Soft Skills</Label>
                     <TagsInput
