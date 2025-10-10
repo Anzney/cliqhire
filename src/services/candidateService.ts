@@ -271,6 +271,41 @@ class CandidateService {
   }
 
   /**
+   * Create a new candidate via public endpoint (no auth)
+   * Endpoint: POST /api/candidates/public
+   * Supports both FormData (for file uploads) and JSON payloads
+   */
+  async createCandidatePublic(candidateData: FormData | Partial<Candidate>): Promise<Candidate> {
+    try {
+      let response: any;
+
+      if (candidateData instanceof FormData) {
+        response = await api.post(`/api/candidates/public`, candidateData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      } else {
+        response = await api.post(`/api/candidates/public`, candidateData, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+      }
+
+      const apiResponse: ApiResponse<Candidate> = response.data;
+      return apiResponse.data || (apiResponse as any);
+    } catch (error) {
+      console.error('Error creating candidate (public):', error);
+      if (axios.isAxiosError(error)) {
+        // Rethrow original AxiosError so the caller can inspect error.response
+        throw error;
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Get candidate statistics
    */
   async getCandidateStats(): Promise<{

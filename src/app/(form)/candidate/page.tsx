@@ -4,7 +4,7 @@ import  React, { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { z } from "zod";
 import { User, Mail, Phone, Globe, MapPin, Calendar, FileText, Badge as BadgeIcon } from "lucide-react";
-import { Toaster, toast } from "sonner";
+import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TagsInput } from "@/components/tags-input";
+import { candidateService } from "@/services/candidateService";
 
 const Schema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -66,6 +67,7 @@ export default function ProtectedCandidateFormPage() {
   const [formData, setFormData] = useState<FormValues>(initialData);
   const [resumeName, setResumeName] = useState<string>("");
   const [dobOpen, setDobOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const toDateInputValue = (d?: string | Date) => {
     if (!d) return "";
@@ -74,23 +76,73 @@ export default function ProtectedCandidateFormPage() {
     return dt.toISOString().slice(0, 10);
   };
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
+    console.log("[CandidateForm] Submit clicked", formData);
     // Validate using Zod
     const parsed = Schema.safeParse(formData);
     if (!parsed.success) {
       const firstErr = parsed.error.issues[0];
       toast.error("Validation error", { description: `${firstErr.path.join(".")}: ${firstErr.message}` });
+      console.warn("[CandidateForm] Validation failed", firstErr);
       return;
     }
-    // Normalize date string to ISO if needed
+
     const values = parsed.data;
-    let payload = { ...values } as any;
-    if (values.dateOfBirth) {
-      const d = typeof values.dateOfBirth === "string" ? new Date(values.dateOfBirth) : values.dateOfBirth;
-      if (!isNaN(d.getTime())) payload.dateOfBirth = d.toISOString();
+    setSubmitting(true);
+    try {
+      // Normalize dateOfBirth
+      let payload: any = { ...values };
+      if (values.dateOfBirth) {
+        const d = typeof values.dateOfBirth === "string" ? new Date(values.dateOfBirth) : values.dateOfBirth;
+        if (!isNaN(d.getTime())) payload.dateOfBirth = d.toISOString();
+      }
+
+      // If resume is a File, send multipart/form-data
+      let result;
+      if (payload.resume && payload.resume instanceof File) {
+        const fd = new FormData();
+        // Append scalar/string fields
+        Object.entries(payload).forEach(([key, val]) => {
+          if (val === undefined || val === null) return;
+          if (key === "resume" && val instanceof File) {
+            fd.append("resume", val);
+          } else if (Array.isArray(val)) {
+            // append arrays as repeated fields
+            val.forEach((v) => fd.append(key, String(v)));
+          } else {
+            fd.append(key, String(val));
+          }
+        });
+        result = await candidateService.createCandidatePublic(fd);
+      } else {
+        // send JSON (exclude resume if empty string)
+        if (payload.resume === "") delete payload.resume;
+        result = await candidateService.createCandidatePublic(payload);
+      }
+
+      toast.success("Candidate submitted", { description: "We received your details successfully." });
+      setFormData(initialData);
+      setResumeName("");
+    } catch (err: any) {
+      console.error("[CandidateForm] API error", err);
+      const backendStatus = err?.response?.data?.status;
+      const backendMessage: string | undefined = err?.response?.data?.message;
+      const httpStatus: number | undefined = err?.response?.status;
+      let displayMessage = err?.message || backendMessage || "Failed to submit candidate";
+
+      // Map duplicate email/phone message to friendly text
+      const dupMsgPattern = /same email or phone already exists|already exists/i;
+      if (
+        (backendStatus === "fail" || httpStatus === 409) &&
+        (dupMsgPattern.test(backendMessage || "") || dupMsgPattern.test(displayMessage))
+      ) {
+        displayMessage = "Congratulations! You are already registered.";
+      }
+
+      toast.error(displayMessage);
+    } finally {
+      setSubmitting(false);
     }
-    console.log("Submitted Candidate:", payload);
-    toast.success("Candidate saved", { description: "Your changes have been saved successfully." });
   };
 
   const { softSkill, technicalSkill, gender, willingToRelocate, } = formData;
@@ -172,16 +224,6 @@ export default function ProtectedCandidateFormPage() {
                       onChange={(e) => setFormData((p) => ({ ...p, nationality: e.target.value }))}
                     />
                   </div>
-
-                  {/* <div className="space-y-2">
-                    <Label htmlFor="resume" className="flex items-center gap-2"><FileText className="h-4 w-4" /> Resume URL</Label>
-                    <Input
-                      id="resume"
-                      placeholder="https://..."
-                      value={formData.resume || ""}
-                      onChange={(e) => setFormData((p) => ({ ...p, resume: e.target.value }))}
-                    />
-                  </div> */}
 
                   <div className="space-y-2">
                     <Label htmlFor="dateOfBirth" className="flex items-center gap-2"><Calendar className="h-4 w-4" /> Date of Birth</Label>
@@ -333,15 +375,14 @@ export default function ProtectedCandidateFormPage() {
                 <Button type="button" variant="secondary" onClick={() => setFormData(initialData)}>
                   Reset
                 </Button>
-                <Button type="button" onClick={onSubmit}>
-                  Submit From
+                <Button type="button" onClick={onSubmit} disabled={submitting}>
+                  {submitting ? "Submitting..." : "Submit Form"}
                 </Button>
               </CardFooter>
             </div>
           </CardContent>
         </Card>
       </div>
-      <Toaster richColors />
     </div>
   );
 }
