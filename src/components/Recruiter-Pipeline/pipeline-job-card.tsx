@@ -176,7 +176,7 @@ export function PipelineJobCard({
 
   const handleCopyCandidateFormLink = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const path = `${window.location.origin}/candidate`; // Route groups like (form) are ignored in URL paths
+    const path = `${window.location.origin}/candidate?job=${encodeURIComponent(job.title)}`; // Route groups like (form) are ignored in URL paths
     try {
       if (navigator?.clipboard?.writeText) {
         await navigator.clipboard.writeText(path);

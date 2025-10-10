@@ -14,7 +14,7 @@ export function PipelineJobHeader({ job, onAddCandidate }: Props) {
   const [isFormLinkCopied, setIsFormLinkCopied] = useState(false);
 
   const handleCopyCandidateFormLink = async () => {
-    const path =`${window.location.origin}/candidate` ;
+    const path = `${window.location.origin}/candidate?job=${encodeURIComponent(job.title)}`;
     try {
       if (navigator?.clipboard?.writeText) {
         await navigator.clipboard.writeText(path);

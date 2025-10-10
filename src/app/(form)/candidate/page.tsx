@@ -1,6 +1,7 @@
 "use client";
 
 import  React, { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { z } from "zod";
 import { User, Mail, Phone, Globe, MapPin, Calendar, FileText, Badge as BadgeIcon } from "lucide-react";
 import { Toaster, toast } from "sonner";
@@ -59,6 +60,9 @@ const initialData: FormValues = {
 };
 
 export default function ProtectedCandidateFormPage() {
+  const searchParams = useSearchParams();
+  const jobFromQuery = searchParams?.get("job") || "";
+  const headingTitle = `${jobFromQuery ? jobFromQuery : "Candidate"} Form`;
   const [formData, setFormData] = useState<FormValues>(initialData);
   const [resumeName, setResumeName] = useState<string>("");
   const [dobOpen, setDobOpen] = useState(false);
@@ -98,7 +102,7 @@ export default function ProtectedCandidateFormPage() {
           <CardHeader className="border-b">
             <div className="flex items-start justify-center ">
               <div>
-                <CardTitle className="text-2xl items-center">Candidate Form</CardTitle>
+                <CardTitle className="text-2xl items-center">{headingTitle}</CardTitle>
                 <CardDescription>Manage candidate profile details</CardDescription>
               </div>
             </div>
