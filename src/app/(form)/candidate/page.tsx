@@ -21,21 +21,29 @@ import {
 } from "@/components/ui/select";
 import { TagsInput } from "@/components/tags-input";
 import { candidateService } from "@/services/candidateService";
+import { SubmissionSuccessDialog } from "@/components/common/submission-success-dialog";
 
 const Schema = z.object({
   name: z.string().min(1, "Name is required"),
-  location: z.string().optional().default(""),
+  location: z.string().min(1, "Location is required"),
   skills: z.array(z.string()).default([]),
-  resume: z.union([z.instanceof(File), z.string().url(), z.literal("")]).optional(),
+  // Resume must be provided: accept File or string but disallow empty at validation time
+  resume: z
+    .union([z.instanceof(File), z.string()])
+    .refine(
+      (val) => val instanceof File || (typeof val === "string" && val.trim().length > 0),
+      { message: "Resume is required" }
+    ),
   status: z.enum(["Active", "Inactive"]).default("Active"),
   gender: z.enum(["male", "female", "other"]).optional(),
-  dateOfBirth: z.union([z.string(), z.date()]).optional(),
+  // Date of Birth required (non-empty string or Date)
+  dateOfBirth: z.union([z.string().min(1, "Date of Birth is required"), z.date()]),
   country: z.string().optional(),
   nationality: z.string().optional(),
   willingToRelocate: z.enum(["yes", "no"]).optional(),
   description: z.string().optional(),
-  phone: z.string().optional(),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
+  phone: z.string().min(1, "Phone is required"),
+  email: z.string().min(1, "Email is required").email("Invalid email"),
   softSkill: z.array(z.string()).default([]),
   technicalSkill: z.array(z.string()).default([]),
 });
@@ -49,7 +57,7 @@ const initialData: FormValues = {
   resume: "",
   status: "Active",
   gender: undefined,
-  dateOfBirth: undefined,
+  dateOfBirth: "",
   country: "",
   nationality: "",
   willingToRelocate: undefined,
@@ -68,6 +76,7 @@ export default function ProtectedCandidateFormPage() {
   const [resumeName, setResumeName] = useState<string>("");
   const [dobOpen, setDobOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
 
   const toDateInputValue = (d?: string | Date) => {
     if (!d) return "";
@@ -123,6 +132,7 @@ export default function ProtectedCandidateFormPage() {
       toast.success("Candidate submitted", { description: "We received your details successfully." });
       setFormData(initialData);
       setResumeName("");
+      setSuccessOpen(true);
     } catch (err: any) {
       console.error("[CandidateForm] API error", err);
       const backendStatus = err?.response?.data?.status;
@@ -165,43 +175,47 @@ export default function ProtectedCandidateFormPage() {
                 <h4 className="text-sm font-medium text-neutral-500 mb-3">Personal Information</h4>
                 <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="flex items-center gap-2"><User className="h-4 w-4" /> Full Name</Label>
+                    <Label htmlFor="name" className="flex items-center gap-2"><User className="h-4 w-4" /> Full Name <span className="text-red-500">*</span></Label>
                     <Input
                       id="name"
                       placeholder="Enter full name"
                       value={formData.name || ""}
                       onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
+                      required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="flex items-center gap-2"><Mail className="h-4 w-4" /> Email</Label>
+                    <Label htmlFor="email" className="flex items-center gap-2"><Mail className="h-4 w-4" /> Email <span className="text-red-500">*</span></Label>
                     <Input
                       id="email"
                       type="email"
                       placeholder="name@example.com"
                       value={formData.email || ""}
                       onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
+                      required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phone" className="flex items-center gap-2"><Phone className="h-4 w-4" /> Phone</Label>
+                    <Label htmlFor="phone" className="flex items-center gap-2"><Phone className="h-4 w-4" /> Phone <span className="text-red-500">*</span></Label>
                     <Input
                       id="phone"
                       placeholder="Phone number"
                       value={formData.phone || ""}
                       onChange={(e) => setFormData((p) => ({ ...p, phone: e.target.value }))}
+                      required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="location" className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Location</Label>
+                    <Label htmlFor="location" className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Location <span className="text-red-500">*</span></Label>
                     <Input
                       id="location"
                       placeholder="City, State"
                       value={formData.location || ""}
                       onChange={(e) => setFormData((p) => ({ ...p, location: e.target.value }))}
+                      required
                     />
                   </div>
 
@@ -226,7 +240,7 @@ export default function ProtectedCandidateFormPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="dateOfBirth" className="flex items-center gap-2"><Calendar className="h-4 w-4" /> Date of Birth</Label>
+                    <Label htmlFor="dateOfBirth" className="flex items-center gap-2"><Calendar className="h-4 w-4" /> Date of Birth <span className="text-red-500">*</span></Label>
                     <Popover open={dobOpen} onOpenChange={setDobOpen}>
                       <PopoverTrigger asChild>
                         <Button
@@ -258,7 +272,7 @@ export default function ProtectedCandidateFormPage() {
                               setFormData((p) => ({ ...p, dateOfBirth: date }));
                               setDobOpen(false);
                             } else {
-                              setFormData((p) => ({ ...p, dateOfBirth: undefined }));
+                              setFormData((p) => ({ ...p, dateOfBirth: "" }));
                             }
                           }}
                           captionLayout="dropdown"
@@ -308,7 +322,7 @@ export default function ProtectedCandidateFormPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="resume" className="flex items-center gap-2"><FileText className="h-4 w-4" /> Upload Resume</Label>
+                    <Label htmlFor="resume" className="flex items-center gap-2"><FileText className="h-4 w-4" /> Upload Resume <span className="text-red-500">*</span></Label>
                     <Input
                       id="resume"
                       name="resume"
@@ -323,6 +337,7 @@ export default function ProtectedCandidateFormPage() {
                       }}
                       type="file"
                       accept=".pdf,.doc,.docx"
+                      required
                     //   placeholder="Select file"
                     />
                     {/* {resumeName && (
@@ -382,6 +397,7 @@ export default function ProtectedCandidateFormPage() {
             </div>
           </CardContent>
         </Card>
+        <SubmissionSuccessDialog open={successOpen} onOpenChange={setSuccessOpen} title="Success" />
       </div>
     </div>
   );
