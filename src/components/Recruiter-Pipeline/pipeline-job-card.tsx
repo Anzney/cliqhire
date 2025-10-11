@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ChevronDown, ChevronRight, Users, MapPin, HandCoins , Building2, Loader2, Plus, Table as TableIcon, Copy } from "lucide-react";
+import { ChevronDown, ChevronRight, Users, MapPin, HandCoins , Building2, Loader2, Plus, Table as TableIcon, Copy, Check } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -569,8 +569,12 @@ export function PipelineJobCard({
                 onClick={handleCopyCandidateFormLink}
                 title="Copy candidate form path"
               >
-                <Copy className="size-4 mr-1" />
-                {isFormLinkCopied ? "Copied" : "Candidate Form"}
+                {isFormLinkCopied ? (
+                  <Check className="size-4 mr-1 text-green-600" />
+                ) : (
+                  <Copy className="size-4 mr-1" />
+                )}
+                {isFormLinkCopied ? "Copied" : "Copy Form URL"}
               </Button>
               <Button
                 size="sm"

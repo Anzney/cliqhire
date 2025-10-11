@@ -1,9 +1,9 @@
 "use client";
 
-import  React, { useState } from "react";
+import  React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { z } from "zod";
-import { User, Mail, Phone, Globe, MapPin, Calendar, FileText, Badge as BadgeIcon } from "lucide-react";
+import { User, Mail, Phone, Globe, MapPin, Calendar, FileText, Badge as BadgeIcon, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -79,6 +79,17 @@ export default function ProtectedCandidateFormPage() {
   const [successOpen, setSuccessOpen] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
 
+  // Initialize from localStorage so reloads show submitted message
+  useEffect(() => {
+    try {
+      const submitted = typeof window !== "undefined" && localStorage.getItem("candidateFormSubmitted") === "true";
+      if (submitted) {
+        setFormSubmitted(true);
+        setSuccessOpen(false);
+      }
+    } catch {}
+  }, []);
+
   const toDateInputValue = (d?: string | Date) => {
     if (!d) return "";
     const dt = typeof d === "string" ? new Date(d) : d;
@@ -87,13 +98,17 @@ export default function ProtectedCandidateFormPage() {
   };
 
   const onSubmit = async () => {
-    console.log("[CandidateForm] Submit clicked", formData);
     // Validate using Zod
     const parsed = Schema.safeParse(formData);
     if (!parsed.success) {
       const firstErr = parsed.error.issues[0];
-      toast.error("Validation error", { description: `${firstErr.path.join(".")}: ${firstErr.message}` });
-      console.warn("[CandidateForm] Validation failed", firstErr);
+      toast.error("Validation error", {
+        description: (
+          <span className="text-red-600 !opacity-100">
+            {`${firstErr.path.join(".")}: ${firstErr.message}`}
+          </span>
+        ),
+      });
       return;
     }
 
@@ -130,9 +145,16 @@ export default function ProtectedCandidateFormPage() {
         result = await candidateService.createCandidatePublic(payload);
       }
 
-      toast.success("Candidate submitted", { description: "We received your details successfully." });
+      // Do not show a toast on successful submission (per requirement)
       setFormData(initialData);
       setResumeName("");
+      // Immediately persist submission so refresh while dialog is open still shows the success message
+      setFormSubmitted(true);
+      try {
+        if (typeof window !== "undefined") {
+          localStorage.setItem("candidateFormSubmitted", "true");
+        }
+      } catch {}
       setSuccessOpen(true);
     } catch (err: any) {
       console.error("[CandidateForm] API error", err);
@@ -169,10 +191,10 @@ export default function ProtectedCandidateFormPage() {
         ) : (
           <Card className="border-primary/10">
             <CardHeader className="border-b items-center">
-                <div>
+                
                   <CardTitle className="text-2xl">{headingTitle}</CardTitle>
                   <CardDescription >Manage candidate profile details</CardDescription>
-              </div>
+            
             </CardHeader>
             <CardContent>
               <div className="space-y-10">
@@ -328,27 +350,33 @@ export default function ProtectedCandidateFormPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="resume" className="flex items-center gap-2"><FileText className="h-4 w-4" /> Upload Resume <span className="text-red-500">*</span></Label>
-                    <Input
-                      id="resume"
-                      name="resume"
-                      onChange={(e) => {
-                        const file = e.target.files && e.target.files[0];
-                        setResumeName(file ? file.name : "");
-                        if (file) {
-                          setFormData((p) => ({ ...p, resume: file }));
-                        } else {
-                          setFormData((p) => ({ ...p, resume: "" }));
-                        }
-                      }}
-                      type="file"
-                      accept=".pdf,.doc,.docx"
-                      required
-                    //   placeholder="Select file"
-                    />
+                    <div className="relative">
+                      <Upload
+                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                        aria-hidden="true"
+                      />
+                      <Input
+                        id="resume"
+                        name="resume"
+                        className="pl-9"
+                        onChange={(e) => {
+                          const file = e.target.files && e.target.files[0];
+                          setResumeName(file ? file.name : "");
+                          if (file) {
+                            setFormData((p) => ({ ...p, resume: file }));
+                          } else {
+                            setFormData((p) => ({ ...p, resume: "" }));
+                          }
+                        }}
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        required
+                      />
+                    </div>
                     {/* {resumeName && (
                       <p className="text-xs text-muted-foreground">{resumeName}</p>
                     )}                                                                               */}
-                    <p className="text-xs text-muted-foreground">Only document files up to 5 MB are allowed.</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Only document files up to 5 MB are allowed.</p>
                   </div>
 
                 </section>
@@ -395,7 +423,7 @@ export default function ProtectedCandidateFormPage() {
                   <Button type="button" variant="secondary" onClick={() => setFormData(initialData)}>
                     Reset
                   </Button>
-                  <Button type="button" onClick={onSubmit} disabled={submitting}>
+                  <Button className="w-full sm:w-auto rounded-full bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 font-medium" type="button" onClick={onSubmit} disabled={submitting}>
                     {submitting ? "Submitting..." : "Submit Form"}
                   </Button>
                 </CardFooter>
@@ -407,7 +435,14 @@ export default function ProtectedCandidateFormPage() {
           open={successOpen}
           onOpenChange={(open) => {
             setSuccessOpen(open);
-            if (!open) setFormSubmitted(true);
+            if (!open) {
+              setFormSubmitted(true);
+              try {
+                if (typeof window !== "undefined") {
+                  localStorage.setItem("candidateFormSubmitted", "true");
+                }
+              } catch {}
+            }
           }}
           title="Congratulations!"
         />

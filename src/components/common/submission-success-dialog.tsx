@@ -28,7 +28,12 @@ export function SubmissionSuccessDialog({
 }: SubmissionSuccessDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg md:max-w-xl">
+      <DialogContent
+        className="sm:max-w-lg md:max-w-xl"
+        showCloseButton={false}
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader className="items-center">
           <div className="mt-2 flex items-center justify-center">
             {/* Success Illustration: solid green circle with white check */}

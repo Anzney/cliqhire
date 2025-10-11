@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, HandCoins, MapPin, Plus, Users, Copy } from "lucide-react";
+import { Building2, HandCoins, MapPin, Plus, Users, Copy, Check } from "lucide-react";
 import { type Job } from "./dummy-data";
 
 type Props = {
@@ -29,7 +29,7 @@ export function PipelineJobHeader({ job, onAddCandidate }: Props) {
       setIsFormLinkCopied(true);
       window.setTimeout(() => setIsFormLinkCopied(false), 15000);
     } catch (err) {
-      console.error("Failed to copy candidate form URL", err);
+      console.error("Failed to copy!", err);
     }
   };
 
@@ -75,8 +75,12 @@ export function PipelineJobHeader({ job, onAddCandidate }: Props) {
 
         <div className="flex items-center gap-2 ml-4">
           <Button size="sm" variant="outline" onClick={handleCopyCandidateFormLink} title="Copy candidate form URL">
-            <Copy className="h-4 w-4 mr-1" />
-            {isFormLinkCopied ? "Copied" : "Candidate Form"}
+            {isFormLinkCopied ? (
+              <Check className="h-4 w-4 mr-1 text-green-600" />
+            ) : (
+              <Copy className="h-4 w-4 mr-1" />
+            )}
+            {isFormLinkCopied ? "Copied" : "Copy Form URL"}
           </Button>
           <Button onClick={onAddCandidate} size="sm" variant="outline">
             <Plus className="h-4 w-4 mr-1" />
