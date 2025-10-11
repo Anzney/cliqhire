@@ -161,12 +161,10 @@ export default function ProtectedCandidateFormPage() {
     <div className="w-full bg-gradient-to-b from-purple-50 via-sky-50 to-emerald-50">
       <div className="container mx-auto max-w-5xl px-6">
         <Card className="border-primary/10">
-          <CardHeader className="border-b">
-            <div className="flex items-start justify-center ">
+          <CardHeader className="border-b items-center">
               <div>
-                <CardTitle className="text-2xl items-center">{headingTitle}</CardTitle>
-                <CardDescription>Manage candidate profile details</CardDescription>
-              </div>
+                <CardTitle className="text-2xl">{headingTitle}</CardTitle>
+                <CardDescription >Manage candidate profile details</CardDescription>
             </div>
           </CardHeader>
           <CardContent>
@@ -397,7 +395,7 @@ export default function ProtectedCandidateFormPage() {
             </div>
           </CardContent>
         </Card>
-        <SubmissionSuccessDialog open={successOpen} onOpenChange={setSuccessOpen} title="Success" />
+        <SubmissionSuccessDialog open={successOpen} onOpenChange={setSuccessOpen} title="Congratulations!" />
       </div>
     </div>
   );
