@@ -77,6 +77,7 @@ export default function ProtectedCandidateFormPage() {
   const [dobOpen, setDobOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
+  const [formSubmitted, setFormSubmitted] = useState(false);
 
   const toDateInputValue = (d?: string | Date) => {
     if (!d) return "";
@@ -160,15 +161,21 @@ export default function ProtectedCandidateFormPage() {
   return (
     <div className="w-full bg-gradient-to-b from-purple-50 via-sky-50 to-emerald-50">
       <div className="container mx-auto max-w-5xl px-6">
-        <Card className="border-primary/10">
-          <CardHeader className="border-b items-center">
-              <div>
-                <CardTitle className="text-2xl">{headingTitle}</CardTitle>
-                <CardDescription >Manage candidate profile details</CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-10">
+        {formSubmitted ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <h2 className="text-3xl font-bold">Form Submitted Successfully!</h2>
+            <p className="mt-2 text-muted-foreground">Thank you. We will be in touch with next steps.</p>
+          </div>
+        ) : (
+          <Card className="border-primary/10">
+            <CardHeader className="border-b items-center">
+                <div>
+                  <CardTitle className="text-2xl">{headingTitle}</CardTitle>
+                  <CardDescription >Manage candidate profile details</CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-10">
               <div>
                 <h4 className="text-sm font-medium text-neutral-500 mb-3">Personal Information</h4>
                 <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -384,18 +391,26 @@ export default function ProtectedCandidateFormPage() {
                 </section>
               </div>
 
-              <CardFooter className="flex items-center justify-end gap-3 p-0">
-                <Button type="button" variant="secondary" onClick={() => setFormData(initialData)}>
-                  Reset
-                </Button>
-                <Button type="button" onClick={onSubmit} disabled={submitting}>
-                  {submitting ? "Submitting..." : "Submit Form"}
-                </Button>
-              </CardFooter>
-            </div>
-          </CardContent>
-        </Card>
-        <SubmissionSuccessDialog open={successOpen} onOpenChange={setSuccessOpen} title="Congratulations!" />
+                <CardFooter className="flex items-center justify-end gap-3 p-0">
+                  <Button type="button" variant="secondary" onClick={() => setFormData(initialData)}>
+                    Reset
+                  </Button>
+                  <Button type="button" onClick={onSubmit} disabled={submitting}>
+                    {submitting ? "Submitting..." : "Submit Form"}
+                  </Button>
+                </CardFooter>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        <SubmissionSuccessDialog
+          open={successOpen}
+          onOpenChange={(open) => {
+            setSuccessOpen(open);
+            if (!open) setFormSubmitted(true);
+          }}
+          title="Congratulations!"
+        />
       </div>
     </div>
   );
