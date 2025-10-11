@@ -347,7 +347,7 @@ export const getPipelineEntry = async (pipelineId: string): Promise<GetPipelineE
  */
 export const getAllPipelineEntries = async (): Promise<GetAllPipelineEntriesResponse> => {
   try {
-    const response = await api.get('/api/recruiter-pipeline');
+    const response = await api.get('/api/recruiter-pipeline/my');
     return response.data;
   } catch (error: any) {
     console.error('Error fetching all pipeline entries:', error);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ChevronDown, ChevronRight, Users, MapPin, HandCoins , Building2, Loader2, Plus, Table as TableIcon} from "lucide-react";
+import { ChevronDown, ChevronRight, Users, MapPin, HandCoins , Building2, Loader2, Plus, Table as TableIcon, Copy, Check } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -59,6 +59,7 @@ export function PipelineJobCard({
   // Consolidated UI state
   const [isAddExistingOpen, setIsAddExistingOpen] = useState(false);
   const [selectedStageFilter, setSelectedStageFilter] = useState<string | null>(null);
+  const [isFormLinkCopied, setIsFormLinkCopied] = useState(false);
   
   
   // Status change confirmation dialog state
@@ -171,6 +172,27 @@ export function PipelineJobCard({
   const handleViewCandidate = (candidate: Candidate) => {
     setSelectedCandidate(candidate);
     setIsDialogOpen(true);
+  };
+
+  const handleCopyCandidateFormLink = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const path = `${window.location.origin}/candidate?job=${encodeURIComponent(job.title)}`; // Route groups like (form) are ignored in URL paths
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(path);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = path;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      setIsFormLinkCopied(true);
+      window.setTimeout(() => setIsFormLinkCopied(false), 15000);
+    } catch (err) {
+      console.error("Failed to copy candidate form path", err);
+    }
   };
 
   const handleCloseDialog = () => {
@@ -541,6 +563,19 @@ export function PipelineJobCard({
             
             {/* View Table + Add Candidate (horizontal) */}
             <div className="flex items-center gap-2 ml-4">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleCopyCandidateFormLink}
+                title="Copy candidate form path"
+              >
+                {isFormLinkCopied ? (
+                  <Check className="size-4 mr-1 text-green-600" />
+                ) : (
+                  <Copy className="size-4 mr-1" />
+                )}
+                {isFormLinkCopied ? "Copied" : "Copy Form URL"}
+              </Button>
               <Button
                 size="sm"
                 variant="outline"

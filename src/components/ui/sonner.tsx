@@ -18,8 +18,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
           toast:
             "group toast group-[.toaster]:bg-white group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
           // Ensure content inherits the variant color
-          title: "text-inherit",
-          description: "text-inherit",
+          // Make title readable
+          title: "text-inherit font-semibold",
+          // Force high-contrast description and align with variant colors
+          description:
+            "!opacity-100 text-neutral-800 dark:text-neutral-100 group-data-[type=error]:!text-red-600 group-data-[type=success]:!text-emerald-600",
           actionButton:
             "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
           cancelButton:

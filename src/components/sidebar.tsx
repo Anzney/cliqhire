@@ -99,7 +99,7 @@ export function Sidebar() {
                         isActive={!!active}
                         tooltip={{
                           children: item.name,
-                          className: "bg-green-100 text-green-700 border border-green-200"
+                          className: "bg-blue-100 text-blue-700 border border-blue-200"
                         }}
                         className={cn(
                           active && " bg-blue-100 text-blue-600 data-[active=true]:bg-blue-100 data-[active=true]:text-blue-600"
