@@ -44,6 +44,7 @@ export function UserPermissionDialog({
   const [userPermissions, setUserPermissions] = useState<UserPermissions | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [permissionAccess, setPermissionAccess] = useState<Record<string, { view: boolean; modify: boolean; delete: boolean }>>({});
 
   // Fetch permissions info and user permissions when dialog opens
   useEffect(() => {
@@ -118,6 +119,19 @@ export function UserPermissionDialog({
         ? prev.filter(id => id !== permissionId)
         : [...prev, permissionId]
     );
+  };
+
+  const handlePermissionAccessToggle = (
+    permissionId: string,
+    key: 'view' | 'modify' | 'delete'
+  ) => {
+    setPermissionAccess(prev => {
+      const current = prev[permissionId] || { view: false, modify: false, delete: false };
+      return {
+        ...prev,
+        [permissionId]: { ...current, [key]: !current[key] }
+      };
+    });
   };
 
   const handleRoleChange = (newRole: string) => {
@@ -204,13 +218,25 @@ export function UserPermissionDialog({
 
 
 
+  useEffect(() => {
+    setPermissionAccess(prev => {
+      const next = { ...prev } as Record<string, { view: boolean; modify: boolean; delete: boolean }>;
+      permissions.forEach(p => {
+        if (!next[p.id]) {
+          next[p.id] = { view: false, modify: false, delete: false };
+        }
+      });
+      return next;
+    });
+  }, [permissions.length]);
+
   const roles = permissionsInfo?.availableRoles || ['ADMIN', 'HIRING_MANAGER', 'TEAM_LEAD', 'RECRUITER', 'HEAD_HUNTER', 'SALES_TEAM'];
 
   if (!user) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
@@ -265,8 +291,8 @@ export function UserPermissionDialog({
         </div>
 
         {/* Permissions List - Scrollable */}
-        <div className="flex-1 overflow-y-auto mt-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="flex flex-col overflow-y-auto mt-3">
+          <div className="p-2 space-y-3">
             {permissions.length === 0 && (
               <div className="text-center text-muted-foreground py-4 col-span-1 sm:col-span-2">
                 No permissions available
@@ -279,7 +305,7 @@ export function UserPermissionDialog({
                   checked={selectedPermissions.includes(permission.id)}
                   onCheckedChange={() => handlePermissionToggle(permission.id)}
                   disabled={saving}
-                  className="mt-1"
+                  className="m-1"
                 />
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
@@ -298,6 +324,35 @@ export function UserPermissionDialog({
                   <p className="text-sm text-muted-foreground mt-1">
                     {permission.description}
                   </p>
+                  <div className="mt-2 grid grid-cols-3 gap-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`${permission.id}-view`}
+                        checked={permissionAccess[permission.id]?.view || false}
+                        onCheckedChange={() => handlePermissionAccessToggle(permission.id, 'view')}
+                        disabled={saving}
+                      />
+                      <Label htmlFor={`${permission.id}-view`} className="text-xs">View</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`${permission.id}-modify`}
+                        checked={permissionAccess[permission.id]?.modify || false}
+                        onCheckedChange={() => handlePermissionAccessToggle(permission.id, 'modify')}
+                        disabled={saving}
+                      />
+                      <Label htmlFor={`${permission.id}-modify`} className="text-xs">Modify</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`${permission.id}-delete`}
+                        checked={permissionAccess[permission.id]?.delete || false}
+                        onCheckedChange={() => handlePermissionAccessToggle(permission.id, 'delete')}
+                        disabled={saving}
+                      />
+                      <Label htmlFor={`${permission.id}-delete`} className="text-xs">Delete</Label>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
