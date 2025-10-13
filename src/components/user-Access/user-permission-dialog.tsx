@@ -305,7 +305,7 @@ export function UserPermissionDialog({
                   checked={selectedPermissions.includes(permission.id)}
                   onCheckedChange={() => handlePermissionToggle(permission.id)}
                   disabled={saving}
-                  className="m-1"
+                  className="m-1 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 data-[state=checked]:text-white"
                 />
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
@@ -331,6 +331,7 @@ export function UserPermissionDialog({
                         checked={permissionAccess[permission.id]?.view || false}
                         onCheckedChange={() => handlePermissionAccessToggle(permission.id, 'view')}
                         disabled={saving}
+                        className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 data-[state=checked]:text-white"
                       />
                       <Label htmlFor={`${permission.id}-view`} className="text-xs">View</Label>
                     </div>
@@ -340,6 +341,7 @@ export function UserPermissionDialog({
                         checked={permissionAccess[permission.id]?.modify || false}
                         onCheckedChange={() => handlePermissionAccessToggle(permission.id, 'modify')}
                         disabled={saving}
+                        className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 data-[state=checked]:text-white"
                       />
                       <Label htmlFor={`${permission.id}-modify`} className="text-xs">Modify</Label>
                     </div>
@@ -349,6 +351,7 @@ export function UserPermissionDialog({
                         checked={permissionAccess[permission.id]?.delete || false}
                         onCheckedChange={() => handlePermissionAccessToggle(permission.id, 'delete')}
                         disabled={saving}
+                        className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 data-[state=checked]:text-white"
                       />
                       <Label htmlFor={`${permission.id}-delete`} className="text-xs">Delete</Label>
                     </div>
