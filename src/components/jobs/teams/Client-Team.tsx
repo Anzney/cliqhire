@@ -11,9 +11,10 @@ import { JobData } from "../types";
 interface ClientTeamProps {
   jobId: string;
   jobData: JobData;
+  canModify?: boolean;
 }
 
-export function ClientTeam({ jobId, jobData }: ClientTeamProps) {
+export function ClientTeam({ jobId, jobData, canModify }: ClientTeamProps) {
   const [allClientContacts, setAllClientContacts] = useState<any[]>([]); // All client contacts
   const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]); // Job's selected contacts
   const [jobContacts, setJobContacts] = useState<any[]>([]); // Job's primary contacts from API
@@ -100,7 +101,9 @@ export function ClientTeam({ jobId, jobData }: ClientTeamProps) {
           variant="default"
           size="sm"
           className="gap-1"
+          disabled={!canModify}
           onClick={() => {
+            if (!canModify) return;
             setShowPrimaryContactsDialog(true);
           }}
         >

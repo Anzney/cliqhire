@@ -28,7 +28,7 @@ function mapNote(noteFromApi: any): Note {
   };
 }
 
-export function CandidateNotesContent({ candidateId }: { candidateId: string }) {
+export function CandidateNotesContent({ candidateId, canModify }: { candidateId: string; canModify?: boolean }) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editNote, setEditNote] = useState<Note | null>(null);
@@ -53,6 +53,9 @@ export function CandidateNotesContent({ candidateId }: { candidateId: string }) 
       alert("Candidate ID not found. Cannot create note.");
       return;
     }
+    if (!canModify) {
+      return;
+    }
     const payload = {
       content: note.content,
       candidate_id: candidateId,
@@ -70,6 +73,7 @@ export function CandidateNotesContent({ candidateId }: { candidateId: string }) 
 
   const handleUpdateNote = async (updated: { content: string }) => {
     if (!editNote) return;
+    if (!canModify) return;
     try {
       const res = await axios.patch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/candidate-notes/${editNote.id}`,
@@ -86,6 +90,7 @@ export function CandidateNotesContent({ candidateId }: { candidateId: string }) 
   };
 
   const handleDeleteNote = async (noteToDelete: Note) => {
+    if (!canModify) return;
     try {
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_URL}/api/candidate-notes/${noteToDelete.id}`
@@ -99,9 +104,11 @@ export function CandidateNotesContent({ candidateId }: { candidateId: string }) 
   return (
     <div className="flex-1">
       <div className="mb-6 flex justify-end">
-        <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" /> Add Note
-        </Button>
+        {canModify && (
+          <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" /> Add Note
+          </Button>
+        )}
       </div>
 
       {notes.length > 0 ? (
@@ -114,6 +121,7 @@ export function CandidateNotesContent({ candidateId }: { candidateId: string }) 
             }, 0);
           }}
           onDelete={handleDeleteNote}
+          canModify={canModify}
         />
       ) : (
         <div className="flex flex-col items-center justify-center text-center">

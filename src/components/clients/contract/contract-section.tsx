@@ -52,7 +52,7 @@ const getFormType = (businessType: string) => {
   return "business"; // default
 };
 
-export function ContractSection({ clientId, clientData }: ContractSectionProps) {
+export function ContractSection({ clientId, clientData, canModify = true }: ContractSectionProps & { canModify?: boolean }) {
   const [expandedContract, setExpandedContract] = useState<string | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState<string | null>(null);
   const [formData, setFormData] = useState<any>({});
@@ -177,14 +177,16 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
   };
 
   const handleEditContract = (businessType: string) => {
+    if (!canModify) return;
     const contractKey = CONTRACT_MAPPING[businessType as keyof typeof CONTRACT_MAPPING];
-    const contractData = clientData.contracts[contractKey];
+    const contractData = clientData?.contracts?.[contractKey];
     const mappedData = mapContractDataToFormData(contractData, businessType);
     setFormData(mappedData);
     setEditDialogOpen(businessType);
   };
 
   const handleFormSubmit = async (updatedFormData: any) => {
+    if (!canModify) return;
     if (!editDialogOpen || !clientId) return;
 
     setIsSubmitting(true);
@@ -209,6 +211,7 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
   };
 
   const handleDeleteContract = async () => {
+    if (!canModify) return;
     if (!deleteDialogOpen || !clientId) return;
 
     setIsDeleting(true);
@@ -234,6 +237,7 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
   };
 
   const handleAddContract = () => {
+    if (!canModify) return;
     setAddContractFormData({
       lineOfBusiness: [],
       contractForms: {},
@@ -250,6 +254,7 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
   };
 
   const handleSubmitContract = async () => {
+    if (!canModify) return;
     if (!clientId || !addContractFormData.lineOfBusiness.length) {
       toast.error("Please select at least one line of business");
       return;
@@ -311,11 +316,22 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
   // Get line of business array
   const lineOfBusiness = clientData.lineOfBusiness || [];
 
-  // Filter to only show contracts that exist in the data
-  const availableContracts = lineOfBusiness.filter((business: string) => {
+  // Determine available contracts from both lineOfBusiness and actual contracts present
+  const contractsObj = clientData?.contracts || {};
+  const contractsBusinessTypes = Object.keys(contractsObj)
+    .map((key) => {
+      const found = Object.entries(CONTRACT_MAPPING).find(([, mappedKey]) => mappedKey === key);
+      return found ? found[0] : undefined;
+    })
+    .filter((v): v is string => Boolean(v));
+
+  const lobArray = Array.isArray(lineOfBusiness) ? lineOfBusiness : [];
+  const lobWithExistingContracts = lobArray.filter((business: string) => {
     const contractKey = CONTRACT_MAPPING[business as keyof typeof CONTRACT_MAPPING];
-    return contractKey && clientData.contracts[contractKey];
+    return !!(contractKey && contractsObj[contractKey]);
   });
+
+  const availableContracts = Array.from(new Set([...lobWithExistingContracts, ...contractsBusinessTypes]));
 
   if (availableContracts.length === 0) {
     return (
@@ -720,7 +736,7 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
     <div className="space-y-4">
       {/* Add Contract Button */}
       <div className="flex justify-end">
-        <Button onClick={handleAddContract} className="flex items-center gap-2">
+        <Button onClick={handleAddContract} className="flex items-center gap-2" disabled={!canModify}>
           <Plus className="h-4 w-4" />
           Add New Contract
         </Button>
@@ -728,7 +744,7 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
 
       {availableContracts.map((businessType: string) => {
         const contractKey = CONTRACT_MAPPING[businessType as keyof typeof CONTRACT_MAPPING];
-        const contractData = clientData.contracts[contractKey];
+        const contractData = clientData?.contracts?.[contractKey];
         const summary = getContractSummary(contractData, businessType);
         const isExpanded = expandedContract === businessType;
 
@@ -793,6 +809,7 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
                     size="sm"
                     onClick={() => handleEditContract(businessType)}
                     className="text-xs"
+                    disabled={!canModify}
                   >
                     <Edit className="h-3 w-3 mr-1" />
                     Edit
@@ -802,6 +819,7 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
                     size="sm"
                     onClick={() => setDeleteDialogOpen(businessType)}
                     className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                    disabled={!canModify}
                   >
                     <Trash2 className="h-3 w-3 mr-1" />
                     Delete
@@ -831,7 +849,7 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
               >
                 Cancel
               </Button>
-              <Button onClick={() => handleFormSubmit(formData)} disabled={isSubmitting}>
+              <Button onClick={() => handleFormSubmit(formData)} disabled={isSubmitting || !canModify}>
                 {isSubmitting ? "Saving..." : "Save Changes"}
               </Button>
             </div>
@@ -849,6 +867,7 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
         cancelText="Cancel"
         onConfirm={handleDeleteContract}
         loading={isDeleting}
+        disabled={!canModify}
         confirmVariant="destructive"
       />
 
@@ -871,7 +890,7 @@ export function ContractSection({ clientId, clientData }: ContractSectionProps) 
               >
                 Cancel
               </Button>
-              <Button onClick={handleSubmitContract} disabled={isAddingContract}>
+              <Button onClick={handleSubmitContract} disabled={isAddingContract || !canModify}>
                 {isAddingContract ? "Adding Contract..." : "Submit Contract"}
               </Button>
             </div>

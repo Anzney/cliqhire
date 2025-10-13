@@ -19,6 +19,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function RecruiterPipeline() {
   const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
+  let finalPermissions = (user?.permissions && user.permissions.length > 0) ? user.permissions : (user?.defaultPermissions || []);
+  if (!isAdmin && !finalPermissions.includes('TODAY_TASKS')) {
+    finalPermissions = [...finalPermissions, 'TODAY_TASKS'];
+  }
+  const canViewPipeline = isAdmin || finalPermissions.includes('RECRUITMENT_PIPELINE_VIEW') || finalPermissions.includes('RECRUITMENT_PIPELINE');
+  const canModifyPipeline = isAdmin || finalPermissions.includes('RECRUITMENT_PIPELINE_MODIFY');
+  const canDeletePipeline = isAdmin || finalPermissions.includes('RECRUITMENT_PIPELINE_DELETE');
   const queryClient = useQueryClient();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -245,6 +253,10 @@ export function RecruiterPipeline() {
     newStage: string,
     extras?: { interviewDate?: string; interviewMeetingLink?: string }
   ) => {
+    if (!canModifyPipeline) {
+      toast.error('You do not have permission to modify the recruitment pipeline.');
+      return;
+    }
     // Track previous stage for rollback on error
     let previousStage: string | undefined;
     try {
@@ -353,6 +365,12 @@ export function RecruiterPipeline() {
   const kpiData = calculateKPIData();
   const filteredJobs = getFilteredAndSortedJobs();
 
+  if (!canViewPipeline) {
+    return (
+      <div className="text-center py-8 text-gray-500">You do not have permission to view the recruitment pipeline.</div>
+    );
+  }
+
   return (
     <div className="space-y-3">
       {/* KPI Section */}
@@ -360,15 +378,17 @@ export function RecruiterPipeline() {
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <CreatePipelineDialog 
-            trigger={
-              <Button className="flex items-center gap-2" disabled={listLoading}>
-                <Plus className="h-4 w-4" />
-                Add Recruitment
-              </Button>
-            }
-            onPipelineCreated={handlePipelineCreated}
-          />
+          {canModifyPipeline && (
+            <CreatePipelineDialog 
+              trigger={
+                <Button className="flex items-center gap-2" disabled={listLoading}>
+                  <Plus className="h-4 w-4" />
+                  Add Recruitment
+                </Button>
+              }
+              onPipelineCreated={handlePipelineCreated}
+            />
+          )}
         </div>
         
         <div className="flex items-center gap-3">

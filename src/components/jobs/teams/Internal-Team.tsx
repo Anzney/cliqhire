@@ -12,9 +12,10 @@ import { JobData } from "../types";
 interface InternalTeamProps {
   jobId: string;
   jobData: JobData;
+  canModify?: boolean;
 }
 
-export function InternalTeam({ jobId, jobData }: InternalTeamProps) {
+export function InternalTeam({ jobId, jobData, canModify }: InternalTeamProps) {
   const [isTeamDialogOpen, setIsTeamDialogOpen] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<{
     team?: { id: string; name: string };
@@ -194,7 +195,11 @@ export function InternalTeam({ jobId, jobData }: InternalTeamProps) {
         <Button
           size="sm"
           className="h-8"
-          onClick={() => setIsTeamDialogOpen(true)}
+          disabled={!canModify}
+          onClick={() => {
+            if (!canModify) return;
+            setIsTeamDialogOpen(true)
+          }}
         >
           {selectedTeam &&
           (selectedTeam.hiringManager || selectedTeam.teamLead || selectedTeam.recruiters?.length) ? (

@@ -18,9 +18,10 @@ interface NotesListProps {
   notes: Note[];
   onEdit: (note: Note) => void;
   onDelete: (note: Note) => void;
+  canModify?: boolean;
 }
 
-export function NotesList({ notes, onEdit, onDelete }: NotesListProps) {
+export function NotesList({ notes, onEdit, onDelete, canModify }: NotesListProps) {
   const [expandNotes, setExpandNotes] = useState<string[]>([]);
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
   const [isPointerDisabled, setIsPointerDisabled] = useState(false);
@@ -62,30 +63,32 @@ export function NotesList({ notes, onEdit, onDelete }: NotesListProps) {
                   <Eye className="h-5 w-5" />
                 )}
               </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40">
-                  <DropdownMenuItem onClick={() => onEdit(note)}>
-                    <Pencil className="h-4 w-4 mr-2" />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setIsPointerDisabled(true);
-                      setTimeout(() => {
-                        setNoteToDelete(note); // ✅ Delay set for modal open
-                      }, 0);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {canModify && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40">
+                    <DropdownMenuItem onClick={() => onEdit(note)}>
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setIsPointerDisabled(true);
+                        setTimeout(() => {
+                          setNoteToDelete(note); // ✅ Delay set for modal open
+                        }, 0);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
           </div>
           <div
@@ -105,25 +108,27 @@ export function NotesList({ notes, onEdit, onDelete }: NotesListProps) {
       ))}
 
       {/* Universal Delete Confirmation Dialog */}
-      <ConfirmDeleteDialog
-        open={!!noteToDelete}
-        onOpenChange={(open) => {
-          if (!open) {
-            setNoteToDelete(null);
-            setTimeout(() => {
-              setIsPointerDisabled(false);
-            }, 200);
-          }
-        }}
-        onConfirm={() => {
-          if (noteToDelete) {
-            onDelete(noteToDelete);
-            setNoteToDelete(null);
-          }
-        }}
-        title="Delete Note"
-        description="Are you sure you want to delete this note?"
-      />
+      {canModify && (
+        <ConfirmDeleteDialog
+          open={!!noteToDelete}
+          onOpenChange={(open) => {
+            if (!open) {
+              setNoteToDelete(null);
+              setTimeout(() => {
+                setIsPointerDisabled(false);
+              }, 200);
+            }
+          }}
+          onConfirm={() => {
+            if (noteToDelete) {
+              onDelete(noteToDelete);
+              setNoteToDelete(null);
+            }
+          }}
+          title="Delete Note"
+          description="Are you sure you want to delete this note?"
+        />
+      )}
     </div>
   );
 }

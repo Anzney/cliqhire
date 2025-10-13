@@ -20,9 +20,10 @@ interface JobTabsProps {
   reloadToken?: number;
   activeTab?: string;
   onTabChange?: (value: string) => void;
+  canModify?: boolean;
 }
 
-export function JobTabs({ jobId, jobData, reloadToken, activeTab = "summary", onTabChange }: JobTabsProps) {
+export function JobTabs({ jobId, jobData, reloadToken, activeTab = "summary", onTabChange, canModify }: JobTabsProps) {
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
       <JobTabsList />
@@ -33,12 +34,12 @@ export function JobTabs({ jobId, jobData, reloadToken, activeTab = "summary", on
       
       <JobTabContent value="summary">
       
-        <SummaryContent jobId={jobId} jobData={jobData} />
+        <SummaryContent jobId={jobId} jobData={jobData} canModify={canModify} />
       </JobTabContent>
       
       <JobTabContent value="team">
       
-        <TeamContent jobId={jobId} jobData={jobData} />
+        <TeamContent jobId={jobId} jobData={jobData} canModify={canModify} />
       </JobTabContent>
 
       {/* <JobTabContent value="recommendations">
@@ -53,12 +54,12 @@ export function JobTabs({ jobId, jobData, reloadToken, activeTab = "summary", on
       
       <JobTabContent value="notes">
       
-        <NotesContent jobId={jobId} jobData={jobData} />
+        <NotesContent jobId={jobId} jobData={jobData} canModify={canModify} />
       </JobTabContent>
       
       <JobTabContent value="attachments">
       
-        <AttachmentsContent jobId={jobId} />
+        <AttachmentsContent jobId={jobId} canModify={canModify} />
       </JobTabContent>
 
       {/* <JobTabContent value="sourcing">

@@ -34,10 +34,12 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 export function NotesContent({ 
   clientId, 
-  candidateId 
+  candidateId,
+  canModify,
 }: { 
   clientId?: string;
   candidateId?: string;
+  canModify?: boolean;
 }) {
   // const router = useRouter();
 
@@ -109,15 +111,18 @@ useEffect(() => {
 
   return (
     <div className="flex-1">
-      <div className="mb-6 flex justify-end">
-        <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" /> Add Note
-        </Button>
-      </div>
+      {canModify && (
+        <div className="mb-6 flex justify-end">
+          <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" /> Add Note
+          </Button>
+        </div>
+      )}
 
       {notes.length > 0 ? (
         <NotesList
           notes={notes}
+          canModify={canModify}
           onEdit={(note) => {
             setEditNote(note);
             setTimeout(() => {
@@ -151,13 +156,15 @@ useEffect(() => {
         </div>
       )}
 
-      <AddNoteDialog
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-        onSubmit={handleAddNote}
-      />
+      {canModify && (
+        <AddNoteDialog
+          open={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+          onSubmit={handleAddNote}
+        />
+      )}
 
-      {editNote && (
+      {canModify && editNote && (
         <AddNoteDialog
           open={isEditDialogOpen}
           onOpenChange={(open) => {

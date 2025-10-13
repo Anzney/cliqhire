@@ -22,8 +22,18 @@ import { PipelineCandidatesTable } from "@/components/Recruiter-Pipeline/Pipelin
 import { mapEntryToJob } from "@/components/Recruiter-Pipeline/pipeline-mapper";
 import { InterviewDetailsDialog } from "@/components/Recruiter-Pipeline/interview-details-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Page = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
+  let finalPermissions = (user?.permissions && user.permissions.length > 0) ? user.permissions : (user?.defaultPermissions || []);
+  if (!isAdmin && !finalPermissions.includes('TODAY_TASKS')) {
+    finalPermissions = [...finalPermissions, 'TODAY_TASKS'];
+  }
+  const canViewPipeline = isAdmin || finalPermissions.includes('RECRUITMENT_PIPELINE_VIEW') || finalPermissions.includes('RECRUITMENT_PIPELINE');
+  const canModifyPipeline = isAdmin || finalPermissions.includes('RECRUITMENT_PIPELINE_MODIFY');
+  const canDeletePipeline = isAdmin || finalPermissions.includes('RECRUITMENT_PIPELINE_DELETE');
   const params = useParams();
   const id = (params as any)?.id as string;
   const router = useRouter();
@@ -156,6 +166,10 @@ const Page = () => {
   };
 
   const handleStageChange = (candidate: Candidate, newStage: string) => {
+    if (!canModifyPipeline) {
+      alert('You do not have permission to modify the recruitment pipeline.');
+      return;
+    }
     // Validate if candidate can change stage (check for temp candidate)
     const validation = validateTempCandidateStageChange(candidate);
     
@@ -184,6 +198,10 @@ const Page = () => {
   };
 
   const handleConfirmStageChange = async () => {
+    if (!canModifyPipeline) {
+      alert('You do not have permission to modify the recruitment pipeline.');
+      return;
+    }
     if (stageChangeDialog.candidate) {
       try {
         const backendStage = mapUIStageToBackendStage(stageChangeDialog.newStage);
@@ -209,6 +227,10 @@ const Page = () => {
   };
 
   const handleConfirmInterviewDetails = async (dateTime: string, meetingLink: string) => {
+    if (!canModifyPipeline) {
+      alert('You do not have permission to modify the recruitment pipeline.');
+      return;
+    }
     const candidate = interviewDialog.candidate;
     if (!candidate) return;
     try {
@@ -235,6 +257,10 @@ const Page = () => {
   };
 
   const handleConfirmDeleteCandidate = async () => {
+    if (!canDeletePipeline) {
+      alert('You do not have permission to delete candidates from the pipeline.');
+      return;
+    }
     if (deleteCandidateDialog.candidate) {
       try {
         await deleteCandidateFromPipeline(id, deleteCandidateDialog.candidate.id);
@@ -253,14 +279,26 @@ const Page = () => {
   };
 
   const handleAddCandidate = () => {
+    if (!canModifyPipeline) {
+      alert('You do not have permission to add candidates.');
+      return;
+    }
     setIsAddCandidateOpen(true);
   };
 
   const handleAddExistingCandidate = () => {
+    if (!canModifyPipeline) {
+      alert('You do not have permission to add candidates.');
+      return;
+    }
     setIsAddExistingOpen(true);
   };
 
   const handleAddNewCandidate = () => {
+    if (!canModifyPipeline) {
+      alert('You do not have permission to add candidates.');
+      return;
+    }
     setIsCreateCandidateOpen(true);
   };
 
@@ -272,6 +310,10 @@ const Page = () => {
   };
 
   const handleStatusChange = (candidate: Candidate, newStatus: any) => {
+    if (!canModifyPipeline) {
+      alert('You do not have permission to modify the recruitment pipeline.');
+      return;
+    }
     // Validate if candidate can change status (check for temp candidate)
     const validation = validateTempCandidateStatusChange(candidate, newStatus);
     
@@ -313,6 +355,10 @@ const Page = () => {
 
 
   const handleConfirmStatusChange = async () => {
+    if (!canModifyPipeline) {
+      alert('You do not have permission to modify the recruitment pipeline.');
+      return;
+    }
     if (statusChangeDialog.candidate && statusChangeDialog.newStatus) {
       try {
         await updateCandidateStatus(id, statusChangeDialog.candidate.id, {
@@ -429,6 +475,14 @@ const Page = () => {
           <ChevronLeft className="h-4 w-4 mr-1" /> Back
         </Button>
         <div className="text-red-600">{(error as any)?.message || "Job not found"}</div>
+      </div>
+    );
+  }
+
+  if (!canViewPipeline) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center text-muted-foreground">You do not have permission to view this pipeline.</div>
       </div>
     );
   }

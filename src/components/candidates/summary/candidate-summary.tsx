@@ -96,9 +96,10 @@ const skillFields = [
 interface CandidateSummaryProps {
   candidate: any;
   onCandidateUpdate?: (updatedCandidate: any, fieldKey?: string) => void;
+  canModify?: boolean;
 }
 
-const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProps) => {
+const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: CandidateSummaryProps) => {
   const [editField, setEditField] = useState<string | null>(null);
   const [localCandidate, setLocalCandidate] = useState(candidate);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
@@ -169,14 +170,16 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
               <span className={`text-sm ${hasValue ? '' : 'text-muted-foreground'}`}>
                 {hasValue ? value : 'No Details'}
               </span>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 flex items-center ml-2"
-                onClick={() => setShowUploadDialog(true)}
-              >
-                <Pencil className="h-4 w-4 mr-2" />Edit
-              </Button>
+              {canModify && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 flex items-center ml-2"
+                  onClick={() => setShowUploadDialog(true)}
+                >
+                  <Pencil className="h-4 w-4 mr-2" />Edit
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -195,14 +198,16 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
               <span className={`text-sm ${hasValue ? '' : 'text-muted-foreground'}`}>
                 {hasValue ? value : 'No Details'}
               </span>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 flex items-center ml-2"
-                onClick={() => setShowDateOfBirthDialog(true)}
-              >
-                <Pencil className="h-4 w-4 mr-2" />Edit
-              </Button>
+              {canModify && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 flex items-center ml-2"
+                  onClick={() => setShowDateOfBirthDialog(true)}
+                >
+                  <Pencil className="h-4 w-4 mr-2" />Edit
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -220,14 +225,16 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
               <span className={`text-sm ${hasValue ? '' : 'text-muted-foreground'}`}>
                 {hasValue ? value : 'No Details'}
               </span>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 flex items-center ml-2"
-                onClick={() => setShowMaritalStatusDialog(true)}
-              >
-                <Pencil className="h-4 w-4 mr-2" />Edit
-              </Button>
+              {canModify && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 flex items-center ml-2"
+                  onClick={() => setShowMaritalStatusDialog(true)}
+                >
+                  <Pencil className="h-4 w-4 mr-2" />Edit
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -245,14 +252,16 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
               <span className={`text-sm ${hasValue ? '' : 'text-muted-foreground'}`}>
                 {hasValue ? value : 'No Details'}
               </span>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 flex items-center ml-2"
-                onClick={() => setShowGenderDialog(true)}
-              >
-                <Pencil className="h-4 w-4 mr-2" />Edit
-              </Button>
+              {canModify && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 flex items-center ml-2"
+                  onClick={() => setShowGenderDialog(true)}
+                >
+                  <Pencil className="h-4 w-4 mr-2" />Edit
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -270,14 +279,16 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
               <span className={`text-sm ${hasValue ? '' : 'text-muted-foreground'}`}>
                 {hasValue ? value : 'No Details'}
               </span>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 flex items-center ml-2"
-                onClick={() => setShowStatusDialog(true)}
-              >
-                <Pencil className="h-4 w-4 mr-2" />Edit
-              </Button>
+              {canModify && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 flex items-center ml-2"
+                  onClick={() => setShowStatusDialog(true)}
+                >
+                  <Pencil className="h-4 w-4 mr-2" />Edit
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -292,14 +303,16 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
             <span className="text-sm font-medium text-muted-foreground">
               {field.label}
             </span>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 flex items-center"
-              onClick={() => setEditField(field.key)}
-            >
-              <Pencil className="h-4 w-4 mr-2" />Edit
-            </Button>
+            {canModify && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 flex items-center"
+                onClick={() => setEditField(field.key)}
+              >
+                <Pencil className="h-4 w-4 mr-2" />Edit
+              </Button>
+            )}
           </div>
           <Textarea
             value={hasValue ? rawValue : ''}
@@ -307,14 +320,16 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
             className="min-h-[80px] resize-none"
             readOnly
           />
-          <EditFieldModal
-            open={editField === field.key}
-            onClose={() => setEditField(null)}
-            fieldName={field.label}
-            currentValue={typeof rawValue === 'string' ? rawValue : ''}
-            onSave={(val: string) => handleSave(field.key, val)}
-            isTextarea={true}
-          />
+          {canModify && (
+            <EditFieldModal
+              open={editField === field.key}
+              onClose={() => setEditField(null)}
+              fieldName={field.label}
+              currentValue={typeof rawValue === 'string' ? rawValue : ''}
+              onSave={(val: string) => handleSave(field.key, val)}
+              isTextarea={true}
+            />
+          )}
         </div>
       );
     }
@@ -329,21 +344,25 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
             <span className={`text-sm ${hasValue ? '' : 'text-muted-foreground'}`}>
               {hasValue ? value : 'No Details'}
             </span>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 flex items-center ml-2"
-              onClick={() => setEditField(field.key)}
-            >
-              <Pencil className="h-4 w-4 mr-2" />Edit
-            </Button>
-            <EditFieldModal
-              open={editField === field.key}
-              onClose={() => setEditField(null)}
-              fieldName={field.label}
-              currentValue={typeof rawValue === 'string' ? rawValue : Array.isArray(rawValue) ? rawValue.join(', ') : ''}
-              onSave={(val: string) => handleSave(field.key, val)}
-            />
+            {canModify && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 flex items-center ml-2"
+                  onClick={() => setEditField(field.key)}
+                >
+                  <Pencil className="h-4 w-4 mr-2" />Edit
+                </Button>
+                <EditFieldModal
+                  open={editField === field.key}
+                  onClose={() => setEditField(null)}
+                  fieldName={field.label}
+                  currentValue={typeof rawValue === 'string' ? rawValue : Array.isArray(rawValue) ? rawValue.join(', ') : ''}
+                  onSave={(val: string) => handleSave(field.key, val)}
+                />
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -357,21 +376,22 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
     
     // Display value: if array, join with commas; if string, use as is
     const displayValue = Array.isArray(rawValue) ? rawValue.join(', ') : rawValue;
-    
     return (
       <div key={field.key} className="mb-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-muted-foreground">
             {field.label}
           </span>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 flex items-center"
-            onClick={() => setEditField(field.key)}
-          >
-            <Pencil className="h-4 w-4 mr-2" />Edit
-          </Button>
+          {canModify && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 flex items-center"
+              onClick={() => setEditField(field.key)}
+            >
+              <Pencil className="h-4 w-4 mr-2" />Edit
+            </Button>
+          )}
         </div>
         <Textarea
           value={hasValue ? displayValue : ''}
@@ -379,18 +399,20 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
           className="min-h-[80px] resize-none"
           readOnly
         />
-        <EditFieldModal
-          open={editField === field.key}
-          onClose={() => setEditField(null)}
-          fieldName={field.label}
-          currentValue={displayValue || ''}
-          onSave={(val: string) => {
-            // Convert comma-separated string back to array
-            const arrayValue = val.trim() ? val.split(',').map(item => item.trim()).filter(item => item) : [];
-            handleSave(field.key, arrayValue);
-          }}
-          isTextarea={true}
-        />
+        {canModify && (
+          <EditFieldModal
+            open={editField === field.key}
+            onClose={() => setEditField(null)}
+            fieldName={field.label}
+            currentValue={displayValue || ''}
+            onSave={(val: string) => {
+              // Convert comma-separated string back to array
+              const arrayValue = val.trim() ? val.split(',').map(item => item.trim()).filter(item => item) : [];
+              handleSave(field.key, arrayValue);
+            }}
+            isTextarea={true}
+          />
+        )}
       </div>
     );
   };
@@ -458,25 +480,8 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
             <SalaryRange
               candidate={localCandidate}
               onCandidateUpdate={onCandidateUpdate}
+              canModify={canModify}
             />
-          </CollapsibleContent>
-        </Collapsible>
-        
-        {/* Previous Company Info Section */}
-        <Collapsible className="rounded-lg border shadow-sm">
-          <div className="flex items-center justify-between p-4">
-            <h4 className="text-sm font-semibold">Previous Company Info</h4>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="text-xs p-1">
-                Show Complete Details
-                <ChevronsUpDown />
-              </Button>
-            </CollapsibleTrigger>
-          </div>
-          <CollapsibleContent className="px-4 pb-4">
-            <div className="space-y-3">
-              {previousCompanyFields.map((field) => renderField(field, previousCompanyFields))}
-            </div>
           </CollapsibleContent>
         </Collapsible>
         
@@ -506,44 +511,54 @@ const CandidateSummary = ({ candidate, onCandidateUpdate }: CandidateSummaryProp
       </div>
 
       {/* Resume Upload Dialog */}
-      <ResumeUploadDialog
-        open={showUploadDialog}
-        onClose={() => setShowUploadDialog(false)}
-        onResumeUploaded={handleResumeUpload}
-        candidateId={localCandidate?._id}
-      />
+      {canModify && (
+        <ResumeUploadDialog
+          open={showUploadDialog}
+          onClose={() => setShowUploadDialog(false)}
+          onResumeUploaded={handleResumeUpload}
+          candidateId={localCandidate?._id}
+        />
+      )}
 
       {/* Date of Birth Dialog */}
-      <DateOfBirthDialog
-        open={showDateOfBirthDialog}
-        onClose={() => setShowDateOfBirthDialog(false)}
-        currentValue={localCandidate?.dateOfBirth}
-        onSave={handleDateOfBirthSave}
-      />
+      {canModify && (
+        <DateOfBirthDialog
+          open={showDateOfBirthDialog}
+          onClose={() => setShowDateOfBirthDialog(false)}
+          currentValue={localCandidate?.dateOfBirth}
+          onSave={handleDateOfBirthSave}
+        />
+      )}
 
       {/* Marital Status Dialog */}
-      <MaritalStatusDialog
-        open={showMaritalStatusDialog}
-        onClose={() => setShowMaritalStatusDialog(false)}
-        currentValue={localCandidate?.maritalStatus}
-        onSave={handleMaritalStatusSave}
-      />
+      {canModify && (
+        <MaritalStatusDialog
+          open={showMaritalStatusDialog}
+          onClose={() => setShowMaritalStatusDialog(false)}
+          currentValue={localCandidate?.maritalStatus}
+          onSave={handleMaritalStatusSave}
+        />
+      )}
 
       {/* Gender Dialog */}
-      <GenderDialog
-        open={showGenderDialog}
-        onClose={() => setShowGenderDialog(false)}
-        currentValue={localCandidate?.gender}
-        onSave={handleGenderSave}
-      />
+      {canModify && (
+        <GenderDialog
+          open={showGenderDialog}
+          onClose={() => setShowGenderDialog(false)}
+          currentValue={localCandidate?.gender}
+          onSave={handleGenderSave}
+        />
+      )}
 
       {/* Status Dialog */}
-      <StatusDialog
-        open={showStatusDialog}
-        onClose={() => setShowStatusDialog(false)}
-        currentValue={localCandidate?.status}
-        onSave={handleStatusSave}
-      />
+      {canModify && (
+        <StatusDialog
+          open={showStatusDialog}
+          onClose={() => setShowStatusDialog(false)}
+          currentValue={localCandidate?.status}
+          onSave={handleStatusSave}
+        />
+      )}
     </div>
   );
 };

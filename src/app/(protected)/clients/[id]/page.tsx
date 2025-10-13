@@ -29,6 +29,7 @@ import { ContractSection } from "@/components/clients/contract/contract-section"
 import { CreateJobRequirementForm } from "@/components/new-jobs/create-jobs-form";
 import { useQuery } from "@tanstack/react-query";
 import { EmailTemplatesContent } from "@/components/clients/email-templates";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PageProps {
   params: { id: string };
@@ -39,6 +40,16 @@ export default function ClientPage({ params }: PageProps) {
   // const [isLoading, setIsLoading] = useState(false);
   const [isCreateJobOpen, setIsCreateJobOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Summary");
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
+  let finalPermissions = (user?.permissions && user.permissions.length > 0) ? user.permissions : (user?.defaultPermissions || []);
+  if (!isAdmin && !finalPermissions.includes('TODAY_TASKS')) {
+    finalPermissions = [...finalPermissions, 'TODAY_TASKS'];
+  }
+  const canViewClients = isAdmin || finalPermissions.includes('CLIENTS_VIEW') || finalPermissions.includes('CLIENTS');
+  const canModifyClients = isAdmin || finalPermissions.includes('CLIENTS_MODIFY');
+  const canDeleteClients = isAdmin || finalPermissions.includes('CLIENTS_DELETE');
+  const canModifyJobs = isAdmin || finalPermissions.includes('JOBS_MODIFY');
 
   const { data: client, isLoading, isError, refetch } = useQuery({
     queryKey: ["clientsData", id],
@@ -76,6 +87,14 @@ export default function ClientPage({ params }: PageProps) {
     );
   }
 
+  if (!canViewClients) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center text-muted-foreground">You do not have permission to view this client.</div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full">
       {/* Header Section */}
@@ -98,13 +117,15 @@ export default function ClientPage({ params }: PageProps) {
 
       {/* Button Bar */}
       <div className="flex items-center justify-between p-4 border-b">
-        <Button
-          className="bg-black text-white hover:bg-gray-800 rounded-md flex items-center gap-2"
-          onClick={() => setIsCreateJobOpen(true)}
-        >
-          <Plus className="h-4 w-4" />
-          Create Job Requirement
-        </Button>
+        {canModifyJobs && (
+          <Button
+            className="bg-black text-white hover:bg-gray-800 rounded-md flex items-center gap-2"
+            onClick={() => setIsCreateJobOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            Create Job Requirement
+          </Button>
+        )}
 
         <div className="flex items-center gap-2">
           <Button
@@ -190,15 +211,15 @@ export default function ClientPage({ params }: PageProps) {
         </TabsContent>
 
         <TabsContent value="Summary" className="p-4">
-          <SummaryContent clientId={id} clientData={client} onTabSwitch={handleTabSwitch} />
+          <SummaryContent clientId={id} clientData={client} onTabSwitch={handleTabSwitch} canModify={canModifyClients} />
         </TabsContent>
 
         <TabsContent value="Notes" className="p-4">
-          <NotesContent clientId={id} />
+          <NotesContent clientId={id} canModify={canModifyClients} />
         </TabsContent>
 
         <TabsContent value="Attachments" className="p-4">
-          <AttachmentsContent clientId={id} />
+          <AttachmentsContent clientId={id} canModify={canModifyClients} />
         </TabsContent>
 
         <TabsContent value="ClientTeam" className="p-4">
@@ -206,29 +227,31 @@ export default function ClientPage({ params }: PageProps) {
         </TabsContent>
 
         <TabsContent value="Contacts" className="p-4">
-          <ContactsContent clientId={id} clientData={client} />
+          <ContactsContent clientId={id} clientData={client} canModify={canModifyClients} />
         </TabsContent>
 
         <TabsContent value="History" className="p-4">
-          <HistoryContent clientId={id} />
+          <HistoryContent clientId={id}  />
         </TabsContent>
 
         <TabsContent value="Contract" className="p-4">
-          <ContractSection clientId={id} clientData={client} />
+          <ContractSection clientId={id} clientData={client} canModify={canModifyClients} />
         </TabsContent>
 
         <TabsContent value="EmailTemplates" className="p-4">
-          <EmailTemplatesContent clientId={id} clientData={client} />
+          <EmailTemplatesContent clientId={id} clientData={client} canModify={canModifyClients} />
         </TabsContent>
       </Tabs>
 
       {/* Create Job Modal */}
-      <CreateJobRequirementForm
-        open={isCreateJobOpen}
-        onOpenChange={setIsCreateJobOpen}
-        lockedClientId={id}
-        lockedClientName={client?.name || ""}
-      />
+      {canModifyJobs && (
+        <CreateJobRequirementForm
+          open={isCreateJobOpen}
+          onOpenChange={setIsCreateJobOpen}
+          lockedClientId={id}
+          lockedClientName={client?.name || ""}
+        />
+      )}
     </div>
   );
 }

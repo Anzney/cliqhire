@@ -152,10 +152,23 @@ export function UserPermissionDialog({
     try {
       setSaving(true);
       const updateData: { permissions?: string[]; role?: string } = {};
+
+      // Expand granular permissions to include base permissions expected by backend
+      const expandWithBase = (perms: string[]): string[] => {
+        const set = new Set(perms);
+        perms.forEach((p) => {
+          const m = p.match(/^(.*)_(VIEW|MODIFY|DELETE)$/);
+          if (m) {
+            set.add(m[1]);
+          }
+        });
+        return Array.from(set);
+      };
+      const expandedSelected = expandWithBase(selectedPermissions);
       
-      // Only include permissions if they've changed
-      if (JSON.stringify(selectedPermissions.sort()) !== JSON.stringify(userPermissions?.permissions.sort())) {
-        updateData.permissions = selectedPermissions;
+      // Only include permissions if they've changed (compare expanded set to server's current perms)
+      if (JSON.stringify([...expandedSelected].sort()) !== JSON.stringify([...(userPermissions?.permissions || [])].sort())) {
+        updateData.permissions = expandedSelected;
       }
       
       // Only include role if it's changed
@@ -193,42 +206,83 @@ export function UserPermissionDialog({
     onOpenChange(false);
   };
 
-  // Create permissions list from API data and always include CLIENTS as additional option
-  const permissions: Permission[] = [];
-  
-  if (permissionsInfo) {
-    // Add permissions from backend
-    permissionsInfo.availablePermissions.forEach(permissionId => {
-      permissions.push({
-        id: permissionId,
-        name: permissionId.replace(/_/g, ' '),
-        description: permissionsInfo.permissionsDescription[permissionId] || `Access to ${permissionId.toLowerCase().replace(/_/g, ' ')}`
+  // Build grouped permissions by base entity with granular actions
+  type ActionKey = 'view' | 'modify' | 'delete';
+  interface GroupedPermission {
+    base: string;
+    label: string;
+    description?: string;
+    actions: Partial<Record<ActionKey, string>>; // maps to actual permission IDs like BASE_VIEW
+  }
+
+  const groupedPermissions: GroupedPermission[] = React.useMemo(() => {
+    const available = permissionsInfo?.availablePermissions || [];
+    const desc = permissionsInfo?.permissionsDescription || {} as Record<string, string>;
+    const map = new Map<string, GroupedPermission>();
+
+    for (const id of available) {
+      const match = id.match(/^(.*)_(VIEW|MODIFY|DELETE)$/);
+      if (match) {
+        const base = match[1];
+        const action = match[2].toLowerCase() as ActionKey;
+        if (!map.has(base)) {
+          map.set(base, {
+            base,
+            label: base.replace(/_/g, ' '),
+            description: desc[base] || desc[id] || `Access to ${base.toLowerCase().replace(/_/g, ' ')}`,
+            actions: {}
+          });
+        }
+        map.get(base)!.actions[action] = id;
+      } else {
+        if (!map.has(id)) {
+          map.set(id, {
+            base: id,
+            label: id.replace(/_/g, ' '),
+            description: desc[id] || `Access to ${id.toLowerCase().replace(/_/g, ' ')}`,
+            actions: {}
+          });
+        }
+      }
+    }
+
+    if (!map.has('CLIENTS')) {
+      map.set('CLIENTS', {
+        base: 'CLIENTS',
+        label: 'CLIENTS',
+        description: 'Access to view and manage client information (Admin can grant additional access)',
+        actions: {
+          view: 'CLIENTS_VIEW',
+          modify: 'CLIENTS_MODIFY',
+          delete: 'CLIENTS_DELETE'
+        }
       });
-    });
-  }
-  
-  // Always add CLIENTS as an additional option if it's not already included
-  if (!permissions.find(p => p.id === 'CLIENTS')) {
-    permissions.push({
-      id: 'CLIENTS',
-      name: 'CLIENTS',
-      description: 'Access to view and manage client information (Admin can grant additional access)'
-    });
-  }
+    }
 
+    const order = ['CANDIDATE', 'JOBS', 'RECRUITMENT_PIPELINE', 'CLIENTS'];
+    const ordered: GroupedPermission[] = [];
+    for (const key of order) {
+      const gp = map.get(key);
+      if (gp) ordered.push(gp);
+    }
 
+    // Include any other groups not in the predefined order at the end
+    for (const [key, gp] of map.entries()) {
+      if (!order.includes(key)) ordered.push(gp);
+    }
+    return ordered;
+  }, [permissionsInfo]);
 
   useEffect(() => {
     setPermissionAccess(prev => {
       const next = { ...prev } as Record<string, { view: boolean; modify: boolean; delete: boolean }>;
-      permissions.forEach(p => {
-        if (!next[p.id]) {
-          next[p.id] = { view: false, modify: false, delete: false };
-        }
+      groupedPermissions.forEach(g => {
+        const current = next[g.base] || { view: false, modify: false, delete: false };
+        next[g.base] = current;
       });
       return next;
     });
-  }, [permissions.length]);
+  }, [groupedPermissions.length]);
 
   const roles = permissionsInfo?.availableRoles || ['ADMIN', 'HIRING_MANAGER', 'TEAM_LEAD', 'RECRUITER', 'HEAD_HUNTER', 'SALES_TEAM'];
 
@@ -293,68 +347,67 @@ export function UserPermissionDialog({
         {/* Permissions List - Scrollable */}
         <div className="flex flex-col overflow-y-auto mt-3">
           <div className="p-2 space-y-3">
-            {permissions.length === 0 && (
+            {groupedPermissions.length === 0 && (
               <div className="text-center text-muted-foreground py-4 col-span-1 sm:col-span-2">
                 No permissions available
               </div>
             )}
-            {permissions.map((permission) => (
-              <div key={permission.id} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-muted/50">
-                <Checkbox
-                  id={permission.id}
-                  checked={selectedPermissions.includes(permission.id)}
-                  onCheckedChange={() => handlePermissionToggle(permission.id)}
-                  disabled={saving}
-                  className="m-1 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 data-[state=checked]:text-white"
-                />
+            {groupedPermissions.map((group) => (
+              <div key={group.base} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-muted/50">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <Label 
-                      htmlFor={permission.id} 
-                      className="text-sm font-medium cursor-pointer"
+                      htmlFor={group.base}
+                      className="text-sm font-medium"
                     >
-                      {permission.name}
+                      {group.label}
                     </Label>
-                    {permission.id === 'CLIENTS' && (
+                    {group.base === 'CLIENTS' && (
                       <Badge variant="secondary" className="text-xs">
                         Additional Access
                       </Badge>
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {permission.description}
+                    {group.description}
                   </p>
                   <div className="mt-2 grid grid-cols-3 gap-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`${permission.id}-view`}
-                        checked={permissionAccess[permission.id]?.view || false}
-                        onCheckedChange={() => handlePermissionAccessToggle(permission.id, 'view')}
-                        disabled={saving}
-                        className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 data-[state=checked]:text-white"
-                      />
-                      <Label htmlFor={`${permission.id}-view`} className="text-xs">View</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`${permission.id}-modify`}
-                        checked={permissionAccess[permission.id]?.modify || false}
-                        onCheckedChange={() => handlePermissionAccessToggle(permission.id, 'modify')}
-                        disabled={saving}
-                        className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 data-[state=checked]:text-white"
-                      />
-                      <Label htmlFor={`${permission.id}-modify`} className="text-xs">Modify</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`${permission.id}-delete`}
-                        checked={permissionAccess[permission.id]?.delete || false}
-                        onCheckedChange={() => handlePermissionAccessToggle(permission.id, 'delete')}
-                        disabled={saving}
-                        className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 data-[state=checked]:text-white"
-                      />
-                      <Label htmlFor={`${permission.id}-delete`} className="text-xs">Delete</Label>
-                    </div>
+                    {group.actions.view && (
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`${group.base}-view`}
+                          checked={selectedPermissions.includes(group.actions.view)}
+                          onCheckedChange={() => handlePermissionToggle(group.actions.view!)}
+                          disabled={saving}
+                          className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 data-[state=checked]:text-white"
+                        />
+                        <Label htmlFor={`${group.base}-view`} className="text-xs">View</Label>
+                      </div>
+                    )}
+                    {group.actions.modify && (
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`${group.base}-modify`}
+                          checked={selectedPermissions.includes(group.actions.modify)}
+                          onCheckedChange={() => handlePermissionToggle(group.actions.modify!)}
+                          disabled={saving}
+                          className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 data-[state=checked]:text-white"
+                        />
+                        <Label htmlFor={`${group.base}-modify`} className="text-xs">Modify</Label>
+                      </div>
+                    )}
+                    {group.actions.delete && (
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`${group.base}-delete`}
+                          checked={selectedPermissions.includes(group.actions.delete)}
+                          onCheckedChange={() => handlePermissionToggle(group.actions.delete!)}
+                          disabled={saving}
+                          className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 data-[state=checked]:text-white"
+                        />
+                        <Label htmlFor={`${group.base}-delete`} className="text-xs">Delete</Label>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

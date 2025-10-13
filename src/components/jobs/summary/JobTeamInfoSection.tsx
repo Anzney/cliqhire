@@ -19,9 +19,10 @@ interface JobInfoSectionProps {
   jobDetails: any;
   handleUpdateField: (field: string) => (value: string) => void;
   handleUpdateMultipleFields?: (fields: Record<string, any>) => void;
+  canModify?: boolean;
 }
 
-export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdateMultipleFields }: JobInfoSectionProps) {
+export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdateMultipleFields, canModify }: JobInfoSectionProps) {
   const [isTeamDialogOpen, setIsTeamDialogOpen] = useState(false);
 
   // Helper function to parse team assignment data
@@ -151,15 +152,17 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdate
         {/* Section Header with Edit Button */}
         <div className="flex items-center justify-between pb-2 border-b">
           <h3 className="text-sm font-medium text-gray-900">Team Assignment</h3>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8"
-            onClick={() => setIsTeamDialogOpen(true)}
-          >
-            <Pencil className="h-4 w-4 mr-2" />
-            Edit Team
-          </Button>
+          {canModify && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => setIsTeamDialogOpen(true)}
+            >
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit Team
+            </Button>
+          )}
         </div>
 
         {/* Team Details - Read Only */}
@@ -191,17 +194,19 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdate
         </div>
       </div>
 
-      <TeamSelectionDialog
-        open={isTeamDialogOpen}
-        onClose={() => setIsTeamDialogOpen(false)}
-        onSave={handleTeamSelectionSave}
-        initialSelections={{
-          teamId: teamAssignmentData?.team?.id || (typeof jobDetails.teamId === 'object' ? jobDetails.teamId._id : jobDetails.teamId) || jobDetails.jobTeamInfo?.teamId?._id,
-          hiringManagerId: currentHiringManager?.id || jobDetails.hiringManagerId || jobDetails.jobTeamInfo?.hiringManager?._id || (typeof jobDetails.internalTeam?.hiringManager === 'string' ? jobDetails.internalTeam.hiringManager : jobDetails.internalTeam?.hiringManager?._id),
-          teamLeadId: currentTeamLead?.id || jobDetails.teamLeadId || jobDetails.jobTeamInfo?.teamLead?._id || (typeof jobDetails.internalTeam?.teamLead === 'string' ? jobDetails.internalTeam.teamLead : jobDetails.internalTeam?.teamLead?._id),
-          recruiterIds: currentRecruiters.length > 0 ? currentRecruiters.map((r: any) => r.id) : jobDetails.recruiterIds ? JSON.parse(jobDetails.recruiterIds) : (jobDetails.jobTeamInfo?.recruiter?._id ? [jobDetails.jobTeamInfo.recruiter._id] : (typeof jobDetails.internalTeam?.recruiter === 'string' ? [jobDetails.internalTeam.recruiter] : (jobDetails.internalTeam?.recruiter?._id ? [jobDetails.internalTeam.recruiter._id] : []))),
-        }}
-      />
+      {canModify && (
+        <TeamSelectionDialog
+          open={isTeamDialogOpen}
+          onClose={() => setIsTeamDialogOpen(false)}
+          onSave={handleTeamSelectionSave}
+          initialSelections={{
+            teamId: teamAssignmentData?.team?.id || (typeof jobDetails.teamId === 'object' ? jobDetails.teamId._id : jobDetails.teamId) || jobDetails.jobTeamInfo?.teamId?._id,
+            hiringManagerId: currentHiringManager?.id || jobDetails.hiringManagerId || jobDetails.jobTeamInfo?.hiringManager?._id || (typeof jobDetails.internalTeam?.hiringManager === 'string' ? jobDetails.internalTeam.hiringManager : jobDetails.internalTeam?.hiringManager?._id),
+            teamLeadId: currentTeamLead?.id || jobDetails.teamLeadId || jobDetails.jobTeamInfo?.teamLead?._id || (typeof jobDetails.internalTeam?.teamLead === 'string' ? jobDetails.internalTeam.teamLead : jobDetails.internalTeam?.teamLead?._id),
+            recruiterIds: currentRecruiters.length > 0 ? currentRecruiters.map((r: any) => r.id) : jobDetails.recruiterIds ? JSON.parse(jobDetails.recruiterIds) : (jobDetails.jobTeamInfo?.recruiter?._id ? [jobDetails.jobTeamInfo.recruiter._id] : (typeof jobDetails.internalTeam?.recruiter === 'string' ? [jobDetails.internalTeam.recruiter] : (jobDetails.internalTeam?.recruiter?._id ? [jobDetails.internalTeam.recruiter._id] : []))),
+          }}
+        />
+      )}
     </CollapsibleSection>
   );
 }

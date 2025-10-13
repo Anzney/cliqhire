@@ -29,6 +29,7 @@ import { CreateJobRequirementForm } from "@/components/new-jobs/create-jobs-form
 import ClientPaginationControls from "@/components/clients/ClientPaginationControls";
 import { getJobs, updateJobStage } from "@/services/jobService";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
 
 const columsArr = [
   "Position Name",
@@ -69,6 +70,15 @@ function ConfirmStageChangeDialog({
 }
 
 export default function JobsPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
+  let finalPermissions = (user?.permissions && user.permissions.length > 0) ? user.permissions : (user?.defaultPermissions || []);
+  if (!isAdmin && !finalPermissions.includes('TODAY_TASKS')) {
+    finalPermissions = [...finalPermissions, 'TODAY_TASKS'];
+  }
+  const canViewJobs = isAdmin || finalPermissions.includes('JOBS_VIEW') || finalPermissions.includes('JOBS');
+  const canModifyJobs = isAdmin || finalPermissions.includes('JOBS_MODIFY');
+  const canDeleteJobs = isAdmin || finalPermissions.includes('JOBS_DELETE');
   const [open, setOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -112,6 +122,7 @@ export default function JobsPage() {
   };
 
   const handleStageChange = (jobId: string, newStage: JobStage) => {
+    if (!canModifyJobs) return;
     setPendingStageChange({ jobId, newStage });
     setConfirmOpen(true);
   };
@@ -137,6 +148,14 @@ export default function JobsPage() {
     }
   };
 
+  if (!canViewJobs) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center text-muted-foreground">You do not have permission to view jobs.</div>
+      </div>
+    );
+  }
+
   if (isLoading && jobs.length === 0) {
     return (
       <div className="flex flex-col h-full">
@@ -148,10 +167,12 @@ export default function JobsPage() {
         </div>
 
         <div className="flex items-center justify-between p-4">
+          {canModifyJobs && (
           <Button size="sm" onClick={() => setOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Create Job Requirement
           </Button>
+          )}
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setFilterOpen(true)}>
               <SlidersHorizontal className="h-4 w-4 mr-2" />
@@ -198,6 +219,7 @@ export default function JobsPage() {
           initialLoading={isLoading || isFetching}
           heading="Jobs"
           buttonText="Create Job Requirement"
+          showCreateButton={canModifyJobs}
         />
         {/* Content */}
         <div className="flex-1 flex flex-col min-h-0">
@@ -265,7 +287,7 @@ export default function JobsPage() {
         onOpenChange={setConfirmOpen}
         onConfirm={confirmStageChange}
       />
-      <CreateJobRequirementForm open={open} onOpenChange={setOpen} />
+      {canModifyJobs && <CreateJobRequirementForm open={open} onOpenChange={setOpen} />}
     </>
   );
 }

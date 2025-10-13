@@ -25,6 +25,7 @@ import { useQueryClient } from "@tanstack/react-query";
 interface SummaryContentProps {
   jobId: string;
   jobData: JobData;
+  canModify?: boolean;
 }
 
 interface TeamMemberType {
@@ -39,7 +40,7 @@ function capitalize(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
+export function SummaryContent({ jobId, jobData, canModify }: SummaryContentProps) {
   const [jobDetails, setJobDetails] = useState<JobData>(jobData);
   const [loading, setLoading] = useState(false);
   const [isSalaryDialogOpen, setIsSalaryDialogOpen] = useState(false);
@@ -52,6 +53,7 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
   const [isNationalityDialogOpen, setIsNationalityDialogOpen] = useState(false);
   const [isJobStageDialogOpen, setIsJobStageDialogOpen] = useState(false);
   const queryClient = useQueryClient();
+  const canEdit = canModify ?? true;
 
   const handleFieldSave = async (editingField: any, newValue: string | Date) => {
     if (!editingField || !jobDetails) return;
@@ -228,11 +230,13 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
                 label="Job Title"
                 value={jobDetails.jobTitle}
                 onUpdate={handleUpdateField("jobTitle")}
+                disableInternalEdit={!canEdit}
               />
               <DetailRow
                 label="Department"
                 value={jobDetails.department}
                 onUpdate={handleUpdateField("department")}
+                disableInternalEdit={!canEdit}
               />
               <DetailRow
                 label="Job Location"
@@ -242,17 +246,20 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
                     : jobDetails.location
                 }
                 onUpdate={handleUpdateField("location")}
+                disableInternalEdit={!canEdit}
               />
               <DetailRow
                 label="Headcount"
                 value={jobDetails.headcount.toString()}
                 onUpdate={handleUpdateField("headcount")}
+                disableInternalEdit={!canEdit}
               />
               <DetailRow
                 label="Job Stage"
                 value={jobDetails.stage}
                 onUpdate={handleUpdateField("stage")}
-                customEdit={() => setIsJobStageDialogOpen(true)}
+                customEdit={canEdit ? () => setIsJobStageDialogOpen(true) : undefined}
+                disableInternalEdit={!canEdit}
               />
             </div>
           </div>
@@ -262,17 +269,20 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
                 label="Job Type"
                 value={capitalize(jobDetails.jobType)}
                 onUpdate={handleUpdateField("jobType")}
+                disableInternalEdit={!canEdit}
               />
               <DetailRow
                 label="Experience"
                 value={capitalize(jobDetails.experience)}
                 onUpdate={handleUpdateField("experience")}
+                disableInternalEdit={!canEdit}
               />
               <DetailRow
                 label="Gender"
                 value={capitalize(jobDetails.gender)}
                 onUpdate={handleUpdateField("gender")}
-                customEdit={() => setIsGenderDialogOpen(true)}
+                customEdit={canEdit ? () => setIsGenderDialogOpen(true) : undefined}
+                disableInternalEdit={!canEdit}
               />
               <DetailRow
                 label="Deadline (By Client)"
@@ -282,7 +292,8 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
                     : ""
                 }
                 onUpdate={handleUpdateField("deadlineByClient")}
-                customEdit={() => setIsDeadlineDialogOpen(true)}
+                customEdit={canEdit ? () => setIsDeadlineDialogOpen(true) : undefined}
+                disableInternalEdit={!canEdit}
               />
               <DetailRow
                 label="Date Range (By Internal Team)"
@@ -297,28 +308,33 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
                     jobDetails.endDateByInternalTeam,
                   )
                 }
-                customEdit={() => setIsDateRangeDialogOpen(true)}
+                customEdit={canEdit ? () => setIsDateRangeDialogOpen(true) : undefined}
+                disableInternalEdit={!canEdit}
               />
               <DetailRow
                 label="Nationality"
                 value={jobDetails.nationalities ? jobDetails.nationalities.join(", ") : ""}
                 onUpdate={() => {}} // Not used since we use customEdit
-                customEdit={() => setIsNationalityDialogOpen(true)}
+                customEdit={canEdit ? () => setIsNationalityDialogOpen(true) : undefined}
+                disableInternalEdit={!canEdit}
               />
               <DetailRow
                 label="Reporting To"
                 value={jobDetails.reportingTo}
                 onUpdate={handleUpdateField("reportingTo")}
+                disableInternalEdit={!canEdit}
               />
               <DetailRow
                 label="Team Size"
                 value={jobDetails.teamSize.toString()}
                 onUpdate={handleUpdateField("teamSize")}
+                disableInternalEdit={!canEdit}
               />
               <DetailRow
                 label="Key Skills"
                 value={jobDetails.keySkills}
                 onUpdate={handleUpdateField("keySkills")}
+                disableInternalEdit={!canEdit}
               />
             </div>
           </CollapsibleContent>
@@ -338,10 +354,12 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
               <span className="text-sm">-</span>
               <span className="text-sm">{jobDetails.maximumSalary || 0}</span>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setIsSalaryDialogOpen(true)}>
-              <Pencil className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
+            {canEdit && (
+              <Button variant="outline" size="sm" onClick={() => setIsSalaryDialogOpen(true)}>
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+            )}
           </div>
         </div>
         {/* Job Description */}
@@ -359,18 +377,20 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
             <div className="bg-white rounded-lg border shadow-sm p-4">
               <div className="flex items-center justify-between mb-4">
                 <Label className="text-sm tracking-tight">Description</Label>
-                <Button variant="outline" size="sm" onClick={() => setIsDescriptionModalOpen(true)}>
-                  {jobDetails.jobDescription ? (
-                    <>
-                      <Pencil className="h-4 w-4" />
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add
-                    </>
-                  )}
-                </Button>
+                {canEdit && (
+                  <Button variant="outline" size="sm" onClick={() => setIsDescriptionModalOpen(true)}>
+                    {jobDetails.jobDescription ? (
+                      <>
+                        <Pencil className="h-4 w-4" />
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
               <div className="space-y-3">
                 {jobDetails.jobDescription ? (
@@ -399,22 +419,24 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
             <div className="bg-white rounded-lg border shadow-sm p-4">
               <div className="flex items-center justify-between mb-4">
                 <Label className="text-sm tracking-tight">Description</Label>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsInternalDescriptionModalOpen(true)}
-                >
-                  {jobDetails.jobDescriptionByInternalTeam ? (
-                    <>
-                      <Pencil className="h-4 w-4" />
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add
-                    </>
-                  )}
-                </Button>
+                {canEdit && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsInternalDescriptionModalOpen(true)}
+                  >
+                    {jobDetails.jobDescriptionByInternalTeam ? (
+                      <>
+                        <Pencil className="h-4 w-4" />
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
               <div className="space-y-3">
                 {jobDetails.jobDescriptionByInternalTeam ? (
@@ -436,6 +458,7 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
             jobDescriptionPdf={jobDetails.jobDescriptionPdf}
             benefitPdf={jobDetails.benefitPdf}
             onFileUpdate={handleFileUpdate}
+            canModify={canEdit}
           />
         </div>
 
@@ -444,20 +467,23 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
               jobDetails={jobDetails} 
               handleUpdateField={handleUpdateField}
               handleUpdateMultipleFields={handleUpdateMultipleFields}
+              canModify={canEdit}
             />
       </div>
-      <EditSalaryDialog
-        open={isSalaryDialogOpen}
-        onClose={() => setIsSalaryDialogOpen(false)}
-        currentValues={{
-          minSalary: jobDetails.minimumSalary,
-          maxSalary: jobDetails.maximumSalary,
-          currency: jobDetails.salaryCurrency || "SAR",
-        }}
-        onSave={handleSalarySave}
-      />
+      {canEdit && (
+        <EditSalaryDialog
+          open={isSalaryDialogOpen}
+          onClose={() => setIsSalaryDialogOpen(false)}
+          currentValues={{
+            minSalary: jobDetails.minimumSalary,
+            maxSalary: jobDetails.maximumSalary,
+            currency: jobDetails.salaryCurrency || "SAR",
+          }}
+          onSave={handleSalarySave}
+        />
+      )}
       {/* Description Modal (reuse EditFieldDialog for description) */}
-      {isDescriptionModalOpen && (
+      {canEdit && isDescriptionModalOpen && (
         <EditFieldDialog
           open={true}
           onClose={() => setIsDescriptionModalOpen(false)}
@@ -471,7 +497,7 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
         />
       )}
 
-      {isInternalDescriptionModalOpen && (
+      {canEdit && isInternalDescriptionModalOpen && (
         <EditFieldDialog
           open={true}
           onClose={() => setIsInternalDescriptionModalOpen(false)}
@@ -486,6 +512,7 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
       )}
 
       {/* Gender Selector Dialog */}
+      {canEdit && (
       <GenderSelector
         open={isGenderDialogOpen}
         onClose={() => setIsGenderDialogOpen(false)}
@@ -495,8 +522,10 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
           setIsGenderDialogOpen(false);
         }}
       />
+      )}
 
       {/* Deadline Picker Dialog */}
+      {canEdit && (
       <DeadlinePicker
         open={isDeadlineDialogOpen}
         onClose={() => setIsDeadlineDialogOpen(false)}
@@ -506,8 +535,10 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
           setIsDeadlineDialogOpen(false);
         }}
       />
+      )}
 
       {/* Date Range Picker Dialog */}
+      {canEdit && (
       <DateRangePicker
         open={isDateRangeDialogOpen}
         onClose={() => setIsDateRangeDialogOpen(false)}
@@ -521,8 +552,10 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
           setIsDateRangeDialogOpen(false);
         }}
       />
+      )}
 
       {/* Nationality Selector Dialog */}
+      {canEdit && (
       <NationalitySelector
         open={isNationalityDialogOpen}
         onClose={() => setIsNationalityDialogOpen(false)}
@@ -532,8 +565,10 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
           setIsNationalityDialogOpen(false);
         }}
       />
+      )}
 
       {/* Job Stage Selector Dialog */}
+      {canEdit && (
       <JobStageSelector
         open={isJobStageDialogOpen}
         onClose={() => setIsJobStageDialogOpen(false)}
@@ -543,6 +578,7 @@ export function SummaryContent({ jobId, jobData }: SummaryContentProps) {
           setIsJobStageDialogOpen(false);
         }}
       />
+      )}
     </div>
   );
 }
