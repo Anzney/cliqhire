@@ -52,6 +52,14 @@ export function PipelineStageDetails({
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingFieldKey, setPendingFieldKey] = useState<string | null>(null);
   
+  // Ensure confirm dialog is closed on unmount to avoid any lingering overlay/focus trap
+  React.useEffect(() => {
+    return () => {
+      setShowConfirmDialog(false);
+      setPendingFieldKey(null);
+    };
+  }, []);
+  
   if (!candidate) return null;
   
   // Use selectedStage if provided, otherwise fallback to currentStage or default

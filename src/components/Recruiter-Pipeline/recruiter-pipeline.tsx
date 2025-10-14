@@ -460,6 +460,7 @@ export function RecruiterPipeline() {
             onToggleExpansion={toggleJobExpansion}
             onUpdateCandidateStage={updateCandidateStage}
             onCandidateUpdate={handleCandidateUpdate}
+            canModify={canModifyPipeline}
           />
         ))
       ) : (

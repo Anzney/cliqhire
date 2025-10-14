@@ -22,8 +22,9 @@ export function StatusChangeConfirmationDialog({
   currentStage,
   newStage,
 }: StatusChangeConfirmationDialogProps) {
+  if (!isOpen) return null;
   return (
-    <AlertDialog open={isOpen} onOpenChange={onClose}>
+    <AlertDialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <AlertDialogContent className="max-w-md">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-lg font-semibold">

@@ -40,6 +40,7 @@ interface PipelineJobCardProps {
   ) => Promise<void>;
   onCandidateUpdate?: (jobId: string, updatedCandidate: Candidate) => void;
   isHighlighted?: boolean;
+  canModify?: boolean;
 }
 
 export function PipelineJobCard({ 
@@ -49,6 +50,7 @@ export function PipelineJobCard({
   onUpdateCandidateStage,
   onCandidateUpdate,
   isHighlighted = false,
+  canModify = true,
 }: PipelineJobCardProps) {
   const router = useRouter();
   const cardRef =useRef<HTMLDivElement | null>(null);
@@ -311,15 +313,18 @@ export function PipelineJobCard({
 
   const handleAddCandidate = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering the card expansion
+    if (!canModify) return;
     setIsAddCandidateOpen(true);
   };
 
   const handleAddExistingCandidate = () => {
+    if (!canModify) return;
     // Open the shared Add Existing Candidate dialog
     setIsAddExistingOpen(true);
   };
 
   const handleAddNewCandidate = () => {
+    if (!canModify) return;
     setIsCreateCandidateOpen(true);
   };
 
@@ -587,14 +592,16 @@ export function PipelineJobCard({
                 <TableIcon className="size-4 mr-1" />
                 View Table
               </Button>
-              <Button
-                onClick={handleAddCandidate}
-                size="sm"
-                variant="outline"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Attach Candidate
-              </Button>
+              {canModify && (
+                <Button
+                  onClick={handleAddCandidate}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Attach Candidate
+                </Button>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -612,6 +619,7 @@ export function PipelineJobCard({
               onViewCandidate={handleViewCandidate}
               onViewResume={handleViewResume}
               onDeleteCandidate={handleDeleteCandidate}
+              canModify={canModify}
             />
           </CardContent>
         )}

@@ -16,6 +16,7 @@ interface PipelineJobExpandedProps {
   onViewCandidate: (candidate: Candidate) => void;
   onViewResume: (candidate: Candidate) => void;
   onDeleteCandidate: (candidate: Candidate) => void;
+  canModify?: boolean;
 }
 
 export function PipelineJobExpanded({
@@ -28,6 +29,7 @@ export function PipelineJobExpanded({
   onViewCandidate,
   onViewResume,
   onDeleteCandidate,
+  canModify = true,
 }: PipelineJobExpandedProps) {
   // Calculate stage counts with resolution function
   const getUpdatedStageCounts = React.useCallback(() => {
@@ -113,6 +115,7 @@ export function PipelineJobExpanded({
             onViewCandidate={onViewCandidate}
             onViewResume={onViewResume}
             onDeleteCandidate={onDeleteCandidate}
+            canModify={canModify}
           />
         </div>
       </div>

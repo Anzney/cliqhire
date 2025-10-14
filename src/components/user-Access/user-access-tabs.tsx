@@ -240,7 +240,7 @@ export function UserAccessTabs({
         </TableCell>
         <TableCell className="text-sm">
           <div className="relative">
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="h-8 w-8 p-0 hover:bg-gray-100 border border-gray-200">
                   <MoreVertical className="size-4" />
