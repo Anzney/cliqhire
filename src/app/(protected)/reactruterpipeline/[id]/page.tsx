@@ -23,6 +23,7 @@ import { mapEntryToJob } from "@/components/Recruiter-Pipeline/pipeline-mapper";
 import { InterviewDetailsDialog } from "@/components/Recruiter-Pipeline/interview-details-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const Page = () => {
   const { user } = useAuth();
@@ -167,7 +168,7 @@ const Page = () => {
 
   const handleStageChange = (candidate: Candidate, newStage: string) => {
     if (!canModifyPipeline) {
-      alert('You do not have permission to modify the recruitment pipeline.');
+      toast.warning('You do not have permission to modify the recruitment pipeline.');
       return;
     }
     // Validate if candidate can change stage (check for temp candidate)
@@ -199,7 +200,7 @@ const Page = () => {
 
   const handleConfirmStageChange = async () => {
     if (!canModifyPipeline) {
-      alert('You do not have permission to modify the recruitment pipeline.');
+      toast.warning('You do not have permission to modify the recruitment pipeline.');
       return;
     }
     if (stageChangeDialog.candidate) {
@@ -228,7 +229,7 @@ const Page = () => {
 
   const handleConfirmInterviewDetails = async (dateTime: string, meetingLink: string) => {
     if (!canModifyPipeline) {
-      alert('You do not have permission to modify the recruitment pipeline.');
+      toast.warning('You do not have permission to modify the recruitment pipeline.');
       return;
     }
     const candidate = interviewDialog.candidate;
@@ -280,7 +281,7 @@ const Page = () => {
 
   const handleAddCandidate = () => {
     if (!canModifyPipeline) {
-      alert('You do not have permission to add candidates.');
+      toast.warning('You do not have permission to add candidates.');
       return;
     }
     setIsAddCandidateOpen(true);
@@ -288,7 +289,7 @@ const Page = () => {
 
   const handleAddExistingCandidate = () => {
     if (!canModifyPipeline) {
-      alert('You do not have permission to add candidates.');
+      toast.warning('You do not have permission to add candidates.');
       return;
     }
     setIsAddExistingOpen(true);
@@ -296,7 +297,7 @@ const Page = () => {
 
   const handleAddNewCandidate = () => {
     if (!canModifyPipeline) {
-      alert('You do not have permission to add candidates.');
+      toast.warning('You do not have permission to add candidates.');
       return;
     }
     setIsCreateCandidateOpen(true);
@@ -311,7 +312,7 @@ const Page = () => {
 
   const handleStatusChange = (candidate: Candidate, newStatus: any) => {
     if (!canModifyPipeline) {
-      alert('You do not have permission to modify the recruitment pipeline.');
+      toast.warning('You do not have permission to modify the recruitment pipeline.');
       return;
     }
     // Validate if candidate can change status (check for temp candidate)
@@ -356,7 +357,7 @@ const Page = () => {
 
   const handleConfirmStatusChange = async () => {
     if (!canModifyPipeline) {
-      alert('You do not have permission to modify the recruitment pipeline.');
+      toast.warning('You do not have permission to modify the recruitment pipeline.');
       return;
     }
     if (statusChangeDialog.candidate && statusChangeDialog.newStatus) {

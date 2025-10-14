@@ -30,6 +30,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
           // Force variant colors to win over base text color regardless of Tailwind utility order
           success: "!text-emerald-600",
           error: "!text-red-600",
+          warning: "!text-amber-600 font-semibold",
+          info: "!text-blue-600",
         },
       }}
       {...props}

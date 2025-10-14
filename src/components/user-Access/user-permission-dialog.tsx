@@ -306,15 +306,12 @@ export function UserPermissionDialog({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <Label className="text-sm font-medium">Email</Label>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
-              </div>
+                <Label className="text-sm font-medium">Email : <span className="text-muted-foreground">{user.email}</span></Label>
+                {/* <p className="text-sm text-muted-foreground">{user.email}</p> */}
             </div>
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-muted-foreground" />
-              <div className="w-full">
-                <Label className="text-sm font-medium">Role</Label>
+                <Label className="text-sm font-medium">Role </Label>
                 <Select 
                   value={selectedRole} 
                   onValueChange={handleRoleChange}
@@ -331,7 +328,6 @@ export function UserPermissionDialog({
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
             </div>
           </div>
         </div>
