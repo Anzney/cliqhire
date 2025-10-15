@@ -260,11 +260,9 @@ export function SummaryContent({
                 value={clientData?.clientPriority}
                 onUpdate={handleUpdateField("clientPriority")}
                 options={[
-                  { value: "1", label: "1" },
-                  { value: "2", label: "2" },
-                  { value: "3", label: "3" },
-                  { value: "4", label: "4" },
-                  { value: "5", label: "5" },
+                  { value: "1-Top", label: "1 - Top" },
+                  { value: "2-Medium", label: "2 - Medium" },
+                  { value: "3-Low", label: "3 - Low" },
                 ]}
                 disableInternalEdit={!canModify}
               />
@@ -273,11 +271,9 @@ export function SummaryContent({
                 value={clientData?.clientSegment}
                 onUpdate={handleUpdateField("clientSegment")}
                 options={[
-                  { value: "A", label: "A" },
-                  { value: "B", label: "B" },
-                  { value: "C", label: "C" },
-                  { value: "D", label: "D" },
-                  { value: "E", label: "E" },
+                  { value: "Silver", label: "Silver" },
+                  { value: "Gold", label: "Gold" },
+                  { value: "Premium", label: "Premium" },
                 ]}
                 disableInternalEdit={!canModify}
               />

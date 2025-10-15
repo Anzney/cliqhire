@@ -21,15 +21,16 @@ import { UseFormReturn } from "react-hook-form";
 import { CreateClientFormData } from "./schema";
 
 const SALES_LEADS = [
-  "Roque Dcosta",
-  "Mohammed Hamed",
-  "Raghu Vamsi",
-  "Vijesh Dsouza",
-  "Zainab Qureshi",
-  "Pradnya Mane",
-  "Sanjali Tillu",
-  "Raghad Almarri",
-  "Raphael Dcosta",
+  "Roque Dcosta (MD & CEO)",
+  "Ujjval Majmudar (Advisor)",
+  "Mohammed Hamed (Team Leader)",
+  "Raghu Vamsi (Team Leader)",
+  "Vijesh Dsouza (Recruiter)",
+  "Zainab Qureshi (Recruiter)",
+  "Pradnya Mane (Recruiter)",
+  "Sanjali Tillu (Sales Operations)",
+  "Raghad Almarri (Sr. Business Development Officer)",
+  "Raphael Dcosta (Accounts & Finance)",
   "Abhay"
 ];
 
@@ -165,11 +166,9 @@ export function ClientInformationTab({ form }: ClientInformationTabProps) {
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Priority</SelectLabel>
-                  <SelectItem value="1">1</SelectItem>
-                  <SelectItem value="2">2</SelectItem>
-                  <SelectItem value="3">3</SelectItem>
-                  <SelectItem value="4">4</SelectItem>
-                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="1-Top">1 - Top</SelectItem>
+                  <SelectItem value="2-Medium">2 - Medium</SelectItem>
+                  <SelectItem value="3-Low">3 - Low</SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -193,9 +192,9 @@ export function ClientInformationTab({ form }: ClientInformationTabProps) {
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Segment</SelectLabel>
-                  <SelectItem value="A">A</SelectItem>
-                  <SelectItem value="B">B</SelectItem>
-                  <SelectItem value="C">C</SelectItem>
+                  <SelectItem value="Silver">Silver</SelectItem>
+                  <SelectItem value="Gold">Gold</SelectItem>
+                  <SelectItem value="Premium">Premium</SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
