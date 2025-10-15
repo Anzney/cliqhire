@@ -20,6 +20,19 @@ import { INDUSTRIES } from "@/lib/constants";
 import { UseFormReturn } from "react-hook-form";
 import { CreateClientFormData } from "./schema";
 
+const SALES_LEADS = [
+  "Roque Dcosta",
+  "Mohammed Hamed",
+  "Raghu Vamsi",
+  "Vijesh Dsouza",
+  "Zainab Qureshi",
+  "Pradnya Mane",
+  "Sanjali Tillu",
+  "Raghad Almarri",
+  "Raphael Dcosta",
+  "Abhay"
+];
+
 interface ClientInformationTabProps {
   form: UseFormReturn<CreateClientFormData>;
 }
@@ -103,10 +116,11 @@ export function ClientInformationTab({ form }: ClientInformationTabProps) {
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="emmanuel">Emmanuel</SelectItem>
-                <SelectItem value="rocky">Rocky</SelectItem>
-                <SelectItem value="hamed">Hamed</SelectItem>
-                <SelectItem value="abhay">Abhay</SelectItem>
+                {SALES_LEADS.map((name) => (
+                  <SelectItem key={name} value={name}>
+                    {name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <FormMessage />
