@@ -22,16 +22,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { getTeamMembers } from "@/services/teamMembersService";
-import { createTeam } from "@/services/teamService";
+import { createTeam, updateTeam, Team } from "@/services/teamService";
 import { TeamMember } from "@/types/teamMember";
 
 interface AddTeamMembersDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: (formData: any) => void;
+  editTeam?: Team | null;
 }
 
-export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamMembersDialogProps) {
+export function AddTeamMembersDialog({ open, onOpenChange, onSuccess, editTeam }: AddTeamMembersDialogProps) {
   const [formData, setFormData] = useState({
     teamName: "",
     hiringManager: "",
@@ -50,6 +51,26 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
       fetchTeamMembers();
     }
   }, [open]);
+
+  useEffect(() => {
+    if (open && editTeam) {
+      setFormData({
+        teamName: editTeam.teamName || "",
+        hiringManager: editTeam.hiringManagerId?._id || "",
+        teamLead: editTeam.teamLeadId?._id || "",
+        recruiters: Array.isArray(editTeam.recruiters) ? editTeam.recruiters.map(r => r._id) : [],
+        teamStatus: editTeam.teamStatus || "",
+      });
+    } else if (open && !editTeam) {
+      setFormData({
+        teamName: "",
+        hiringManager: "",
+        teamLead: "",
+        recruiters: [],
+        teamStatus: "",
+      });
+    }
+  }, [open, editTeam]);
 
   const fetchTeamMembers = async () => {
     setLoadingTeamMembers(true);
@@ -141,22 +162,24 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
         throw new Error("Please fill in all required fields");
       }
 
-      // Prepare team data according to API specification
-      const teamData = {
+      const payload = {
         teamName: formData.teamName,
         hiringManagerId: formData.hiringManager,
         teamLeadId: formData.teamLead,
         recruiterIds: formData.recruiters,
-        teamStatus: formData.teamStatus
+        teamStatus: formData.teamStatus,
       };
 
-      // Call the API to create team
-      const createdTeam = await createTeam(teamData);
-      
-      // Close dialog and trigger success callback with created team data
+      let result;
+      if (editTeam?._id) {
+        result = await updateTeam(editTeam._id, payload);
+      } else {
+        result = await createTeam(payload);
+      }
+
       onOpenChange(false);
       if (onSuccess) {
-        onSuccess(createdTeam);
+        onSuccess(result);
       }
       
       // Reset form
@@ -169,7 +192,7 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
       });
     } catch (error: any) {
       // You might want to show an error message to the user here
-      alert(error.message || "Failed to create team");
+      alert(error.message || (editTeam ? "Failed to update team" : "Failed to create team"));
     } finally {
       setLoading(false);
     }
@@ -190,9 +213,9 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add Team Members</DialogTitle>
+          <DialogTitle>{editTeam ? "Edit Team" : "Add Team Members"}</DialogTitle>
           <DialogDescription>
-            Create a new team with the required members and roles.
+            {editTeam ? "Update the team details and members." : "Create a new team with the required members and roles."}
           </DialogDescription>
         </DialogHeader>
 
@@ -331,7 +354,7 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess }: AddTeamM
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Creating..." : "Create Team"}
+              {loading ? (editTeam ? "Updating..." : "Creating...") : (editTeam ? "Update Team" : "Create Team")}
             </Button>
           </DialogFooter>
         </form>

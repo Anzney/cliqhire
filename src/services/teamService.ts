@@ -8,6 +8,7 @@ export interface CreateTeamData {
   hiringManagerId: string;
   teamLeadId: string;
   recruiterIds: string[];
+  teamStatus?: string;
 }
 
 export interface TeamMember {

@@ -67,6 +67,7 @@ export function UserAccessTabs({
   const [teamToView, setTeamToView] = useState<Team | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingChange, setPendingChange] = useState<{ teamId: string; status: string } | null>(null);
+  const [editTeam, setEditTeam] = useState<Team | null>(null);
   const queryClient = useQueryClient();
 
   // React Query: fetch teams and team members
@@ -178,6 +179,11 @@ export function UserAccessTabs({
     setDeleteDialogOpen(true);
   };
 
+  const handleEditTeam = (team: Team) => {
+    setEditTeam(team);
+    setDialogOpen(true);
+  };
+
   const confirmDeleteTeam = async () => {
     if (teamToDelete) {
       deleteTeamMutation.mutate(teamToDelete._id, {
@@ -256,10 +262,10 @@ export function UserAccessTabs({
                   <Eye className="mr-2 h-4 w-4" />
                   View
                 </DropdownMenuItem>
-                {/* <DropdownMenuItem onClick={() => handleViewTeam(team)}>
+                <DropdownMenuItem onClick={() => handleEditTeam(team)}>
                   <Edit className="mr-2 h-4 w-4" />
                   Edit
-                </DropdownMenuItem> */}
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handleDeleteTeam(team)}
                   className="text-red-600"
@@ -333,8 +339,14 @@ export function UserAccessTabs({
 
       <AddTeamMembersDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) {
+            setEditTeam(null);
+          }
+        }}
         onSuccess={handleAddTeamSuccess}
+        editTeam={editTeam}
       />
 
       <ViewTeamDialog
