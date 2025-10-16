@@ -110,11 +110,15 @@ export function ContactsContent({ clientId , clientData, canModify }: ContactsCo
     { code: "+81", label: "+81 (Japan)" },
   ];
   const positionOptions = [
-    { value: "HR", label: "HR" },
-    { value: "Senior HR", label: "Senior HR" },
-    { value: "Manager", label: "Manager" },
-    { value: "Director", label: "Director" },
-    { value: "Executive", label: "Executive" },
+  { value: "CEO", label: "CEO" },
+  { value: "HR Head", label: "HR Head" },
+  { value: "CHRO", label: "CHRO" },
+  { value: "HR", label: "HR" },
+  { value: "Manager", label: "Manager" },
+  { value: "HR Manager", label: "HR Manager" },
+  { value: "Director", label: "Director" },
+  { value: "Executive", label: "Executive" },
+  { value: "General Manager", label: "General Manager" },
   ];
 
   const getCountryCodeLabel = (code: string) => {

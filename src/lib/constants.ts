@@ -1,6 +1,11 @@
 export const INDUSTRIES = {
   'Salect Industry':[
 'IT and Communications',
+'Even Charity',
+'Fintech',
+'FMCG',
+'Stock Exchange',
+'Investment',
 'Banking and Finance',
 'Healthcare and Pharmaceuticals',
 'Education and Training',

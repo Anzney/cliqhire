@@ -155,8 +155,8 @@ export function ClientInformationTab({ form }: ClientInformationTabProps) {
           <FormItem className="space-y-1">
             <FormLabel>Client Priority</FormLabel>
             <Select
-              value={field.value?.toString() || ""}
-              onValueChange={(value) => field.onChange(parseInt(value, 10))}
+              value={field.value !== undefined ? String(field.value) : ""}
+              onValueChange={(value) => field.onChange(value)}
             >
               <FormControl>
                 <SelectTrigger>
