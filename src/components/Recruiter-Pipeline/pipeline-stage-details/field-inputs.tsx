@@ -33,7 +33,7 @@ export const DatePickerField = ({
   const selectedDate = parseDateString(value);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -91,7 +91,7 @@ export const DateTimePickerField = ({
 
   return (
     <div className="space-y-2">
-      <Popover open={dateOpen} onOpenChange={setDateOpen}>
+      <Popover open={dateOpen} onOpenChange={setDateOpen} modal={true}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
@@ -114,7 +114,7 @@ export const DateTimePickerField = ({
         </PopoverContent>
       </Popover>
       
-      <Popover open={timeOpen} onOpenChange={setTimeOpen}>
+      <Popover open={timeOpen} onOpenChange={setTimeOpen} modal={true}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
