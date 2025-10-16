@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { Inter } from 'next/font/google'
 import "./globals.css"
 import { Toaster } from "@/components/ui/sonner";
-import { ThemeProvider } from "next-themes"
+import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/contexts/AuthContext"
 import '@/lib/axios-config'; // Initialize global axios interceptors
 import { QueryProvider } from "@/contexts/query-provider";
