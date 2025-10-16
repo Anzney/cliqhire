@@ -40,6 +40,7 @@ export function InterviewDetailsDialog({
   const [period, setPeriod] = React.useState<"AM" | "PM">("AM");
   const [meetingLink, setMeetingLink] = React.useState<string>(initialMeetingLink);
   const [submitting, setSubmitting] = React.useState(false);
+  const [dateOpen, setDateOpen] = React.useState(false);
 
   const isValid = Boolean(date) && Boolean(hour12) && Boolean(minute) && Boolean(period) && meetingLink.trim().length > 0;
 
@@ -105,7 +106,7 @@ export function InterviewDetailsDialog({
         <div className="space-y-4 py-2">
           <div className="space-y-2">
             <label className="text-sm font-medium">Interview Date <span className="text-red-500">*</span></label>
-            <Popover>
+            <Popover modal={true} open={dateOpen} onOpenChange={setDateOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start text-left font-normal">
                   <CalendarIcon className="mr-2 h-4 w-4" />
@@ -116,7 +117,12 @@ export function InterviewDetailsDialog({
                 <Calendar
                   mode="single"
                   selected={date}
-                  onSelect={(d) => d && setDate(d)}
+                  onSelect={(d) => {
+                    if (d) {
+                      setDate(d);
+                      setDateOpen(false);
+                    }
+                  }}
                   initialFocus
                 />
               </PopoverContent>
@@ -125,7 +131,7 @@ export function InterviewDetailsDialog({
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Interview Time <span className="text-red-500">*</span></label>
-            <Popover>
+            <Popover modal={true}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start text-left font-normal">
                   <Clock className="mr-2 h-4 w-4" />
