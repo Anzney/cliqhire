@@ -4,6 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CreateTeamMemberData, TeamMemberStatus } from '@/types/teamMember';
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
+import "@/styles/phone-input-override.css";
 
 interface PersonalInformationTabProps {
   formData: CreateTeamMemberData;
@@ -89,11 +92,17 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
 
         <div className='mr-2'>
           <Label htmlFor="phone">Phone Number</Label>
-          <Input
-            id="phone"
-            value={formData.phone}
-            onChange={(e) => handleInputChange('phone', e.target.value)}
-            placeholder="Enter phone number"
+          <PhoneInput
+            country={"sa"}
+            value={formData.phone || ""}
+            onChange={(value) => {
+              handleInputChange('phone', value || "");
+            }}
+            inputClass="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm w-full"
+            enableSearch={true}
+            preferredCountries={["in", "us", "gb", "sa"]}
+            countryCodeEditable={false}
+            autoFormat={true}
           />
         </div>
 
