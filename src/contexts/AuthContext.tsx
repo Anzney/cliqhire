@@ -29,6 +29,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isFetchingTasksRef = useRef(false);
   const router = useRouter();
 
+  console.log('AuthContext: Current user state:', user);
+
 
   const checkAuth = async () => {
     try {

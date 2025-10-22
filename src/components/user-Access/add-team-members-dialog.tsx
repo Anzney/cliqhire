@@ -250,7 +250,7 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess, editTeam }
                 ) : (
                   getTeamMembersByRole("Hiring Manager").map((member) => (
                     <SelectItem key={member._id} value={member._id}>
-                      {member.name}
+                      {member.firstName + " " + member.lastName}
                     </SelectItem>
                   ))
                 )}
@@ -277,7 +277,7 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess, editTeam }
                 ) : (
                   getTeamMembersByRole("Team Lead").map((member) => (
                     <SelectItem key={member._id} value={member._id}>
-                      {member.name}
+                      {member.firstName + " " + member.lastName}
                     </SelectItem>
                   ))
                 )}
@@ -304,7 +304,7 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess, editTeam }
                   ) : (
                     getTeamMembersByRole("Recruiters").map((member) => (
                       <SelectItem key={member._id} value={member._id}>
-                        {member.name}
+                        {member.firstName + " " + member.lastName}
                       </SelectItem>
                     ))
                   )}
@@ -318,7 +318,7 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess, editTeam }
                     const recruiter = getTeamMemberById(recruiterId);
                     return recruiter ? (
                       <Badge key={recruiterId} variant="secondary" className="flex items-center gap-1">
-                        {recruiter.name}
+                        {recruiter.firstName + " " + recruiter.lastName}
                         <X
                           className="h-3 w-3 cursor-pointer"
                           onClick={() => removeRecruiter(recruiterId)}

@@ -4,6 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CreateTeamMemberData, TeamMemberStatus } from '@/types/teamMember';
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
+import "@/styles/phone-input-override.css";
 
 interface PersonalInformationTabProps {
   formData: CreateTeamMemberData;
@@ -45,16 +48,26 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className='ml-2'>
-          <Label htmlFor="name">Full Name <span className="text-red-500">*</span></Label>
+        <div>
+          <Label htmlFor="name">First Name <span className="text-red-500">*</span></Label>
           <Input
             id="name"
-            value={formData.name}
-            onChange={(e) => handleInputChange('name', e.target.value)}
-            placeholder="Enter full name"
-            className={errors.name ? 'border-red-500' : ''}
+            value={formData.firstName}
+            onChange={(e) => handleInputChange('firstName', e.target.value)}
+            placeholder="Enter First Name"
+            className={errors.firstName ? 'border-red-500' : ''}
           />
-          {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+          {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
+        </div>
+
+         <div>
+          <Label htmlFor="name"> Last Name </Label>
+          <Input
+            id="name"
+            value={formData.lastName}
+            onChange={(e) => handleInputChange('lastName', e.target.value)}
+            placeholder="Enter Last Name"
+          />
         </div>
 
         <div className='mr-2'>
@@ -89,11 +102,17 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
 
         <div className='mr-2'>
           <Label htmlFor="phone">Phone Number</Label>
-          <Input
-            id="phone"
-            value={formData.phone}
-            onChange={(e) => handleInputChange('phone', e.target.value)}
-            placeholder="Enter phone number"
+          <PhoneInput
+            country={"sa"}
+            value={formData.phone || ""}
+            onChange={(value) => {
+              handleInputChange('phone', value || "");
+            }}
+            inputClass="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm w-full"
+            enableSearch={true}
+            preferredCountries={["in", "us", "gb", "sa"]}
+            countryCodeEditable={false}
+            autoFormat={true}
           />
         </div>
 
@@ -120,16 +139,6 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
             value={formData.location}
             onChange={(e) => handleInputChange('location', e.target.value)}
             placeholder="Enter location"
-          />
-        </div>
-
-        <div className='ml-2'>
-          <Label htmlFor="experience">Experience</Label>
-          <Input
-            id="experience"
-            value={formData.experience}
-            onChange={(e) => handleInputChange('experience', e.target.value)}
-            placeholder="e.g., 5 years"
           />
         </div>
 

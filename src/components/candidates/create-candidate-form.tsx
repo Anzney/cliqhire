@@ -20,6 +20,9 @@ import { subDays } from "date-fns";
 import { candidateService } from "@/services/candidateService";
 import { convertTempCandidateToReal, type ConvertTempCandidateRequest } from "@/services/recruitmentPipelineService";
 import { toast } from "sonner";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
+import "@/styles/phone-input-override.css";
 
 interface CreateCandidateFormProps {
   onCandidateCreated?: (candidate: any) => void;
@@ -346,13 +349,16 @@ export default function CreateCandidateForm({
           {/* Phone Number - Required */}
           <div className="space-y-2">
             <Label htmlFor="phone">Phone Number<span className="text-red-500">*</span></Label>
-            <Input 
-              id="phone" 
-              name="phone" 
-              value={form.phone} 
-              onChange={handleChange} 
-              placeholder="Enter phone number" 
-              required
+            <PhoneInput
+              country={"sa"}
+              value={form.phone || ""}
+              onChange={(value) => setForm(prev => ({ ...prev, phone: value || "" }))}
+              inputClass="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm w-full"
+              enableSearch={true}
+              preferredCountries={["sa", "us", "gb", "in"]}
+              countryCodeEditable={false}
+              autoFormat={true}
+              inputProps={{ id: "phone", name: "phone", placeholder: "Enter phone number", required: true }}
             />
           </div>
 

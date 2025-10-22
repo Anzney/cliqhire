@@ -32,7 +32,8 @@ interface TeamMembersTabsProps {
 }
 
 const headerArr = [
-  "Name",
+  "First Name",
+  "Last Name",
   "Email",
   "Phone",
   "Location",
@@ -292,7 +293,8 @@ export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
         key={teamMember._id}
         className="hover:bg-muted/50 cursor-default"
       >
-        <TableCell className="text-sm font-medium">{teamMember.name}</TableCell>
+        <TableCell className="text-sm font-medium">{teamMember.firstName}</TableCell>
+        <TableCell className="text-sm">{teamMember.lastName}</TableCell>
         <TableCell className="text-sm">{teamMember.email}</TableCell>
         <TableCell className="text-sm">{teamMember.phone}</TableCell>
         <TableCell className="text-sm">{teamMember.location}</TableCell>
@@ -574,7 +576,7 @@ export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
             isOpen={registerDialogOpen}
             onClose={handleCloseRegisterDialog}
             teamMemberId={selectedTeamMember._id}
-            teamMemberName={selectedTeamMember.name}
+            teamMemberName={selectedTeamMember.firstName + " " + selectedTeamMember.lastName}
             teamMemberEmail={selectedTeamMember.email}
           />
         )}
@@ -582,7 +584,7 @@ export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
         <DeleteTeamMemberDialog
           open={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
-          teamMemberName={teamMemberToDelete?.name || ""}
+          teamMemberName={teamMemberToDelete?.firstName + " " + teamMemberToDelete?.lastName || ""}
           onConfirm={confirmDeleteTeamMember}
           isLoading={deleteMutation.isPending}
         />

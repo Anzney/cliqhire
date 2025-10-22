@@ -1,6 +1,7 @@
 export interface TeamMember {
   _id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   avatar?: string;
@@ -41,6 +42,8 @@ export interface TeamMemberResponse {
 
 export interface TeamMemberFilters {
   name?: string;
+  firstName?: string;
+  lastName?: string;
   status?: TeamMemberStatus;
   location?: string;
   department?: string;
@@ -48,7 +51,8 @@ export interface TeamMemberFilters {
 }
 
 export interface CreateTeamMemberData {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   location: string;

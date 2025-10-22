@@ -38,12 +38,12 @@ export function ViewTeamDialog({
            { label: "Created", value: team.createdAt ? new Date(team.createdAt).toLocaleDateString() : "—", isBadge: false },
          ],
          [
-           { label: "Hiring Manager", value: team.hiringManagerId?.name || "—", isBadge: false },
-           { label: "Team Lead", value: team.teamLeadId?.name || "—", isBadge: false },
+           { label: "Hiring Manager", value: team.hiringManagerId?.firstName + " " + team.hiringManagerId?.lastName || "—", isBadge: false },
+           { label: "Team Lead", value: team.teamLeadId?.firstName + " " + team.teamLeadId?.lastName || "—", isBadge: false },
            { label: "", value: "", isBadge: false },
          ],
          [
-           { label: "Recruiters", value: (team.recruiters && team.recruiters.length > 0) ? team.recruiters.map(recruiter => recruiter.name).join(", ") : "—", isBadge: false },
+           { label: "Recruiters", value: (team.recruiters && team.recruiters.length > 0) ? team.recruiters.map(recruiter => recruiter.firstName + " " + recruiter.lastName).join(", ") : "—", isBadge: false },
          ]
        ]
     },

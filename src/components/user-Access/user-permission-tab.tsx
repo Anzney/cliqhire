@@ -125,7 +125,7 @@ export function UserPermissionTab({
 
     return teamMembers.map((user) => (
       <TableRow key={user._id} className="hover:bg-muted/50">
-        <TableCell className="text-sm font-medium">{user.name}</TableCell>
+        <TableCell className="text-sm font-medium">{user.firstName + " " + user.lastName}</TableCell>
         <TableCell className="text-sm">{user.email}</TableCell>
         <TableCell className="text-sm">{user.phone}</TableCell>
                  <TableCell className="text-sm">

@@ -28,7 +28,8 @@ export function CreateTeamMemberModal({
   onSuccess,
 }: CreateTeamMemberModalProps) {
   const [formData, setFormData] = useState<CreateTeamMemberData>({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
     location: "",
@@ -48,9 +49,13 @@ export function CreateTeamMemberModal({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "First Name is required";
     }
+
+    // if (!formData.lastName.trim()) {
+    //   newErrors.lastName = "Last Name is required";
+    // }
 
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
@@ -78,7 +83,8 @@ export function CreateTeamMemberModal({
         const formDataToSend = new FormData();
         
         // Required fields
-        formDataToSend.append('name', formData.name);
+        formDataToSend.append('firstName', formData.firstName);
+        formDataToSend.append('lastName', formData.lastName);
         formDataToSend.append('email', formData.email);
         formDataToSend.append('teamRole', formData.teamRole);
         
@@ -108,7 +114,8 @@ export function CreateTeamMemberModal({
 
       // Reset form
       setFormData({
-        name: "",
+        firstName: "",
+        lastName: "",
         email: "",
         phone: "",
         location: "",
@@ -140,7 +147,8 @@ export function CreateTeamMemberModal({
   const handleClose = () => {
     if (!isSubmitting) {
       setFormData({
-        name: "",
+        firstName: "",
+        lastName: "",
         email: "",
         phone: "",
         location: "",
@@ -162,7 +170,7 @@ export function CreateTeamMemberModal({
     // Validate current tab before proceeding
     if (currentTab === 0) {
       const tabErrors: Record<string, string> = {};
-      if (!formData.name.trim()) tabErrors.name = "Name is required";
+      if (!formData.firstName.trim()) tabErrors.firstName = "First Name is required";
       if (!formData.email.trim()) tabErrors.email = "Email is required";
       if (!formData.teamRole.trim()) tabErrors.teamRole = "Team role is required";
 

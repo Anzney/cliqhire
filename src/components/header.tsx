@@ -9,6 +9,7 @@ import { useState } from "react";
 import { UserProfileDialog } from "@/components/user-profile/user-profile-dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { ModeToggle } from "@/components/mode-toggle";
 
 export function Header() {
   const pathname = usePathname();
@@ -88,6 +89,7 @@ export function Header() {
             </div> */}
           </div>
           <div className="flex items-center gap-4">
+            <ModeToggle />
             {/* <Button variant="ghost" size="icon">
               <Plus className="h-4 w-4" />
             </Button> */}
