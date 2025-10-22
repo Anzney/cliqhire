@@ -73,6 +73,16 @@ export function SkillsAndStatusTab({ formData, setFormData, errors, onResumeFile
 
   return (
     <div className="space-y-6">
+      {/* Experience */}
+      <div className="ml-2 mr-2">
+        <Label htmlFor="experience">Experience</Label>
+        <Input
+          id="experience"
+          value={formData.experience}
+          onChange={(e) => handleInputChange('experience', e.target.value)}
+          placeholder="Enter experience"
+        />
+      </div>
       {/* Specialization */}
       <div className="ml-2 mr-2">
         <Label htmlFor="specialization">Specialization</Label>

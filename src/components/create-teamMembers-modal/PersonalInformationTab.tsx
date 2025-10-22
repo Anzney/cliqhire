@@ -48,16 +48,26 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className='ml-2'>
-          <Label htmlFor="name">Full Name <span className="text-red-500">*</span></Label>
+        <div>
+          <Label htmlFor="name">First Name <span className="text-red-500">*</span></Label>
           <Input
             id="name"
-            value={formData.name}
-            onChange={(e) => handleInputChange('name', e.target.value)}
-            placeholder="Enter full name"
-            className={errors.name ? 'border-red-500' : ''}
+            value={formData.firstName}
+            onChange={(e) => handleInputChange('firstName', e.target.value)}
+            placeholder="Enter First Name"
+            className={errors.firstName ? 'border-red-500' : ''}
           />
-          {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+          {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
+        </div>
+
+         <div>
+          <Label htmlFor="name"> Last Name </Label>
+          <Input
+            id="name"
+            value={formData.lastName}
+            onChange={(e) => handleInputChange('lastName', e.target.value)}
+            placeholder="Enter Last Name"
+          />
         </div>
 
         <div className='mr-2'>
@@ -129,16 +139,6 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
             value={formData.location}
             onChange={(e) => handleInputChange('location', e.target.value)}
             placeholder="Enter location"
-          />
-        </div>
-
-        <div className='ml-2'>
-          <Label htmlFor="experience">Experience</Label>
-          <Input
-            id="experience"
-            value={formData.experience}
-            onChange={(e) => handleInputChange('experience', e.target.value)}
-            placeholder="e.g., 5 years"
           />
         </div>
 

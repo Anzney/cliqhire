@@ -79,7 +79,7 @@ export const updateTeamMember = async (teamMemberData: UpdateTeamMemberData): Pr
     
     // Filter only allowed fields according to API specification
     const allowedFields = [
-      'name', 'email', 'teamRole', 'phone', 'location', 'experience', 
+      'name', 'firstName', 'lastName', 'email', 'teamRole', 'phone', 'location', 'experience', 
       'status', 'department', 'specialization', 'skills', 'resume', 
       'avatar', 'gender'
     ];

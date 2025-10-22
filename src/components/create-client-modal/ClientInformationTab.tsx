@@ -21,17 +21,17 @@ import { UseFormReturn } from "react-hook-form";
 import { CreateClientFormData } from "./schema";
 
 const SALES_LEADS = [
-  "Roque Dcosta (MD & CEO)",
-  "Ujjval Majmudar (Advisor)",
-  "Mohammed Hamed (Team Leader)",
-  "Raghu Vamsi (Team Leader)",
-  "Vijesh Dsouza (Recruiter)",
-  "Zainab Qureshi (Recruiter)",
-  "Pradnya Mane (Recruiter)",
-  "Sanjali Tillu (Sales Operations)",
-  "Raghad Almarri (Sr. Business Development Officer)",
-  "Raphael Dcosta (Accounts & Finance)",
-  "Abhay"
+  "Dcosta, Roque (MD & CEO)",
+  "Majmudar, Ujjval (Advisor)",
+  "Hamed, Mohammed (Team Leader)",
+  "Vamsi, Raghu (Team Leader)",
+  "Dsouza, Vijesh (Recruiter)",
+  "Qureshi, Zainab (Recruiter)",
+  "Mane, Pradnya (Recruiter)",
+  "Tillu, Sanjali (Sales Operations)",
+  "Almarri, Raghad (Sr. Business Development Officer)",
+  "Dcosta, Raphael (Accounts & Finance)",
+  "Abhay",
 ];
 
 interface ClientInformationTabProps {

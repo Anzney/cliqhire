@@ -27,7 +27,8 @@ interface ViewEditTeamMemberDialogProps {
 }
 
 type EditableForm = {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   location: string;
@@ -39,7 +40,8 @@ type EditableForm = {
 
 export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpdated }: ViewEditTeamMemberDialogProps) {
   const [form, setForm] = useState<EditableForm>({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
     location: "",
@@ -62,7 +64,7 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
   }>({
     open: false,
     fieldName: "",
-    fieldKey: "name",
+    fieldKey: "firstName",
     oldValue: "",
     newValue: "",
   });
@@ -73,7 +75,8 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
   useEffect(() => {
     if (open && teamMember) {
       const next: EditableForm = {
-        name: teamMember.name || "",
+        firstName: teamMember.firstName || "",
+        lastName: teamMember.lastName || "",
         email: teamMember.email || "",
         phone: teamMember.phone || "",
         location: teamMember.location || "",
@@ -120,7 +123,8 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
 
   const getFieldLabel = (key: keyof EditableForm): string => {
     const labels: Record<keyof EditableForm, string> = {
-      name: "Name",
+      firstName: "First Name",
+      lastName: "Last Name",
       email: "Email",
       phone: "Phone",
       location: "Location",
@@ -254,13 +258,13 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Avatar className="h-12 w-12">
-                <AvatarImage src={teamMember?.avatar || ""} alt={teamMember?.name || "User"} />
-                <AvatarFallback>{(teamMember?.name || "").substring(0,2).toUpperCase()}</AvatarFallback>
+                <AvatarImage src={teamMember?.avatar || ""} alt={teamMember?.firstName + " " + teamMember?.lastName || "User"} />
+                <AvatarFallback>{(teamMember?.firstName || "").substring(0,2).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>
                 <DialogTitle className="flex items-center gap-2">
                   <UserCog className="h-5 w-5" />
-                  {teamMember?.name}
+                  {teamMember?.firstName + " " + teamMember?.lastName}
                 </DialogTitle>
                 <DialogDescription className="flex items-center gap-2">
                   {teamMember?.email && (
@@ -282,7 +286,8 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
         <div className="max-h-[70vh] overflow-y-auto pr-1">
           {/* Row 1: Name, Email, Phone */}
           <div className="grid grid-cols-3 gap-4 mb-4">
-            {renderField("name", "Name", form.name)}
+            {renderField("firstName", "First Name", form.firstName)}
+            {renderField("lastName", "Last Name", form.lastName)}
             {renderField("email", "Email", form.email)}
             {renderField("phone", "Phone", form.phone)}
           </div>

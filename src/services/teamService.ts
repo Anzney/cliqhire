@@ -26,6 +26,8 @@ export interface TeamMember {
 export interface Team {
   _id: string;
   teamName: string;
+  firstName: string;
+  lastName: string;
   hiringManagerId: TeamMember;
   teamLeadId: TeamMember;
   recruiters: TeamMember[];

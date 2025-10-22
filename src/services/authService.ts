@@ -137,6 +137,8 @@ class AuthService {
 
       // Extract data from response - your API returns accessToken, user, and tasks
       const { accessToken, user, tasks } = response.data.data;
+
+      console.log('User profile details after login:', user);
       
       // Store token in memory and localStorage for persistence
       setAccessToken(accessToken);
