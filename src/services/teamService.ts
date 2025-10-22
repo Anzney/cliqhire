@@ -13,7 +13,8 @@ export interface CreateTeamData {
 
 export interface TeamMember {
   _id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   teamRole: string;
   department: string;

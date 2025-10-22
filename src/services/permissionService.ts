@@ -2,13 +2,15 @@ import axios from 'axios';
 
 export interface UserPermissions {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   role: string;
   isActive: boolean;
   permissions: string[];
   profile: {
-    name: string;
+    firstName: string;
+    lastName: string;
     email: string;
     teamRole: string;
     status: string;

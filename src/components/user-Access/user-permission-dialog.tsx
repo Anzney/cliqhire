@@ -86,13 +86,15 @@ export function UserPermissionDialog({
       // If user doesn't exist in permission system, use fallback data
       setUserPermissions({
         id: user._id,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         role: user.teamRole || "RECRUITER",
         isActive: true,
         permissions: ['RECRUITMENT_PIPELINE', 'JOBS', 'CANDIDATE', 'TODAY_TASKS'], // Default permissions
         profile: {
-          name: user.name,
+          firstName: user.firstName,
+          lastName: user.lastName,
           email: user.email,
           teamRole: user.teamRole || "RECRUITER",
           status: "Active",
@@ -294,7 +296,7 @@ export function UserPermissionDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            User Permissions: {user.name}
+            User Permissions: {user.firstName + " " + user.lastName}
           </DialogTitle>
           <DialogDescription>
             Manage access permissions for this user across different pages and features.

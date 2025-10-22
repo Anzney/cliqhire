@@ -264,9 +264,9 @@ export function SummaryContent({
                 value={clientData?.clientPriority}
                 onUpdate={handleUpdateField("clientPriority")}
                 options={[
-                  { value: "1-Top", label: "1 - Top" },
-                  { value: "2-Medium", label: "2 - Medium" },
-                  { value: "3-Low", label: "3 - Low" },
+                  { value: "High", label: "High" },
+                  { value: "Medium", label: "Medium" },
+                  { value: "Low", label: "Low" },
                 ]}
                 disableInternalEdit={!canModify}
               />

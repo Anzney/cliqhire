@@ -166,9 +166,9 @@ export function ClientInformationTab({ form }: ClientInformationTabProps) {
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Priority</SelectLabel>
-                  <SelectItem value="1-Top">1 - Top</SelectItem>
-                  <SelectItem value="2-Medium">2 - Medium</SelectItem>
-                  <SelectItem value="3-Low">3 - Low</SelectItem>
+                  <SelectItem value="High">High</SelectItem>
+                  <SelectItem value="Medium">Medium</SelectItem>
+                  <SelectItem value="Low">Low</SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>

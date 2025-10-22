@@ -121,7 +121,7 @@ export function TeamSelectionDialog({
         ? (() => {
             const recruiter = selectedTeam?.recruiters.find((r) => r._id === selectedRecruiterId);
             return recruiter
-              ? [{ id: recruiter._id, name: recruiter.name, email: recruiter.email, phone: recruiter.phone }]
+              ? [{ id: recruiter._id, name: recruiter.firstName + " " + recruiter.lastName, email: recruiter.email, phone: recruiter.phone }]
               : [];
           })()
         : [],
@@ -219,7 +219,7 @@ export function TeamSelectionDialog({
                       key={recruiter._id} 
                       value={recruiter._id}
                     >
-                      {recruiter.name}
+                      {recruiter.firstName + " " + recruiter.lastName}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -72,7 +72,7 @@ export function EditSkillsDialog({ open, onOpenChange, teamMember, onUpdated }: 
         <DialogHeader>
           <DialogTitle>Edit Skills</DialogTitle>
           <DialogDescription>
-            Update skills for {teamMember.name}
+            Update skills for {teamMember.firstName + " " + teamMember.lastName}
           </DialogDescription>
         </DialogHeader>
 
