@@ -37,6 +37,7 @@ interface PipelineStageDetailsProps {
   onStageSelect?: (stage: string) => void;
   onUpdateCandidate?: (updatedCandidate: any) => void;
   pipelineId?: string;
+  canModify?: boolean;
 }
 
 export function PipelineStageDetails({ 
@@ -44,13 +45,22 @@ export function PipelineStageDetails({
   selectedStage, 
   onStageSelect,
   onUpdateCandidate,
-  pipelineId
+  pipelineId,
+  canModify = true
 }: PipelineStageDetailsProps) {
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingFieldKey, setPendingFieldKey] = useState<string | null>(null);
+  
+  // Ensure confirm dialog is closed on unmount to avoid any lingering overlay/focus trap
+  React.useEffect(() => {
+    return () => {
+      setShowConfirmDialog(false);
+      setPendingFieldKey(null);
+    };
+  }, []);
   
   if (!candidate) return null;
   
@@ -66,6 +76,10 @@ export function PipelineStageDetails({
   };
 
   const handleSaveField = (fieldKey: string) => {
+    if (!canModify) {
+      toast.error('You do not have permission to modify the recruitment pipeline.');
+      return;
+    }
     // Show confirmation dialog instead of immediately saving
     setPendingFieldKey(fieldKey);
     setShowConfirmDialog(true);
@@ -240,7 +254,7 @@ export function PipelineStageDetails({
                           <X className="h-3 w-3" />
                         </Button>
                       </div>
-                    ) : displayStage === candidate.currentStage ? (
+                    ) : (canModify && displayStage === candidate.currentStage) ? (
                       <Button
                         size="sm"
                         variant="ghost"

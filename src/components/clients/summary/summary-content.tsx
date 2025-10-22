@@ -25,10 +25,12 @@ export function SummaryContent({
   clientId,
   clientData,
   onTabSwitch,
+  canModify = true,
 }: {
   clientId: string;
   clientData?: any;
   onTabSwitch?: (tabValue: string) => void;
+  canModify?: boolean;
 }) {
   const queryClient = useQueryClient();
 
@@ -54,6 +56,7 @@ export function SummaryContent({
     fieldName: string,
     value: string | string[] | PrimaryContact | { url: string; fileName: string },
   ) => {
+    if (!canModify) return;
     try {
       const response = await api.patch(`/api/clients/${clientId}`, { [fieldName]: value });
       // Optimistically update React Query cache
@@ -69,6 +72,7 @@ export function SummaryContent({
 
   // Handler for opening file upload modal
   const handleOpenFileUploadModal = (field: keyof ClientDetails, title: string) => {
+    if (!canModify) return;
     setCurrentUploadField(field);
     setCurrentUploadTitle(title);
     setIsFileUploadModalOpen(true);
@@ -76,6 +80,7 @@ export function SummaryContent({
 
   // Handler for file upload through modal
   const handleFileUploadFromModal = async (file: File): Promise<void> => {
+    if (!canModify) return;
     if (!currentUploadField || !file) return;
 
     try {
@@ -102,6 +107,7 @@ export function SummaryContent({
     (field: keyof ClientDetails) =>
     (file: File | null): void => {
       if (!file) return;
+      if (!canModify) return;
       (async () => {
         try {
           const formData = new FormData();
@@ -122,23 +128,28 @@ export function SummaryContent({
     };
 
   const handleUpdateField = (field: keyof ClientDetails) => (value: string) => {
+    if (!canModify) return;
     updateClientDetails(field, value);
   };
 
   const handleAddTeamMember = (member: TeamMemberType) => {
+    if (!canModify) return;
     setTeamMembers((prev) => [...prev, { ...member, isActive: true }]);
   };
 
   const handleAddContact = (contact: PrimaryContact) => {
+    if (!canModify) return;
     const nextContacts = [...(clientData?.primaryContacts || []), contact];
     updateClientDetails("primaryContacts", nextContacts as unknown as PrimaryContact);
   };
 
   const handleUpdateDescription = (description: string) => {
+    if (!canModify) return;
     updateClientDetails("description", description);
   };
 
   const handleUpdateContact = (index: number, field: keyof PrimaryContact, value: string) => {
+    if (!canModify) return;
     const updated = (clientData?.primaryContacts || []).map((c: any, i: number) =>
       i === index ? { ...c, [field]: value } : c,
     );
@@ -209,11 +220,15 @@ export function SummaryContent({
   };
 
   const positionOptions = [
-    { value: "HR", label: "HR" },
-    { value: "Senior HR", label: "Senior HR" },
-    { value: "Manager", label: "Manager" },
-    { value: "Director", label: "Director" },
-    { value: "Executive", label: "Executive" },
+    { value: "CEO", label: "CEO" },
+  { value: "HR Head", label: "HR Head" },
+  { value: "CHRO", label: "CHRO" },
+  { value: "HR", label: "HR" },
+  { value: "Manager", label: "Manager" },
+  { value: "HR Manager", label: "HR Manager" },
+  { value: "Director", label: "Director" },
+  { value: "Executive", label: "Executive" },
+  { value: "General Manager", label: "General Manager" },
   ];
 
   return (
@@ -235,11 +250,13 @@ export function SummaryContent({
                 label="Sales Lead (Internal)"
                 value={clientData?.salesLead}
                 onUpdate={handleUpdateField("salesLead")}
+                disableInternalEdit={!canModify}
               />
               <DetailRow
                 label="Referred By (External)"
                 value={clientData?.referredBy}
                 onUpdate={handleUpdateField("referredBy")}
+                disableInternalEdit={!canModify}
               />
 
               <DetailRow
@@ -247,34 +264,34 @@ export function SummaryContent({
                 value={clientData?.clientPriority}
                 onUpdate={handleUpdateField("clientPriority")}
                 options={[
-                  { value: "1", label: "1" },
-                  { value: "2", label: "2" },
-                  { value: "3", label: "3" },
-                  { value: "4", label: "4" },
-                  { value: "5", label: "5" },
+                  { value: "1-Top", label: "1 - Top" },
+                  { value: "2-Medium", label: "2 - Medium" },
+                  { value: "3-Low", label: "3 - Low" },
                 ]}
+                disableInternalEdit={!canModify}
               />
               <DetailRow
                 label="Client Segment"
                 value={clientData?.clientSegment}
                 onUpdate={handleUpdateField("clientSegment")}
                 options={[
-                  { value: "A", label: "A" },
-                  { value: "B", label: "B" },
-                  { value: "C", label: "C" },
-                  { value: "D", label: "D" },
-                  { value: "E", label: "E" },
+                  { value: "Silver", label: "Silver" },
+                  { value: "Gold", label: "Gold" },
+                  { value: "Premium", label: "Premium" },
                 ]}
+                disableInternalEdit={!canModify}
               />
               <DetailRow
                 label="Client Name"
                 value={clientData?.name}
                 onUpdate={handleUpdateField("name")}
+                disableInternalEdit={!canModify}
               />
               <DetailRow
                 label="Client Phone Number"
                 value={clientData?.phoneNumber}
                 onUpdate={handleUpdateField("phoneNumber")}
+                disableInternalEdit={!canModify}
               />
             </div>
           </div>
@@ -285,49 +302,57 @@ export function SummaryContent({
                 value={clientData?.emails?.join(", ") || ""}
                 onUpdate={handleUpdateEmails}
                 alwaysShowEdit={true}
+                disableInternalEdit={!canModify}
               />
               <DetailRow
                 label="Client Industry"
                 value={clientData?.industry}
                 onUpdate={handleUpdateField("industry")}
+                disableInternalEdit={!canModify}
               />
               <DetailRow
                 label="Client Website"
                 value={clientData?.website}
                 onUpdate={handleUpdateField("website")}
+                disableInternalEdit={!canModify}
               />
               <DetailRow
                 label="Google Maps Link"
                 value={clientData?.googleMapsLink}
                 onUpdate={handleUpdateField("googleMapsLink")}
+                disableInternalEdit={!canModify}
               />
               <DetailRow
                 label="Client Location"
                 value={clientData?.location}
                 onUpdate={handleUpdateField("location")}
+                disableInternalEdit={!canModify}
               />
               <DetailRow
                 label="Client Address"
                 value={clientData?.address}
                 onUpdate={handleUpdateField("address")}
+                disableInternalEdit={!canModify}
               />
               <DetailRow
                 label="Country of Business"
                 value={clientData?.countryOfBusiness}
                 onUpdate={handleUpdateField("countryOfBusiness")}
+                disableInternalEdit={!canModify}
               />
               <DetailRow
                 label="LinkedIn Profile"
                 value={clientData?.linkedInProfile}
                 onUpdate={handleUpdateField("linkedInProfile")}
                 optional
+                disableInternalEdit={!canModify}
               />
               <FileUploadRow
                 id="vat-copy-upload"
                 label="VAT Copy"
                 className="border-b"
-                onFileSelect={handleFileUpload("vatCopy")}
-                onUploadClick={() => handleOpenFileUploadModal("vatCopy", "VAT Copy")}
+                onFileSelect={canModify ? handleFileUpload("vatCopy") : () => {}}
+                onUploadClick={canModify ? () => handleOpenFileUploadModal("vatCopy", "VAT Copy") : () => {}}
                 docUrl={clientData?.vatCopy?.url}
                 currentFileName={clientData?.vatCopy?.fileName}
                 onPreview={() =>
@@ -342,8 +367,8 @@ export function SummaryContent({
                 id="cr-copy-upload"
                 label="CR Copy"
                 className="border-b"
-                onFileSelect={handleFileUpload("crCopy")}
-                onUploadClick={() => handleOpenFileUploadModal("crCopy", "CR Copy")}
+                onFileSelect={canModify ? handleFileUpload("crCopy") : () => {}}
+                onUploadClick={canModify ? () => handleOpenFileUploadModal("crCopy", "CR Copy") : () => {}}
                 docUrl={clientData?.crCopy?.url}
                 currentFileName={clientData?.crCopy?.fileName}
                 onPreview={() =>
@@ -357,10 +382,9 @@ export function SummaryContent({
               <FileUploadRow
                 id="gst-tin-document-upload"
                 label="GST IN Doc"
-                onFileSelect={handleFileUpload("gstTinDocument")}
-                onUploadClick={() =>
-                  handleOpenFileUploadModal("gstTinDocument", "GST TIN Document")
-                }
+                onFileSelect={canModify ? handleFileUpload("gstTinDocument") : () => {}}
+                onUploadClick={canModify ? () =>
+                  handleOpenFileUploadModal("gstTinDocument", "GST TIN Document") : () => {}}
                 docUrl={clientData?.gstTinDocument?.url}
                 currentFileName={clientData?.gstTinDocument?.fileName}
                 onPreview={() =>

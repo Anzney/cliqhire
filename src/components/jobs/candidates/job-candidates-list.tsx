@@ -62,19 +62,14 @@ export const JobCandidatesList = forwardRef<JobCandidatesListRef, JobCandidatesL
 
     return (
       <div className="w-full">
-        <div className="border-b py-2 px-6">
-          <div className="flex items-center">
-            <div className="grid grid-cols-6 w-full text-sm font-medium text-gray-500">
-              <div>Name</div>
-              <div>Email</div>
-              <div>Phone</div>
-              <div>Status</div>
-              <div>Experience</div>
-              <div>Location</div>
+           <div className="border-b py-2 px-6 grid grid-cols-[1.5fr_2.5fr_1.5fr_1fr_1fr_1.5fr] min-w-[900px] w-full text-sm font-medium text-gray-500">
+              <div >Name</div>
+              <div >Email</div>
+              <div >Phone</div>
+              <div >Status</div>
+              <div >Experience</div>
+              <div >Location</div>
             </div>
-          </div>
-        </div>
-
         <div className="overflow-auto">
           {loading ? (
             <div className="flex items-center justify-center h-32">
@@ -90,8 +85,8 @@ export const JobCandidatesList = forwardRef<JobCandidatesListRef, JobCandidatesL
                 className="border-b hover:bg-gray-50 py-3 px-4 cursor-pointer"
                 onClick={() => candidate._id && router.push(`/candidates/${candidate._id}`)}
               >
-                <div className="flex items-center">
-                  <div className="grid grid-cols-6 w-full">
+               
+                  <div className="grid grid-cols-[1.5fr_2.5fr_1.5fr_1fr_1fr_1.5fr] min-w-[900px] w-full">
                     <div className="font-medium">{getCandidateDisplayName(candidate)}</div>
                     <div>{candidate.email || "-"}</div>
                     <div>{candidate.phone || candidate.otherPhone || "-"}</div>
@@ -99,25 +94,11 @@ export const JobCandidatesList = forwardRef<JobCandidatesListRef, JobCandidatesL
                     <div>{candidate.experience || candidate.totalRelevantExperience || "-"}</div>
                     <div>{candidate.location || candidate.country || "-"}</div>
                   </div>
-                </div>
               </div>
             ))
           ) : (
             <div className="flex flex-col items-center justify-center h-48 text-gray-500 gap-3">
               <div>No candidates have been added to this job yet.</div>
-              {/* <AddExistingCandidateDialog
-                jobId={jobId}
-                jobTitle={jobTitle}
-                onCandidatesAdded={async () => {
-                  await fetchCandidatesForJob();
-                }}
-                trigger={
-                  <Button className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Add Candidate
-                  </Button>
-                }
-              /> */}
             </div>
           )}
         </div>

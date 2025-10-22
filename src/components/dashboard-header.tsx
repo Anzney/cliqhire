@@ -10,6 +10,7 @@ type DashboardHeaderProps = {
   heading: string;
   buttonText: string;
   showFilterButton?: boolean;
+  showCreateButton?: boolean;
   rightContent?: React.ReactNode;
   onRefresh?: () => void;
 }
@@ -21,6 +22,7 @@ const  Dashboardheader= ({
     heading,
     buttonText,
     showFilterButton = true,
+    showCreateButton = true,
     rightContent,
     onRefresh,
 }:DashboardHeaderProps)=> {
@@ -36,10 +38,12 @@ const  Dashboardheader= ({
 
         {/* Toolbar */}
         <div className="flex items-center justify-between p-4">
-          <Button size="sm" onClick={() => setOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            {buttonText}
-          </Button>
+          {showCreateButton ? (
+            <Button size="sm" onClick={() => setOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              {buttonText}
+            </Button>
+          ) : (<div />)}
           <div className="flex items-center gap-2">
             {rightContent ? (
               rightContent

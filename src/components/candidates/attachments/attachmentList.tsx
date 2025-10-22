@@ -18,9 +18,10 @@ interface Props {
   attachments: BackendAttachment[];
   onDelete: (id: string) => void;
   onDeleteSelected?: (ids: string[]) => void;
+  canModify?: boolean;
 }
 
-export function AttachmentList({ attachments, onDelete, onDeleteSelected }: Props) {
+export function AttachmentList({ attachments, onDelete, onDeleteSelected, canModify = true }: Props) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -41,6 +42,7 @@ export function AttachmentList({ attachments, onDelete, onDeleteSelected }: Prop
   };
 
   const handleBulkDelete = async () => {
+    if (!canModify) return;
     if (onDeleteSelected && selectedIds.length > 0) {
       await onDeleteSelected(selectedIds);
       setSelectedIds([]);
@@ -49,6 +51,7 @@ export function AttachmentList({ attachments, onDelete, onDeleteSelected }: Prop
   };
 
   const handleDelete = (id: string) => {
+    if (!canModify) return;
     onDelete(id);
   };
 
@@ -70,7 +73,7 @@ export function AttachmentList({ attachments, onDelete, onDeleteSelected }: Prop
           />
           <span className="text-sm">Select All</span>
         </div>
-        {selectedIds.length > 0 && (
+        {canModify && selectedIds.length > 0 && (
           <Button
             variant="destructive"
             size="sm"
@@ -154,16 +157,18 @@ export function AttachmentList({ attachments, onDelete, onDeleteSelected }: Prop
                   >
                     <Download className="h-4 w-4 mr-2" /> Download
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setTimeout(() => {
-                        setDeleteId(attachment._id);
-                        setIsDialogOpen(true);
-                      }, 0); // setTimeout prevents pointer/cursor bug
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" /> Delete
-                  </DropdownMenuItem>
+                  {canModify && (
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setTimeout(() => {
+                          setDeleteId(attachment._id);
+                          setIsDialogOpen(true);
+                        }, 0); // setTimeout prevents pointer/cursor bug
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" /> Delete
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
              

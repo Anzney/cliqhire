@@ -22,12 +22,14 @@ interface JDBenefitFilesSectionProps {
   jobDescriptionPdf?: File | FileData | null;
   benefitPdf?: File | FileData | null;
   onFileUpdate: (field: "jobDescriptionPdf" | "benefitPdf", file: File) => Promise<void>;
+  canModify?: boolean;
 }
 
 export function JDBenefitFilesSection({
   jobDescriptionPdf,
   benefitPdf,
   onFileUpdate,
+  canModify,
 }: JDBenefitFilesSectionProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [uploadField, setUploadField] = useState<"jobDescriptionPdf" | "benefitPdf" | null>(null);
@@ -92,6 +94,7 @@ export function JDBenefitFilesSection({
   };
 
   const handleUploadAgain = (field: "jobDescriptionPdf" | "benefitPdf") => {
+    if (!canModify) return;
     setUploadField(field);
     setIsUploadModalOpen(true);
   };
@@ -154,16 +157,18 @@ export function JDBenefitFilesSection({
                   <Download className="h-4 w-4 mr-2" />
                   Download
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleUploadAgain(field)}>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload Again
-                </DropdownMenuItem>
+                {canModify && (
+                  <DropdownMenuItem onClick={() => handleUploadAgain(field)}>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload Again
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         )}
 
-        {!hasFile && (
+        {!hasFile && canModify && (
           <Button
             variant="outline"
             size="sm"
@@ -203,16 +208,18 @@ export function JDBenefitFilesSection({
         </CollapsibleContent>
       </Collapsible>
 
-      <FileUploadModal
-        open={isUploadModalOpen}
-        onOpenChange={setIsUploadModalOpen}
-        onUpload={handleFileUpload}
-        title={
-          uploadField === "jobDescriptionPdf" ? "Upload Job Description PDF" : "Upload Benefit PDF"
-        }
-        acceptedFileTypes=".pdf"
-        maxSizeInMB={10}
-      />
+      {canModify && (
+        <FileUploadModal
+          open={isUploadModalOpen}
+          onOpenChange={setIsUploadModalOpen}
+          onUpload={handleFileUpload}
+          title={
+            uploadField === "jobDescriptionPdf" ? "Upload Job Description PDF" : "Upload Benefit PDF"
+          }
+          acceptedFileTypes=".pdf"
+          maxSizeInMB={10}
+        />
+      )}
     </>
   );
 }

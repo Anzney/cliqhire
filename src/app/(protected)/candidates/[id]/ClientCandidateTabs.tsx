@@ -13,7 +13,7 @@ import { candidateService } from '@/services/candidateService';
 import { toast } from "sonner";
 import { initializeAuth } from '@/lib/axios-config';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Tab {
   label: string;
@@ -33,6 +33,26 @@ interface Candidate {
 }
 
 export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId: string, tabs: Tab[] }) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
+  let finalPermissions = (user?.permissions && user.permissions.length > 0) ? user.permissions : (user?.defaultPermissions || []);
+  if (!isAdmin && !finalPermissions.includes('TODAY_TASKS')) {
+    finalPermissions = [...finalPermissions, 'TODAY_TASKS'];
+  }
+  const canViewCandidates = isAdmin || finalPermissions.includes('CANDIDATE_VIEW') || finalPermissions.includes('CANDIDATE');
+  const canModifyCandidates = isAdmin || finalPermissions.includes('CANDIDATE_MODIFY');
+  const canDeleteCandidates = isAdmin || finalPermissions.includes('CANDIDATE_DELETE');
+
+  if (!canViewCandidates) {
+    return (
+      <div className="min-h-[400px] font-sans w-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-gray-500 text-lg mb-4">You do not have permission to view this candidate.</div>
+        </div>
+      </div>
+    );
+  }
+
   const [activeTab, setActiveTab] = useState("Summary");
   const jobsContentRef = useRef<JobsContentRef>(null);
   const queryClient = useQueryClient();
@@ -86,7 +106,6 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
       toast.error("Failed to refresh data");
     }
   };
-
 
   // Show loading state
   if (isLoading) {
@@ -150,8 +169,11 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
     }
   };
 
-
   const handleCandidateUpdate = async (updatedCandidate: any, fieldKey?: string) => {
+    if (!canModifyCandidates) {
+      toast.error('You do not have permission to modify candidate details.');
+      return;
+    }
     try {
       const id = candidate?._id;
       if (!id) throw new Error('Missing candidate id');
@@ -268,6 +290,7 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
           <CandidateSummary 
             candidate={candidate} 
             onCandidateUpdate={handleCandidateUpdate}
+            canModify={canModifyCandidates}
           />
         </TabsContent>
 
@@ -312,11 +335,11 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
         </TabsContent>
 
         <TabsContent value="Notes" className="p-4">
-          <CandidateNotesContent candidateId={candidateId} />
+          <CandidateNotesContent candidateId={candidateId} canModify={canModifyCandidates}/>
         </TabsContent>
 
         <TabsContent value="Attachments" className="p-4">
-          <AttachmentsContent candidateId={candidateId} />
+          <AttachmentsContent candidateId={candidateId} canModify={canModifyCandidates} />
         </TabsContent>
 
         <TabsContent value="ClientTeam" className="p-4">

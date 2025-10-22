@@ -50,12 +50,15 @@ export const countryCodes = [
 ];
 
 export const positionOptions = [
+  { value: "CEO", label: "CEO" },
+  { value: "HR Head", label: "HR Head" },
+  { value: "CHRO", label: "CHRO" },
   { value: "HR", label: "HR" },
-  { value: "Senior HR", label: "Senior HR" },
   { value: "Manager", label: "Manager" },
   { value: "HR Manager", label: "HR Manager" },
   { value: "Director", label: "Director" },
   { value: "Executive", label: "Executive" },
+  { value: "General Manager", label: "General Manager" },
 ];
 
 // export const levelFieldMap: Record<string, { percentage: keyof ClientForm; notes: keyof ClientForm; money: keyof ClientForm; currency: keyof ClientForm; }> = {

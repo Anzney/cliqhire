@@ -317,7 +317,7 @@ export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
           />
         </TableCell>
                  <TableCell className="text-sm">
-           <DropdownMenu>
+           <DropdownMenu modal={false}>
              <DropdownMenuTrigger asChild>
                <Button
                  variant="ghost"

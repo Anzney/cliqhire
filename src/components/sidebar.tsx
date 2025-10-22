@@ -70,6 +70,14 @@ export function Sidebar() {
     finalPermissions = [...finalPermissions, 'TODAY_TASKS'];
   }
 
+  // Map base permissions to required VIEW permissions for sidebar visibility
+  const permissionViewMap: Record<string, string> = {
+    CLIENTS: 'CLIENTS_VIEW',
+    JOBS: 'JOBS_VIEW',
+    CANDIDATE: 'CANDIDATE_VIEW',
+    RECRUITMENT_PIPELINE: 'RECRUITMENT_PIPELINE_VIEW',
+  };
+
   return (
     <UISidebar
       collapsible="icon"
@@ -87,7 +95,13 @@ export function Sidebar() {
               {menuItems
                 .filter((item) => {
                   if (isAdmin && item.permission === 'TODAY_TASKS') return false;
-                  return isAdmin || item.permission === "HOME" || finalPermissions.includes(item.permission);
+                  if (isAdmin) return true;
+                  if (item.permission === 'HOME') return true;
+                  const requiredView = permissionViewMap[item.permission as keyof typeof permissionViewMap];
+                  if (requiredView) {
+                    return finalPermissions.includes(requiredView);
+                  }
+                  return finalPermissions.includes(item.permission);
                 })
                 .map((item, index) => {
                   const active = (item.href === "/" ? pathname === "/" : pathname?.startsWith(item.href));

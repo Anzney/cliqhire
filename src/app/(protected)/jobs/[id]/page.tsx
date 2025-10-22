@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { JobTabs } from "@/components/jobs/job-tabs"
 import { JobData } from "@/components/jobs/types"
 import { AddExistingCandidateDialog } from "@/components/common/add-existing-candidate-dialog"
+import { useAuth } from "@/contexts/AuthContext"
 
 interface PageProps {
   params: { id: string }
@@ -19,6 +20,15 @@ export default function JobPage({ params }: PageProps) {
   const [addCandidateOpen, setAddCandidateOpen] = useState(false)
   const [reloadToken, setReloadToken] = useState(0)
   const [activeTab, setActiveTab] = useState<string>("summary")
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
+  let finalPermissions = (user?.permissions && user.permissions.length > 0) ? user.permissions : (user?.defaultPermissions || []);
+  if (!isAdmin && !finalPermissions.includes('TODAY_TASKS')) {
+    finalPermissions = [...finalPermissions, 'TODAY_TASKS'];
+  }
+  const canViewJobs = isAdmin || finalPermissions.includes('JOBS_VIEW') || finalPermissions.includes('JOBS');
+  const canModifyJobs = isAdmin || finalPermissions.includes('JOBS_MODIFY');
+
   const queryClient = useQueryClient();
   const { data: job, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['job', id],
@@ -28,6 +38,7 @@ export default function JobPage({ params }: PageProps) {
     select: (res: any) => (Array.isArray(res?.data) ? res.data[0] : res?.data) as JobData | undefined,
     placeholderData: (prev) => prev,
   })
+
   if (isLoading) {
     return <div className="flex items-center justify-center h-screen">
       <div className="flex items-center justify-center gap-2 flex-col">
@@ -45,11 +56,18 @@ export default function JobPage({ params }: PageProps) {
     return notFound()
   }
 
+  if (!canViewJobs) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center text-muted-foreground">You do not have permission to view this job.</div>
+      </div>
+    )
+  }
+
   const handleRefresh = async () => {
     refetch()
     queryClient.invalidateQueries({ queryKey: ['job', id] })
   }
-  
 
   // Header values from summary
   const jobTitle = job.jobTitle || "Untitled Job"
@@ -98,6 +116,7 @@ export default function JobPage({ params }: PageProps) {
         reloadToken={reloadToken}
         activeTab={activeTab}
         onTabChange={setActiveTab}
+        canModify={canModifyJobs}
       />
 
       {/* Add Candidate Dialog (Existing Candidate selection) */}

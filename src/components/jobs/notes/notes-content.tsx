@@ -37,7 +37,7 @@ function mapNote(noteFromApi: any): Note {
   };
 }
 
-export function NotesContent({ jobId, jobData }: { jobId: string, jobData: JobData }) {
+export function NotesContent({ jobId, jobData, canModify }: { jobId: string, jobData: JobData, canModify?: boolean }) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editNote, setEditNote] = useState<Note | null>(null);
@@ -98,11 +98,13 @@ export function NotesContent({ jobId, jobData }: { jobId: string, jobData: JobDa
 
   return (
     <div className="flex-1 p-6">
-      <div className="mb-6 flex justify-end">
-        <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" /> Add Note
-        </Button>
-      </div>
+      {canModify && (
+        <div className="mb-6 flex justify-end">
+          <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" /> Add Note
+          </Button>
+        </div>
+      )}
 
       {notes.length > 0 ? (
         <NotesList
@@ -114,6 +116,7 @@ export function NotesContent({ jobId, jobData }: { jobId: string, jobData: JobDa
             }, 0);
           }}
           onDelete={handleDeleteNote}
+          canModify={canModify}
         />
       ) : (
         <div className="flex flex-col items-center justify-center text-center py-12">

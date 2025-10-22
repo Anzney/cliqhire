@@ -87,7 +87,7 @@ export function CandidateStatusBadge({ id, status, onStatusChange }: CandidateSt
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-auto p-0 hover:bg-transparent candidate-status-badge">
             <Badge

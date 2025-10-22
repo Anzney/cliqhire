@@ -23,7 +23,7 @@ export const clientGeneralInfoSchema = z.object({
   clientSubStage: z.string().optional(),
   salesLead: z.string().min(1, "Sales lead is required"),
   referredBy: z.string().optional(),
-  clientPriority: z.number().optional(),
+  clientPriority: z.string().optional(),
   clientSegment: z.string().optional(),
   clientSource: z.string().optional(),
   industry: z.string().optional(),

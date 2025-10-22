@@ -23,9 +23,10 @@ const currencyOptions = Object.values(currencies)
 interface SalaryRangeProps {
   candidate: any;
   onCandidateUpdate?: (updatedCandidate: any) => void;
+  canModify?: boolean;
 }
 
-const SalaryRange = ({ candidate, onCandidateUpdate }: SalaryRangeProps) => {
+const SalaryRange = ({ candidate, onCandidateUpdate, canModify = true }: SalaryRangeProps) => {
   // ...existing hooks and state...
 
   // Save handler for current salary row
@@ -113,14 +114,16 @@ const SalaryRange = ({ candidate, onCandidateUpdate }: SalaryRangeProps) => {
             </span>
           </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 flex items-center"
-          onClick={() => setEditField("currentSalaryRow")}
-        >
-          <Pencil className="h-4 w-4 mr-2" />Edit
-        </Button>
+        {canModify && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 flex items-center"
+            onClick={() => setEditField("currentSalaryRow")}
+          >
+            <Pencil className="h-4 w-4 mr-2" />Edit
+          </Button>
+        )}
       </div>
     );
   };
@@ -139,14 +142,16 @@ const SalaryRange = ({ candidate, onCandidateUpdate }: SalaryRangeProps) => {
             </span>
           </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 flex items-center"
-          onClick={() => setEditField("expectedSalaryRow")}
-        >
-          <Pencil className="h-4 w-4 mr-2" />Edit
-        </Button>
+        {canModify && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 flex items-center"
+            onClick={() => setEditField("expectedSalaryRow")}
+          >
+            <Pencil className="h-4 w-4 mr-2" />Edit
+          </Button>
+        )}
       </div>
     );
   };

@@ -20,6 +20,20 @@ import { INDUSTRIES } from "@/lib/constants";
 import { UseFormReturn } from "react-hook-form";
 import { CreateClientFormData } from "./schema";
 
+const SALES_LEADS = [
+  "Roque Dcosta (MD & CEO)",
+  "Ujjval Majmudar (Advisor)",
+  "Mohammed Hamed (Team Leader)",
+  "Raghu Vamsi (Team Leader)",
+  "Vijesh Dsouza (Recruiter)",
+  "Zainab Qureshi (Recruiter)",
+  "Pradnya Mane (Recruiter)",
+  "Sanjali Tillu (Sales Operations)",
+  "Raghad Almarri (Sr. Business Development Officer)",
+  "Raphael Dcosta (Accounts & Finance)",
+  "Abhay"
+];
+
 interface ClientInformationTabProps {
   form: UseFormReturn<CreateClientFormData>;
 }
@@ -103,10 +117,11 @@ export function ClientInformationTab({ form }: ClientInformationTabProps) {
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="emmanuel">Emmanuel</SelectItem>
-                <SelectItem value="rocky">Rocky</SelectItem>
-                <SelectItem value="hamed">Hamed</SelectItem>
-                <SelectItem value="abhay">Abhay</SelectItem>
+                {SALES_LEADS.map((name) => (
+                  <SelectItem key={name} value={name}>
+                    {name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <FormMessage />
@@ -140,8 +155,8 @@ export function ClientInformationTab({ form }: ClientInformationTabProps) {
           <FormItem className="space-y-1">
             <FormLabel>Client Priority</FormLabel>
             <Select
-              value={field.value?.toString() || ""}
-              onValueChange={(value) => field.onChange(parseInt(value, 10))}
+              value={field.value !== undefined ? String(field.value) : ""}
+              onValueChange={(value) => field.onChange(value)}
             >
               <FormControl>
                 <SelectTrigger>
@@ -151,11 +166,9 @@ export function ClientInformationTab({ form }: ClientInformationTabProps) {
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Priority</SelectLabel>
-                  <SelectItem value="1">1</SelectItem>
-                  <SelectItem value="2">2</SelectItem>
-                  <SelectItem value="3">3</SelectItem>
-                  <SelectItem value="4">4</SelectItem>
-                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="1-Top">1 - Top</SelectItem>
+                  <SelectItem value="2-Medium">2 - Medium</SelectItem>
+                  <SelectItem value="3-Low">3 - Low</SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -179,9 +192,9 @@ export function ClientInformationTab({ form }: ClientInformationTabProps) {
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Segment</SelectLabel>
-                  <SelectItem value="A">A</SelectItem>
-                  <SelectItem value="B">B</SelectItem>
-                  <SelectItem value="C">C</SelectItem>
+                  <SelectItem value="Silver">Silver</SelectItem>
+                  <SelectItem value="Gold">Gold</SelectItem>
+                  <SelectItem value="Premium">Premium</SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>

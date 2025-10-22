@@ -93,6 +93,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                     <FormControl>
                       <Input
                         type="email"
+                        autoComplete="email"
                         placeholder="Enter your email"
                         className="w-80"
                         {...field}
@@ -123,6 +124,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                           className="w-80" 
                           {...field} 
                           placeholder="Enter your password"
+                          autoComplete="current-password"
                         />
                         <Button
                           type="button"

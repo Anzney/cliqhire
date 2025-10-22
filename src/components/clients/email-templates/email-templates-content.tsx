@@ -124,10 +124,12 @@ Best regards,
 
 export function EmailTemplatesContent({ 
   clientId, 
-  clientData 
+  clientData,
+  canModify = true
 }: { 
   clientId: string;
   clientData?: any;
+  canModify?: boolean;
 }) {
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -153,6 +155,7 @@ export function EmailTemplatesContent({
     category: string; 
     isDefault: boolean; 
   }) => {
+    if (!canModify) return;
     // Create new template with dummy data
     const newTemplate: EmailTemplate = {
       id: Date.now().toString(),
@@ -173,6 +176,7 @@ export function EmailTemplatesContent({
     category: string; 
     isDefault: boolean; 
   }) => {
+    if (!canModify) return;
     if (!editTemplate) return;
 
     // Update template with dummy data
@@ -192,6 +196,7 @@ export function EmailTemplatesContent({
   };
 
   const handleDeleteTemplate = async (templateToDelete: EmailTemplate) => {
+    if (!canModify) return;
     // Delete template from dummy data
     setTemplates(templates.filter((t) => t.id !== templateToDelete.id));
   };
@@ -230,7 +235,7 @@ export function EmailTemplatesContent({
             Manage email templates for {clientData?.name || "this client"}
           </p>
         </div>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
+        <Button onClick={() => canModify && setIsAddDialogOpen(true)} disabled={!canModify}>
           <Plus className="h-4 w-4 mr-2" /> Create Template
         </Button>
       </div>
@@ -239,6 +244,7 @@ export function EmailTemplatesContent({
         <TemplatesList
           templates={templates}
           onEdit={(template: EmailTemplate) => {
+            if (!canModify) return;
             setEditTemplate(template);
             setTimeout(() => {
               setIsEditDialogOpen(true);
@@ -295,9 +301,10 @@ export function EmailTemplatesContent({
             {/* Action buttons */}
             <div className="flex flex-col sm:flex-row gap-2 justify-center">
               <Button 
-                onClick={() => setIsAddDialogOpen(true)} 
+                onClick={() => canModify && setIsAddDialogOpen(true)} 
                 size="sm"
                 className="bg-blue-600 hover:bg-blue-700 text-white"
+                disabled={!canModify}
               >
                 <Plus className="w-3 h-3 mr-1" /> 
                 Create Template
@@ -305,7 +312,8 @@ export function EmailTemplatesContent({
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => setTemplates(DUMMY_TEMPLATES)}
+                onClick={() => canModify && setTemplates(DUMMY_TEMPLATES)}
+                disabled={!canModify}
               >
                 Load Samples
               </Button>

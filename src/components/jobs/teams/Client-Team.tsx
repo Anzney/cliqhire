@@ -11,9 +11,10 @@ import { JobData } from "../types";
 interface ClientTeamProps {
   jobId: string;
   jobData: JobData;
+  canModify?: boolean;
 }
 
-export function ClientTeam({ jobId, jobData }: ClientTeamProps) {
+export function ClientTeam({ jobId, jobData, canModify }: ClientTeamProps) {
   const [allClientContacts, setAllClientContacts] = useState<any[]>([]); // All client contacts
   const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]); // Job's selected contacts
   const [jobContacts, setJobContacts] = useState<any[]>([]); // Job's primary contacts from API
@@ -34,11 +35,15 @@ export function ClientTeam({ jobId, jobData }: ClientTeamProps) {
     { code: "+81", label: "+81 (Japan)" },
   ];
   const positionOptions = [
-    { value: "HR", label: "HR" },
-    { value: "Senior HR", label: "Senior HR" },
-    { value: "Manager", label: "Manager" },
-    { value: "Director", label: "Director" },
-    { value: "Executive", label: "Executive" },
+    { value: "CEO", label: "CEO" },
+  { value: "HR Head", label: "HR Head" },
+  { value: "CHRO", label: "CHRO" },
+  { value: "HR", label: "HR" },
+  { value: "Manager", label: "Manager" },
+  { value: "HR Manager", label: "HR Manager" },
+  { value: "Director", label: "Director" },
+  { value: "Executive", label: "Executive" },
+  { value: "General Manager", label: "General Manager" },
   ];
 
   // Add getCountryCodeLabel helper (copy from ContactsContent)
@@ -100,7 +105,9 @@ export function ClientTeam({ jobId, jobData }: ClientTeamProps) {
           variant="default"
           size="sm"
           className="gap-1"
+          disabled={!canModify}
           onClick={() => {
+            if (!canModify) return;
             setShowPrimaryContactsDialog(true);
           }}
         >

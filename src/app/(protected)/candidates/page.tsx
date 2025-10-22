@@ -15,6 +15,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import CandidatePaginationControls from "@/components/candidates/CandidatePaginationControls";
 import CandidateFiltersInline from "@/components/candidates/CandidateFiltersInline";
 import { CandidateFilterState } from "@/components/candidates/CandidateFilters";
+import { useAuth } from "@/contexts/AuthContext";
 
 const columsArr = [
   "Candidate Name",
@@ -27,6 +28,15 @@ const columsArr = [
 ];
 
 export default function CandidatesPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
+  let finalPermissions = (user?.permissions && user.permissions.length > 0) ? user.permissions : (user?.defaultPermissions || []);
+  if (!isAdmin && !finalPermissions.includes('TODAY_TASKS')) {
+    finalPermissions = [...finalPermissions, 'TODAY_TASKS'];
+  }
+  const canViewCandidates = isAdmin || finalPermissions.includes('CANDIDATE_VIEW') || finalPermissions.includes('CANDIDATE');
+  const canModifyCandidates = isAdmin || finalPermissions.includes('CANDIDATE_MODIFY');
+  const canDeleteCandidates = isAdmin || finalPermissions.includes('CANDIDATE_DELETE');
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data, isLoading: initialLoading, isFetching, refetch } = useQuery({
@@ -82,20 +92,30 @@ export default function CandidatesPage() {
   });
 
   const handleStatusChange = async (candidateId: string, newStatus: string) => {
+    if (!canModifyCandidates) return;
     await updateStatusMutation.mutateAsync({ candidateId, newStatus });
   };
 
+  if (!canViewCandidates) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center text-muted-foreground">You do not have permission to view candidates.</div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full">
-      <CreateCandidateModal
-        isOpen={open}
-        onClose={() => setOpen(false)}
-        onCandidateCreated={async () => {
-          // Refetch the list after creating a candidate
-          await queryClient.invalidateQueries({ queryKey: ["candidates"] });
-          setOpen(false);
-        }}
-      />
+      {canModifyCandidates && (
+        <CreateCandidateModal
+          isOpen={open}
+          onClose={() => setOpen(false)}
+          onCandidateCreated={async () => {
+            await queryClient.invalidateQueries({ queryKey: ["candidates"] });
+            setOpen(false);
+          }}
+        />
+      )}
 
       {/* Header */}
 
@@ -105,6 +125,7 @@ export default function CandidatesPage() {
         initialLoading={isFetching}
         heading="Candidates"
         buttonText="Create Candidate"
+        showCreateButton={canModifyCandidates}
         showFilterButton={false}
         rightContent={<CandidateFiltersInline filters={filters} onChange={setFilters} />}
         onRefresh={() => {

@@ -70,29 +70,6 @@ export function CreateClientModal({
   // Watch form values for location suggestions
   const watchedContactInfo = form.watch("clientContactInfo");
 
-  // Location suggestions
-  // useEffect(() => {
-  //   const fetchLocationSuggestions = async () => {
-  //     if (!watchedContactInfo.location || watchedContactInfo.location.length < 3) {
-  //       setLocationSuggestions([]);
-  //       return;
-  //     }
-  //     try {
-  //       const response = await axios.get(
-  //         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-  //           watchedContactInfo.location,
-  //         )}`,
-  //       );
-  //       setLocationSuggestions(response.data);
-  //       setShowLocationSuggestions(true);
-  //     } catch (error) {
-  //       console.error("Error fetching location suggestions:", error);
-  //     }
-  //   };
-  //   const debounceTimer = setTimeout(fetchLocationSuggestions, 300);
-  //   return () => clearTimeout(debounceTimer);
-  // }, [watchedContactInfo.location]);
-
   // URL validation
   const validateUrl = (url: string): boolean => {
     if (!url) return true;

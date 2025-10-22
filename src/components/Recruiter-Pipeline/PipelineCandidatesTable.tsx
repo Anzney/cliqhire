@@ -23,6 +23,7 @@ type Props = {
   onViewCandidate: (candidate: Candidate) => void;
   onViewResume: (candidate: Candidate) => void;
   onDeleteCandidate: (candidate: Candidate) => void;
+  canModify?: boolean;
 };
 
 export function PipelineCandidatesTable({
@@ -33,6 +34,7 @@ export function PipelineCandidatesTable({
   onViewCandidate,
   onViewResume,
   onDeleteCandidate,
+  canModify = true,
 }: Props) {
   return (
     <Table>
@@ -68,7 +70,7 @@ export function PipelineCandidatesTable({
             <TableCell>
               <PipelineStageBadge
                 stage={candidate.currentStage}
-                onStageChange={(newStage) => onStageChange(candidate, newStage)}
+                onStageChange={(newStage) => { if (canModify) onStageChange(candidate, newStage); }}
               />
             </TableCell>
             <TableCell>
@@ -86,7 +88,7 @@ export function PipelineCandidatesTable({
                     <StatusBadge
                       status={(candidate.status as any) || null}
                       stage={candidate.currentStage}
-                      onStatusChange={(newStatus) => onStatusChange(candidate, newStatus as any)}
+                      onStatusChange={(newStatus) => { if (canModify) onStatusChange(candidate, newStatus as any); }}
                     />
                   );
                 } else {
@@ -101,7 +103,7 @@ export function PipelineCandidatesTable({
               {(job as any).jobId?.jobTeamInfo?.recruiter?.name || "Not assigned"}
             </TableCell>
             <TableCell>
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <button
                     className="p-1 hover:bg-gray-100 rounded-full transition-colors"
@@ -134,16 +136,18 @@ export function PipelineCandidatesTable({
                       View Resume
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteCandidate(candidate);
-                    }}
-                    className="cursor-pointer"
-                  >
-                    <Trash2 className="size-4 mr-2 text-red-500" />
-                    Delete Candidate
-                  </DropdownMenuItem>
+                  {canModify && (
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteCandidate(candidate);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <Trash2 className="size-4 mr-2 text-red-500" />
+                      Delete Candidate
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </TableCell>

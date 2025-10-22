@@ -24,11 +24,12 @@ export interface BackendAttachment {
 
 interface AttachmentsContentProps {
   jobId: string;
+  canModify?: boolean;
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export function AttachmentsContent({ jobId }: AttachmentsContentProps) {
+export function AttachmentsContent({ jobId, canModify }: AttachmentsContentProps) {
   const [showUploadBox, setShowUploadBox] = useState(false);
   const [attachments, setAttachments] = useState<BackendAttachment[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -99,8 +100,8 @@ export function AttachmentsContent({ jobId }: AttachmentsContentProps) {
         <h3 className="text-lg font-semibold text-gray-800">Upload File</h3>
         <Button
           onClick={() => setShowUploadBox(true)}
-          disabled={showUploadBox}
           className="flex items-center gap-2 bg-black text-white hover:bg-gray-800"
+          disabled={showUploadBox || !canModify}
         >
           <Plus className="w-4 h-4" />
           Upload File

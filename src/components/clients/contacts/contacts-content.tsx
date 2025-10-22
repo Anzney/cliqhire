@@ -26,6 +26,7 @@ import { toast } from "sonner";
 interface ContactsContentProps {
   clientId: string;
   clientData?: any;
+  canModify?: boolean;
 }
 
 interface ExtendedPrimaryContact {
@@ -42,7 +43,7 @@ interface ExtendedPrimaryContact {
   gender?: string;
 }
 
-export function ContactsContent({ clientId , clientData }: ContactsContentProps) {
+export function ContactsContent({ clientId , clientData, canModify }: ContactsContentProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [primaryContacts, setPrimaryContacts] = useState<ExtendedPrimaryContact[]>([]);
   const [clientPhoneNumber, setClientPhoneNumber] = useState<string>("");
@@ -109,11 +110,15 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
     { code: "+81", label: "+81 (Japan)" },
   ];
   const positionOptions = [
-    { value: "HR", label: "HR" },
-    { value: "Senior HR", label: "Senior HR" },
-    { value: "Manager", label: "Manager" },
-    { value: "Director", label: "Director" },
-    { value: "Executive", label: "Executive" },
+  { value: "CEO", label: "CEO" },
+  { value: "HR Head", label: "HR Head" },
+  { value: "CHRO", label: "CHRO" },
+  { value: "HR", label: "HR" },
+  { value: "Manager", label: "Manager" },
+  { value: "HR Manager", label: "HR Manager" },
+  { value: "Director", label: "Director" },
+  { value: "Executive", label: "Executive" },
+  { value: "General Manager", label: "General Manager" },
   ];
 
   const getCountryCodeLabel = (code: string) => {
@@ -457,50 +462,56 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
                   </div>
                 </div>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 gap-1 ml-auto"
-                  onClick={() => setIsContactEditOpen(true)}
-                >
-                  <Pencil className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
+                {canModify && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1 ml-auto"
+                    onClick={() => setIsContactEditOpen(true)}
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                )}
               </div>
             </div>
-            <EditContactDetailsModal
-              open={isContactEditOpen}
-              onClose={() => setIsContactEditOpen(false)}
-              clientId={clientId}
-              initialValues={{
-                phoneNumber: clientPhoneNumber,
-                website: clientWebsite,
-                emails: clientEmails,
-                linkedInProfile: clientLinkedIn,
-              }}
-              onSave={async (values) => {
-                await handleSaveContactDetails(values, () => setIsContactEditOpen(false));
-              }}
-            />
+            {canModify && (
+              <EditContactDetailsModal
+                open={isContactEditOpen}
+                onClose={() => setIsContactEditOpen(false)}
+                clientId={clientId}
+                initialValues={{
+                  phoneNumber: clientPhoneNumber,
+                  website: clientWebsite,
+                  emails: clientEmails,
+                  linkedInProfile: clientLinkedIn,
+                }}
+                onSave={async (values) => {
+                  await handleSaveContactDetails(values, () => setIsContactEditOpen(false));
+                }}
+              />
+            )}
           </div>
           {/* Primary Contacts on the right */}
           <div className="w-full md:w-1/2">
             <div className="bg-white rounded-lg border shadow-sm p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-semibold">Primary Contacts</span>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setEditContactIndex(null);
-                      setAddEditModalOpen(true);
-                    }}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add
-                  </Button>
-                </div>
+                {canModify && (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditContactIndex(null);
+                        setAddEditModalOpen(true);
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add
+                    </Button>
+                  </div>
+                )}
               </div>
               {(primaryContacts || []).length === 0 ? (
                 <div className="text-sm text-muted-foreground text-center py-4">
@@ -572,25 +583,27 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
                             )}
                           </div>
                         </div>
-                        <div className="flex gap-2 ml-auto">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => {
-                              setEditContactIndex(index);
-                              setAddEditModalOpen(true);
-                            }}
-                          >
-                            <Pencil className="size-4" />
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            onClick={() => setDeleteContactIndex(index)}
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
-                        </div>
+                        {canModify && (
+                          <div className="flex gap-2 ml-auto">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => {
+                                setEditContactIndex(index);
+                                setAddEditModalOpen(true);
+                              }}
+                            >
+                              <Pencil className="size-4" />
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              onClick={() => setDeleteContactIndex(index)}
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -599,38 +612,42 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
             </div>
           </div>
         </div>
-        <AddContactModal
-          open={addEditModalOpen}
-          onOpenChange={(open) => {
-            setAddEditModalOpen(open);
-            if (!open) setEditContactIndex(null);
-          }}
-          onAdd={handleAddOrEditContact}
-          countryCodes={countryCodes}
-          positionOptions={positionOptions}
-          initialValues={initialContactValues}
-          isEdit={editContactIndex !== null}
-        />
+        {canModify && (
+          <AddContactModal
+            open={addEditModalOpen}
+            onOpenChange={(open) => {
+              setAddEditModalOpen(open);
+              if (!open) setEditContactIndex(null);
+            }}
+            onAdd={handleAddOrEditContact}
+            countryCodes={countryCodes}
+            positionOptions={positionOptions}
+            initialValues={initialContactValues}
+            isEdit={editContactIndex !== null}
+          />
+        )}
         {/* Delete confirmation (now using Shadcn Dialog) */}
-        <Dialog open={deleteContactIndex !== null} onOpenChange={() => setDeleteContactIndex(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Delete Contact</DialogTitle>
-              <DialogDescription>Are you sure you want to delete this contact?</DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setDeleteContactIndex(null)}>
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => handleDeleteContact(deleteContactIndex!)}
-              >
-                Delete
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {canModify && (
+          <Dialog open={deleteContactIndex !== null} onOpenChange={() => setDeleteContactIndex(null)}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete Contact</DialogTitle>
+                <DialogDescription>Are you sure you want to delete this contact?</DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setDeleteContactIndex(null)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => handleDeleteContact(deleteContactIndex!)}
+                >
+                  Delete
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     );
   }
@@ -653,20 +670,24 @@ export function ContactsContent({ clientId , clientData }: ContactsContentProps)
         do not have access to any information in your Manatal account, unless you invite them to
         collaborate as guests.
       </p>
-      <div className="flex gap-2">
-        <Button className="gap-2" onClick={() => setIsDialogOpen(true)}>
-          <Plus className="h-4 w-4" />
-          Create contact
-        </Button>
-      </div>
+      {canModify && (
+        <div className="flex gap-2">
+          <Button className="gap-2" onClick={() => setIsDialogOpen(true)}>
+            <Plus className="h-4 w-4" />
+            Create contact
+          </Button>
+        </div>
+      )}
 
-      <AddContactModal
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        onAdd={handleAddContact}
-        countryCodes={countryCodes}
-        positionOptions={positionOptions}
-      />
+      {canModify && (
+        <AddContactModal
+          open={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          onAdd={handleAddContact}
+          countryCodes={countryCodes}
+          positionOptions={positionOptions}
+        />
+      )}
     </div>
   );
 }

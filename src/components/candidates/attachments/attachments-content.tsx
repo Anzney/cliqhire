@@ -17,9 +17,10 @@ export interface BackendAttachment {
 
 interface AttachmentsContentProps {
   candidateId: string;
+  canModify?: boolean;
 }
 
-export function AttachmentsContent({ candidateId }: AttachmentsContentProps) {
+export function AttachmentsContent({ candidateId, canModify = true }: AttachmentsContentProps) {
   const [showUploadBox, setShowUploadBox] = useState(false);
   const [attachments, setAttachments] = useState<BackendAttachment[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -55,6 +56,7 @@ export function AttachmentsContent({ candidateId }: AttachmentsContentProps) {
 
   // Bulk delete selected attachments
   const handleBulkDelete = async (ids: string[]) => {
+    if (!canModify) return;
     try {
       await Promise.all(
         ids.map((id) =>
@@ -70,6 +72,7 @@ export function AttachmentsContent({ candidateId }: AttachmentsContentProps) {
   // Upload a file
   const handleUpload = async (file: File) => {
     if (!candidateId) return;
+    if (!canModify) return;
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -85,6 +88,7 @@ export function AttachmentsContent({ candidateId }: AttachmentsContentProps) {
 
   // Delete a file
   const handleDelete = async (attachmentId: string) => {
+    if (!canModify) return;
     try {
       await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/candidate-attachments/${encodeURIComponent(attachmentId)}`);
       setAttachments((prev) => prev.filter((item) => item._id !== attachmentId));
@@ -104,7 +108,7 @@ export function AttachmentsContent({ candidateId }: AttachmentsContentProps) {
         <h3 className="text-lg font-semibold text-gray-800">Upload File</h3>
         <Button
           onClick={() => setShowUploadBox(true)}
-          disabled={showUploadBox}
+          disabled={showUploadBox || !canModify}
           className="flex items-center gap-2 bg-black text-white hover:bg-gray-800"
         >
           <Plus className="w-4 h-4" />
@@ -141,6 +145,7 @@ export function AttachmentsContent({ candidateId }: AttachmentsContentProps) {
           attachments={attachments}
           onDelete={handleDelete}
           onDeleteSelected={handleBulkDelete}
+          canModify={canModify}
         />
       )}
     </div>

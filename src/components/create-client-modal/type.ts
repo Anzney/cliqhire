@@ -78,7 +78,7 @@ export interface ClientForm {
   clientSource?: string;
   fixWithoutAdvanceNotes?: string;
   fixWithoutAdvanceValue?: number;
-  clientPriority?: number;
+  clientPriority?: string;
   clientSegment?: string;
   technicalProposal?: any;
   financialProposal?: any;
@@ -113,7 +113,7 @@ export type ClientGeneralInfo = {
   clientSubStage: string | undefined;
   salesLead: string | undefined;
   referredBy: string | undefined;
-  clientPriority: number | undefined;
+  clientPriority: string | undefined;
   clientSegment: string | undefined;
   clientSource: string | undefined;
   industry: string | undefined;

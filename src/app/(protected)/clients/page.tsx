@@ -19,6 +19,7 @@ import ClientPaginationControls from "@/components/clients/ClientPaginationContr
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Loader } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
 
 const columsArr = [
   "Name",
@@ -62,6 +63,15 @@ interface Filters {
 }
 
 export default function ClientsPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
+  let finalPermissions = (user?.permissions && user.permissions.length > 0) ? user.permissions : (user?.defaultPermissions || []);
+  if (!isAdmin && !finalPermissions.includes('TODAY_TASKS')) {
+    finalPermissions = [...finalPermissions, 'TODAY_TASKS'];
+  }
+  const canViewClients = isAdmin || finalPermissions.includes('CLIENTS_VIEW') || finalPermissions.includes('CLIENTS');
+  const canModifyClients = isAdmin || finalPermissions.includes('CLIENTS_MODIFY');
+  const canDeleteClients = isAdmin || finalPermissions.includes('CLIENTS_DELETE');
   const [open, setOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: "name", order: "asc" });
@@ -138,6 +148,7 @@ export default function ClientsPage() {
   };
 
   const handleStageChange = (clientId: string, newStage: Client["clientStage"]) => {
+    if (!canModifyClients) return;
     setPendingChange({ clientId, stage: newStage });
     setTimeout(() => {
       setShowConfirmDialog(true);
@@ -145,6 +156,7 @@ export default function ClientsPage() {
   };
 
   const handleStageStatusChange = (clientId: string, newStatus: ClientStageStatus) => {
+    if (!canModifyClients) return;
     setPendingStatusChange({ clientId, status: newStatus });
     setTimeout(() => {
       setShowStatusConfirmDialog(true);
@@ -236,6 +248,14 @@ export default function ClientsPage() {
     setError(null);
   };
 
+  if (!canViewClients) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center text-muted-foreground">You do not have permission to view clients.</div>
+      </div>
+    );
+  }
+
   return (
     <>
       {/* Confirmation Dialog for Stage Change */}
@@ -279,6 +299,7 @@ export default function ClientsPage() {
           initialLoading={isLoading}
           heading="Clients"
           buttonText="Create Client"
+          showCreateButton={canModifyClients}
         />
 
         {/* Table */}
@@ -335,7 +356,7 @@ export default function ClientsPage() {
           </div>
         </div>
 
-        <CreateClientModal open={open} onOpenChange={setOpen} />
+        {canModifyClients && <CreateClientModal open={open} onOpenChange={setOpen} />}
       </div>
       {/* Filters Modal */}
       <Dialog open={filterOpen} onOpenChange={setFilterOpen}>

@@ -13,7 +13,7 @@ import React from "react";
 interface ConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   onCancel?: () => void;
   title?: string;
   description?: string;
@@ -23,6 +23,7 @@ interface ConfirmDialogProps {
   error?: string | null;
   confirmVariant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
   showConfirmButton?: boolean;
+  disabled?: boolean;
 }
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
@@ -38,6 +39,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   error = null,
   confirmVariant = "default",
   showConfirmButton = true,
+  disabled = false,
 }) => {
   const handleCancel = () => {
     if (onCancel) {
@@ -67,13 +69,13 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={handleCancel} disabled={loading} className="mr-2">
+          <Button variant="outline" onClick={handleCancel} disabled={loading || disabled} className="mr-2">
             {error ? "Close" : cancelText}
           </Button>
           {showConfirmButton && !error && (
             <Button
               onClick={onConfirm}
-              disabled={loading}
+              disabled={loading || disabled}
               variant={confirmVariant}
               className={confirmVariant === "default" ? "bg-blue-600 hover:bg-blue-700" : ""}
             >
