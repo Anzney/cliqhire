@@ -66,6 +66,50 @@ export function CreateClientModal({
   const [currentTab, setCurrentTab] = useState(0);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [primaryContact, setPrimaryContact] = useState<PrimaryContact>(primaryContactInitialState);
+  const [isFormValid, setIsFormValid] = useState(false);
+
+  // Validate current tab's fields
+  const validateCurrentTabFields = async () => {
+    const formValues = form.getValues();
+    try {
+      // Only validate the current tab's fields
+      switch (currentTab) {
+        case 0: // Client General Info
+          await createClientFormSchema.shape.clientGeneralInfo.parseAsync(formValues.clientGeneralInfo);
+          break;
+        case 1: // Client Contact Info
+          await createClientFormSchema.shape.clientContactInfo.parseAsync(formValues.clientContactInfo);
+          break;
+        case 2: // Contract Information
+          await createClientFormSchema.shape.clientContractInfo.parseAsync(formValues.clientContractInfo);
+          // Additional validation for contract forms
+          const selectedBusinesses = formValues.clientContractInfo.lineOfBusiness;
+          const filledForms = Object.keys(formValues.clientContractInfo.contractForms);
+          const missingForms = selectedBusinesses.filter(
+            (business: string) => !filledForms.includes(business)
+          );
+          if (missingForms.length > 0) {
+            return false;
+          }
+          break;
+        case 3: // Documents (optional)
+          // No required fields in documents tab
+          break;
+      }
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  // Watch form values and validate current tab
+  useEffect(() => {
+    const validateForm = async () => {
+      const isValid = await validateCurrentTabFields();
+      setIsFormValid(isValid);
+    };
+    validateForm();
+  }, [form.watch(), currentTab]);
 
   // Watch form values for location suggestions
   const watchedContactInfo = form.watch("clientContactInfo");
@@ -358,10 +402,14 @@ export function CreateClientModal({
   };
 
   const handleNext = async () => {
-    const isValid = await validateCurrentTab();
+    const isValid = await validateCurrentTabFields();
     if (isValid) {
       const newTab = Math.min(currentTab + 1, 3);
       setCurrentTab(newTab);
+      // Reset form validation state when changing tabs
+      setIsFormValid(false);
+    } else {
+      toast.error("Please fill all required fields in the current tab");
     }
   };
 
@@ -386,13 +434,12 @@ export function CreateClientModal({
               "Contract Information",
               "Documents",
             ].map((tab, index) => (
-              <button
+              <div
                 key={tab}
                 className={`flex-1 px-2 py-2 text-center text-xs sm:text-sm md:text-base ${currentTab === index ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-500"}`}
-                onClick={() => setCurrentTab(index)}
               >
                 {tab}
-              </button>
+              </div>
             ))}
           </div>
         </div>
@@ -438,8 +485,9 @@ export function CreateClientModal({
                           <Button
                             type="button"
                             onClick={handleNext}
-                            disabled={loading}
+                            disabled={loading || !isFormValid}
                             className="w-full sm:w-auto"
+                            title={!isFormValid ? "Please fill all required fields" : ""}
                           >
                             Next
                             <ArrowRightIcon className="size-5" />
@@ -455,7 +503,12 @@ export function CreateClientModal({
                             >
                               Cancel
                             </Button>
-                            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+                            <Button 
+                              type="submit" 
+                              disabled={loading || !isFormValid} 
+                              className="w-full sm:w-auto"
+                              title={!isFormValid ? "Please fill all required fields" : ""}
+                            >
                               {loading ? "Creating..." : "Create Client"}
                             </Button>
                           </>

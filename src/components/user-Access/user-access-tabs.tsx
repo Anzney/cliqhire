@@ -235,8 +235,8 @@ export function UserAccessTabs({
     return teams.map((team) => (
       <TableRow key={team._id} className="hover:bg-muted/50">
         <TableCell className="text-sm font-medium">{team.teamName}</TableCell>
-        <TableCell className="text-sm">{team.hiringManagerId?.name || "—"}</TableCell>
-        <TableCell className="text-sm">{team.teamLeadId?.name || "—"}</TableCell>
+        <TableCell className="text-sm">{team.hiringManagerId?.firstName + " " + team.hiringManagerId?.lastName || "—"}</TableCell>
+        <TableCell className="text-sm">{team.teamLeadId?.firstName + " " + team.teamLeadId?.lastName || "—"}</TableCell>
         <TableCell className="text-sm">{team.recruiterCount}</TableCell>
         <TableCell className="text-sm">
           <TeamStatusBadge 

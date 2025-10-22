@@ -78,7 +78,7 @@ export function EditResumeDialog({ open, onOpenChange, teamMember, onUpdated }: 
         <DialogHeader>
           <DialogTitle>Edit Resume</DialogTitle>
           <DialogDescription>
-            Update resume for {teamMember.name}
+            Update resume for {teamMember.firstName+" "+teamMember.lastName}
           </DialogDescription>
         </DialogHeader>
 

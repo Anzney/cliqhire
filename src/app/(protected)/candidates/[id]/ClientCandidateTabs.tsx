@@ -33,7 +33,49 @@ interface Candidate {
 }
 
 export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId: string, tabs: Tab[] }) {
+  // All hooks must be called at the top level
+  const [activeTab, setActiveTab] = useState("Summary");
+  const jobsContentRef = useRef<JobsContentRef>(null);
+  const queryClient = useQueryClient();
   const { user } = useAuth();
+  
+  const { data: candidate, isLoading, isError, error, refetch } = useQuery<Candidate | null, any>({
+    queryKey: ["candidate", candidateId],
+    enabled: !!candidateId,
+    queryFn: async () => {
+      await initializeAuth();
+      return candidateService.getCandidateById(candidateId);
+    },
+  });
+
+  // Mutation for updating candidate with optimistic cache update
+  const updateCandidateMutation = useMutation({
+    mutationFn: async ({ id, updatedCandidate }: { id: string; updatedCandidate: any }) => {
+      await initializeAuth();
+      return candidateService.updateCandidate(id, updatedCandidate);
+    },
+    onMutate: async ({ updatedCandidate }) => {
+      await queryClient.cancelQueries({ queryKey: ["candidate", candidateId] });
+      const previous = queryClient.getQueryData(["candidate", candidateId]);
+      queryClient.setQueryData(["candidate", candidateId], (old: any) => ({ ...(old || {}), ...(updatedCandidate || {}) }));
+      return { previous } as { previous: any };
+    },
+    onError: (err: any, _vars, context) => {
+      if ((context as any)?.previous) {
+        queryClient.setQueryData(["candidate", candidateId], (context as any).previous);
+      }
+      if (err?.response?.status === 401) {
+        toast.error("Authentication failed. Please log in again.");
+      } else {
+        toast.error("Failed to update candidate");
+      }
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["candidate", candidateId] });
+    },
+  });
+
+  // Permission checks after hooks
   const isAdmin = user?.role === 'ADMIN';
   let finalPermissions = (user?.permissions && user.permissions.length > 0) ? user.permissions : (user?.defaultPermissions || []);
   if (!isAdmin && !finalPermissions.includes('TODAY_TASKS')) {
@@ -52,49 +94,6 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
       </div>
     );
   }
-
-  const [activeTab, setActiveTab] = useState("Summary");
-  const jobsContentRef = useRef<JobsContentRef>(null);
-  const queryClient = useQueryClient();
-
-  const { data: candidate, isLoading, isError, error, refetch } = useQuery<Candidate | null, any>({
-    queryKey: ["candidate", candidateId],
-    enabled: !!candidateId,
-    queryFn: async () => {
-      await initializeAuth();
-      return candidateService.getCandidateById(candidateId);
-    },
-  });
-
-  // Fetching handled by React Query above
-
-  // Mutation for updating candidate with optimistic cache update (must be before early returns)
-  const updateCandidateMutation = useMutation({
-    mutationFn: async ({ id, updatedCandidate }: { id: string; updatedCandidate: any }) => {
-      await initializeAuth();
-      return candidateService.updateCandidate(id, updatedCandidate);
-    },
-    onMutate: async ({ updatedCandidate }) => {
-      await queryClient.cancelQueries({ queryKey: ["candidate", candidateId] });
-      const previous = queryClient.getQueryData(["candidate", candidateId]);
-      queryClient.setQueryData(["candidate", candidateId], (old: any) => ({ ...(old || {}), ...(updatedCandidate || {}) }));
-      return { previous } as { previous: any };
-    },
-    onError: (err: any, _vars, context) => {
-      if ((context as any)?.previous) {
-        queryClient.setQueryData(["candidate", candidateId], (context as any).previous);
-      }
-      // Show helpful error messages; global axios interceptors will handle 401 redirects if needed
-      if (err?.response?.status === 401) {
-        toast.error("Authentication failed. Please log in again.");
-      } else {
-        toast.error("Failed to update candidate");
-      }
-    },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["candidate", candidateId] });
-    },
-  });
 
   const handleRefresh = async () => {
     try {

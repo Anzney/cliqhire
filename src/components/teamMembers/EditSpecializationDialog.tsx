@@ -72,7 +72,7 @@ export function EditSpecializationDialog({ open, onOpenChange, teamMember, onUpd
         <DialogHeader>
           <DialogTitle>Edit Specialization</DialogTitle>
           <DialogDescription>
-            Update specialization for {teamMember.name}
+            Update specialization for {teamMember.firstName + " " + teamMember.lastName}
           </DialogDescription>
         </DialogHeader>
 
