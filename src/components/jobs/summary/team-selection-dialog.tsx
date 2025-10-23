@@ -181,7 +181,7 @@ export function TeamSelectionDialog({
               <div className="p-3 bg-gray-50 rounded-md border">
                 <span className="text-sm font-medium">
                   {typeof (selectedTeam as any).hiringManagerId === "object"
-                    ? (selectedTeam as any).hiringManagerId?.name
+                    ? (selectedTeam as any).hiringManagerId?.firstName + " " + (selectedTeam as any).hiringManagerId?.lastName
                     : "Not assigned"}
                 </span>
               </div>
@@ -195,7 +195,7 @@ export function TeamSelectionDialog({
               <div className="p-3 bg-gray-50 rounded-md border">
                 <span className="text-sm font-medium">
                   {typeof (selectedTeam as any).teamLeadId === "object"
-                    ? (selectedTeam as any).teamLeadId?.name
+                    ? (selectedTeam as any).teamLeadId?.firstName + " " + (selectedTeam as any).teamLeadId?.lastName
                     : "Not assigned"}
                 </span>
               </div>
