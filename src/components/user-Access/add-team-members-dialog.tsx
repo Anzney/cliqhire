@@ -221,12 +221,12 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess, editTeam }
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="teamName">Team Name</Label>
+            <Label htmlFor="teamName">Position Name</Label>
             <Input
               id="teamName"
               value={formData.teamName}
               onChange={(e) => handleInputChange("teamName", e.target.value)}
-              placeholder="Enter team name"
+              placeholder="Enter position name"
               required
             />
           </div>

@@ -248,20 +248,37 @@ export function UserPermissionDialog({
       }
     }
 
-    if (!map.has('CLIENTS')) {
-      map.set('CLIENTS', {
+    // Add default permission groups if they don't exist
+    const defaultGroups = [
+      {
         base: 'CLIENTS',
         label: 'CLIENTS',
-        description: 'Access to view and manage client information (Admin can grant additional access)',
+        description: 'Access to view and manage client information',
         actions: {
           view: 'CLIENTS_VIEW',
           modify: 'CLIENTS_MODIFY',
           delete: 'CLIENTS_DELETE'
         }
-      });
-    }
+      },
+      {
+        base: 'TEAM_MEMBERS',
+        label: 'TEAM MEMBERS',
+        description: 'Access to view and manage team members',
+        actions: {
+          view: 'TEAM_MEMBERS_VIEW',
+          modify: 'TEAM_MEMBERS_MODIFY',
+          delete: 'TEAM_MEMBERS_DELETE'
+        }
+      }
+    ];
 
-    const order = ['CANDIDATE', 'JOBS', 'RECRUITMENT_PIPELINE', 'CLIENTS'];
+    defaultGroups.forEach(group => {
+      if (!map.has(group.base)) {
+        map.set(group.base, group as any);
+      }
+    });
+
+    const order = ['CANDIDATE', 'JOBS', 'RECRUITMENT_PIPELINE', 'CLIENTS', 'TEAM_MEMBERS'];
     const ordered: GroupedPermission[] = [];
     for (const key of order) {
       const gp = map.get(key);

@@ -168,7 +168,7 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdate
         {/* Team Details - Read Only */}
         <div className="space-y-3 pt-1">
           <DetailRow
-            label="Team Name"
+            label="Position Name"
             value={teamAssignmentData?.team?.name || jobDetails.teamName || (typeof jobDetails.teamId === 'object' ? jobDetails.teamId.teamName : null) || jobDetails.jobTeamInfo?.teamId?.teamName || "Not assigned"}
             onUpdate={() => {}} // No edit functionality
             disableInternalEdit={true} // Disable edit button

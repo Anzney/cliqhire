@@ -56,8 +56,11 @@ export function Sidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
 
-  // Check if user is admin
+  // Check user role
   const isAdmin = user?.role === 'ADMIN';
+  const isHiringManager = user?.role === 'HIRING_MANAGER';
+  const isTeamLead = user?.role === 'TEAM_LEAD';
+  const isManagerOrLead = isAdmin || isHiringManager || isTeamLead;
 
   // Determine which permissions to use
   // If user has custom permissions, use those; otherwise use default permissions
@@ -76,7 +79,14 @@ export function Sidebar() {
     JOBS: 'JOBS_VIEW',
     CANDIDATE: 'CANDIDATE_VIEW',
     RECRUITMENT_PIPELINE: 'RECRUITMENT_PIPELINE_VIEW',
+    TEAM_MEMBERS: 'TEAM_MEMBERS_VIEW',
+    USER_ACCESS: 'USER_ACCESS_VIEW',
   };
+
+  // Special permissions for managers and leads
+  if (isManagerOrLead) {
+    finalPermissions = [...finalPermissions, 'TEAM_MEMBERS_VIEW', 'USER_ACCESS_VIEW'];
+  }
 
   return (
     <UISidebar

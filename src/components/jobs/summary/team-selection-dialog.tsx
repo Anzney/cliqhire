@@ -153,7 +153,7 @@ export function TeamSelectionDialog({
         <div className="space-y-6 py-4">
           {/* Team Selection */}
           <div className="space-y-2">
-            <Label htmlFor="team">Team Name</Label>
+            <Label htmlFor="team">Position Name</Label>
             <Select
               value={selectedTeamId}
               onValueChange={handleTeamChange}
