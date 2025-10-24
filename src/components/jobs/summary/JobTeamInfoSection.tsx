@@ -175,19 +175,19 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdate
           />
           <DetailRow
             label="Hiring Manager"
-            value={currentHiringManager?.name || jobDetails.hiringManager || jobDetails.jobTeamInfo?.hiringManager?.name || jobDetails.internalTeam?.hiringManager?.name || "Not assigned"}
+            value={currentHiringManager?.name || jobDetails.hiringManager || jobDetails.jobTeamInfo?.hiringManager?.firstName + " " + jobDetails.jobTeamInfo?.hiringManager?.lastName || jobDetails.internalTeam?.hiringManager?.name || "Not assigned"}
             onUpdate={() => {}} // No edit functionality
             disableInternalEdit={true} // Disable edit button
           />
           <DetailRow
             label="Team Lead"
-            value={currentTeamLead?.name || jobDetails.teamLead || jobDetails.jobTeamInfo?.teamLead?.name || jobDetails.internalTeam?.teamLead?.name || "Not assigned"}
+            value={currentTeamLead?.name || jobDetails.teamLead || jobDetails.jobTeamInfo?.teamLead?.firstName + " " + jobDetails.jobTeamInfo?.teamLead?.lastName || jobDetails.internalTeam?.teamLead?.name || "Not assigned"}
             onUpdate={() => {}} // No edit functionality
             disableInternalEdit={true} // Disable edit button
           />
           <DetailRow
             label="Recruiters"
-            value={currentRecruiters.length > 0 ? currentRecruiters.map((r: any) => r.name).join(", ") : jobDetails.recruiters || jobDetails.jobTeamInfo?.recruiter?.name || jobDetails.internalTeam?.recruiter?.name || "Not assigned"}
+           value={ jobDetails.recruiter || jobDetails.jobTeamInfo?.recruiter?.firstName + " " + jobDetails.jobTeamInfo?.recruiter?.lastName || jobDetails.internalTeam?.recruiter?.firstName + " " + jobDetails.internalTeam?.recruiter?.lastName|| "Not assigned"}
             onUpdate={() => {}} // No edit functionality
             disableInternalEdit={true} // Disable edit button
           />

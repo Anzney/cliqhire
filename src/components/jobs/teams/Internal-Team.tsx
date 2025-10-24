@@ -56,13 +56,13 @@ export function InternalTeam({ jobId, jobData, canModify }: InternalTeamProps) {
           ? { id: jti.teamId._id, name: jti.teamId.teamName }
           : undefined,
         hiringManager: jti.hiringManager
-          ? { id: jti.hiringManager._id, name: jti.hiringManager.name, email: jti.hiringManager.email, phone: jti.hiringManager.phone }
+          ? { id: jti.hiringManager._id, name: jti.hiringManager.firstName + " " + jti.hiringManager.lastName, email: jti.hiringManager.email, phone: jti.hiringManager.phone }
           : undefined,
         teamLead: jti.teamLead
-          ? { id: jti.teamLead._id, name: jti.teamLead.name, email: jti.teamLead.email, phone: jti.teamLead.phone }
+          ? { id: jti.teamLead._id, name: jti.teamLead.firstName + " " + jti.teamLead.lastName, email: jti.teamLead.email, phone: jti.teamLead.phone }
           : undefined,
         recruiters: jti.recruiter
-          ? [{ id: jti.recruiter._id, name: jti.recruiter.name, email: jti.recruiter.email, phone: jti.recruiter.phone }]
+          ? [{ id: jti.recruiter._id, name: jti.recruiter.firstName + " " + jti.recruiter.lastName, email: jti.recruiter.email, phone: jti.recruiter.phone }]
           : [],
       } as {
         team?: { id: string; name: string };
