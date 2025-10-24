@@ -135,7 +135,7 @@ export function UserAccessTabs({
   });
 
   const teamsHeaderArr = [
-    "Team Name",
+    "Position Name",
     "Hiring Manager",
     "Team Lead",
     "No. of Recruiters",

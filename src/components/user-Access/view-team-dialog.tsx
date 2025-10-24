@@ -33,7 +33,7 @@ export function ViewTeamDialog({
       icon: Users,
              rows: [
          [
-           { label: "Team Name", value: team.teamName, isBadge: false },
+           { label: "Po ", value: team.teamName, isBadge: false },
            { label: "Team Status", value: team.teamStatus || "Inactive", isBadge: true },
            { label: "Created", value: team.createdAt ? new Date(team.createdAt).toLocaleDateString() : "—", isBadge: false },
          ],
