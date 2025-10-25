@@ -394,7 +394,9 @@ export function SummaryContent({ jobId, jobData, canModify }: SummaryContentProp
               </div>
               <div className="space-y-3">
                 {jobDetails.jobDescription ? (
-                  <p className="text-sm whitespace-pre-wrap">{jobDetails.jobDescription}</p>
+                  <div className="w-full">
+                    <p className="text-sm whitespace-pre-wrap break-words overflow-hidden">{jobDetails.jobDescription}</p>
+                  </div>
                 ) : (
                   <div className="text-sm text-muted-foreground text-center py-4">
                     No description added yet
