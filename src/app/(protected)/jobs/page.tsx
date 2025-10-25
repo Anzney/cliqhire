@@ -97,7 +97,7 @@ export default function JobsPage() {
     newStage: JobStage;
   } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(13);
 
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -349,8 +349,8 @@ export default function JobsPage() {
                           onStageChange={(newStage) => handleStageChange(job._id, newStage)}
                         />
                       </TableCell>
-                      <TableCell className="text-sm">{job.minimumSalary}</TableCell>
-                      <TableCell className="text-sm">{job.maximumSalary}</TableCell>
+                      <TableCell className="text-sm">{job.salaryCurrency+" "+ job.minimumSalary}</TableCell>
+                      <TableCell className="text-sm">{job.salaryCurrency+" "+ job.maximumSalary}</TableCell>
                       <TableCell className="text-sm">
                         {job.client}
                       </TableCell>

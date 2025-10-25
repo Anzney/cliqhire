@@ -12,7 +12,7 @@ import { Job, JobStage } from "@/types/job"
 import { ChevronDown } from "lucide-react"
 
 const stageColors: Record<JobStage, string> = {
-  'Open': "bg-blue-100 text-blue-800",
+  'Open': "bg-yellow-100 text-yellow-800",
   'Onboarding': "bg-indigo-100 text-indigo-800",
   'Active': "bg-green-100 text-green-800",
   'Hired': "bg-green-100 text-green-800",
