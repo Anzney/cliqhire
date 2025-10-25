@@ -97,14 +97,25 @@ export default function JobsPage() {
     queryFn: () => getJobs(),
     placeholderData: (prev) => prev, // keep previous page data while fetching
   });
-  // Support both PaginatedJobResponse { jobs, total, pages } and JobResponse { data, count }
-  const jobs = (jobsData as any)?.jobs ?? (jobsData as any)?.data ?? [];
-  const totalJobs = (jobsData as any)?.total ?? (jobsData as any)?.count ?? jobs.length;
-  const totalPages = (jobsData as any)?.pages ?? (totalJobs ? Math.max(1, Math.ceil(totalJobs / pageSize)) : 1);
+  
+  // Get all jobs and handle different response formats
+  const allJobs = Array.isArray(jobsData?.data) ? jobsData.data : 
+                 (jobsData as any)?.jobs ?? 
+                 (Array.isArray(jobsData) ? jobsData : []);
+  
+  // Calculate pagination
+  const totalJobs = allJobs.length;
+  const totalPages = Math.max(1, Math.ceil(totalJobs / pageSize));
+  
+  // Get current page jobs
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const jobs = allJobs.slice(startIndex, endIndex);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
