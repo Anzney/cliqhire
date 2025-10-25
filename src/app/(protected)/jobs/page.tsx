@@ -35,7 +35,7 @@ import {
 import Dashboardheader from "@/components/dashboard-header";
 import Tableheader from "@/components/table-header";
 import { CreateJobRequirementForm } from "@/components/new-jobs/create-jobs-form";
-import ClientPaginationControls from "@/components/clients/ClientPaginationControls";
+import { JobPaginationControls } from "@/components/jobs/JobPaginationControls";
 import { getJobs, updateJobStage } from "@/services/jobService";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -369,14 +369,14 @@ export default function JobsPage() {
             </Table>
           </div>
           <div className="sticky bottom-0 bg-white z-10 border-t">
-            <ClientPaginationControls
+            <JobPaginationControls
               currentPage={currentPage}
               totalPages={totalPages}
-              totalClients={totalJobs}
+              totalJobs={totalJobs}
               pageSize={pageSize}
               setPageSize={setPageSize}
               handlePageChange={handlePageChange}
-              clientsLength={jobs.length}
+              jobsLength={jobs.length}
             />
           </div>
         </div>
