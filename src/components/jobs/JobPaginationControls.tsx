@@ -50,7 +50,7 @@ export function JobPaginationControls({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {["1000", "10", "25", "50", "100", "200"].map((item) => (
+              {["13", "25", "50", "100", "200", "1000"].map((item) => (
                 <SelectItem key={item} value={item}>
                   {item}
                 </SelectItem>
