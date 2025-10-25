@@ -93,7 +93,7 @@ export default function JobsPage() {
   const queryClient = useQueryClient();
 
   const { data: jobsData, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ["jobs", currentPage, pageSize],
+    queryKey: ["jobs"],
     queryFn: () => getJobs(),
     placeholderData: (prev) => prev, // keep previous page data while fetching
   });
