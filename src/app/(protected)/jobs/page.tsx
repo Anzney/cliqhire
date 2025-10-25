@@ -1,7 +1,16 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Plus, SlidersHorizontal, RefreshCcw, MoreVertical, Loader } from "lucide-react";
+import { Plus, SlidersHorizontal, RefreshCcw, MoreVertical, Loader, X } from "lucide-react";
 import { useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 // import { CreateJobModal } from "@/components/jobs/create-job-modal"
 import {  
   Table,
@@ -81,6 +90,7 @@ export default function JobsPage() {
   const canDeleteJobs = isAdmin || finalPermissions.includes('JOBS_DELETE');
   const [open, setOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [selectedStages, setSelectedStages] = useState<JobStage[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingStageChange, setPendingStageChange] = useState<{
     jobId: string;
@@ -97,14 +107,37 @@ export default function JobsPage() {
     queryFn: () => getJobs(),
     placeholderData: (prev) => prev, // keep previous page data while fetching
   });
-  // Support both PaginatedJobResponse { jobs, total, pages } and JobResponse { data, count }
-  const jobs = (jobsData as any)?.jobs ?? (jobsData as any)?.data ?? [];
-  const totalJobs = (jobsData as any)?.total ?? (jobsData as any)?.count ?? jobs.length;
-  const totalPages = (jobsData as any)?.pages ?? (totalJobs ? Math.max(1, Math.ceil(totalJobs / pageSize)) : 1);
+  
+  // Get all jobs and handle different response formats
+  let allJobs = Array.isArray(jobsData?.data) ? jobsData.data : 
+               (jobsData as any)?.jobs ?? 
+               (Array.isArray(jobsData) ? jobsData : []);
+
+  console.log('All Jobs:', allJobs); // Debug log
+  console.log('Selected Stages:', selectedStages); // Debug log
+
+  // Filter jobs by selected stages if any
+  if (selectedStages.length > 0) {
+    allJobs = allJobs.filter((job: any) => {
+      const jobStage = job.stage || job.jobStatus; // Try both possible field names
+      console.log('Job:', job._id, 'Stage:', jobStage); // Debug log
+      return selectedStages.includes(jobStage);
+    });
+  }
+  
+  // Calculate pagination
+  const totalJobs = allJobs.length;
+  const totalPages = Math.max(1, Math.ceil(totalJobs / pageSize));
+  
+  // Get current page jobs
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const jobs = allJobs.slice(startIndex, endIndex);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -213,14 +246,82 @@ export default function JobsPage() {
     <>
       <div className="flex flex-col h-full">
         {/* Header */}
-        <Dashboardheader
-          setOpen={setOpen}
-          setFilterOpen={setFilterOpen}
-          initialLoading={isLoading || isFetching}
-          heading="Jobs"
-          buttonText="Create Job Requirement"
-          showCreateButton={canModifyJobs}
-        />
+        <div className="flex flex-col">
+          <div className="flex items-center justify-between p-4 border-b">
+            <h1 className="text-2xl font-bold">Jobs</h1>
+            <div className="flex items-center space-x-2">
+              {selectedStages.length > 0 && (
+                <div className="flex items-center space-x-2 bg-muted px-3 py-1 rounded-md">
+                  <span className="text-sm text-muted-foreground">
+                    {selectedStages.length} filter{selectedStages.length !== 1 ? 's' : ''} applied
+                  </span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-6 px-2 text-muted-foreground hover:text-foreground"
+                    onClick={() => setSelectedStages([])}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    <span className="sr-only">Clear filters</span>
+                  </Button>
+                </div>
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <SlidersHorizontal className="h-4 w-4 mr-2" />
+                    Filter
+                    {selectedStages.length > 0 && (
+                      <span className="ml-2 bg-primary text-primary-foreground rounded-full h-5 w-5 text-xs flex items-center justify-center">
+                        {selectedStages.length}
+                      </span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end">
+                  <DropdownMenuLabel>Filter by Stage</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <div className="space-y-2 p-2">
+                    {['Open', 'Hired', 'On Hold', 'Closed', 'Active', 'Onboarding'].map((stage) => (
+                      <div key={stage} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`stage-${stage}`} 
+                          checked={selectedStages.includes(stage as JobStage)}
+                          onCheckedChange={(checked) => {
+                            setCurrentPage(1);
+                            if (checked) {
+                              setSelectedStages([...selectedStages, stage as JobStage]);
+                            } else {
+                              setSelectedStages(selectedStages.filter(s => s !== stage));
+                            }
+                          }}
+                        />
+                        <Label htmlFor={`stage-${stage}`} className="text-sm font-normal">
+                          {stage}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => refetch()}
+                disabled={isFetching}
+              >
+                <RefreshCcw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              {canModifyJobs && (
+                <Button onClick={() => setOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Job Requirement
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
         {/* Content */}
         <div className="flex-1 flex flex-col min-h-0">
           <div className="flex-1 overflow-auto" style={{ maxHeight: "calc(100vh - 30px)" }}>
