@@ -1,8 +1,5 @@
 import { AssignedJob, Interview, PersonalTask } from "./types";
 
-// Dummy data for Today Tasks page
-// TODO: Replace with real API calls when backend is ready
-
 export const dummyAssignedJobs: AssignedJob[] = [
   {
     id: "1",
@@ -553,3 +550,7 @@ export const dummyPersonalTasks: PersonalTask[] = [
     createdAt: "2024-01-07"
   }
 ];
+
+
+
+

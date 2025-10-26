@@ -133,26 +133,6 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
     );
   }
 
-  // Enhanced dummy data for better display
-  const enhancedCandidate = {
-    ...candidate,
-    // Additional fields that would come from API
-    currentRole: "Senior Software Engineer",
-    company: "Tech Corp",
-    salary: "$120,000 - $140,000",
-    availability: "2 weeks notice",
-    education: "Bachelor's in Computer Science",
-    languages: ["English", "Spanish"],
-    certifications: ["AWS Certified Developer", "Google Cloud Professional"],
-    linkedIn: "linkedin.com/in/johndoe",
-    portfolio: "github.com/johndoe",
-    notes: "Strong technical skills, excellent communication, looking for remote opportunities.",
-    lastContact: "2024-01-15",
-    nextFollowUp: "2024-01-22",
-    source: "LinkedIn",
-    recruiter: "Sarah Johnson"
-  };
-
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'active':
@@ -223,16 +203,12 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
       <div className="border-b bg-white py-4 px-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">{enhancedCandidate.name || "Unknown Candidate"}</h1>
+            <h1 className="text-2xl font-bold">{candidate.name || "Unknown Candidate"}</h1>
             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-              <span>{enhancedCandidate.currentRole}</span>
-              <span>•</span>
-              <span>{enhancedCandidate.experience}</span>
-              <span>•</span>
-              <span>{enhancedCandidate.location}</span>
-              <span>•</span>
-              <Badge variant="outline" className={getStatusColor(enhancedCandidate.status || "unknown")}>
-                {enhancedCandidate.status || "Unknown"}
+              {candidate.experience && <><span>{candidate.experience}</span><span>•</span></>}
+              {candidate.location && <><span>{candidate.location}</span><span>•</span></>}
+              <Badge variant="outline" className={getStatusColor(candidate.status || "unknown")}>
+                {candidate.status || "Unknown"}
               </Badge>
             </div>
           </div>
@@ -297,7 +273,7 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
           <JobsContent 
             ref={jobsContentRef}
             candidateId={candidateId} 
-            candidateName={enhancedCandidate.name || "Unknown Candidate"} 
+            candidateName={candidate.name || "Unknown Candidate"} 
           />
         </TabsContent>
 
@@ -350,8 +326,8 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
                   <User className="w-5 h-5 text-gray-600" />
                 </div>
                 <div>
-                  <p className="font-medium">{enhancedCandidate.recruiter}</p>
-                  <p className="text-sm text-gray-600">Primary Recruiter</p>
+                  <p className="font-medium">Recruiter</p>
+                  <p className="text-sm text-gray-600">Assigned to: {user?.name || 'Unassigned'}</p>
                 </div>
               </div>
             </div>
@@ -366,21 +342,21 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
                 <Mail className="w-5 h-5 text-gray-600" />
                 <div>
                   <p className="font-medium">Email</p>
-                  <p className="text-sm text-gray-600">{enhancedCandidate.email}</p>
+                  <p className="text-sm text-gray-600">{candidate.email || 'Not provided'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 border rounded-lg">
                 <Phone className="w-5 h-5 text-gray-600" />
                 <div>
                   <p className="font-medium">Phone</p>
-                  <p className="text-sm text-gray-600">{enhancedCandidate.phone}</p>
+                  <p className="text-sm text-gray-600">{candidate.phone || 'Not provided'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 border rounded-lg">
                 <MapPin className="w-5 h-5 text-gray-600" />
                 <div>
                   <p className="font-medium">Location</p>
-                  <p className="text-sm text-gray-600">{enhancedCandidate.location}</p>
+                  <p className="text-sm text-gray-600">{candidate.location || 'Not provided'}</p>
                 </div>
               </div>
             </div>
@@ -403,7 +379,7 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
                 <Calendar className="w-5 h-5 text-gray-600" />
                 <div>
                   <p className="font-medium">Status updated</p>
-                  <p className="text-sm text-gray-600">Changed to {enhancedCandidate.status}</p>
+                  <p className="text-sm text-gray-600">Changed to {candidate.status || 'Unknown'}</p>
                 </div>
                 <span className="text-xs text-gray-500 ml-auto">Jan 12, 2024</span>
               </div>
