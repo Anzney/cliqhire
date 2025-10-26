@@ -1,6 +1,13 @@
 import axios, { AxiosError } from "axios";
 import { api, setAccessToken, clearAccessToken } from "@/lib/axios-config";
 
+// Create a separate axios instance for login/register without interceptors
+const authApi = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  withCredentials: true,
+  timeout: 10000, // 10 second timeout
+});
+
 // Types for authentication data
 export interface RegisterUserData {
   name: string;
@@ -78,8 +85,8 @@ class AuthService {
         confirmPassword: userData.confirmPassword,
       };
       
-      // Make real API call to Express backend using the configured api instance
-      const response = await api.post('/auth/register', payload);
+      // Make real API call to Express backend using the auth-specific instance
+      const response = await authApi.post('/auth/register', payload);
 
       // Extract data from response - your API returns accessToken and user
       const { accessToken, user } = response.data.data;
@@ -132,8 +139,8 @@ class AuthService {
         password: userData.password,
       };
       
-      // Make real API call to Express backend using the configured api instance
-      const response = await api.post('/api/auth/login', payload);
+      // Make real API call to Express backend using the auth-specific instance
+      const response = await authApi.post('/api/auth/login', payload);
 
       // Extract data from response - your API returns accessToken, user, and tasks
       const { accessToken, user, tasks } = response.data.data;
@@ -167,6 +174,7 @@ class AuthService {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError;
         const errorData = axiosError.response?.data as any;
+        
         
         return {
           success: false,

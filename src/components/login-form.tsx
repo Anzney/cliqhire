@@ -34,8 +34,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
   const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login } = useAuth();
+  const { login, isLoginLoading } = useAuth();
   const router = useRouter();
 
   const form = useForm<LoginFormValues>({
@@ -48,8 +47,8 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
-      setIsSubmitting(true);
       const success = await login(values.email, values.password);
+      
       if (success) {
         toast.success("Login successful!");
          // Reset form after successful login
@@ -63,12 +62,15 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
           router.push(redirectPath);
         }, 100);
       } else {
-        toast.error("Invalid email or password");
+        toast.error("Email or password is incorrect");
+        // Reset form after failed login
+        form.reset();
       }
     } catch (error) {
+      console.error('LoginForm: Login error caught:', error);
       toast.error(error instanceof Error ? error.message : "Login failed");
-    } finally {
-      setIsSubmitting(false);
+      // Reset form after error
+      form.reset();
     }
   };
 
@@ -96,6 +98,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                         autoComplete="email"
                         placeholder="Enter your email"
                         className="w-80"
+                        data-form-type="other"
                         {...field}
                       />
                     </FormControl>
@@ -125,6 +128,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                           {...field} 
                           placeholder="Enter your password"
                           autoComplete="current-password"
+                          data-form-type="other"
                         />
                         <Button
                           type="button"
@@ -148,9 +152,9 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
               <Button 
                 type="submit" 
                 className="w-full" 
-                disabled={isSubmitting}
+                disabled={isLoginLoading}
               >
-                {isSubmitting ? "Logging in..." : "Login"}
+                {isLoginLoading ? "Logging in..." : "Login"}
               </Button>
               <Button variant="outline" className="w-full" type="button">
                 Login with Google

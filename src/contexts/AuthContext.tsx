@@ -11,6 +11,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isLoginLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
@@ -25,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true); // Start with true to show loading state
+  const [isLoginLoading, setIsLoginLoading] = useState(false); // Separate state for login loading
   const [tasks, setTasks] = useState<Task[]>([]);
   const isFetchingTasksRef = useRef(false);
   const router = useRouter();
@@ -70,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      setIsLoading(true); // Show loading during login
+      setIsLoginLoading(true); // Show login loading during login attempt
       const response = await authService.login({ email, password });
       
       if (response.success && response.user && response.token) {
@@ -91,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('AuthContext: Login error:', error);
       return false;
     } finally {
-      setIsLoading(false); // Hide loading after login attempt
+      setIsLoginLoading(false); // Hide login loading after login attempt
     }
   };
 
@@ -176,6 +178,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     isAuthenticated,
     isLoading,
+    isLoginLoading,
     login,
     logout,
     checkAuth,
