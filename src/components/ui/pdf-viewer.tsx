@@ -191,7 +191,7 @@ export function PDFViewer({ isOpen, onClose, pdfUrl, candidateName }: PDFViewerP
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Resume Viewer
+              PDF Viewer
               {candidateName && (
                 <Badge variant="secondary" className="ml-2">
                   {candidateName}

@@ -16,10 +16,10 @@ import { toast } from "sonner";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import ContractOverview from "./contract-overview";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { getFileType ,ClientDetails ,PrimaryContact , TeamMemberType ,ContactType} from "./summaryType";
+import { getFileType, ClientDetails, PrimaryContact, TeamMemberType, ContactType } from "./summaryType";
 import { api } from "@/lib/axios-config";
 import { useQueryClient } from "@tanstack/react-query";
-
+import { PDFViewer } from "@/components/ui/pdf-viewer";
 
 export function SummaryContent({
   clientId,
@@ -169,18 +169,16 @@ export function SummaryContent({
     const fileType = getFileType(fileName);
 
     if (fileType === "pdf") {
-      // Show PDF in modal with iframe
+      // Show PDF in the PDF viewer
       setPreviewFileUrl(fileUrl);
       setPreviewFileName(displayName || fileName);
       setIsPdfPreviewOpen(true);
     } else if (fileType === "docx") {
-      // For DOCX files, try to use Google Docs viewer
-      const googleDocsUrl = `https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`;
-      setPreviewFileUrl(googleDocsUrl);
-      setPreviewFileName(displayName || fileName);
-      setIsPdfPreviewOpen(true);
+      // For DOCX files, open in Google Docs viewer in a new tab
+      const googleDocsUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+      window.open(googleDocsUrl, "_blank");
     } else {
-      // For images and other files, open in new tab (existing behavior)
+      // For images and other files, open in new tab
       window.open(fileUrl, "_blank");
     }
   };
@@ -221,14 +219,14 @@ export function SummaryContent({
 
   const positionOptions = [
     { value: "CEO", label: "CEO" },
-  { value: "HR Head", label: "HR Head" },
-  { value: "CHRO", label: "CHRO" },
-  { value: "HR", label: "HR" },
-  { value: "Manager", label: "Manager" },
-  { value: "HR Manager", label: "HR Manager" },
-  { value: "Director", label: "Director" },
-  { value: "Executive", label: "Executive" },
-  { value: "General Manager", label: "General Manager" },
+    { value: "HR Head", label: "HR Head" },
+    { value: "CHRO", label: "CHRO" },
+    { value: "HR", label: "HR" },
+    { value: "Manager", label: "Manager" },
+    { value: "HR Manager", label: "HR Manager" },
+    { value: "Director", label: "Director" },
+    { value: "Executive", label: "Executive" },
+    { value: "General Manager", label: "General Manager" },
   ];
 
   return (
@@ -464,35 +462,14 @@ export function SummaryContent({
         onSave={handleUpdateDescription}
       />
 
-      {/* PDF Preview Modal */}
-      <Dialog open={isPdfPreviewOpen} onOpenChange={setIsPdfPreviewOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] w-[90vw] h-[80vh] p-0">
-          <DialogHeader className="p-4 pb-2">
-            <DialogTitle className="text-lg font-semibold flex items-center justify-between">
-              <span>Document Preview: {previewFileName}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsPdfPreviewOpen(false)}
-                className="h-8 w-8 p-0"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex-1 p-4 pt-0">
-            <iframe
-              src={previewFileUrl}
-              className="w-full h-full border rounded-lg"
-              title="Document Preview"
-              onError={() => {
-                toast.error("Failed to load document preview");
-                setIsPdfPreviewOpen(false);
-              }}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* PDF Viewer */}
+      <PDFViewer
+        isOpen={isPdfPreviewOpen}
+        onClose={() => setIsPdfPreviewOpen(false)}
+        pdfUrl={previewFileUrl}
+        candidateName={previewFileName}
+        
+      />
 
       {/* File Upload Modal */}
       <FileUploadModal
