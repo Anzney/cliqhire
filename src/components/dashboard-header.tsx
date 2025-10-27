@@ -1,6 +1,6 @@
 import React from 'react'
 import { Button } from "@/components/ui/button"
-import { Plus, SlidersHorizontal, RefreshCcw, MoreVertical } from 'lucide-react'
+import { Plus, SlidersHorizontal, RefreshCcw, MoreVertical, Trash2 } from 'lucide-react'
 import { useState , useEffect } from 'react'
 
 type DashboardHeaderProps = {
@@ -13,6 +13,8 @@ type DashboardHeaderProps = {
   showCreateButton?: boolean;
   rightContent?: React.ReactNode;
   onRefresh?: () => void;
+  selectedCount?: number;
+  onDelete?: () => void;
 }
 
 const  Dashboardheader= ({
@@ -25,6 +27,8 @@ const  Dashboardheader= ({
     showCreateButton = true,
     rightContent,
     onRefresh,
+    selectedCount = 0,
+    onDelete,
 }:DashboardHeaderProps)=> {
 
   return (
@@ -48,12 +52,24 @@ const  Dashboardheader= ({
             {rightContent ? (
               rightContent
             ) : (
-              showFilterButton && (
-                <Button variant="outline" size="sm" onClick={() => setFilterOpen(true)}>
-                  <SlidersHorizontal className="h-4 w-4 mr-2" />
-                  Filters
+              <>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                  disabled={selectedCount === 0}
+                  onClick={onDelete}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {selectedCount > 0 ? `Delete (${selectedCount})` : 'Delete'}
                 </Button>
-              )
+                {showFilterButton && (
+                  <Button variant="outline" size="sm" onClick={() => setFilterOpen(true)}>
+                    <SlidersHorizontal className="h-4 w-4 mr-2" />
+                    Filters
+                  </Button>
+                )}
+              </>
             )}
             <Button 
               variant="outline" 

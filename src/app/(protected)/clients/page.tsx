@@ -7,6 +7,7 @@ import {
   updateClientStage,
   updateClientStageStatus,
   ClientStageStatus,
+  deleteClient,
 } from "@/services/clientService";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,8 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Loader } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { DeleteConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 const columnsArr = [
   "", // Empty header for the checkbox column
@@ -96,7 +99,51 @@ export default function ClientsPage() {
     if (selectedRows.size === pagedClients.length) {
       setSelectedRows(new Set());
     } else {
-      setSelectedRows(new Set(pagedClients.map(client => client.id)));
+      const newSelectedRows = new Set(selectedRows);
+      pagedClients.forEach((client: Client) => {
+        newSelectedRows.add(client.id);
+      });
+      setSelectedRows(newSelectedRows);
+    }
+  };
+
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteSelected = async () => {
+    if (selectedRows.size === 0) return;
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteSelected = async () => {
+    if (selectedRows.size === 0) return;
+    
+    setIsDeleting(true);
+    try {
+      // Delete all selected clients in parallel
+      await Promise.all(
+        Array.from(selectedRows).map((clientId) =>
+          deleteClient(clientId).catch(error => {
+            console.error(`Error deleting client ${clientId}:`, error);
+            throw error; // Re-throw to trigger the catch block
+          })
+        )
+      );
+      
+      // Refresh the client list after successful deletion
+      await refetch();
+      
+      // Clear the selection
+      setSelectedRows(new Set());
+      
+      // Show success message
+      toast.success(`${selectedRows.size} client(s) deleted successfully`);
+    } catch (error) {
+      console.error('Error deleting clients:', error);
+      toast.error('Failed to delete selected clients. Please try again.');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
     }
   };
 
@@ -351,6 +398,8 @@ export default function ClientsPage() {
           buttonText="Create Client"
           showCreateButton={canModifyClients}
           onRefresh={() => refetch()}
+          selectedCount={selectedRows.size}
+          onDelete={handleDeleteSelected}
         />
 
         {/* Table */}
@@ -362,7 +411,7 @@ export default function ClientsPage() {
                 <TableRow className="sticky top-0 z-20 bg-white">
                   <TableHead className="w-12 px-4">
                     <div className="flex items-center justify-center">
-                      <input
+                      <Input
                         type="checkbox"
                         checked={selectedRows.size > 0 && selectedRows.size === pagedClients.length}
                         onChange={toggleSelectAll}
@@ -405,7 +454,7 @@ export default function ClientsPage() {
                     >
                       <TableCell className="px-4 py-2 w-12">
                         <div className="flex items-center justify-center">
-                          <input
+                          <Input
                             type="checkbox"
                             checked={selectedRows.has(client.id)}
                             onChange={(e) => {
@@ -439,19 +488,29 @@ export default function ClientsPage() {
               handlePageChange={handlePageChange}
               clientsLength={allClients?.length}
             />
-
           </div>
         </div>
 
         {canModifyClients && <CreateClientModal open={open} onOpenChange={setOpen} />}
-      </div>
-      {/* Filters Modal */}
-      <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Filters</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
+        
+        <DeleteConfirmationDialog
+          isOpen={showDeleteDialog}
+          onClose={() => setShowDeleteDialog(false)}
+          onConfirm={confirmDeleteSelected}
+          title={`Delete ${selectedRows.size} client(s)?`}
+          description={`Are you sure you want to delete ${selectedRows.size} selected client(s)? This action cannot be undone.`}
+          confirmText={isDeleting ? "Deleting..." : "Delete"}
+          cancelText="Cancel"
+          isDeleting={isDeleting}
+        />
+
+        {/* Filters Dialog */}
+        <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Filters</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
             <div>
               <Label htmlFor="name-filter">Client Name</Label>
               <Input
@@ -479,9 +538,10 @@ export default function ClientsPage() {
                 onChange={(e) => setFilters({ ...filters, maxAge: e.target.value })}
               />
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
     </>
   );
 }
