@@ -30,11 +30,11 @@ const  Dashboardheader= ({
   return (
     <div>
          {/* Header */}
-        <div className="border-b">
+        {/* <div className="border-b">
           <div className="flex h-16 items-center px-4">
             <h1 className="text-2xl font-semibold">{heading}</h1>
           </div>
-        </div>
+        </div> */}
 
         {/* Toolbar */}
         <div className="flex items-center justify-between p-4">
@@ -73,9 +73,9 @@ const  Dashboardheader= ({
                 </>
               )}
             </Button>
-            {/* <Button variant="ghost" size="sm">
+             {/* <Button variant="ghost" size="sm">
               <MoreVertical className="h-4 w-4" />
-            </Button> */}
+            </Button>                             */}
           </div>
         </div> 
     </div>

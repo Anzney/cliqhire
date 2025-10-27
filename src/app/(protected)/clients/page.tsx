@@ -1,7 +1,7 @@
 "use client";
 import axios from "axios";
 import { useState, useMemo} from "react";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableHead, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { CreateClientModal } from "@/components/create-client-modal/create-client-modal";
 import {
   updateClientStage,
@@ -21,7 +21,8 @@ import { Loader } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 
-const columsArr = [
+const columnsArr = [
+  "", // Empty header for the checkbox column
   "Name",
   "Industry",
   "Location",
@@ -75,6 +76,50 @@ export default function ClientsPage() {
   const [open, setOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: "name", order: "asc" });
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+
+  // Toggle row selection
+  const toggleRowSelection = (clientId: string) => {
+    setSelectedRows(prevSelected => {
+      const newSelected = new Set(prevSelected);
+      if (newSelected.has(clientId)) {
+        newSelected.delete(clientId);
+      } else {
+        newSelected.add(clientId);
+      }
+      return newSelected;
+    });
+  };
+
+  // Toggle all rows selection
+  const toggleSelectAll = () => {
+    if (selectedRows.size === pagedClients.length) {
+      setSelectedRows(new Set());
+    } else {
+      setSelectedRows(new Set(pagedClients.map(client => client.id)));
+    }
+  };
+
+  const handleSort = (field: string) => {
+    if (field !== 'name') return; // Only allow sorting by name
+    
+    setSortConfig(prevConfig => {
+      // If clicking the same column, toggle the order
+      if (prevConfig.field === field) {
+        return {
+          field,
+          order: prevConfig.order === 'asc' ? 'desc' : 'asc'
+        };
+      }
+      // If clicking a different column, set to ascending by default
+      return {
+        field,
+        order: 'asc'
+      };
+    });
+    
+    setCurrentPage(1); // Reset to first page when sorting changes
+  };
   const [filters, setFilters] = useState<Filters>({
     name: "",
     industry: "",
@@ -93,7 +138,7 @@ export default function ClientsPage() {
   const [showStatusConfirmDialog, setShowStatusConfirmDialog] = useState(false);
   // Pagination states
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10); // Default to 10 per page
+  const [pageSize, setPageSize] = useState<number>(12); // Default to 10 per page
 
   // Hoisted function declaration to avoid temporal dead zone issues
   async function fetchClients(page = 1, size = pageSize): Promise<Client[]> {
@@ -122,7 +167,7 @@ export default function ClientsPage() {
     })) as Client[];
   }
 
-   const { data: allClients = [], isLoading , refetch } = useQuery<Client[]>({
+   const { data: allClients = [], isLoading, isRefetching, refetch } = useQuery<Client[]>({
     queryKey: ['clients', filters],
     queryFn: () => fetchClients(),
   })
@@ -183,16 +228,21 @@ export default function ClientsPage() {
       }
     }
 
-    // Apply sorting
-    result.sort((a, b) => {
-      if (a[sortConfig.field] < b[sortConfig.field]) {
-        return sortConfig.order === "asc" ? -1 : 1;
-      }
-      if (a[sortConfig.field] > b[sortConfig.field]) {
-        return sortConfig.order === "asc" ? 1 : -1;
-      }
-      return 0;
-    });
+    // Apply sorting only if sortConfig is for name
+    if (sortConfig.field === 'name') {
+      result.sort((a, b) => {
+        const aValue = a.name.toLowerCase();
+        const bValue = b.name.toLowerCase();
+        
+        if (aValue < bValue) {
+          return sortConfig.order === "asc" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.order === "asc" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
 
     const totalClientsCalc = result.length;
     const totalPagesCalcRaw = Math.ceil(totalClientsCalc / pageSize);
@@ -296,19 +346,38 @@ export default function ClientsPage() {
          <Dashboardheader
           setOpen={setOpen}
           setFilterOpen={setFilterOpen}
-          initialLoading={isLoading}
+          initialLoading={isLoading || isRefetching}
           heading="Clients"
           buttonText="Create Client"
           showCreateButton={canModifyClients}
+          onRefresh={() => refetch()}
         />
 
         {/* Table */}
 
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col min-h-0 border-t">
           <div className="flex-1 overflow-auto" style={{ maxHeight: "calc(100vh - 30px)" }}>
             <Table>
               <TableHeader>
-                <Tableheader tableHeadArr={columsArr} className="sticky top-0 z-20 bg-white" />
+                <TableRow className="sticky top-0 z-20 bg-white">
+                  <TableHead className="w-12 px-4">
+                    <div className="flex items-center justify-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedRows.size > 0 && selectedRows.size === pagedClients.length}
+                        onChange={toggleSelectAll}
+                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                    </div>
+                  </TableHead>
+                  <TableHead className="min-w-[200px]">Name</TableHead>
+                  <TableHead className="min-w-[150px]">Industry</TableHead>
+                  <TableHead className="min-w-[150px]">Location</TableHead>
+                  <TableHead className="min-w-[120px]">Stage</TableHead>
+                  <TableHead className="min-w-[150px]">Stage Status</TableHead>
+                  <TableHead className="min-w-[120px]">Client Age</TableHead>
+                  <TableHead className="min-w-[100px]">Job Count</TableHead>
+                </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
@@ -330,13 +399,31 @@ export default function ClientsPage() {
                   </TableRow>
                 ) : (
                   pagedClients.map((client: Client) => (
-                    <ClientTableRow
+                    <TableRow 
                       key={client.id ?? client._id}
-                      client={client}
-                      onStageChange={handleStageChange}
-                      onStatusChange={handleStageStatusChange}
-                      getYearDifference={getYearDifference}
-                    />
+                      className={`hover:bg-muted/50 cursor-pointer ${selectedRows.has(client.id) ? 'bg-blue-50' : ''}`}
+                    >
+                      <TableCell className="px-4 py-2 w-12">
+                        <div className="flex items-center justify-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedRows.has(client.id)}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              toggleRowSelection(client.id);
+                            }}
+                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      </TableCell>
+                      <ClientTableRow
+                        client={client}
+                        onStageChange={handleStageChange}
+                        onStatusChange={handleStageStatusChange}
+                        getYearDifference={getYearDifference}
+                      />
+                    </TableRow>
                   ))
                 )}
               </TableBody>
