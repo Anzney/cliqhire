@@ -23,6 +23,7 @@ export interface ClientTableRowProps {
   onStageChange: (clientId: string, newStage: "Lead" | "Engaged" | "Signed") => void;
   onStatusChange: (clientId: string, newStatus: ClientStageStatus) => void;
   getYearDifference: (createdAt: string) => number;
+  canModify?: boolean;
 }
 
 const ClientTableRow: React.FC<ClientTableRowProps> = ({
@@ -30,6 +31,7 @@ const ClientTableRow: React.FC<ClientTableRowProps> = ({
   onStageChange,
   onStatusChange,
   getYearDifference,
+  canModify = false,
 }) => {
   const router = useRouter();
   
@@ -70,7 +72,8 @@ const ClientTableRow: React.FC<ClientTableRowProps> = ({
         <ClientStageBadge 
           id={client.id} 
           stage={client.clientStage} 
-          onStageChange={onStageChange} 
+          onStageChange={onStageChange}
+          disabled={!canModify}
         />
       </TableCell>
       <TableCell 
@@ -86,6 +89,7 @@ const ClientTableRow: React.FC<ClientTableRowProps> = ({
           status={client.clientSubStage}
           stage={client.clientStage}
           onStatusChange={onStatusChange}
+          disabled={!canModify}
         />
       </TableCell>
       <TableCell className="text-sm px-4 py-2 w-[120px]" onClick={handleCellClick}>

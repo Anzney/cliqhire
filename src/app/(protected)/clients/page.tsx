@@ -83,6 +83,7 @@ export default function ClientsPage() {
 
   // Toggle row selection
   const toggleRowSelection = (clientId: string) => {
+    if (!canDeleteClients) return; // Prevent selection if user can't delete
     setSelectedRows(prevSelected => {
       const newSelected = new Set(prevSelected);
       if (newSelected.has(clientId)) {
@@ -96,6 +97,7 @@ export default function ClientsPage() {
 
   // Toggle all rows selection
   const toggleSelectAll = () => {
+    if (!canDeleteClients) return; // Prevent selection if user can't delete
     if (selectedRows.size === pagedClients.length) {
       setSelectedRows(new Set());
     } else {
@@ -111,12 +113,12 @@ export default function ClientsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDeleteSelected = async () => {
-    if (selectedRows.size === 0) return;
+    if (selectedRows.size === 0 || !canDeleteClients) return;
     setShowDeleteDialog(true);
   };
 
   const confirmDeleteSelected = async () => {
-    if (selectedRows.size === 0) return;
+    if (selectedRows.size === 0 || !canDeleteClients) return;
     
     setIsDeleting(true);
     try {
@@ -467,10 +469,12 @@ export default function ClientsPage() {
                         </div>
                       </TableCell>
                       <ClientTableRow
+                        key={client.id}
                         client={client}
                         onStageChange={handleStageChange}
                         onStatusChange={handleStageStatusChange}
                         getYearDifference={getYearDifference}
+                        canModify={canModifyClients}
                       />
                     </TableRow>
                   ))
