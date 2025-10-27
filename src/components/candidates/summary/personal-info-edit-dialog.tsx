@@ -71,7 +71,7 @@ export function DateOfBirthDialog({
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="dateOfBirth">Date of Birth</Label>
-            <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+            <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen} modal={true}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"

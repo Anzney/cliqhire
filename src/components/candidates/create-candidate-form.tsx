@@ -402,7 +402,7 @@ export default function CreateCandidateForm({
               {/* Date of Birth */}
               <div className="space-y-2">
                 <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                <Popover open={dobOpen} onOpenChange={setDobOpen}>
+                <Popover open={dobOpen} onOpenChange={setDobOpen} modal={true}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
