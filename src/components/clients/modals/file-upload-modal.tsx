@@ -21,7 +21,7 @@ export const FileUploadModal = ({
   onUpload,
   title,
   acceptedFileTypes = ".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp,.svg",
-  maxSizeInMB = 10,
+  maxSizeInMB = 5,
 }: FileUploadModalProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -30,10 +30,10 @@ export const FileUploadModal = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validateFile = (file: File): boolean => {
-    // Check file size
-    const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
+    // Check file size (5MB in bytes)
+    const maxSizeInBytes = 5 * 1024 * 1024;
     if (file.size > maxSizeInBytes) {
-      toast.error(`File size must be less than ${maxSizeInMB}MB`);
+      toast.error(`File size exceeds 5MB limit. Please choose a smaller file.`);
       return false;
     }
 

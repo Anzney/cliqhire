@@ -45,7 +45,7 @@ export function DeadlinePicker({ open, onClose, currentValue = "", onSave }: Dea
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label>Deadline (By Client)</Label>
-            <Popover>
+            <Popover modal={true}>
               <PopoverTrigger asChild>
                 <Button
                   variant={"outline"}

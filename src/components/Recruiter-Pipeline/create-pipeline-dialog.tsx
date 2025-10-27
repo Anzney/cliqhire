@@ -41,26 +41,19 @@ export function CreatePipelineDialog({ trigger, onPipelineCreated }: CreatePipel
   const [searchTerm, setSearchTerm] = useState("");
   const [clientNames, setClientNames] = useState<Record<string, string>>({});
 
-  // Helper functions - defined first to avoid reference errors
-  const getClientName = (job: Job) => {
-    return clientNames[job._id] || 'Loading...';
-  };
-
-  const getJobDisplayName = (job: Job) => {
-    const clientName = getClientName(job);
-    return `${job.jobTitle} - ${clientName}`;
-  };
+  // Helper function to get job display name (just the job title)
+  const getJobDisplayName = (job: Job) => job.jobTitle;
   
   // Create a mapping from job display name to job ID
   const getJobIdFromDisplayName = (displayName: string) => {
-    const job = jobs.find(job => getJobDisplayName(job) === displayName);
+    const job = jobs.find(job => job.jobTitle === displayName);
     return job?._id;
   };
   
   // Create a mapping from job ID to job display name
   const getDisplayNameFromJobId = (jobId: string) => {
     const job = jobs.find(job => job._id === jobId);
-    return job ? getJobDisplayName(job) : '';
+    return job ? job.jobTitle : '';
   };
   
   // Convert selected job IDs to display names for the MultiSelector
@@ -103,10 +96,7 @@ export function CreatePipelineDialog({ trigger, onPipelineCreated }: CreatePipel
       
       setJobs(jobsData);
       
-      // Fetch client names for all jobs
-      if (jobsData.length > 0) {
-        await fetchClientNames(jobsData);
-      }
+      // No need to fetch client names anymore
     } catch (error) {
       console.error("Error fetching jobs:", error);
       toast.error("Failed to fetch jobs. Please try again.");
@@ -207,49 +197,10 @@ export function CreatePipelineDialog({ trigger, onPipelineCreated }: CreatePipel
   };
 
   const filteredJobs = jobs.filter(job =>
-    job.jobTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (job.client && typeof job.client === 'object' && job.client.name && job.client.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    job.jobTitle.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const fetchClientNames = async (jobs: Job[]) => {
-    const newClientNames: Record<string, string> = {};
-    
-    for (const job of jobs) {
-      const jobId = job._id;
-      if (clientNames[jobId]) {
-        newClientNames[jobId] = clientNames[jobId];
-        continue;
-      }
-      
-      let clientName = 'Unknown Client';
-      
-      if (job.client && typeof job.client === 'object') {
-        if ('name' in job.client && job.client.name) {
-          clientName = job.client.name;
-        } else if ('_id' in job.client && job.client._id) {
-          try {
-            const clientData = await getClientById(job.client._id);
-            clientName = clientData.name || 'Unknown Client';
-          } catch (error) {
-            console.error("Error fetching client name:", error);
-            clientName = 'Unknown Client';
-          }
-        }
-      } else if (typeof job.client === 'string') {
-        try {
-          const clientData = await getClientById(job.client);
-          clientName = clientData.name || 'Unknown Client';
-        } catch (error) {
-          console.error("Error fetching client name:", error);
-          clientName = job.client; // Return the ID as fallback
-        }
-      }
-      
-      newClientNames[jobId] = clientName;
-    }
-    
-    setClientNames(prev => ({ ...prev, ...newClientNames }));
-  };
+  // Client name fetching has been removed as it's not needed for pipeline creation
 
   const getSalaryRange = (job: Job) => {
     if (job.minimumSalary && job.maximumSalary) {
@@ -324,7 +275,7 @@ export function CreatePipelineDialog({ trigger, onPipelineCreated }: CreatePipel
                               <span className="font-medium">{job.jobTitle}</span>
                               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                                 <Building className="h-3 w-3" />
-                                {getClientName(job)}
+                                {typeof job.client === 'string' ? job.client : job.client?.name || "—"}
                               </div>
                             </div>
                           </MultiSelectorItem>
@@ -366,7 +317,7 @@ export function CreatePipelineDialog({ trigger, onPipelineCreated }: CreatePipel
                                     Client:
                                   </span>
                                   <span className="text-sm text-muted-foreground">
-                                    {getClientName(job)}
+                                    {typeof job.client === 'string' ? job.client : job.client?.name || "—"}
                                   </span>
                                 </div>
                                 <div className="flex items-center gap-2">
