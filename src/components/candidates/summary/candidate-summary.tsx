@@ -81,8 +81,8 @@ const contactFields = [
   },
 ];
 
-const previousCompanyFields = [
-  { key: "previousCompanyName", label: "Previous Company Name" },
+const previousCompanyFields= [
+  { key: "previousCompanyName", label: "Current Company Name" },
   { key: "currentJobTitle", label: "Current Job Title" },
   { key: "reportingTo", label: "Reporting To" },
   { key: "totalStaffReporting", label: "Total Number of Staff Reporting to You" },
@@ -461,6 +461,24 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
           <CollapsibleContent className="px-4 pb-4">
             <div className="space-y-3">
               {contactFields.map((field) => renderField(field, contactFields))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
+        {/* Previous Company Info Section */}
+        <Collapsible className="rounded-lg border shadow-sm">
+          <div className="flex items-center justify-between p-4">
+            <h4 className="text-sm font-semibold">Current Company Details</h4>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-xs p-1">
+                Show Complete Details
+                <ChevronsUpDown />
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="px-4 pb-4">
+            <div className="space-y-3">
+              {previousCompanyFields.map((field) => renderField(field, previousCompanyFields))}
             </div>
           </CollapsibleContent>
         </Collapsible>

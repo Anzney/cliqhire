@@ -1,6 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Plus, SlidersHorizontal, RefreshCcw, MoreVertical, Loader, X } from "lucide-react";
+import { toast } from "sonner";
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,7 @@ import {
 // import { CreateJobModal } from "@/components/jobs/create-job-modal"
 import {  
   Table,
+  TableHead,
   TableBody,
   TableCell,
   TableHeader,
@@ -36,9 +38,11 @@ import Dashboardheader from "@/components/dashboard-header";
 import Tableheader from "@/components/table-header";
 import { CreateJobRequirementForm } from "@/components/new-jobs/create-jobs-form";
 import { JobPaginationControls } from "@/components/jobs/JobPaginationControls";
-import { getJobs, updateJobStage } from "@/services/jobService";
+import { getJobs, updateJobStage, deleteJobById } from "@/services/jobService";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
+import { DeleteConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { Input } from "@/components/ui/input";
 
 const columsArr = [
   "Position Name",
@@ -98,6 +102,9 @@ export default function JobsPage() {
   } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(13);
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -181,6 +188,77 @@ export default function JobsPage() {
     }
   };
 
+  // Toggle row selection
+  const toggleRowSelection = (jobId: string) => {
+    if (!canDeleteJobs) return; // Prevent selection if user can't delete
+    setSelectedRows(prevSelected => {
+      const newSelected = new Set(prevSelected);
+      if (newSelected.has(jobId)) {
+        newSelected.delete(jobId);
+      } else {
+        newSelected.add(jobId);
+      }
+      return newSelected;
+    });
+  };
+
+  // Toggle all rows selection
+  const toggleSelectAll = () => {
+    if (!canDeleteJobs) return; // Prevent selection if user can't delete
+    if (selectedRows.size === jobs.length) {
+      setSelectedRows(new Set());
+    } else {
+      const newSelectedRows = new Set<string>();
+      jobs.forEach((job: any) => {
+        newSelectedRows.add(job._id);
+      });
+      setSelectedRows(newSelectedRows);
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    console.log('handleDeleteSelected called');
+    console.log('selectedRows size:', selectedRows.size, 'canDeleteJobs:', canDeleteJobs);
+    if (selectedRows.size === 0 || !canDeleteJobs) {
+      console.log('Not showing dialog - no rows selected or no delete permission');
+      return;
+    }
+    console.log('Setting showDeleteDialog to true');
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteSelected = async () => {
+    if (selectedRows.size === 0 || !canDeleteJobs) return;
+    
+    setIsDeleting(true);
+    try {
+      // Delete all selected jobs in parallel
+      await Promise.all(
+        Array.from(selectedRows).map((jobId) =>
+          deleteJobById(jobId).catch(error => {
+            console.error(`Error deleting job ${jobId}:`, error);
+            throw error;
+          })
+        )
+      );
+      
+      // Refresh the job list after successful deletion
+      await refetch();
+      
+      // Clear the selection
+      setSelectedRows(new Set());
+      
+      // Show success message
+      toast.success(`${selectedRows.size} job(s) deleted successfully`);
+    } catch (error) {
+      console.error('Error deleting jobs:', error);
+      toast.error('Failed to delete selected jobs. Please try again.');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
+
   if (!canViewJobs) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -246,103 +324,64 @@ export default function JobsPage() {
     <>
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between p-4 border-b">
-            <h1 className="text-2xl font-bold">Jobs</h1>
-            <div className="flex items-center space-x-2">
-              {selectedStages.length > 0 && (
-                <div className="flex items-center space-x-2 bg-muted px-3 py-1 rounded-md">
-                  <span className="text-sm text-muted-foreground">
-                    {selectedStages.length} filter{selectedStages.length !== 1 ? 's' : ''} applied
-                  </span>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-6 px-2 text-muted-foreground hover:text-foreground"
-                    onClick={() => setSelectedStages([])}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                    <span className="sr-only">Clear filters</span>
-                  </Button>
-                </div>
-              )}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <SlidersHorizontal className="h-4 w-4 mr-2" />
-                    Filter
-                    {selectedStages.length > 0 && (
-                      <span className="ml-2 bg-primary text-primary-foreground rounded-full h-5 w-5 text-xs flex items-center justify-center">
-                        {selectedStages.length}
-                      </span>
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end">
-                  <DropdownMenuLabel>Filter by Stage</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <div className="space-y-2 p-2">
-                    {['Open', 'Hired', 'On Hold', 'Closed', 'Active', 'Onboarding'].map((stage) => (
-                      <div key={stage} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`stage-${stage}`} 
-                          checked={selectedStages.includes(stage as JobStage)}
-                          onCheckedChange={(checked) => {
-                            setCurrentPage(1);
-                            if (checked) {
-                              setSelectedStages([...selectedStages, stage as JobStage]);
-                            } else {
-                              setSelectedStages(selectedStages.filter(s => s !== stage));
-                            }
-                          }}
-                        />
-                        <Label htmlFor={`stage-${stage}`} className="text-sm font-normal">
-                          {stage}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => refetch()}
-                disabled={isFetching}
-              >
-                <RefreshCcw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
-              {canModifyJobs && (
-                <Button onClick={() => setOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Job Requirement
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
+       <Dashboardheader 
+          setOpen={setOpen}
+          setFilterOpen={setFilterOpen}
+          initialLoading={isLoading}
+          onRefresh={() => refetch()}
+          onDelete={handleDeleteSelected}
+          heading="Jobs"
+          buttonText="Add Job"
+          selectedCount={selectedRows.size}
+          showCreateButton={canModifyJobs}
+       />
         {/* Content */}
         <div className="flex-1 flex flex-col min-h-0">
           <div className="flex-1 overflow-auto" style={{ maxHeight: "calc(100vh - 30px)" }}>
             <Table>
               <TableHeader>
-                <Tableheader tableHeadArr={columsArr} className="sticky top-0 z-20 bg-white" />
+                <TableRow className="sticky top-0 z-20 bg-white">
+                  <TableHead className="w-12 px-4">
+                    <div className="flex items-center justify-center">
+                      <Input
+                        type="checkbox"
+                        checked={selectedRows.size > 0 && selectedRows.size === jobs.length}
+                        onChange={toggleSelectAll}
+                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        disabled={!canDeleteJobs}
+                      />
+                    </div>
+                  </TableHead>
+                  {columsArr.map((column) => (
+                    <TableHead key={column}>{column}</TableHead>
+                  ))}
+                </TableRow>
               </TableHeader>
               <TableBody>
                 {jobs.length > 0 ? (
                   jobs.map((job:any) => (
-                    <TableRow
-                      key={job._id}
-                      className="hover:bg-muted/50 cursor-pointer"
-                      onClick={() => router.push(`/jobs/${job._id}`)}
+                    <TableRow 
+                      key={job._id} 
+                      className={`${selectedRows.has(job._id) ? 'bg-indigo-50' : ''} hover:bg-indigo-50`}
                     >
+                      <TableCell className="w-12 px-4" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-center">
+                          <Input
+                            type="checkbox"
+                            checked={selectedRows.has(job._id)}
+                            onChange={() => toggleRowSelection(job._id)}
+                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            disabled={!canDeleteJobs}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      </TableCell>
                       <TableCell className="text-sm font-medium">{job.jobTitle}</TableCell>
                       <TableCell className="text-sm capitalize">{job.jobType}</TableCell>
                       <TableCell className="text-sm">{Array.isArray(job.location) ? job.location.join(", ") : job.location ?? ""}</TableCell>
                       <TableCell className="text-sm">{job.headcount}</TableCell>
                       <TableCell className="text-sm"
-                       onClick={(e)=>e.stopPropagation()}
+                        onClick={(e)=>e.stopPropagation()}
                       >
                         <JobStageBadge
                           stage={toJobStage(job.stage)}
@@ -387,6 +426,22 @@ export default function JobsPage() {
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         onConfirm={confirmStageChange}
+      />
+
+      <DeleteConfirmationDialog
+        isOpen={showDeleteDialog}
+        onClose={() => {
+          console.log('Dialog closed');
+          setShowDeleteDialog(false);
+        }}
+        onConfirm={() => {
+          console.log('Confirm button clicked - deleting', selectedRows.size, 'jobs');
+          confirmDeleteSelected();
+        }}
+        title="Delete Jobs"
+        description={`Are you sure you want to delete ${selectedRows.size} selected job(s)? This action cannot be undone.`}
+        confirmText={isDeleting ? 'Deleting...' : 'Delete'}
+        isDeleting={isDeleting}
       />
       {canModifyJobs && <CreateJobRequirementForm open={open} onOpenChange={setOpen} />}
     </>
