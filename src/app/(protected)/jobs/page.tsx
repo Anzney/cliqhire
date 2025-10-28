@@ -43,6 +43,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { DeleteConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Input } from "@/components/ui/input";
+import JobsFilter from "@/components/jobs/JobsFilter";
 
 const columsArr = [
   "Position Name",
@@ -94,6 +95,8 @@ export default function JobsPage() {
   const canDeleteJobs = isAdmin || finalPermissions.includes('JOBS_DELETE');
   const [open, setOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [filterPositionName, setFilterPositionName] = useState("");
+  const [filterJobOwner, setFilterJobOwner] = useState("");
   const [selectedStages, setSelectedStages] = useState<JobStage[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingStageChange, setPendingStageChange] = useState<{
@@ -123,12 +126,23 @@ export default function JobsPage() {
   console.log('All Jobs:', allJobs); // Debug log
   console.log('Selected Stages:', selectedStages); // Debug log
 
-  // Filter jobs by selected stages if any
-  if (selectedStages.length > 0) {
+  // Build owner options from unfiltered jobs
+  const allOwnerOptions: string[] = Array.from(
+    new Set((Array.isArray(allJobs) ? allJobs : []).map((j: any) => j.client).filter(Boolean))
+  );
+
+  // Apply filters
+  if (selectedStages.length > 0 || filterPositionName || filterJobOwner) {
+    const position = filterPositionName.trim().toLowerCase();
+    const owner = filterJobOwner.trim().toLowerCase();
     allJobs = allJobs.filter((job: any) => {
-      const jobStage = job.stage || job.jobStatus; // Try both possible field names
-      console.log('Job:', job._id, 'Stage:', jobStage); // Debug log
-      return selectedStages.includes(jobStage);
+      const jobStage = (job.stage || job.jobStatus) as JobStage | undefined;
+      const matchesStage = selectedStages.length === 0 || (jobStage ? selectedStages.includes(jobStage) : false);
+      const title = (job.jobTitle || "").toLowerCase();
+      const matchesTitle = position === "" || title.includes(position);
+      const jobOwnerVal = (job.client || "").toLowerCase();
+      const matchesOwner = owner === "" || jobOwnerVal.includes(owner);
+      return matchesStage && matchesTitle && matchesOwner;
     });
   }
   
@@ -334,6 +348,12 @@ export default function JobsPage() {
           buttonText="Add Job"
           selectedCount={selectedRows.size}
           showCreateButton={canModifyJobs}
+          isFilterActive={selectedStages.length > 0 || !!filterPositionName.trim() || !!filterJobOwner.trim()}
+          filterCount={
+            (selectedStages.length > 0 ? 1 : 0) +
+            (filterPositionName.trim() ? 1 : 0) +
+            (filterJobOwner.trim() ? 1 : 0)
+          }
        />
         {/* Content */}
         <div className="flex-1 flex flex-col min-h-0">
@@ -442,6 +462,23 @@ export default function JobsPage() {
         description={`Are you sure you want to delete ${selectedRows.size} selected job(s)? This action cannot be undone.`}
         confirmText={isDeleting ? 'Deleting...' : 'Delete'}
         isDeleting={isDeleting}
+      />
+      <JobsFilter
+        open={filterOpen}
+        onOpenChange={setFilterOpen}
+        positionName={filterPositionName}
+        onPositionNameChange={setFilterPositionName}
+        jobOwner={filterJobOwner}
+        onJobOwnerChange={setFilterJobOwner}
+        selectedStages={selectedStages}
+        onStagesChange={setSelectedStages}
+        jobOwners={allOwnerOptions}
+        onApply={() => setFilterOpen(false)}
+        onClear={() => {
+          setFilterPositionName("");
+          setFilterJobOwner("");
+          setSelectedStages([]);
+        }}
       />
       {canModifyJobs && <CreateJobRequirementForm open={open} onOpenChange={setOpen} />}
     </>

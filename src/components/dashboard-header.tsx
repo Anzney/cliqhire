@@ -1,6 +1,6 @@
 import React from 'react'
 import { Button } from "@/components/ui/button"
-import { Plus, SlidersHorizontal, RefreshCcw, MoreVertical, Trash2 } from 'lucide-react'
+import { Plus, Funnel, RefreshCcw, MoreVertical, Trash2 } from 'lucide-react'
 import { useState , useEffect } from 'react'
 
 type DashboardHeaderProps = {
@@ -15,6 +15,8 @@ type DashboardHeaderProps = {
   onRefresh?: () => void;
   selectedCount?: number;
   onDelete?: () => void;
+  isFilterActive?: boolean;
+  filterCount?: number;
 }
 
 const  Dashboardheader= ({
@@ -29,6 +31,8 @@ const  Dashboardheader= ({
     onRefresh,
     selectedCount = 0,
     onDelete,
+    isFilterActive = false,
+    filterCount = 0,
 }:DashboardHeaderProps)=> {
 
   return (
@@ -64,9 +68,13 @@ const  Dashboardheader= ({
                   {selectedCount > 0 ? `Delete (${selectedCount})` : 'Delete'}
                 </Button>
                 {showFilterButton && (
-                  <Button variant="outline" size="sm" onClick={() => setFilterOpen(true)}>
-                    <SlidersHorizontal className="h-4 w-4 mr-2" />
-                    Filters
+                  <Button 
+                    variant={isFilterActive ? "default" : "outline"} 
+                    size="sm" 
+                    onClick={() => setFilterOpen(true)}
+                  >
+                    <Funnel className="h-4 w-4 mr-2" />
+                    {isFilterActive ? `Filters (${filterCount})` : 'Filters'}
                   </Button>
                 )}
               </>

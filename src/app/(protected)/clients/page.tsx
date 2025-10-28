@@ -1,6 +1,6 @@
 "use client";
 import axios from "axios";
-import { useState, useMemo} from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Table, TableHead, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { CreateClientModal } from "@/components/create-client-modal/create-client-modal";
 import {
@@ -23,6 +23,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { DeleteConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import ClientsFilter from "@/components/clients/ClientsFilter";
 
 const columnsArr = [
   "", // Empty header for the checkbox column
@@ -78,6 +79,10 @@ export default function ClientsPage() {
   const canDeleteClients = isAdmin || finalPermissions.includes('CLIENTS_DELETE');
   const [open, setOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [filterName, setFilterName] = useState("");
+  const [filterIndustry, setFilterIndustry] = useState("");
+  const [filterLocation, setFilterLocation] = useState("");
+  const [filterStages, setFilterStages] = useState<Client["clientStage"][]>([]);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: "name", order: "asc" });
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 
@@ -260,16 +265,26 @@ export default function ClientsPage() {
   const { pagedClients, totalClientsCalc, totalPagesCalc } = useMemo(() => {
     let result: Client[] = isLoading ? [] : (allClients ?? []);
 
-    if (filters.name) {
-      result = result.filter((client: Client) =>
-        client.name.toLowerCase().includes(filters.name.toLowerCase()),
-      );
+    // Apply new sheet filters
+    const nameQ = filterName.trim().toLowerCase();
+    const indQ = filterIndustry.trim().toLowerCase();
+    const locQ = filterLocation.trim().toLowerCase();
+    const stagesQ = filterStages;
+
+    if (nameQ) {
+      result = result.filter((client: Client) => client.name.toLowerCase().includes(nameQ));
     }
-    if (filters.industry) {
-      result = result.filter((client: Client) =>
-        client.industry.toLowerCase().includes(filters.industry.toLowerCase()),
-      );
+    if (indQ) {
+      result = result.filter((client: Client) => client.industry.toLowerCase().includes(indQ));
     }
+    if (locQ) {
+      result = result.filter((client: Client) => (client.countryOfBusiness || "").toLowerCase().includes(locQ));
+    }
+    if (stagesQ.length > 0) {
+      result = result.filter((client: Client) => stagesQ.includes(client.clientStage));
+    }
+
+    // Keep existing maxAge text filter if used
     if (filters.maxAge) {
       const maxAgeMonths = parseInt(filters.maxAge);
       if (!isNaN(maxAgeMonths)) {
@@ -303,7 +318,23 @@ export default function ClientsPage() {
     const pagedClients = result.slice(startIndex, endIndex);
 
     return { pagedClients, totalClientsCalc, totalPagesCalc };
-  }, [sortConfig, filters, allClients, currentPage, pageSize, isLoading]);
+  }, [
+    sortConfig,
+    filters, // includes maxAge
+    allClients,
+    currentPage,
+    pageSize,
+    isLoading,
+    filterName,
+    filterIndustry,
+    filterLocation,
+    filterStages,
+  ]);
+
+  // Reset to first page when any filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterName, filterIndustry, filterLocation, filterStages, filters.maxAge]);
 
   // Handle page change (after totals derived)
   const handlePageChange = (newPage: number) => {
@@ -402,6 +433,8 @@ export default function ClientsPage() {
           onRefresh={() => refetch()}
           selectedCount={selectedRows.size}
           onDelete={handleDeleteSelected}
+          isFilterActive={Boolean(filterName || filterIndustry || filterLocation || filterStages.length > 0)}
+          filterCount={(filterName ? 1 : 0) + (filterIndustry ? 1 : 0) + (filterLocation ? 1 : 0) + (filterStages.length > 0 ? 1 : 0)}
         />
 
         {/* Table */}
@@ -508,43 +541,25 @@ export default function ClientsPage() {
           isDeleting={isDeleting}
         />
 
-        {/* Filters Dialog */}
-        <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Filters</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-2">
-            <div>
-              <Label htmlFor="name-filter">Client Name</Label>
-              <Input
-                id="name-filter"
-                placeholder="Enter client name"
-                value={filters.name}
-                onChange={(e) => setFilters({ ...filters, name: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="industry-filter">Client Industry</Label>
-              <Input
-                id="industry-filter"
-                placeholder="Enter client industry"
-                value={filters.industry}
-                onChange={(e) => setFilters({ ...filters, industry: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="age-filter">Client Age (months)</Label>
-              <Input
-                id="age-filter"
-                placeholder="Enter max age"
-                value={filters.maxAge}
-                onChange={(e) => setFilters({ ...filters, maxAge: e.target.value })}
-              />
-            </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <ClientsFilter
+          open={filterOpen}
+          onOpenChange={setFilterOpen}
+          name={filterName}
+          onNameChange={setFilterName}
+          industry={filterIndustry}
+          onIndustryChange={setFilterIndustry}
+          location={filterLocation}
+          onLocationChange={setFilterLocation}
+          selectedStages={filterStages as any}
+          onStagesChange={setFilterStages as any}
+          onApply={() => setFilterOpen(false)}
+          onClear={() => {
+            setFilterName("");
+            setFilterIndustry("");
+            setFilterLocation("");
+            setFilterStages([]);
+          }}
+        />
       </div>
     </>
   );
