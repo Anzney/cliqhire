@@ -356,7 +356,7 @@ export default function JobsPage() {
           }
        />
         {/* Content */}
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col min-h-0 ">
           <div className="flex-1 overflow-auto" style={{ maxHeight: "calc(100vh - 30px)" }}>
             <Table>
               <TableHeader>
@@ -382,7 +382,8 @@ export default function JobsPage() {
                   jobs.map((job:any) => (
                     <TableRow 
                       key={job._id} 
-                      className={`${selectedRows.has(job._id) ? 'bg-indigo-50' : ''} hover:bg-indigo-50`}
+                      className={`${selectedRows.has(job._id) ? 'bg-blue-50' : ''} hover:bg-muted/50 cursor-pointer`}
+                      onClick={() => router.push(`/jobs/${job._id}`)}
                     >
                       <TableCell className="w-12 px-4" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center">
@@ -451,11 +452,9 @@ export default function JobsPage() {
       <DeleteConfirmationDialog
         isOpen={showDeleteDialog}
         onClose={() => {
-          console.log('Dialog closed');
           setShowDeleteDialog(false);
         }}
         onConfirm={() => {
-          console.log('Confirm button clicked - deleting', selectedRows.size, 'jobs');
           confirmDeleteSelected();
         }}
         title="Delete Jobs"
