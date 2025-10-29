@@ -49,7 +49,7 @@ const ClientPaginationControls: React.FC<ClientPaginationControlsProps> = ({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {["1000", "10", "25", "50", "100", "200"].map((item) => (
+              {["1000", "12", "25", "50", "100", "200"].map((item) => (
                 <SelectItem key={item} value={item}>
                   {item}
                 </SelectItem>
