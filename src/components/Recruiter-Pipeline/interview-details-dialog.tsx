@@ -38,11 +38,16 @@ export function InterviewDetailsDialog({
   const [hour12, setHour12] = React.useState<string>("09");
   const [minute, setMinute] = React.useState<string>("00");
   const [period, setPeriod] = React.useState<"AM" | "PM">("AM");
+  const [interviewMode, setInterviewMode] = React.useState<"online" | "offline">("online");
   const [meetingLink, setMeetingLink] = React.useState<string>(initialMeetingLink);
   const [submitting, setSubmitting] = React.useState(false);
   const [dateOpen, setDateOpen] = React.useState(false);
 
-  const isValid = Boolean(date) && Boolean(hour12) && Boolean(minute) && Boolean(period) && meetingLink.trim().length > 0;
+  const isValid = Boolean(date)
+    && Boolean(hour12)
+    && Boolean(minute)
+    && Boolean(period)
+    && (interviewMode === "offline" || meetingLink.trim().length > 0);
 
   React.useEffect(() => {
     // Parse initialDateTime formatted like 'yyyy-MM-ddTHH:mm'
@@ -74,6 +79,10 @@ export function InterviewDetailsDialog({
 
   React.useEffect(() => {
     setMeetingLink(initialMeetingLink || "");
+    // If an initial meeting link is provided, default to online; otherwise keep current selection
+    if (initialMeetingLink && initialMeetingLink.trim().length > 0) {
+      setInterviewMode("online");
+    }
   }, [initialMeetingLink, isOpen]);
 
   const handleConfirm = async () => {
@@ -104,6 +113,18 @@ export function InterviewDetailsDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-2">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Interview Type <span className="text-red-500">*</span></label>
+            <Select value={interviewMode} onValueChange={(v) => setInterviewMode(v as any)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="online">Online Interview</SelectItem>
+                <SelectItem value="offline">Offline Interview</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Interview Date <span className="text-red-500">*</span></label>
             <Popover modal={true} open={dateOpen} onOpenChange={setDateOpen}>
@@ -183,16 +204,18 @@ export function InterviewDetailsDialog({
             </Popover>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Meeting Link <span className="text-red-500">*</span></label>
-            <Input
-              type="url"
-              placeholder="https://meet.google.com/..."
-              value={meetingLink}
-              onChange={(e) => setMeetingLink(e.target.value)}
-              required
-            />
-          </div>
+          {interviewMode === "online" && (
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Meeting Link <span className="text-red-500">*</span></label>
+              <Input
+                type="url"
+                placeholder="https://meet.google.com/..."
+                value={meetingLink}
+                onChange={(e) => setMeetingLink(e.target.value)}
+                required
+              />
+            </div>
+          )}
         </div>
 
         <DialogFooter>
