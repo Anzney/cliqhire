@@ -15,6 +15,8 @@ import { Label } from "@/components/ui/label";
 import { Lock, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { authService } from "@/services/authService";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 interface ChangePasswordDialogProps {
   open: boolean;
@@ -32,6 +34,9 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  const { logout } = useAuth();
+  const router = useRouter();
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,14 +62,29 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
       );
       
       if (result.success) {
-        // Only close the dialog and show success message if password change was successful
-        onOpenChange(false);
+        // Show success message
         toast.success("Password updated", {
-          description: "Your password has been changed successfully",
+          description: "Your password has been changed successfully. You will be logged out."
         });
         
         // Reset form
         resetForm();
+        
+        // Close the dialog
+        onOpenChange(false);
+        
+        // Add a small delay before logout to allow the toast to be seen
+        setTimeout(async () => {
+          try {
+            // Logout the user
+            await logout();
+            
+            // Redirect to login page
+            router.push('/login');
+          } catch (error) {
+            console.error('Error during logout after password change:', error);
+          }
+        }, 1500);
       } else {
         // Show error message from the API
         setPasswordError(result.message || "Failed to change password. Please check your current password.");
