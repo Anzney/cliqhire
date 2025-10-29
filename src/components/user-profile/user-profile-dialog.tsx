@@ -19,7 +19,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { 
@@ -27,18 +26,15 @@ import {
   User as UserIcon, 
   Mail, 
   Calendar, 
-  Lock, 
-  Shield, 
-  CheckCircle,
-  AlertCircle
+  Shield
 } from "lucide-react";
 import { authService, User } from "@/services/authService";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-// import { toast } from "@/components/ui/use-toast";
 import { toast } from "sonner";
+import { ChangePasswordDialog } from "./change-password-dialog";
 
 interface UserProfileDialogProps {
   open: boolean;
@@ -48,13 +44,6 @@ interface UserProfileDialogProps {
 export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps) {
   const [loading, setLoading] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
-  const [passwordError, setPasswordError] = useState("");
-  const [passwordLoading, setPasswordLoading] = useState(false);
   
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -73,49 +62,7 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
     }
   };
 
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPasswordError("");
-    
-    // Validate passwords
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordError("New passwords don't match");
-      return;
-    }
-    
-    if (passwordData.newPassword.length < 8) {
-      setPasswordError("Password must be at least 8 characters");
-      return;
-    }
-    
-    setPasswordLoading(true);
-    try {
-      // Call your auth service to change password
-      // This is a placeholder - implement the actual service call
-      await authService.changePassword(
-        passwordData.currentPassword,
-        passwordData.newPassword
-      );
-      
-      // Close the password dialog and show success message
-      setShowPasswordDialog(false);
-      toast.success("Password updated", {
-        description: "Your password has been changed successfully",
-      });
-      
-      // Reset form
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-    } catch (error) {
-      console.error('Error changing password:', error);
-      setPasswordError("Failed to change password. Please check your current password.");
-    } finally {
-      setPasswordLoading(false);
-    }
-  };
+  // Password dialog is now handled by the ChangePasswordDialog component
 
   const getUserInitials = (name: string) => {
     if (!name || typeof name !== 'string') {
@@ -245,79 +192,10 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
       </Dialog>
 
       {/* Password Change Dialog */}
-      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog} >
-        <DialogContent className=" max-w-[600px] h-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Lock className="h-5 w-5" /> Change Password
-            </DialogTitle>
-            <DialogDescription>
-              Update your password to keep your account secure
-            </DialogDescription>
-          </DialogHeader>
-          
-          <form onSubmit={handlePasswordChange}>
-            <div className="space-y-4 py-2">
-              {passwordError && (
-                <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4" />
-                  {passwordError}
-                </div>
-              )}
-              
-              <div className="space-y-2">
-                <Label htmlFor="current-password">Current Password</Label>
-                <Input 
-                  id="current-password" 
-                  type="password"
-                  value={passwordData.currentPassword}
-                  onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
-                <Input 
-                  id="new-password" 
-                  type="password"
-                  value={passwordData.newPassword}
-                  onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm New Password</Label>
-                <Input 
-                  id="confirm-password" 
-                  type="password"
-                  value={passwordData.confirmPassword}
-                  onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
-                  required
-                />
-              </div>
-            </div>
-            
-            <DialogFooter className="mt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowPasswordDialog(false)}
-                disabled={passwordLoading}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit"
-                disabled={passwordLoading}
-              >
-                {passwordLoading ? 'Updating...' : 'Update Password'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <ChangePasswordDialog 
+        open={showPasswordDialog} 
+        onOpenChange={setShowPasswordDialog} 
+      />
     </>
   );
 }
