@@ -268,6 +268,43 @@ class AuthService {
   }
 
   /**
+   * Change user password
+   */
+  async changePassword(currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+    try {
+      // Make API call to change password
+      const response = await api.post('/api/auth/change-password', {
+        currentPassword,
+        newPassword
+      });
+
+      return {
+        success: true,
+        message: 'Password changed successfully'
+      };
+    } catch (error) {
+      console.error('Error changing password:', error);
+      
+      // Handle axios errors
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+        const errorData = axiosError.response?.data as any;
+        
+        return {
+          success: false,
+          message: errorData?.message || axiosError.message || 'Failed to change password'
+        };
+      }
+      
+      // Handle other errors
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to change password'
+      };
+    }
+  }
+
+  /**
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {
