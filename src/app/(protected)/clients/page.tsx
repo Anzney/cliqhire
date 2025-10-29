@@ -1,12 +1,13 @@
 "use client";
 import axios from "axios";
-import { useState, useMemo} from "react";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { useState, useMemo, useEffect } from "react";
+import { Table, TableHead, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { CreateClientModal } from "@/components/create-client-modal/create-client-modal";
 import {
   updateClientStage,
   updateClientStageStatus,
   ClientStageStatus,
+  deleteClient,
 } from "@/services/clientService";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -20,8 +21,12 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Loader } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { DeleteConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import ClientsFilter from "@/components/clients/ClientsFilter";
 
-const columsArr = [
+const columnsArr = [
+  "", // Empty header for the checkbox column
   "Name",
   "Industry",
   "Location",
@@ -74,7 +79,101 @@ export default function ClientsPage() {
   const canDeleteClients = isAdmin || finalPermissions.includes('CLIENTS_DELETE');
   const [open, setOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [filterName, setFilterName] = useState("");
+  const [filterIndustry, setFilterIndustry] = useState("");
+  const [filterLocation, setFilterLocation] = useState("");
+  const [filterStages, setFilterStages] = useState<Client["clientStage"][]>([]);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: "name", order: "asc" });
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+
+  // Toggle row selection
+  const toggleRowSelection = (clientId: string) => {
+    if (!canDeleteClients) return; // Prevent selection if user can't delete
+    setSelectedRows(prevSelected => {
+      const newSelected = new Set(prevSelected);
+      if (newSelected.has(clientId)) {
+        newSelected.delete(clientId);
+      } else {
+        newSelected.add(clientId);
+      }
+      return newSelected;
+    });
+  };
+
+  // Toggle all rows selection
+  const toggleSelectAll = () => {
+    if (!canDeleteClients) return; // Prevent selection if user can't delete
+    if (selectedRows.size === pagedClients.length) {
+      setSelectedRows(new Set());
+    } else {
+      const newSelectedRows = new Set(selectedRows);
+      pagedClients.forEach((client: Client) => {
+        newSelectedRows.add(client.id);
+      });
+      setSelectedRows(newSelectedRows);
+    }
+  };
+
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteSelected = async () => {
+    if (selectedRows.size === 0 || !canDeleteClients) return;
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteSelected = async () => {
+    if (selectedRows.size === 0 || !canDeleteClients) return;
+    
+    setIsDeleting(true);
+    try {
+      // Delete all selected clients in parallel
+      await Promise.all(
+        Array.from(selectedRows).map((clientId) =>
+          deleteClient(clientId).catch(error => {
+            console.error(`Error deleting client ${clientId}:`, error);
+            throw error; // Re-throw to trigger the catch block
+          })
+        )
+      );
+      
+      // Refresh the client list after successful deletion
+      await refetch();
+      
+      // Clear the selection
+      setSelectedRows(new Set());
+      
+      // Show success message
+      toast.success(`${selectedRows.size} client(s) deleted successfully`);
+    } catch (error) {
+      console.error('Error deleting clients:', error);
+      toast.error('Failed to delete selected clients. Please try again.');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
+
+  const handleSort = (field: string) => {
+    if (field !== 'name') return; // Only allow sorting by name
+    
+    setSortConfig(prevConfig => {
+      // If clicking the same column, toggle the order
+      if (prevConfig.field === field) {
+        return {
+          field,
+          order: prevConfig.order === 'asc' ? 'desc' : 'asc'
+        };
+      }
+      // If clicking a different column, set to ascending by default
+      return {
+        field,
+        order: 'asc'
+      };
+    });
+    
+    setCurrentPage(1); // Reset to first page when sorting changes
+  };
   const [filters, setFilters] = useState<Filters>({
     name: "",
     industry: "",
@@ -93,7 +192,7 @@ export default function ClientsPage() {
   const [showStatusConfirmDialog, setShowStatusConfirmDialog] = useState(false);
   // Pagination states
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10); // Default to 10 per page
+  const [pageSize, setPageSize] = useState<number>(12); // Default to 10 per page
 
   // Hoisted function declaration to avoid temporal dead zone issues
   async function fetchClients(page = 1, size = pageSize): Promise<Client[]> {
@@ -122,7 +221,7 @@ export default function ClientsPage() {
     })) as Client[];
   }
 
-   const { data: allClients = [], isLoading , refetch } = useQuery<Client[]>({
+   const { data: allClients = [], isLoading, isRefetching, refetch } = useQuery<Client[]>({
     queryKey: ['clients', filters],
     queryFn: () => fetchClients(),
   })
@@ -166,16 +265,26 @@ export default function ClientsPage() {
   const { pagedClients, totalClientsCalc, totalPagesCalc } = useMemo(() => {
     let result: Client[] = isLoading ? [] : (allClients ?? []);
 
-    if (filters.name) {
-      result = result.filter((client: Client) =>
-        client.name.toLowerCase().includes(filters.name.toLowerCase()),
-      );
+    // Apply new sheet filters
+    const nameQ = filterName.trim().toLowerCase();
+    const indQ = filterIndustry.trim().toLowerCase();
+    const locQ = filterLocation.trim().toLowerCase();
+    const stagesQ = filterStages;
+
+    if (nameQ) {
+      result = result.filter((client: Client) => client.name.toLowerCase().includes(nameQ));
     }
-    if (filters.industry) {
-      result = result.filter((client: Client) =>
-        client.industry.toLowerCase().includes(filters.industry.toLowerCase()),
-      );
+    if (indQ) {
+      result = result.filter((client: Client) => client.industry.toLowerCase().includes(indQ));
     }
+    if (locQ) {
+      result = result.filter((client: Client) => (client.countryOfBusiness || "").toLowerCase().includes(locQ));
+    }
+    if (stagesQ.length > 0) {
+      result = result.filter((client: Client) => stagesQ.includes(client.clientStage));
+    }
+
+    // Keep existing maxAge text filter if used
     if (filters.maxAge) {
       const maxAgeMonths = parseInt(filters.maxAge);
       if (!isNaN(maxAgeMonths)) {
@@ -183,16 +292,21 @@ export default function ClientsPage() {
       }
     }
 
-    // Apply sorting
-    result.sort((a, b) => {
-      if (a[sortConfig.field] < b[sortConfig.field]) {
-        return sortConfig.order === "asc" ? -1 : 1;
-      }
-      if (a[sortConfig.field] > b[sortConfig.field]) {
-        return sortConfig.order === "asc" ? 1 : -1;
-      }
-      return 0;
-    });
+    // Apply sorting only if sortConfig is for name
+    if (sortConfig.field === 'name') {
+      result.sort((a, b) => {
+        const aValue = a.name.toLowerCase();
+        const bValue = b.name.toLowerCase();
+        
+        if (aValue < bValue) {
+          return sortConfig.order === "asc" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.order === "asc" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
 
     const totalClientsCalc = result.length;
     const totalPagesCalcRaw = Math.ceil(totalClientsCalc / pageSize);
@@ -204,7 +318,23 @@ export default function ClientsPage() {
     const pagedClients = result.slice(startIndex, endIndex);
 
     return { pagedClients, totalClientsCalc, totalPagesCalc };
-  }, [sortConfig, filters, allClients, currentPage, pageSize, isLoading]);
+  }, [
+    sortConfig,
+    filters, // includes maxAge
+    allClients,
+    currentPage,
+    pageSize,
+    isLoading,
+    filterName,
+    filterIndustry,
+    filterLocation,
+    filterStages,
+  ]);
+
+  // Reset to first page when any filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterName, filterIndustry, filterLocation, filterStages, filters.maxAge]);
 
   // Handle page change (after totals derived)
   const handlePageChange = (newPage: number) => {
@@ -296,19 +426,42 @@ export default function ClientsPage() {
          <Dashboardheader
           setOpen={setOpen}
           setFilterOpen={setFilterOpen}
-          initialLoading={isLoading}
+          initialLoading={isLoading || isRefetching}
           heading="Clients"
           buttonText="Create Client"
           showCreateButton={canModifyClients}
+          onRefresh={() => refetch()}
+          selectedCount={selectedRows.size}
+          onDelete={handleDeleteSelected}
+          isFilterActive={Boolean(filterName || filterIndustry || filterLocation || filterStages.length > 0)}
+          filterCount={(filterName ? 1 : 0) + (filterIndustry ? 1 : 0) + (filterLocation ? 1 : 0) + (filterStages.length > 0 ? 1 : 0)}
         />
 
         {/* Table */}
 
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col min-h-0 border-t">
           <div className="flex-1 overflow-auto" style={{ maxHeight: "calc(100vh - 30px)" }}>
             <Table>
               <TableHeader>
-                <Tableheader tableHeadArr={columsArr} className="sticky top-0 z-20 bg-white" />
+                <TableRow className="sticky top-0 z-20 bg-white">
+                  <TableHead className="w-12 px-4">
+                    <div className="flex items-center justify-center">
+                      <Input
+                        type="checkbox"
+                        checked={selectedRows.size > 0 && selectedRows.size === pagedClients.length}
+                        onChange={toggleSelectAll}
+                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                    </div>
+                  </TableHead>
+                  <TableHead className="min-w-[200px]">Name</TableHead>
+                  <TableHead className="min-w-[150px]">Industry</TableHead>
+                  <TableHead className="min-w-[150px]">Location</TableHead>
+                  <TableHead className="min-w-[120px]">Stage</TableHead>
+                  <TableHead className="min-w-[150px]">Stage Status</TableHead>
+                  <TableHead className="min-w-[120px]">Client Age</TableHead>
+                  <TableHead className="min-w-[100px]">Job Count</TableHead>
+                </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
@@ -330,13 +483,33 @@ export default function ClientsPage() {
                   </TableRow>
                 ) : (
                   pagedClients.map((client: Client) => (
-                    <ClientTableRow
+                    <TableRow 
                       key={client.id ?? client._id}
-                      client={client}
-                      onStageChange={handleStageChange}
-                      onStatusChange={handleStageStatusChange}
-                      getYearDifference={getYearDifference}
-                    />
+                      className={`hover:bg-muted/50 cursor-pointer ${selectedRows.has(client.id) ? 'bg-blue-50' : ''}`}
+                    >
+                      <TableCell className="px-4 py-2 w-12">
+                        <div className="flex items-center justify-center">
+                          <Input
+                            type="checkbox"
+                            checked={selectedRows.has(client.id)}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              toggleRowSelection(client.id);
+                            }}
+                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      </TableCell>
+                      <ClientTableRow
+                        key={client.id}
+                        client={client}
+                        onStageChange={handleStageChange}
+                        onStatusChange={handleStageStatusChange}
+                        getYearDifference={getYearDifference}
+                        canModify={canModifyClients}
+                      />
+                    </TableRow>
                   ))
                 )}
               </TableBody>
@@ -352,49 +525,42 @@ export default function ClientsPage() {
               handlePageChange={handlePageChange}
               clientsLength={allClients?.length}
             />
-
           </div>
         </div>
 
         {canModifyClients && <CreateClientModal open={open} onOpenChange={setOpen} />}
+        
+        <DeleteConfirmationDialog
+          isOpen={showDeleteDialog}
+          onClose={() => setShowDeleteDialog(false)}
+          onConfirm={confirmDeleteSelected}
+          title={`Delete ${selectedRows.size} client(s)?`}
+          description={`Are you sure you want to delete ${selectedRows.size} selected client(s)? This action cannot be undone.`}
+          confirmText={isDeleting ? "Deleting..." : "Delete"}
+          cancelText="Cancel"
+          isDeleting={isDeleting}
+        />
+
+        <ClientsFilter
+          open={filterOpen}
+          onOpenChange={setFilterOpen}
+          name={filterName}
+          onNameChange={setFilterName}
+          industry={filterIndustry}
+          onIndustryChange={setFilterIndustry}
+          location={filterLocation}
+          onLocationChange={setFilterLocation}
+          selectedStages={filterStages as any}
+          onStagesChange={setFilterStages as any}
+          onApply={() => setFilterOpen(false)}
+          onClear={() => {
+            setFilterName("");
+            setFilterIndustry("");
+            setFilterLocation("");
+            setFilterStages([]);
+          }}
+        />
       </div>
-      {/* Filters Modal */}
-      <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Filters</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div>
-              <Label htmlFor="name-filter">Client Name</Label>
-              <Input
-                id="name-filter"
-                placeholder="Enter client name"
-                value={filters.name}
-                onChange={(e) => setFilters({ ...filters, name: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="industry-filter">Client Industry</Label>
-              <Input
-                id="industry-filter"
-                placeholder="Enter client industry"
-                value={filters.industry}
-                onChange={(e) => setFilters({ ...filters, industry: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="age-filter">Client Age (months)</Label>
-              <Input
-                id="age-filter"
-                placeholder="Enter max age"
-                value={filters.maxAge}
-                onChange={(e) => setFilters({ ...filters, maxAge: e.target.value })}
-              />
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

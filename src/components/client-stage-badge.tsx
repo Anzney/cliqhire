@@ -22,10 +22,11 @@ interface ClientStageBadgeProps {
   id?: string;
   stage: keyof typeof stageColors;
   onStageChange?: (id: string, newStage: keyof typeof stageColors) => void;
+  disabled?: boolean;
 }
 
-export function ClientStageBadge({ id, stage, onStageChange }: ClientStageBadgeProps) {
-  if (!onStageChange) {
+export function ClientStageBadge({ id, stage, onStageChange, disabled = false }: ClientStageBadgeProps) {
+  if (!onStageChange || disabled) {
     return (
       <Badge variant="secondary" className={`${stageColors[stage]} border-none`}>
         {stage}
