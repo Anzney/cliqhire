@@ -1,21 +1,20 @@
 "use client";
 import { Candidate, candidateService } from "@/services/candidateService";
-import { Table, TableHeader, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { Table, TableHeader, TableBody, TableCell, TableRow, TableHead } from "@/components/ui/table";
 import { Loader } from "lucide-react";
 import { CandidatesEmptyState } from "../../../components/candidates/empty-states";
 // import Link from 'next/link'
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Dashboardheader from "@/components/dashboard-header";
-import Tableheader from "@/components/table-header";
 import { CreateCandidateModal } from "@/components/candidates/create-candidate-modal";
 import { CandidateStatusBadge } from "@/components/candidate-status-badge";
 import { toast } from "sonner";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import CandidatePaginationControls from "@/components/candidates/CandidatePaginationControls";
-import CandidateFiltersInline from "@/components/candidates/CandidateFiltersInline";
-import { CandidateFilterState } from "@/components/candidates/CandidateFilters";
 import { useAuth } from "@/contexts/AuthContext";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DeleteConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 const columsArr = [
   "Candidate Name",
@@ -45,28 +44,18 @@ export default function CandidatesPage() {
   });
   const candidates: Candidate[] = data?.candidates ?? [];
   const [open, setOpen] = useState(false);
-  const [filters, setFilters] = useState<CandidateFilterState>({ name: "", email: "", status: "" });
   // const [selected, setSelected] = useState("candidate");
 
   // Pagination state (client-side, similar to clients page)
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Derive filtered + paged candidates and totals (client-side)
   const { pagedCandidates, totalCandidatesCalc, totalPagesCalc } = useMemo(() => {
-    let result: Candidate[] = initialLoading ? [] : candidates;
-    // Apply filters
-    if (filters.name) {
-      const q = filters.name.toLowerCase();
-      result = result.filter((c) => (c.name || "").toLowerCase().includes(q));
-    }
-    if (filters.email) {
-      const q = filters.email.toLowerCase();
-      result = result.filter((c) => (c.email || "").toLowerCase().includes(q));
-    }
-    if (filters.status) {
-      result = result.filter((c) => (c.status || "").toLowerCase() === filters.status.toLowerCase());
-    }
+    const result: Candidate[] = initialLoading ? [] : candidates;
     const totalCandidatesCalc = result.length;
     const totalPagesCalcRaw = Math.ceil(totalCandidatesCalc / pageSize);
     const totalPagesCalc = totalPagesCalcRaw > 0 ? totalPagesCalcRaw : 1;
@@ -76,7 +65,60 @@ export default function CandidatesPage() {
     const pagedCandidates = result.slice(startIndex, endIndex);
 
     return { pagedCandidates, totalCandidatesCalc, totalPagesCalc };
-  }, [candidates, currentPage, pageSize, initialLoading, filters]);
+  }, [candidates, currentPage, pageSize, initialLoading]);
+
+  const toggleRowSelection = (candidateId: string) => {
+    if (!canDeleteCandidates) return;
+    setSelectedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(candidateId)) {
+        next.delete(candidateId);
+      } else {
+        next.add(candidateId);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (!canDeleteCandidates) return;
+    if (selectedRows.size === pagedCandidates.length) {
+      setSelectedRows(new Set());
+    } else {
+      const newSelected = new Set<string>();
+      pagedCandidates.forEach((c) => newSelected.add(c._id));
+      setSelectedRows(newSelected);
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedRows.size === 0 || !canDeleteCandidates) return;
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteSelected = async () => {
+    if (selectedRows.size === 0 || !canDeleteCandidates) return;
+    setIsDeleting(true);
+    try {
+      await Promise.all(
+        Array.from(selectedRows).map((candidateId) =>
+          candidateService.deleteCandidate(candidateId).catch((error) => {
+            console.error(`Error deleting candidate ${candidateId}:`, error);
+            throw error;
+          })
+        )
+      );
+      await refetch();
+      setSelectedRows(new Set());
+      toast.success(`${selectedRows.size} candidate(s) deleted successfully`);
+    } catch (error) {
+      console.error('Error deleting candidates:', error);
+      toast.error('Failed to delete selected candidates. Please try again.');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ candidateId, newStatus }: { candidateId: string; newStatus: string }) => {
@@ -127,9 +169,9 @@ export default function CandidatesPage() {
         buttonText="Create Candidate"
         showCreateButton={canModifyCandidates}
         showFilterButton={false}
-        rightContent={<CandidateFiltersInline filters={filters} onChange={setFilters} />}
+        selectedCount={selectedRows.size}
+        onDelete={handleDeleteSelected}
         onRefresh={() => {
-          // Ensure we reset to first page optionally if desired in future
           refetch();
         }}
       />
@@ -142,7 +184,21 @@ export default function CandidatesPage() {
         <div className="flex-1 overflow-auto" style={{ maxHeight: "calc(100vh - 30px)" }}>
           <Table>
             <TableHeader>
-              <Tableheader tableHeadArr={columsArr} className="sticky top-0 z-20 bg-white" />
+              <TableRow className="sticky top-0 z-20 bg-white">
+                <TableHead className="w-12 px-4">
+                  <div className="flex items-center justify-center">
+                    <Checkbox
+                      checked={selectedRows.size > 0 && selectedRows.size === pagedCandidates.length}
+                      onCheckedChange={() => toggleSelectAll()}
+                      className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
+                      disabled={!canDeleteCandidates}
+                    />
+                  </div>
+                </TableHead>
+                {columsArr.map((column) => (
+                  <TableHead key={column} className="text-xs uppercase text-muted-foreground font-medium">{column}</TableHead>
+                ))}
+              </TableRow>
             </TableHeader>
             <TableBody>
               {initialLoading ? (
@@ -166,7 +222,7 @@ export default function CandidatesPage() {
                 pagedCandidates.map((candidate) => (
                   <TableRow
                     key={candidate._id}
-                    className="cursor-pointer hover:bg-gray-100"
+                    className={`${selectedRows.has(candidate._id) ? 'bg-blue-50' : ''} cursor-pointer hover:bg-gray-100`}
                     onClick={(e) => {
                       // Don't navigate if clicking on the status badge
                       if (!(e.target as HTMLElement).closest(".candidate-status-badge")) {
@@ -174,6 +230,17 @@ export default function CandidatesPage() {
                       }
                     }}
                   >
+                    <TableCell className="w-12 px-4" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-center">
+                        <Checkbox
+                          checked={selectedRows.has(candidate._id)}
+                          onCheckedChange={() => toggleRowSelection(candidate._id)}
+                          className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
+                          disabled={!canDeleteCandidates}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </TableCell>
                     <TableCell className="text-sm font-medium">{candidate.name || "N/A"}</TableCell>
                     <TableCell className="text-sm">{candidate.email || "N/A"}</TableCell>
                     <TableCell className="text-sm">{candidate.phone || "N/A"}</TableCell>
@@ -225,6 +292,16 @@ export default function CandidatesPage() {
 
       {/* Content */}
       {/* {showSelectedOption()} */}
+
+      <DeleteConfirmationDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={confirmDeleteSelected}
+        title="Delete Candidates"
+        description={`Are you sure you want to delete ${selectedRows.size} selected candidate(s)? This action cannot be undone.`}
+        confirmText={isDeleting ? 'Deleting...' : 'Delete'}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 }

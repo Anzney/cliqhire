@@ -2,7 +2,12 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, ChevronsUpDown } from "lucide-react";
 import { EditFieldModal } from "./edit-field-modal";
-import { DateOfBirthDialog, MaritalStatusDialog, GenderDialog, StatusDialog } from "./personal-info-edit-dialog";
+import {
+  DateOfBirthDialog,
+  MaritalStatusDialog,
+  GenderDialog,
+  StatusDialog,
+} from "./personal-info-edit-dialog";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -16,37 +21,51 @@ const detailsFields = [
   { key: "experience", label: "Experience" },
   { key: "totalRelevantExperience", label: "Total Relevant Years of Experience" },
   { key: "noticePeriod", label: "Notice Period" },
-  { key: "skills", label: "Skills", render: (val: string[] | undefined) => val && val.length ? val.join(", ") : undefined },
-  { 
-    key: "resume", 
-    label: "Resume", 
-    render: (val: string | undefined) => val ? <a href={val} target="_blank" rel="noopener noreferrer" className="underline">View Resume</a> : undefined,
-    isUpload: true 
+  {
+    key: "skills",
+    label: "Skills",
+    render: (val: string[] | undefined) => (val && val.length ? val.join(", ") : undefined),
+  },
+  {
+    key: "resume",
+    label: "Resume",
+    render: (val: string | undefined) =>
+      val ? (
+        <a href={val} target="_blank" rel="noopener noreferrer" className="underline">
+          View Resume
+        </a>
+      ) : undefined,
+    isUpload: true,
   },
   { key: "status", label: "Status" },
   { key: "referredBy", label: "Referred By" },
   { key: "gender", label: "Gender" },
-  { key: "dateOfBirth", label: "Date of Birth", render: (val: string | undefined) => {
-    if (!val) return undefined;
-    try {
-      const date = new Date(val);
-      if (isNaN(date.getTime())) return val; // Return original value if invalid date
-      return date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-      });
-    } catch (error) {
-      return val; // Return original value if parsing fails
-    }
-  }},
+  {
+    key: "dateOfBirth",
+    label: "Date of Birth",
+    render: (val: string | undefined) => {
+      if (!val) return undefined;
+      try {
+        const date = new Date(val);
+        if (isNaN(date.getTime())) return val; // Return original value if invalid date
+        return date.toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+      } catch (error) {
+        return val; // Return original value if parsing fails
+      }
+    },
+  },
   { key: "maritalStatus", label: "Marital Status" },
   { key: "country", label: "Country" },
   { key: "nationality", label: "Nationality" },
   { key: "universityName", label: "University Name" },
   { key: "educationDegree", label: "Education Degree/Certificate", isTextarea: true },
   { key: "primaryLanguage", label: "Primary Language" },
-  { key: "willingToRelocate", label: "Are you willing to relocate?" },
+  { key: "willingToRelocate", label: "Are you willing to relocate ?" },
+  { key: "iqama", label: "Iqama is transferable ?" },
 ];
 
 // Split details fields into default visible and collapsible sections
@@ -57,31 +76,31 @@ const contactFields = [
   { key: "phone", label: "Phone Number" },
   { key: "email", label: "Email" },
   { key: "otherPhone", label: "Other Phone Number" },
-  { 
-    key: "linkedin", 
+  {
+    key: "linkedin",
     label: "LinkedIn",
     render: (val: string | undefined) => {
       if (!val) return undefined;
-      const isValidUrl = val.startsWith('http://') || val.startsWith('https://');
+      const isValidUrl = val.startsWith("http://") || val.startsWith("https://");
       if (isValidUrl) {
         return (
-          <a 
-            href={val} 
-            target="_blank" 
+          <a
+            href={val}
+            target="_blank"
             rel="noopener noreferrer"
             className="cursor-pointer hover:underline"
-            style={{ textDecoration: 'none' }}
+            style={{ textDecoration: "none" }}
           >
             {val}
           </a>
         );
       }
       return val;
-    }
+    },
   },
 ];
 
-const previousCompanyFields= [
+const previousCompanyFields = [
   { key: "previousCompanyName", label: "Current Company Name" },
   { key: "currentJobTitle", label: "Current Job Title" },
   { key: "reportingTo", label: "Reporting To" },
@@ -99,7 +118,11 @@ interface CandidateSummaryProps {
   canModify?: boolean;
 }
 
-const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: CandidateSummaryProps) => {
+const CandidateSummary = ({
+  candidate,
+  onCandidateUpdate,
+  canModify = true,
+}: CandidateSummaryProps) => {
   const [editField, setEditField] = useState<string | null>(null);
   const [localCandidate, setLocalCandidate] = useState(candidate);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
@@ -112,7 +135,7 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
     // LinkedIn validation
     if (fieldKey === "linkedin" && newValue && newValue.trim()) {
       const trimmedValue = newValue.trim();
-      if (!trimmedValue.startsWith('http://') && !trimmedValue.startsWith('https://')) {
+      if (!trimmedValue.startsWith("http://") && !trimmedValue.startsWith("https://")) {
         toast.error("LinkedIn URL must start with 'http://' or 'https://'");
         return;
       }
@@ -121,7 +144,7 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
     const updatedCandidate = { ...localCandidate, [fieldKey]: newValue };
     setLocalCandidate(updatedCandidate);
     setEditField(null);
-    
+
     // Notify parent component of the update
     if (onCandidateUpdate) {
       onCandidateUpdate(updatedCandidate, fieldKey);
@@ -156,19 +179,21 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
   const renderField = (field: any, fieldArray: any[]) => {
     const rawValue = localCandidate?.[field.key];
     const value = field.render ? field.render(rawValue) : rawValue;
-    const hasValue = rawValue !== undefined && rawValue !== null && rawValue !== '' && (!Array.isArray(rawValue) || rawValue.length > 0);
-    
+    const hasValue =
+      rawValue !== undefined &&
+      rawValue !== null &&
+      rawValue !== "" &&
+      (!Array.isArray(rawValue) || rawValue.length > 0);
+
     // Special handling for upload fields (like Resume)
     if (field.isUpload) {
       return (
         <div key={field.key} className="relative border-b last:border-b-0">
           <div className="flex items-center py-2">
-            <span className="text-sm text-muted-foreground w-1/3">
-              {field.label}
-            </span>
+            <span className="text-sm text-muted-foreground w-1/3">{field.label}</span>
             <div className="flex items-center justify-between flex-1">
-              <span className={`text-sm ${hasValue ? '' : 'text-muted-foreground'}`}>
-                {hasValue ? value : 'No Details'}
+              <span className={`text-sm ${hasValue ? "" : "text-muted-foreground"}`}>
+                {hasValue ? value : "No Details"}
               </span>
               {canModify && (
                 <Button
@@ -177,7 +202,8 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
                   className="h-8 flex items-center ml-2"
                   onClick={() => setShowUploadDialog(true)}
                 >
-                  <Pencil className="h-4 w-4 mr-2" />Edit
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit
                 </Button>
               )}
             </div>
@@ -185,18 +211,16 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
         </div>
       );
     }
-    
+
     // Special handling for personal information fields
-    if (field.key === 'dateOfBirth') {
+    if (field.key === "dateOfBirth") {
       return (
         <div key={field.key} className="relative border-b last:border-b-0">
           <div className="flex items-center py-2">
-            <span className="text-sm text-muted-foreground w-1/3">
-              {field.label}
-            </span>
+            <span className="text-sm text-muted-foreground w-1/3">{field.label}</span>
             <div className="flex items-center justify-between flex-1">
-              <span className={`text-sm ${hasValue ? '' : 'text-muted-foreground'}`}>
-                {hasValue ? value : 'No Details'}
+              <span className={`text-sm ${hasValue ? "" : "text-muted-foreground"}`}>
+                {hasValue ? value : "No Details"}
               </span>
               {canModify && (
                 <Button
@@ -205,7 +229,8 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
                   className="h-8 flex items-center ml-2"
                   onClick={() => setShowDateOfBirthDialog(true)}
                 >
-                  <Pencil className="h-4 w-4 mr-2" />Edit
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit
                 </Button>
               )}
             </div>
@@ -214,16 +239,14 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
       );
     }
 
-    if (field.key === 'maritalStatus') {
+    if (field.key === "maritalStatus") {
       return (
         <div key={field.key} className="relative border-b last:border-b-0">
           <div className="flex items-center py-2">
-            <span className="text-sm text-muted-foreground w-1/3">
-              {field.label}
-            </span>
+            <span className="text-sm text-muted-foreground w-1/3">{field.label}</span>
             <div className="flex items-center justify-between flex-1">
-              <span className={`text-sm ${hasValue ? '' : 'text-muted-foreground'}`}>
-                {hasValue ? value : 'No Details'}
+              <span className={`text-sm ${hasValue ? "" : "text-muted-foreground"}`}>
+                {hasValue ? value : "No Details"}
               </span>
               {canModify && (
                 <Button
@@ -232,7 +255,8 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
                   className="h-8 flex items-center ml-2"
                   onClick={() => setShowMaritalStatusDialog(true)}
                 >
-                  <Pencil className="h-4 w-4 mr-2" />Edit
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit
                 </Button>
               )}
             </div>
@@ -241,16 +265,14 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
       );
     }
 
-    if (field.key === 'gender') {
+    if (field.key === "gender") {
       return (
         <div key={field.key} className="relative border-b last:border-b-0">
           <div className="flex items-center py-2">
-            <span className="text-sm text-muted-foreground w-1/3">
-              {field.label}
-            </span>
+            <span className="text-sm text-muted-foreground w-1/3">{field.label}</span>
             <div className="flex items-center justify-between flex-1">
-              <span className={`text-sm ${hasValue ? '' : 'text-muted-foreground'}`}>
-                {hasValue ? value : 'No Details'}
+              <span className={`text-sm ${hasValue ? "" : "text-muted-foreground"}`}>
+                {hasValue ? value : "No Details"}
               </span>
               {canModify && (
                 <Button
@@ -259,7 +281,8 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
                   className="h-8 flex items-center ml-2"
                   onClick={() => setShowGenderDialog(true)}
                 >
-                  <Pencil className="h-4 w-4 mr-2" />Edit
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit
                 </Button>
               )}
             </div>
@@ -268,16 +291,14 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
       );
     }
 
-    if (field.key === 'status') {
+    if (field.key === "status") {
       return (
         <div key={field.key} className="relative border-b last:border-b-0">
           <div className="flex items-center py-2">
-            <span className="text-sm text-muted-foreground w-1/3">
-              {field.label}
-            </span>
+            <span className="text-sm text-muted-foreground w-1/3">{field.label}</span>
             <div className="flex items-center justify-between flex-1">
-              <span className={`text-sm ${hasValue ? '' : 'text-muted-foreground'}`}>
-                {hasValue ? value : 'No Details'}
+              <span className={`text-sm ${hasValue ? "" : "text-muted-foreground"}`}>
+                {hasValue ? value : "No Details"}
               </span>
               {canModify && (
                 <Button
@@ -286,7 +307,8 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
                   className="h-8 flex items-center ml-2"
                   onClick={() => setShowStatusDialog(true)}
                 >
-                  <Pencil className="h-4 w-4 mr-2" />Edit
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit
                 </Button>
               )}
             </div>
@@ -294,15 +316,13 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
         </div>
       );
     }
-    
+
     // If it's a textarea field, render it differently
     if (field.isTextarea) {
       return (
         <div key={field.key} className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-muted-foreground">
-              {field.label}
-            </span>
+            <span className="text-sm font-medium text-muted-foreground">{field.label}</span>
             {canModify && (
               <Button
                 variant="outline"
@@ -310,12 +330,13 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
                 className="h-8 flex items-center"
                 onClick={() => setEditField(field.key)}
               >
-                <Pencil className="h-4 w-4 mr-2" />Edit
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit
               </Button>
             )}
           </div>
           <Textarea
-            value={hasValue ? rawValue : ''}
+            value={hasValue ? rawValue : ""}
             placeholder="No Details"
             className="min-h-[80px] resize-none"
             readOnly
@@ -325,7 +346,7 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
               open={editField === field.key}
               onClose={() => setEditField(null)}
               fieldName={field.label}
-              currentValue={typeof rawValue === 'string' ? rawValue : ''}
+              currentValue={typeof rawValue === "string" ? rawValue : ""}
               onSave={(val: string) => handleSave(field.key, val)}
               isTextarea={true}
             />
@@ -333,16 +354,14 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
         </div>
       );
     }
-    
+
     return (
       <div key={field.key} className="relative border-b last:border-b-0">
         <div className="flex items-center py-2">
-          <span className="text-sm text-muted-foreground w-1/3">
-            {field.label}
-          </span>
+          <span className="text-sm text-muted-foreground w-1/3">{field.label}</span>
           <div className="flex items-center justify-between flex-1">
-            <span className={`text-sm ${hasValue ? '' : 'text-muted-foreground'}`}>
-              {hasValue ? value : 'No Details'}
+            <span className={`text-sm ${hasValue ? "" : "text-muted-foreground"}`}>
+              {hasValue ? value : "No Details"}
             </span>
             {canModify && (
               <>
@@ -352,13 +371,20 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
                   className="h-8 flex items-center ml-2"
                   onClick={() => setEditField(field.key)}
                 >
-                  <Pencil className="h-4 w-4 mr-2" />Edit
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit
                 </Button>
                 <EditFieldModal
                   open={editField === field.key}
                   onClose={() => setEditField(null)}
                   fieldName={field.label}
-                  currentValue={typeof rawValue === 'string' ? rawValue : Array.isArray(rawValue) ? rawValue.join(', ') : ''}
+                  currentValue={
+                    typeof rawValue === "string"
+                      ? rawValue
+                      : Array.isArray(rawValue)
+                        ? rawValue.join(", ")
+                        : ""
+                  }
                   onSave={(val: string) => handleSave(field.key, val)}
                 />
               </>
@@ -371,17 +397,17 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
 
   const renderSkillField = (field: any) => {
     const rawValue = localCandidate?.[field.key];
-    const hasValue = rawValue !== undefined && rawValue !== null && 
-      (Array.isArray(rawValue) ? rawValue.length > 0 : rawValue !== '');
-    
+    const hasValue =
+      rawValue !== undefined &&
+      rawValue !== null &&
+      (Array.isArray(rawValue) ? rawValue.length > 0 : rawValue !== "");
+
     // Display value: if array, join with commas; if string, use as is
-    const displayValue = Array.isArray(rawValue) ? rawValue.join(', ') : rawValue;
+    const displayValue = Array.isArray(rawValue) ? rawValue.join(", ") : rawValue;
     return (
       <div key={field.key} className="mb-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-muted-foreground">
-            {field.label}
-          </span>
+          <span className="text-sm font-medium text-muted-foreground">{field.label}</span>
           {canModify && (
             <Button
               variant="outline"
@@ -389,12 +415,13 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
               className="h-8 flex items-center"
               onClick={() => setEditField(field.key)}
             >
-              <Pencil className="h-4 w-4 mr-2" />Edit
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit
             </Button>
           )}
         </div>
         <Textarea
-          value={hasValue ? displayValue : ''}
+          value={hasValue ? displayValue : ""}
           placeholder="No Details"
           className="min-h-[80px] resize-none"
           readOnly
@@ -404,10 +431,15 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
             open={editField === field.key}
             onClose={() => setEditField(null)}
             fieldName={field.label}
-            currentValue={displayValue || ''}
+            currentValue={displayValue || ""}
             onSave={(val: string) => {
               // Convert comma-separated string back to array
-              const arrayValue = val.trim() ? val.split(',').map(item => item.trim()).filter(item => item) : [];
+              const arrayValue = val.trim()
+                ? val
+                    .split(",")
+                    .map((item) => item.trim())
+                    .filter((item) => item)
+                : [];
               handleSave(field.key, arrayValue);
             }}
             isTextarea={true}
@@ -440,12 +472,14 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
           {/* Collapsible additional fields */}
           <CollapsibleContent className="px-4 pb-4">
             <div className="space-y-3">
-              {collapsibleDetailsFields.map((field) => renderField(field, collapsibleDetailsFields))}
+              {collapsibleDetailsFields.map((field) =>
+                renderField(field, collapsibleDetailsFields),
+              )}
             </div>
           </CollapsibleContent>
         </Collapsible>
       </div>
-      
+
       <div className="space-y-6">
         {/* Contact Info Section */}
         <Collapsible className="rounded-lg border shadow-sm">
@@ -482,7 +516,7 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
             </div>
           </CollapsibleContent>
         </Collapsible>
-        
+
         {/* Salary Range Section */}
         <Collapsible className="rounded-lg border shadow-sm">
           <div className="flex items-center justify-between p-4">
@@ -502,7 +536,7 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
             />
           </CollapsibleContent>
         </Collapsible>
-        
+
         {/* Skill Section */}
         <Collapsible className="rounded-lg border shadow-sm">
           <div className="flex items-center justify-between p-4">
@@ -515,12 +549,10 @@ const CandidateSummary = ({ candidate, onCandidateUpdate, canModify = true }: Ca
             </CollapsibleTrigger>
           </div>
           <CollapsibleContent className="px-4 pb-4">
-            <div className="space-y-3">
-              {skillFields.map((field) => renderSkillField(field))}
-            </div>
+            <div className="space-y-3">{skillFields.map((field) => renderSkillField(field))}</div>
           </CollapsibleContent>
         </Collapsible>
-        
+
         {/* Candidate Team Info Section */}
         {/* <CandidateTeamInfoSection
           candidateDetails={localCandidate}

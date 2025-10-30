@@ -177,6 +177,7 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
           { key: "educationDegree", label: "Education Degree/Certificate" },
           { key: "primaryLanguage", label: "Primary Language" },
           { key: "willingToRelocate", label: "Are you willing to relocate?" },
+          { key: "iqama", label: "Iqama is transferable ?" },
           { key: "phone", label: "Phone Number" },
           { key: "email", label: "Email" },
           { key: "otherPhone", label: "Other Phone Number" },
