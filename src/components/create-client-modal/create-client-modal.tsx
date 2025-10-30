@@ -14,7 +14,7 @@ import { ClientInformationTab } from "./ClientInformationTab";
 import { ContactDetailsTab } from "./ContactDetailsTab";
 import { ContractInformationTab } from "./ContractInformationTab";
 import { DocumentsTab } from "@/components/create-client-modal/DocumentsTab";
-import { ContactModal } from "@/components/create-client-modal/ContactModal";
+import { AddContactModal } from "@/components/clients/modals/add-contact-modal";
 import { PrimaryContact, LocationSuggestion } from "@/components/create-client-modal/type";
 import axios from "axios";
 import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
@@ -100,6 +100,31 @@ export function CreateClientModal({
     } catch (error) {
       return false;
     }
+  };
+
+  // Bridge handler to accept AddContactModal's payload and map to PrimaryContact
+  const handleAddContactFromModal = (contact: {
+    firstName: string;
+    lastName: string;
+    gender: string;
+    email: string;
+    phone: string;
+    countryCode: string;
+    position: string; // map to designation
+    linkedin: string;
+  }) => {
+    const mapped: PrimaryContact = {
+      firstName: contact.firstName,
+      lastName: contact.lastName,
+      gender: contact.gender,
+      email: contact.email,
+      phone: contact.phone,
+      countryCode: contact.countryCode || "+966",
+      designation: contact.position || "",
+      linkedin: contact.linkedin,
+      isPrimary: true,
+    };
+    handleAddContact(mapped);
   };
 
   // Watch form values and validate current tab
@@ -523,12 +548,11 @@ export function CreateClientModal({
         </div>
 
         {isContactModalOpen && (
-          <ContactModal
-            isOpen={isContactModalOpen}
+          <AddContactModal
+            open={isContactModalOpen}
             onOpenChange={setIsContactModalOpen}
-            newContact={primaryContact}
-            setNewContact={setPrimaryContact}
-            handleAddContact={handleAddContact}
+            onAdd={handleAddContactFromModal}
+            positionOptions={[]}
           />
         )}
       </DialogContent>
