@@ -12,6 +12,9 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { AddPositionDialog } from "@/components/common/add-position-dialog";
 import { getPositions } from "@/services/positionService";
 import { useQuery } from "@tanstack/react-query";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { ChevronDown } from "lucide-react";
 
 interface AddContactModalProps {
   open: boolean;
@@ -57,6 +60,7 @@ export function AddContactModal({ open, onOpenChange, onAdd, countryCodes, posit
   const [isAddPositionOpen, setIsAddPositionOpen] = useState(false);
   // Track positions user adds locally during this session
   const [addedPositions, setAddedPositions] = useState<string[]>([]);
+  const [positionPopoverOpen, setPositionPopoverOpen] = useState(false);
 
   // Sync formData with initialValues when modal opens or initialValues change
   useEffect(() => {
@@ -181,21 +185,36 @@ export function AddContactModal({ open, onOpenChange, onAdd, countryCodes, posit
                 <Label htmlFor="position">Position</Label>
                 <Button type="button" variant="ghost" size="sm" onClick={() => setIsAddPositionOpen(true)}>Add new</Button>
               </div>
-              <Select
-                value={formData.position}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, position: value }))}
-              >
-                <SelectTrigger id="position">
-                  <SelectValue placeholder="Select position" />
-                </SelectTrigger>
-                <SelectContent>
-                  {computedOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={positionPopoverOpen} onOpenChange={setPositionPopoverOpen} modal={true}>
+                <PopoverTrigger asChild>
+                  <Button type="button" variant="outline" className="w-full justify-between">
+                    {formData.position || "Select position"}
+                    <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0 w-[--radix-popover-trigger-width] min-w-[260px] h-72 overflow-hidden" align="start">
+                  <Command className="grid grid-rows-[auto,1fr] min-h-0">
+                    <CommandInput placeholder="Search positions..." />
+                    <CommandList className="overflow-y-auto overscroll-contain">
+                      <CommandEmpty>No positions found.</CommandEmpty>
+                      <CommandGroup>
+                        {computedOptions.map((option) => (
+                          <CommandItem
+                            key={option.value}
+                            value={option.label}
+                            onSelect={() => {
+                              setFormData(prev => ({ ...prev, position: option.value }));
+                              setPositionPopoverOpen(false);
+                            }}
+                          >
+                            {option.label}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <AddPositionDialog
                 open={isAddPositionOpen}
                 onOpenChange={setIsAddPositionOpen}
