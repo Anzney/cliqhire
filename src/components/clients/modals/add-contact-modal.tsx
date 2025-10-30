@@ -4,13 +4,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import '@/styles/phone-input-override.css';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { AddPositionDialog } from "@/components/common/add-position-dialog";
 import { getPositions } from "@/services/positionService";
+import { useQuery } from "@tanstack/react-query";
 
 interface AddContactModalProps {
   open: boolean;
@@ -54,7 +55,8 @@ export function AddContactModal({ open, onOpenChange, onAdd, countryCodes, posit
     linkedin: initialValues?.linkedin ?? "",
   });
   const [isAddPositionOpen, setIsAddPositionOpen] = useState(false);
-  const [localPositionOptions, setLocalPositionOptions] = useState(positionOptions ?? []);
+  // Track positions user adds locally during this session
+  const [addedPositions, setAddedPositions] = useState<string[]>([]);
 
   // Sync formData with initialValues when modal opens or initialValues change
   useEffect(() => {
@@ -72,26 +74,19 @@ export function AddContactModal({ open, onOpenChange, onAdd, countryCodes, posit
     }
   }, [open, initialValues]);
 
-  // Keep local options in sync with props when they change
-  useEffect(() => {
-    setLocalPositionOptions(positionOptions ?? []);
-  }, [positionOptions]);
+  // Fetch positions via React Query when modal is open
+  const { data: positionsData } = useQuery({
+    queryKey: ["positions"],
+    queryFn: getPositions,
+    enabled: open,
+  });
 
-  // Load positions from API when the modal opens
-  useEffect(() => {
-    const loadPositions = async () => {
-      try {
-        const data = await getPositions();
-        const opts = (data || []).map((p: { name: string }) => ({ value: p.name, label: p.name }));
-        setLocalPositionOptions(opts);
-      } catch (err) {
-        console.error("Failed to load positions", err);
-      }
-    };
-    if (open) {
-      loadPositions();
-    }
-  }, [open]);
+  // Compute final options = API names + locally added (unique)
+  const computedOptions = useMemo(() => {
+    const apiNames = (positionsData ?? []).map((p: { name: string }) => p.name);
+    const uniqueNames = Array.from(new Set([...apiNames, ...addedPositions]));
+    return uniqueNames.map((name) => ({ value: name, label: name }));
+  }, [positionsData, addedPositions]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -194,7 +189,7 @@ export function AddContactModal({ open, onOpenChange, onAdd, countryCodes, posit
                   <SelectValue placeholder="Select position" />
                 </SelectTrigger>
                 <SelectContent>
-                  {localPositionOptions.map((option) => (
+                  {computedOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -205,14 +200,9 @@ export function AddContactModal({ open, onOpenChange, onAdd, countryCodes, posit
                 open={isAddPositionOpen}
                 onOpenChange={setIsAddPositionOpen}
                 title="Add Position"
-                existingNames={localPositionOptions.map(o => o.label)}
+                existingNames={computedOptions.map(o => o.label)}
                 onCreated={(name) => {
-                  const newOption = { value: name, label: name };
-                  setLocalPositionOptions((prev) => {
-                    const exists = prev.some(p => p.value.toLowerCase() === name.toLowerCase());
-                    if (exists) return prev;
-                    return [...prev, newOption];
-                  });
+                  setAddedPositions((prev) => prev.includes(name) ? prev : [...prev, name]);
                   setFormData(prev => ({ ...prev, position: name }));
                 }}
               />
