@@ -87,36 +87,43 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden">
-          <Card className="border-0 shadow-none">
-            <CardHeader className="bg-primary/5 pb-4">
-              <div className="flex justify-between items-start">
+        <DialogContent className="sm:max-w-[560px] md:max-w-[680px] p-0 overflow-hidden rounded-2xl">
+          <Card className="border-0 shadow-xl">
+            <CardHeader className="bg-white pb-4 px-6 pt-6 border-b">
+              <div className="flex justify-between items-start gap-4">
                 <div>
-                  <CardTitle>User Profile</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-2xl tracking-tight">User Profile</CardTitle>
+                  <CardDescription className="text-muted-foreground">
                     Your account information
                   </CardDescription>
                 </div>
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                  <span>Active</span>
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-green-50 text-green-700 px-3 py-1 text-xs font-medium border border-green-100">
+                    <span className="h-2.5 w-2.5 rounded-full bg-green-500"></span>
+                    Active
+                  </span>
+                </div>
               </div>
             </CardHeader>
             
             <CardContent className="pt-6 px-6">
               <div className="space-y-6">
                 {/* User Avatar and Basic Info */}
-                <div className="flex items-center space-x-4">
-                  <Avatar className="h-16 w-16 border-2 border-primary/20">
-                    <AvatarFallback className="text-lg bg-primary/10 text-primary">
-                      {user ? getUserInitials(user.name) : 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="space-y-1">
-                    <h3 className="text-lg font-semibold">{user?.name || 'User Name'}</h3>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <Mail className="h-3 w-3" />
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <Avatar className="h-20 w-20 ring-2 ring-primary/20">
+                      <AvatarFallback className="text-xl bg-primary/10 text-primary">
+                        {user ? getUserInitials(user.name) : 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-white flex items-center justify-center">
+                      <span className="h-3 w-3 rounded-full bg-green-500" />
+                    </span>
+                  </div>
+                  <div className="space-y-1 min-w-0">
+                    <h3 className="text-xl font-semibold truncate">{user?.name || 'User Name'}</h3>
+                    <p className="text-sm text-muted-foreground flex items-center gap-2 truncate">
+                      <Mail className="h-4 w-4" />
                       {user?.email || 'user@example.com'}
                     </p>
                   </div>
@@ -125,40 +132,41 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
                 <Separator />
 
                 {/* User Details */}
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-primary/10 p-2 rounded-full">
-                      <UserIcon className="h-4 w-4 text-primary" />
+                <div className="grid gap-4">
+                  {/* Team Role Card */}
+                  <div className="flex items-center gap-4 rounded-2xl border border-blue-100 bg-blue-50/60 px-4 py-4 shadow-sm">
+                    <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-blue-600 text-white">
+                      <UserIcon className="h-5 w-5" />
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">Team Role</p>
-                      <p className="text-sm text-muted-foreground">{user?.role || 'Not provided'}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-semibold tracking-widest text-blue-700 uppercase">Team Role</p>
+                      <p className="text-base font-semibold text-blue-900 truncate">{user?.role || 'Not provided'}</p>
                     </div>
                   </div>
 
+                  {/* Member Since Card */}
                   {user?.createdAt && (
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-primary/10 p-2 rounded-full">
-                        <Calendar className="h-4 w-4 text-primary" />
+                    <div className="flex items-center gap-4 rounded-2xl border border-purple-100 bg-purple-50/60 px-4 py-4 shadow-sm">
+                      <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-purple-600 text-white">
+                        <Calendar className="h-5 w-5" />
                       </div>
-                      <div>
-                        <p className="text-sm font-medium">Member Since</p>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDate(user.createdAt)}
-                        </p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-semibold tracking-widest text-purple-700 uppercase">Member Since</p>
+                        <p className="text-base font-semibold text-purple-900 truncate">{formatDate(user.createdAt)}</p>
                       </div>
                     </div>
                   )}
-                  
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-primary/10 p-2 rounded-full">
-                      <Shield className="h-4 w-4 text-primary" />
+
+                  {/* Account Security Card */}
+                  <div className="flex items-center gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 shadow-sm">
+                    <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-amber-500 text-white">
+                      <Shield className="h-5 w-5" />
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">Account Security</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-semibold tracking-widest text-amber-700 uppercase">Account Security</p>
                       <Button 
                         variant="link" 
-                        className="p-0 h-auto text-sm text-primary"
+                        className="p-0 h-auto text-sm text-amber-900"
                         onClick={() => setShowPasswordDialog(true)}
                       >
                         Change Password
@@ -169,19 +177,18 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
               </div>
             </CardContent>
             
-            <CardFooter className="flex-col sm:flex-row gap-2 bg-muted/20 p-4">
+            <CardFooter className="flex-col sm:flex-row gap-3 bg-muted/30 p-5 border-t">
               <Button
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto rounded-xl shadow-sm"
               >
                 Close
               </Button>
               <Button
-                variant="destructive"
                 onClick={handleLogout}
                 disabled={loading}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-red-500 to-rose-500 text-white hover:from-red-600 hover:to-rose-600"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 {loading ? 'Logging out...' : 'Logout'}

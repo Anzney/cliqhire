@@ -24,6 +24,8 @@ const UserAccess = () => {
         initialLoading={initialLoading}
         heading="User Management"
         buttonText="Add Team Member"
+        showFilterButton={false}
+        rightContent={<></>}
       />
 
       {/* Tabbed Interface */}
