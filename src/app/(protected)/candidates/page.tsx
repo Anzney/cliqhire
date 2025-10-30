@@ -109,7 +109,9 @@ export default function CandidatesPage() {
       setSelectedRows(new Set());
     } else {
       const newSelected = new Set<string>();
-      pagedCandidates.forEach((c) => newSelected.add(c._id));
+      pagedCandidates.forEach((c) => {
+        if (c._id) newSelected.add(c._id);
+      });
       setSelectedRows(newSelected);
     }
   };
@@ -247,7 +249,7 @@ export default function CandidatesPage() {
                 pagedCandidates.map((candidate) => (
                   <TableRow
                     key={candidate._id}
-                    className={`${selectedRows.has(candidate._id) ? 'bg-blue-50' : ''} cursor-pointer hover:bg-gray-100`}
+                    className={`${candidate._id && selectedRows.has(candidate._id) ? 'bg-blue-50' : ''} cursor-pointer hover:bg-gray-100`}
                     onClick={(e) => {
                       // Don't navigate if clicking on the status badge
                       if (!(e.target as HTMLElement).closest(".candidate-status-badge")) {
@@ -258,8 +260,8 @@ export default function CandidatesPage() {
                     <TableCell className="w-12 px-4" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-center">
                         <Checkbox
-                          checked={selectedRows.has(candidate._id)}
-                          onCheckedChange={() => toggleRowSelection(candidate._id)}
+                          checked={candidate._id ? selectedRows.has(candidate._id) : false}
+                          onCheckedChange={() => candidate._id && toggleRowSelection(candidate._id)}
                           className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
                           disabled={!canDeleteCandidates}
                           onClick={(e) => e.stopPropagation()}
