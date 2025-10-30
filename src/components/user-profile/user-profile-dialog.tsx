@@ -87,7 +87,7 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[560px] md:max-w-[680px] p-0 overflow-hidden rounded-2xl">
+        <DialogContent className="sm:max-w-[400px] md:max-w-[500px] p-0 overflow-hidden rounded-2xl">
           <Card className="border-0 shadow-xl">
             <CardHeader className="bg-white pb-4 px-6 pt-6 border-b">
               <div className="flex justify-between items-start gap-4">

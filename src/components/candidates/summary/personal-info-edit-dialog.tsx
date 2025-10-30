@@ -126,8 +126,9 @@ interface MaritalStatusDialogProps {
 }
 
 const maritalStatusOptions = [
-  { value: "single", label: "Single" },
-  { value: "married", label: "Married" },
+  { value: "Single", label: "Single" },
+  { value: "Married", label: "Married" },
+  { value: "Divorced", label: "Divorced" },
 ];
 
 export function MaritalStatusDialog({

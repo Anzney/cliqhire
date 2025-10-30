@@ -4,11 +4,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import '@/styles/phone-input-override.css';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { AddPositionDialog } from "@/components/common/add-position-dialog";
+import { getPositions } from "@/services/positionService";
+import { useQuery } from "@tanstack/react-query";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { ChevronDown } from "lucide-react";
 
 interface AddContactModalProps {
   open: boolean;
@@ -51,6 +57,10 @@ export function AddContactModal({ open, onOpenChange, onAdd, countryCodes, posit
     position: initialValues?.position ?? "",
     linkedin: initialValues?.linkedin ?? "",
   });
+  const [isAddPositionOpen, setIsAddPositionOpen] = useState(false);
+  // Track positions user adds locally during this session
+  const [addedPositions, setAddedPositions] = useState<string[]>([]);
+  const [positionPopoverOpen, setPositionPopoverOpen] = useState(false);
 
   // Sync formData with initialValues when modal opens or initialValues change
   useEffect(() => {
@@ -68,6 +78,19 @@ export function AddContactModal({ open, onOpenChange, onAdd, countryCodes, posit
     }
   }, [open, initialValues]);
 
+  // Fetch positions via React Query when modal is open
+  const { data: positionsData } = useQuery({
+    queryKey: ["positions"],
+    queryFn: getPositions,
+    enabled: open,
+  });
+
+  // Compute final options = API names + locally added (unique)
+  const computedOptions = useMemo(() => {
+    const apiNames = (positionsData ?? []).map((p: { name: string }) => p.name);
+    const uniqueNames = Array.from(new Set([...apiNames, ...addedPositions]));
+    return uniqueNames.map((name) => ({ value: name, label: name }));
+  }, [positionsData, addedPositions]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,22 +181,50 @@ export function AddContactModal({ open, onOpenChange, onAdd, countryCodes, posit
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="position">Position</Label>
-              <Select
-                value={formData.position}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, position: value }))}
-              >
-                <SelectTrigger id="position">
-                  <SelectValue placeholder="Select position" />
-                </SelectTrigger>
-                <SelectContent>
-                  {positionOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="position">Position</Label>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setIsAddPositionOpen(true)}>Add new</Button>
+              </div>
+              <Popover open={positionPopoverOpen} onOpenChange={setPositionPopoverOpen} modal={true}>
+                <PopoverTrigger asChild>
+                  <Button type="button" variant="outline" className="w-full justify-between">
+                    {formData.position || "Select position"}
+                    <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0 w-[--radix-popover-trigger-width] min-w-[260px] h-72 overflow-hidden" align="start">
+                  <Command className="grid grid-rows-[auto,1fr] min-h-0">
+                    <CommandInput placeholder="Search positions..." />
+                    <CommandList className="overflow-y-auto overscroll-contain">
+                      <CommandEmpty>No positions found.</CommandEmpty>
+                      <CommandGroup>
+                        {computedOptions.map((option) => (
+                          <CommandItem
+                            key={option.value}
+                            value={option.label}
+                            onSelect={() => {
+                              setFormData(prev => ({ ...prev, position: option.value }));
+                              setPositionPopoverOpen(false);
+                            }}
+                          >
+                            {option.label}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              <AddPositionDialog
+                open={isAddPositionOpen}
+                onOpenChange={setIsAddPositionOpen}
+                title="Add Position"
+                existingNames={computedOptions.map(o => o.label)}
+                onCreated={(name) => {
+                  setAddedPositions((prev) => prev.includes(name) ? prev : [...prev, name]);
+                  setFormData(prev => ({ ...prev, position: name }));
+                }}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="linkedin">LinkedIn</Label>
