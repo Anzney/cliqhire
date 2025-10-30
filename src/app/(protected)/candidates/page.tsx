@@ -15,6 +15,7 @@ import CandidatePaginationControls from "@/components/candidates/CandidatePagina
 import { useAuth } from "@/contexts/AuthContext";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DeleteConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import CandidateFilter, { CandidateStatus as FilterStatus } from "@/components/candidates/CandidateFilter";
 
 const columsArr = [
   "Candidate Name",
@@ -52,10 +53,32 @@ export default function CandidatesPage() {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filterName, setFilterName] = useState("");
+  const [filterEmail, setFilterEmail] = useState("");
+  const [filterExperience, setFilterExperience] = useState("");
+  const [filterLocation, setFilterLocation] = useState("");
+  const [selectedStatuses, setSelectedStatuses] = useState<FilterStatus[]>([]);
 
   // Derive filtered + paged candidates and totals (client-side)
   const { pagedCandidates, totalCandidatesCalc, totalPagesCalc } = useMemo(() => {
-    const result: Candidate[] = initialLoading ? [] : candidates;
+    let result: Candidate[] = initialLoading ? [] : candidates;
+
+    const nameQ = filterName.trim().toLowerCase();
+    const emailQ = filterEmail.trim().toLowerCase();
+    const expQ = filterExperience.trim().toLowerCase();
+    const locQ = filterLocation.trim().toLowerCase();
+
+    if (nameQ || emailQ || expQ || locQ || selectedStatuses.length > 0) {
+      result = result.filter((c) => {
+        const matchesName = nameQ === "" || (c.name || "").toLowerCase().includes(nameQ);
+        const matchesEmail = emailQ === "" || (c.email || "").toLowerCase().includes(emailQ);
+        const matchesExp = expQ === "" || (c.experience || "").toLowerCase().includes(expQ);
+        const matchesLoc = locQ === "" || (c.location || "").toLowerCase().includes(locQ);
+        const matchesStatus = selectedStatuses.length === 0 || (c.status ? selectedStatuses.includes(c.status as FilterStatus) : false);
+        return matchesName && matchesEmail && matchesExp && matchesLoc && matchesStatus;
+      });
+    }
     const totalCandidatesCalc = result.length;
     const totalPagesCalcRaw = Math.ceil(totalCandidatesCalc / pageSize);
     const totalPagesCalc = totalPagesCalcRaw > 0 ? totalPagesCalcRaw : 1;
@@ -65,7 +88,7 @@ export default function CandidatesPage() {
     const pagedCandidates = result.slice(startIndex, endIndex);
 
     return { pagedCandidates, totalCandidatesCalc, totalPagesCalc };
-  }, [candidates, currentPage, pageSize, initialLoading]);
+  }, [candidates, currentPage, pageSize, initialLoading, filterName, filterEmail, filterExperience, filterLocation, selectedStatuses]);
 
   const toggleRowSelection = (candidateId: string) => {
     if (!canDeleteCandidates) return;
@@ -163,12 +186,14 @@ export default function CandidatesPage() {
 
       <Dashboardheader
         setOpen={setOpen}
-        setFilterOpen={() => {}}
+        setFilterOpen={setFilterOpen}
         initialLoading={isFetching}
         heading="Candidates"
         buttonText="Create Candidate"
         showCreateButton={canModifyCandidates}
-        showFilterButton={false}
+        showFilterButton={true}
+        isFilterActive={selectedStatuses.length > 0 || !!filterName.trim() || !!filterEmail.trim() || !!filterExperience.trim() || !!filterLocation.trim()}
+        filterCount={(selectedStatuses.length > 0 ? 1 : 0) + (filterName.trim() ? 1 : 0) + (filterEmail.trim() ? 1 : 0) + (filterExperience.trim() ? 1 : 0) + (filterLocation.trim() ? 1 : 0)}
         selectedCount={selectedRows.size}
         onDelete={handleDeleteSelected}
         onRefresh={() => {
@@ -301,6 +326,29 @@ export default function CandidatesPage() {
         description={`Are you sure you want to delete ${selectedRows.size} selected candidate(s)? This action cannot be undone.`}
         confirmText={isDeleting ? 'Deleting...' : 'Delete'}
         isDeleting={isDeleting}
+      />
+
+      <CandidateFilter
+        open={filterOpen}
+        onOpenChange={setFilterOpen}
+        name={filterName}
+        onNameChange={setFilterName}
+        email={filterEmail}
+        onEmailChange={setFilterEmail}
+        experience={filterExperience}
+        onExperienceChange={setFilterExperience}
+        location={filterLocation}
+        onLocationChange={setFilterLocation}
+        selectedStatuses={selectedStatuses}
+        onStatusesChange={setSelectedStatuses}
+        onApply={() => setFilterOpen(false)}
+        onClear={() => {
+          setFilterName("");
+          setFilterEmail("");
+          setFilterExperience("");
+          setFilterLocation("");
+          setSelectedStatuses([]);
+        }}
       />
     </div>
   );
