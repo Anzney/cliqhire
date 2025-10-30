@@ -29,6 +29,8 @@ export default function TeamMembersPage() {
         setOpen={setOpen}
         setFilterOpen={setFilterOpen}
         initialLoading={initialLoading}
+        showFilterButton={false}
+        rightContent={<></>}
         heading="Team Members"
         buttonText="Add Team Member"
       />
