@@ -363,11 +363,10 @@ export default function JobsPage() {
                 <TableRow className="sticky top-0 z-20 bg-white">
                   <TableHead className="w-12 px-4">
                     <div className="flex items-center justify-center">
-                      <Input
-                        type="checkbox"
+                      <Checkbox
                         checked={selectedRows.size > 0 && selectedRows.size === jobs.length}
-                        onChange={toggleSelectAll}
-                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        onCheckedChange={()=>toggleSelectAll()}
+                        className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
                         disabled={!canDeleteJobs}
                       />
                     </div>
@@ -387,11 +386,10 @@ export default function JobsPage() {
                     >
                       <TableCell className="w-12 px-4" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center">
-                          <Input
-                            type="checkbox"
+                          <Checkbox
                             checked={selectedRows.has(job._id)}
-                            onChange={() => toggleRowSelection(job._id)}
-                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            onCheckedChange={() => toggleRowSelection(job._id)}
+                            className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
                             disabled={!canDeleteJobs}
                             onClick={(e) => e.stopPropagation()}
                           />

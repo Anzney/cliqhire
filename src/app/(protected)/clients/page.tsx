@@ -24,6 +24,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { DeleteConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import ClientsFilter from "@/components/clients/ClientsFilter";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const columnsArr = [
   "", // Empty header for the checkbox column
@@ -446,11 +447,10 @@ export default function ClientsPage() {
                 <TableRow className="sticky top-0 z-20 bg-white">
                   <TableHead className="w-12 px-4">
                     <div className="flex items-center justify-center">
-                      <Input
-                        type="checkbox"
+                      <Checkbox
                         checked={selectedRows.size > 0 && selectedRows.size === pagedClients.length}
-                        onChange={toggleSelectAll}
-                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        onCheckedChange={()=>toggleSelectAll()}
+                       className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
                       />
                     </div>
                   </TableHead>
@@ -489,14 +489,10 @@ export default function ClientsPage() {
                     >
                       <TableCell className="px-4 py-2 w-12">
                         <div className="flex items-center justify-center">
-                          <Input
-                            type="checkbox"
+                          <Checkbox
                             checked={selectedRows.has(client.id)}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              toggleRowSelection(client.id);
-                            }}
-                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            onCheckedChange={() => toggleRowSelection(client.id)}
+                            className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
                             onClick={(e) => e.stopPropagation()}
                           />
                         </div>
