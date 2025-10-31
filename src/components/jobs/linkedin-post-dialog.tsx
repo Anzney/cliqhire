@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Copy, Check, Linkedin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -22,6 +22,7 @@ interface LinkedInPostDialogProps {
 export function LinkedInPostDialog({ job, triggerClassName }: LinkedInPostDialogProps) {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [value, setValue] = useState("")
 
   const postText = useMemo(() => {
     const lines: string[] = []
@@ -54,9 +55,15 @@ export function LinkedInPostDialog({ job, triggerClassName }: LinkedInPostDialog
     return lines.join("\n")
   }, [job])
 
+  useEffect(() => {
+    if (open) {
+      setValue(postText)
+    }
+  }, [open, postText])
+
   const onCopy = async () => {
     try {
-      await navigator.clipboard.writeText(postText)
+      await navigator.clipboard.writeText(value)
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
     } catch {}
@@ -73,15 +80,15 @@ export function LinkedInPostDialog({ job, triggerClassName }: LinkedInPostDialog
           Post In LinkedIn
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="sm:max-w-2xl max-w-[95vw] max-h-[85vh]">
         <DialogHeader>
           <DialogTitle>LinkedIn Post Preview</DialogTitle>
           <DialogDescription>
-            Copy the content below and paste it into your LinkedIn post.
+            Edit anything you need and then copy to post on LinkedIn.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
-          <Textarea value={postText} readOnly className="min-h-56 font-medium" />
+          <Textarea value={value} onChange={(e) => setValue(e.target.value)} className="min-h-80 font-medium" />
           <div className="flex items-center justify-between">
             <Button onClick={onCopy} variant="secondary" className="flex items-center gap-2">
               {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
