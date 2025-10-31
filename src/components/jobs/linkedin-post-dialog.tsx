@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import type { JobData } from "./types"
+import { postToLinkedIn } from "@/services/linkedinService"
 
 interface LinkedInPostDialogProps {
   job: JobData
@@ -23,6 +24,7 @@ export function LinkedInPostDialog({ job, triggerClassName }: LinkedInPostDialog
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const [value, setValue] = useState("")
+  const [posting, setPosting] = useState(false)
 
   const postText = useMemo(() => {
     const lines: string[] = []
@@ -69,6 +71,17 @@ export function LinkedInPostDialog({ job, triggerClassName }: LinkedInPostDialog
     } catch {}
   }
 
+  const onOpenLinkedIn = async () => {
+    try {
+      setPosting(true)
+      await postToLinkedIn({ text: value })
+    } catch {
+    } finally {
+      setPosting(false)
+      window.open("https://www.linkedin.com/feed/", "_blank", "noreferrer")
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -94,16 +107,10 @@ export function LinkedInPostDialog({ job, triggerClassName }: LinkedInPostDialog
               {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
               {copied ? "Copied" : "Copy"}
             </Button>
-            <a
-              href="https://www.linkedin.com/feed/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <Button className="flex items-center gap-2">
-                <Linkedin className="size-4" />
-                Open LinkedIn
-              </Button>
-            </a>
+            <Button onClick={onOpenLinkedIn} disabled={posting} className="flex items-center gap-2">
+              <Linkedin className="size-4" />
+              {posting ? "Opening..." : "Post On LinkedIn"}
+            </Button>
           </div>
         </div>
       </DialogContent>
