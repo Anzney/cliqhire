@@ -9,13 +9,12 @@ import { JobTabs } from "@/components/jobs/job-tabs"
 import { JobData } from "@/components/jobs/types"
 import { AddExistingCandidateDialog } from "@/components/common/add-existing-candidate-dialog"
 import { useAuth } from "@/contexts/AuthContext"
-import {Share2} from "lucide-react"
+import { LinkedInPostDialog } from "@/components/jobs/linkedin-post-dialog"
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface PageProps {
   params: { id: string }
 }
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button"
 
 export default function JobPage({ params }: PageProps) {
   const { id } = params
@@ -109,13 +108,7 @@ export default function JobPage({ params }: PageProps) {
             </div>
           </div>
           <div>
-            <Button
-            variant="outline"
-            className="flex items-center gap-2 bg-blue-400 hover:bg-blue-600 text-white"
-            >
-            <Share2 className="size-4"/>
-            Post In LinkedIn
-            </Button>
+            <LinkedInPostDialog job={job} />
           </div>
         </div>
         
