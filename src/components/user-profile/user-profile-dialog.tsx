@@ -26,7 +26,8 @@ import {
   User as UserIcon, 
   Mail, 
   Calendar, 
-  Shield
+  Shield,
+  ChevronRight
 } from "lucide-react";
 import { authService, User } from "@/services/authService";
 import { useRouter } from "next/navigation";
@@ -87,54 +88,55 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[400px] md:max-w-[500px] p-0 overflow-hidden rounded-2xl">
+        <DialogContent className="sm:max-w-[400px] md:max-w-[500px] p-0 overflow-hidden rounded-2xl [&>button.absolute.right-4.top-4]:hidden">
           <Card className="border-0 shadow-xl">
-            <CardHeader className="bg-white pb-4 px-6 pt-6 border-b">
+            <CardHeader className="pb-20 px-6 pt-6 border-0 bg-gradient-to-r from-indigo-500 to-fuchsia-500 text-white relative">
               <div className="flex justify-between items-start gap-4">
                 <div>
-                  <CardTitle className="text-2xl tracking-tight">User Profile</CardTitle>
-                  <CardDescription className="text-muted-foreground">
+                  <CardTitle className="text-2xl tracking-tight text-white">User Profile</CardTitle>
+                  <CardDescription className="text-white/80">
                     Your account information
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-2 rounded-full bg-green-50 text-green-700 px-3 py-1 text-xs font-medium border border-green-100">
-                    <span className="h-2.5 w-2.5 rounded-full bg-green-500"></span>
+                  <span className="inline-flex items-center gap-2 rounded-full bg-white/20 text-white px-3 py-1 text-xs font-medium ring-1 ring-white/30">
+                    <span className="h-2.5 w-2.5 rounded-full bg-green-400"></span>
                     Active
                   </span>
                 </div>
               </div>
             </CardHeader>
             
-            <CardContent className="pt-6 px-6">
+            <CardContent className="pt-0 px-6">
               <div className="space-y-6">
-                {/* User Avatar and Basic Info */}
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <Avatar className="h-20 w-20 ring-2 ring-primary/20">
-                      <AvatarFallback className="text-xl bg-primary/10 text-primary">
-                        {user ? getUserInitials(user.name) : 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-white flex items-center justify-center">
-                      <span className="h-3 w-3 rounded-full bg-green-500" />
-                    </span>
-                  </div>
-                  <div className="space-y-1 min-w-0">
-                    <h3 className="text-xl font-semibold truncate">{user?.name || 'User Name'}</h3>
-                    <p className="text-sm text-muted-foreground flex items-center gap-2 truncate">
-                      <Mail className="h-4 w-4" />
-                      {user?.email || 'user@example.com'}
-                    </p>
+                {/* User Avatar and Basic Info Card overlapping header */}
+                <div className="-mt-12">
+                  <div className="relative rounded-2xl bg-white shadow-xl border border-gray-100 px-5 py-4">
+                    <div className="flex items-center gap-4">
+                      <div className="relative ">
+                        <Avatar className="h-20 w-20 ring-8 ring-white shadow-lg">
+                          <AvatarFallback className="text-xl bg-primary/10 text-primary">
+                            {user ? getUserInitials(user.name) : 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
+                      <div className="space-y-1 min-w-0">
+                        <h3 className="text-xl font-semibold truncate">{user?.name || 'User Name'}</h3>
+                        <p className="text-sm text-muted-foreground flex items-center gap-2 truncate">
+                          <Mail className="h-4 w-4" />
+                          {user?.email || 'user@example.com'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <Separator />
+                {/* <Separator /> */}
 
                 {/* User Details */}
                 <div className="grid gap-4">
                   {/* Team Role Card */}
-                  <div className="flex items-center gap-4 rounded-2xl border border-blue-100 bg-blue-50/60 px-4 py-4 shadow-sm">
+                  <div className="flex items-center gap-4 rounded-[18px] border border-blue-100 bg-blue-50/60 px-4 py-4 shadow-sm">
                     <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-blue-600 text-white">
                       <UserIcon className="h-5 w-5" />
                     </div>
@@ -146,7 +148,7 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
 
                   {/* Member Since Card */}
                   {user?.createdAt && (
-                    <div className="flex items-center gap-4 rounded-2xl border border-purple-100 bg-purple-50/60 px-4 py-4 shadow-sm">
+                    <div className="flex items-center gap-4 rounded-[18px] border border-purple-100 bg-purple-50/60 px-4 py-4 shadow-sm">
                       <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-purple-600 text-white">
                         <Calendar className="h-5 w-5" />
                       </div>
@@ -158,37 +160,36 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
                   )}
 
                   {/* Account Security Card */}
-                  <div className="flex items-center gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordDialog(true)}
+                    className="flex items-center gap-4 rounded-[18px] border border-amber-300 bg-amber-50 px-4 py-4 shadow-sm w-full text-left hover:bg-amber-50/80 transition"
+                  >
                     <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-amber-500 text-white">
                       <Shield className="h-5 w-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[11px] font-semibold tracking-widest text-amber-700 uppercase">Account Security</p>
-                      <Button 
-                        variant="link" 
-                        className="p-0 h-auto text-sm text-amber-900"
-                        onClick={() => setShowPasswordDialog(true)}
-                      >
-                        Change Password
-                      </Button>
+                      <p className="text-base font-semibold text-amber-900">Change Password</p>
                     </div>
-                  </div>
+                    <ChevronRight className="h-5 w-5 text-amber-700" />
+                  </button>
                 </div>
               </div>
             </CardContent>
             
-            <CardFooter className="flex-col sm:flex-row gap-3 bg-muted/30 p-5 border-t">
+            <CardFooter className="flex-col justify-between sm:flex-row gap-3 bg-muted/30 p-5 border-t">
               <Button
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                className="w-full sm:w-auto rounded-xl shadow-sm"
+                className="w-full sm:w-auto rounded-full shadow-sm px-5"
               >
                 Close
               </Button>
               <Button
                 onClick={handleLogout}
                 disabled={loading}
-                className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-red-500 to-rose-500 text-white hover:from-red-600 hover:to-rose-600"
+                className="w-full sm:w-auto rounded-full bg-gradient-to-r from-red-500 to-rose-500 text-white hover:from-red-600 hover:to-rose-600 px-5"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 {loading ? 'Logging out...' : 'Logout'}
