@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 export default function Navbar() {
   return (
@@ -19,9 +20,19 @@ export default function Navbar() {
         </nav>
         <div className="flex items-center gap-2">
           <ModeToggle />
-          <Button asChild>
-            <Link href="/login">Sign in</Link>
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="default">Login</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link href="/client/login">Client Login</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/login">Admin Login</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
