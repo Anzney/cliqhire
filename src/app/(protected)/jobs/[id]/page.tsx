@@ -9,11 +9,12 @@ import { JobTabs } from "@/components/jobs/job-tabs"
 import { JobData } from "@/components/jobs/types"
 import { AddExistingCandidateDialog } from "@/components/common/add-existing-candidate-dialog"
 import { useAuth } from "@/contexts/AuthContext"
+import { LinkedInPostDialog } from "@/components/jobs/linkedin-post-dialog"
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface PageProps {
   params: { id: string }
 }
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function JobPage({ params }: PageProps) {
   const { id } = params
@@ -106,7 +107,11 @@ export default function JobPage({ params }: PageProps) {
               </Badge>
             </div>
           </div>
+          <div>
+            <LinkedInPostDialog job={job} />
+          </div>
         </div>
+        
       </div>
 
       {/* Tabs */}
