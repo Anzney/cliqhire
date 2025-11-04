@@ -14,6 +14,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import type { JobData } from "./types"
 import { postToLinkedIn } from "@/services/linkedinService"
+import { toast } from "sonner"
 
 interface LinkedInPostDialogProps {
   job: JobData
@@ -75,10 +76,11 @@ export function LinkedInPostDialog({ job, triggerClassName }: LinkedInPostDialog
     try {
       setPosting(true)
       await postToLinkedIn({ text: value })
-    } catch {
+      toast.success("LinkedIn post created successfully")
+    } catch (e) {
+      toast.error("Failed to create LinkedIn post")
     } finally {
       setPosting(false)
-      window.open("https://www.linkedin.com/feed/", "_blank", "noreferrer")
     }
   }
 
