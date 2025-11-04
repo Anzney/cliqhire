@@ -49,7 +49,7 @@ export default function CandidatesPage() {
 
   // Pagination state (client-side, similar to clients page)
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
+  const [pageSize, setPageSize] = useState<number>(12);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
