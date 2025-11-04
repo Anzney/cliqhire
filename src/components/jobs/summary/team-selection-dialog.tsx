@@ -3,14 +3,8 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { CommandDialog, CommandInput, CommandList, CommandEmpty, CommandItem } from "@/components/ui/command";
 import { getTeams, type Team } from "@/services/teamService";
 
 interface TeamSelectionDialogProps {
@@ -40,6 +34,8 @@ export function TeamSelectionDialog({
   const [selectedRecruiterId, setSelectedRecruiterId] = useState<string>("");
   const [teams, setTeams] = useState<Team[]>([]);
   const [isLoadingTeams, setIsLoadingTeams] = useState(false);
+  const [recruiterDialogOpen, setRecruiterDialogOpen] = useState(false);
+  const [teamDialogOpen, setTeamDialogOpen] = useState(false);
 
   // Get the selected team object
   const selectedTeam = teams.find(team => team._id === selectedTeamId);
@@ -154,24 +150,34 @@ export function TeamSelectionDialog({
           {/* Team Selection */}
           <div className="space-y-2">
             <Label htmlFor="team">Position Name</Label>
-            <Select
-              value={selectedTeamId}
-              onValueChange={handleTeamChange}
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full justify-between"
+              onClick={() => setTeamDialogOpen(true)}
               disabled={isLoadingTeams}
             >
-              <SelectTrigger>
-                <SelectValue 
-                  placeholder={isLoadingTeams ? "Loading teams..." : "Select a team"} 
-                />
-              </SelectTrigger>
-              <SelectContent>
+              {selectedTeam ? selectedTeam.teamName : (isLoadingTeams ? "Loading teams..." : "Select a team")}
+            </Button>
+
+            <CommandDialog open={teamDialogOpen} onOpenChange={setTeamDialogOpen}>
+              <CommandInput placeholder="Search team..." />
+              <CommandList>
+                <CommandEmpty>No team found.</CommandEmpty>
                 {teams.map((team) => (
-                  <SelectItem key={team._id} value={team._id}>
+                  <CommandItem
+                    key={team._id}
+                    value={team.teamName || team._id}
+                    onSelect={() => {
+                      handleTeamChange(team._id);
+                      setTeamDialogOpen(false);
+                    }}
+                  >
                     {team.teamName}
-                  </SelectItem>
+                  </CommandItem>
                 ))}
-              </SelectContent>
-            </Select>
+              </CommandList>
+            </CommandDialog>
           </div>
 
           {/* Hiring Manager Display (Auto-populated) */}
@@ -206,24 +212,36 @@ export function TeamSelectionDialog({
           {selectedTeam && (
             <div className="space-y-2">
               <Label>Recruiter</Label>
-              <Select
-                value={selectedRecruiterId}
-                onValueChange={handleRecruiterChange}
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full justify-between"
+                onClick={() => setRecruiterDialogOpen(true)}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a recruiter" />
-                </SelectTrigger>
-                <SelectContent>
+                {(() => {
+                  const r = selectedTeam.recruiters?.find?.((rec) => rec._id === selectedRecruiterId);
+                  return r ? r.firstName + " " + r.lastName : "Select a recruiter";
+                })()}
+              </Button>
+
+              <CommandDialog open={recruiterDialogOpen} onOpenChange={setRecruiterDialogOpen}>
+                <CommandInput placeholder="Search recruiter..." />
+                <CommandList>
+                  <CommandEmpty>No recruiter found.</CommandEmpty>
                   {selectedTeam.recruiters?.map?.((recruiter) => (
-                    <SelectItem 
-                      key={recruiter._id} 
-                      value={recruiter._id}
+                    <CommandItem
+                      key={recruiter._id}
+                      value={(recruiter.firstName + " " + recruiter.lastName) || recruiter.email || recruiter._id}
+                      onSelect={() => {
+                        handleRecruiterChange(recruiter._id);
+                        setRecruiterDialogOpen(false);
+                      }}
                     >
                       {recruiter.firstName + " " + recruiter.lastName}
-                    </SelectItem>
+                    </CommandItem>
                   ))}
-                </SelectContent>
-              </Select>
+                </CommandList>
+              </CommandDialog>
             </div>
           )}
         </div>
