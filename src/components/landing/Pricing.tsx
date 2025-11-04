@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 
 const plans = [
   { name: "Starter", price: "$0", period: "/mo", features: ["Up to 2 jobs", "Basic pipeline", "Email templates"], cta: "Get started" },
-  { name: "Team", price: "$49", period: "/user/mo", features: ["Unlimited jobs", "Automation rules", "Reports & dashboards"], cta: "Start trial" },
+  { name: "Team", price: "$49", period: "/user/mo", features: ["Unlimited jobs", "Automation rules", "Reports & dashboards"], cta: "Start trial", featured: true },
   { name: "Enterprise", price: "Custom", period: "", features: ["SSO & SCIM", "Advanced permissions", "Priority support"], cta: "Contact sales" },
 ]
 
@@ -16,7 +16,7 @@ export default function Pricing() {
       </div>
       <div className="mt-10 grid gap-6 md:grid-cols-3">
         {plans.map((p) => (
-          <Card key={p.name}>
+          <Card key={p.name} className={p.featured ? "border-primary/40 shadow-sm shadow-primary/10" : "transition-colors hover:border-primary/30"}>
             <CardHeader>
               <CardTitle>{p.name}</CardTitle>
             </CardHeader>
@@ -27,7 +27,7 @@ export default function Pricing() {
               </ul>
             </CardContent>
             <CardFooter>
-              <Button className="w-full">{p.cta}</Button>
+              <Button className="w-full" variant={p.featured ? "default" : "outline"}>{p.cta}</Button>
             </CardFooter>
           </Card>
         ))}

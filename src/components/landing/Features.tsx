@@ -19,9 +19,12 @@ export default function Features() {
       </div>
       <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((it) => (
-          <Card key={it.title}>
+          <Card
+            key={it.title}
+            className="transition-colors hover:border-primary/30"
+          >
             <CardHeader>
-              <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary shadow-sm shadow-primary/10">
                 <it.icon size={20} />
               </div>
               <CardTitle className="text-lg">{it.title}</CardTitle>

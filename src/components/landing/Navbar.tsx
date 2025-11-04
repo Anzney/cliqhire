@@ -9,18 +9,18 @@ export default function Navbar() {
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 text-xl font-semibold">
-          <span>CliqHire ATS</span>
+          <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">CliqHire ATS</span>
         </Link>
         <nav className="hidden items-center gap-6 md:flex">
-          <Link href="#features" className="text-sm text-muted-foreground hover:text-foreground">Features</Link>
-          <Link href="#workflow" className="text-sm text-muted-foreground hover:text-foreground">Workflow</Link>
-          <Link href="#pricing" className="text-sm text-muted-foreground hover:text-foreground">Pricing</Link>
-          <Link href="#contact" className="text-sm text-muted-foreground hover:text-foreground">Contact</Link>
+          <Link href="#features" className="text-sm text-muted-foreground transition-colors hover:text-primary">Features</Link>
+          <Link href="#workflow" className="text-sm text-muted-foreground transition-colors hover:text-primary">Workflow</Link>
+          <Link href="#pricing" className="text-sm text-muted-foreground transition-colors hover:text-primary">Pricing</Link>
+          <Link href="#contact" className="text-sm text-muted-foreground transition-colors hover:text-primary">Contact</Link>
         </nav>
         <div className="flex items-center gap-2">
           <ModeToggle />
           <Button asChild>
-            <Link href="/auth/login">Sign in</Link>
+            <Link href="/login">Sign in</Link>
           </Button>
         </div>
       </div>
