@@ -109,9 +109,12 @@ export default function ClientLogin() {
           <Button type="submit" className="w-full">Sign in</Button>
         </form>
       </Form>
-      <div className="mt-4 text-center">
-        <Button variant="link" asChild>
-          <Link href="/login">Admin Login</Link>
+      <div className="mt-4 flex items-center justify-between text-sm">
+        <Button variant="link" className="px-0" asChild>
+          <Link href="/client/forgot-password">Forgot Password</Link>
+        </Button>
+        <Button variant="link" className="px-0" asChild>
+          <Link href="/client/register">Register</Link>
         </Button>
       </div>
     </div>
