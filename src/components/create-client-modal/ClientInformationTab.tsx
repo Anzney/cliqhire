@@ -18,27 +18,19 @@ import { Info } from "lucide-react";
 import { optionsForClient } from "./constants";
 import { INDUSTRIES } from "@/lib/constants";
 import { UseFormReturn } from "react-hook-form";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import UserSelectDialog from "@/components/shared/UserSelectDialog";
 import { CreateClientFormData } from "./schema";
 
-const SALES_LEADS = [
-  "Dcosta, Roque (MD & CEO)",
-  "Majmudar, Ujjval (Advisor)",
-  "Hamed, Mohammed (Team Leader)",
-  "Vamsi, Raghu (Team Leader)",
-  "Dsouza, Vijesh (Recruiter)",
-  "Qureshi, Zainab (Recruiter)",
-  "Mane, Pradnya (Recruiter)",
-  "Tillu, Sanjali (Sales Operations)",
-  "Almarri, Raghad (Sr. Business Development Officer)",
-  "Dcosta, Raphael (Accounts & Finance)",
-  "Abhay",
-];
+// Removed hardcoded sales leads; using UserSelectDialog instead
 
 interface ClientInformationTabProps {
   form: UseFormReturn<CreateClientFormData>;
 }
 
 export function ClientInformationTab({ form }: ClientInformationTabProps) {
+  const [showSalesLeadDialog, setShowSalesLeadDialog] = useState(false);
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pb-2">
       <FormField
@@ -110,20 +102,21 @@ export function ClientInformationTab({ form }: ClientInformationTabProps) {
             <FormLabel>
               Sales Lead (Internal)<span className="text-red-700">*</span>
             </FormLabel>
-            <Select value={field.value || ""} onValueChange={field.onChange}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select sales lead" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {SALES_LEADS.map((name) => (
-                  <SelectItem key={name} value={name}>
-                    {name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <Input
+                readOnly
+                value={field.value || ""}
+                placeholder="Select sales lead"
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowSalesLeadDialog(true)}
+              >
+                Choose
+              </Button>
+            </div>
             <FormMessage />
           </FormItem>
         )}
@@ -259,6 +252,17 @@ export function ClientInformationTab({ form }: ClientInformationTabProps) {
             <FormMessage />
           </FormItem>
         )}
+      />
+      {/* Sales Lead Selector Dialog */}
+      <UserSelectDialog
+        open={showSalesLeadDialog}
+        onClose={() => setShowSalesLeadDialog(false)}
+        title="Select Sales Lead"
+        onSelect={(user) => {
+          const name = user?.name || user?.email || "";
+          form.setValue("clientGeneralInfo.salesLead", name, { shouldValidate: true, shouldDirty: true });
+          setShowSalesLeadDialog(false);
+        }}
       />
     </div>
   );

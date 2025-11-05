@@ -15,11 +15,12 @@ import { SalesInfo } from "./sales/salesInfo";
 import { toast } from "sonner";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import ContractOverview from "./contract-overview";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getFileType, ClientDetails, PrimaryContact, TeamMemberType, ContactType } from "./summaryType";
 import { api } from "@/lib/axios-config";
 import { useQueryClient } from "@tanstack/react-query";
 import { PDFViewer } from "@/components/ui/pdf-viewer";
+import UserSelectDialog from "@/components/shared/UserSelectDialog";
 
 export function SummaryContent({
   clientId,
@@ -49,6 +50,11 @@ export function SummaryContent({
   const [isFileUploadModalOpen, setIsFileUploadModalOpen] = useState(false);
   const [currentUploadField, setCurrentUploadField] = useState<keyof ClientDetails | null>(null);
   const [currentUploadTitle, setCurrentUploadTitle] = useState("");
+
+  // Sales Lead selection dialogs
+  const [showSalesLeadDialog, setShowSalesLeadDialog] = useState(false);
+  const [showConfirmSalesLead, setShowConfirmSalesLead] = useState(false);
+  const [pendingSalesLeadName, setPendingSalesLeadName] = useState<string | null>(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -249,6 +255,10 @@ export function SummaryContent({
                 value={clientData?.salesLead}
                 onUpdate={handleUpdateField("salesLead")}
                 disableInternalEdit={!canModify}
+                customEdit={() => {
+                  if (!canModify) return;
+                  setShowSalesLeadDialog(true);
+                }}
               />
               <DetailRow
                 label="Referred By (External)"
@@ -480,6 +490,57 @@ export function SummaryContent({
         acceptedFileTypes=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp,.svg"
         maxSizeInMB={10}
       />
+
+      {/* Sales Lead User Select Dialog */}
+      {canModify && (
+        <UserSelectDialog
+          open={showSalesLeadDialog}
+          onClose={() => setShowSalesLeadDialog(false)}
+          title="Select Sales Lead"
+          onSelect={(user) => {
+            const name = user?.name || user?.email || "";
+            setPendingSalesLeadName(name || null);
+            setShowSalesLeadDialog(false);
+            setShowConfirmSalesLead(true);
+          }}
+        />
+      )}
+
+      {/* Confirm Sales Lead Update */}
+      <Dialog open={showConfirmSalesLead} onOpenChange={setShowConfirmSalesLead}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Sales Lead</DialogTitle>
+          </DialogHeader>
+          <div className="text-sm text-muted-foreground">
+            {pendingSalesLeadName
+              ? `Set "Sales Lead" to ${pendingSalesLeadName}?`
+              : "No user selected."}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowConfirmSalesLead(false);
+                setPendingSalesLeadName(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                if (pendingSalesLeadName) {
+                  await updateClientDetails("salesLead", pendingSalesLeadName);
+                }
+                setShowConfirmSalesLead(false);
+                setPendingSalesLeadName(null);
+              }}
+            >
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
