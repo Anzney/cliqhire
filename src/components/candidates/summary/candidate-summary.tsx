@@ -14,18 +14,17 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { CandidateTeamInfoSection } from "./CandidateTeamInfoSection";
 import SalaryRange from "./salary-range";
 import { ResumeUploadDialog } from "./resume-upload-dialog";
+import UserSelectDialog from "@/components/shared/UserSelectDialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const detailsFields = [
   { key: "name", label: "Candidate Name" },
   { key: "location", label: "Location" },
   { key: "experience", label: "Experience" },
+   { key: "referredBy", label: "Referred By" },
   { key: "totalRelevantExperience", label: "Total Relevant Years of Experience" },
   { key: "noticePeriod", label: "Notice Period" },
-  {
-    key: "skills",
-    label: "Skills",
-    render: (val: string[] | undefined) => (val && val.length ? val.join(", ") : undefined),
-  },
+  
   {
     key: "resume",
     label: "Resume",
@@ -37,8 +36,12 @@ const detailsFields = [
       ) : undefined,
     isUpload: true,
   },
+  {
+    key: "skills",
+    label: "Skills",
+    render: (val: string[] | undefined) => (val && val.length ? val.join(", ") : undefined),
+  },
   { key: "status", label: "Status" },
-  { key: "referredBy", label: "Referred By" },
   { key: "gender", label: "Gender" },
   {
     key: "dateOfBirth",
@@ -130,6 +133,9 @@ const CandidateSummary = ({
   const [showMaritalStatusDialog, setShowMaritalStatusDialog] = useState(false);
   const [showGenderDialog, setShowGenderDialog] = useState(false);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [showReferredByDialog, setShowReferredByDialog] = useState(false);
+  const [showConfirmReferrer, setShowConfirmReferrer] = useState(false);
+  const [pendingReferrerName, setPendingReferrerName] = useState<string | null>(null);
 
   const handleSave = (fieldKey: string, newValue: any) => {
     // LinkedIn validation
@@ -306,6 +312,32 @@ const CandidateSummary = ({
                   size="sm"
                   className="h-8 flex items-center ml-2"
                   onClick={() => setShowStatusDialog(true)}
+                >
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (field.key === "referredBy") {
+      return (
+        <div key={field.key} className="relative border-b last:border-b-0">
+          <div className="flex items-center py-2">
+            <span className="text-sm text-muted-foreground w-1/3">{field.label}</span>
+            <div className="flex items-center justify-between flex-1">
+              <span className={`text-sm ${hasValue ? "" : "text-muted-foreground"}`}>
+                {hasValue ? value : "No Details"}
+              </span>
+              {canModify && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 flex items-center ml-2"
+                  onClick={() => setShowReferredByDialog(true)}
                 >
                   <Pencil className="h-4 w-4 mr-2" />
                   Edit
@@ -609,6 +641,48 @@ const CandidateSummary = ({
           onSave={handleStatusSave}
         />
       )}
+
+      {/* Referred By Dialog */}
+      {canModify && (
+        <UserSelectDialog
+          open={showReferredByDialog}
+          onClose={() => setShowReferredByDialog(false)}
+          title="Select Referrer"
+          onSelect={(user) => {
+            const refName = user?.name || user?.email || "";
+            setPendingReferrerName(refName || null);
+            setShowReferredByDialog(false);
+            setShowConfirmReferrer(true);
+          }}
+        />
+      )}
+
+      {/* Confirm Referred By Update */}
+      <Dialog open={showConfirmReferrer} onOpenChange={setShowConfirmReferrer}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Referrer</DialogTitle>
+          </DialogHeader>
+          <div className="text-sm text-muted-foreground">
+            {pendingReferrerName
+              ? `Set "Referred By" to ${pendingReferrerName}?`
+              : "No user selected."}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowConfirmReferrer(false);
+              setPendingReferrerName(null);
+            }}>Cancel</Button>
+            <Button onClick={() => {
+              if (pendingReferrerName) {
+                handleSave("referredBy", pendingReferrerName);
+              }
+              setShowConfirmReferrer(false);
+              setPendingReferrerName(null);
+            }}>Confirm</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
