@@ -14,14 +14,14 @@ import { clientLogin } from '@/services/clientAuthService'
 import { useRouter } from 'next/navigation'
 
 const schema = z.object({
-  email: z.string().email('Enter a valid email'),
+  emails: z.string().email('Enter a valid email'),
   password: z.string().min(6, 'At least 6 characters'),
 })
 
 export default function ClientLogin() {
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: { email: '', password: '' }
+    defaultValues: { emails: '', password: '' }
   })
 
   const [showPassword, setShowPassword] = React.useState(false)
@@ -31,7 +31,7 @@ export default function ClientLogin() {
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
       setSubmitting(true)
-      const res = await clientLogin({ email: values.email, password: values.password })
+      const res = await clientLogin({ email: values.emails, password: values.password })
       if (res.success) {
         router.push('/dashboards')
       } else {
@@ -53,7 +53,7 @@ export default function ClientLogin() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="email"
+              name="emails"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Email</FormLabel>
