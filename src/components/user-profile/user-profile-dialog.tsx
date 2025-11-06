@@ -90,19 +90,16 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[400px] md:max-w-[500px] p-0 overflow-hidden rounded-2xl [&>button.absolute.right-4.top-4]:hidden">
           <Card className="border-0 shadow-xl">
-            <CardHeader className="pb-20 px-6 pt-6 border-0 bg-gradient-to-r from-indigo-500 to-fuchsia-500 text-white relative">
+            <CardHeader className="pb-16 px-6 pt-6 border-0 bg-muted relative">
               <div className="flex justify-between items-start gap-4">
                 <div>
-                  <CardTitle className="text-2xl tracking-tight text-white">User Profile</CardTitle>
-                  <CardDescription className="text-white/80">
+                  <CardTitle className="text-2xl tracking-tight">User Profile</CardTitle>
+                  <CardDescription>
                     Your account information
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-2 rounded-full bg-white/20 text-white px-3 py-1 text-xs font-medium ring-1 ring-white/30">
-                    <span className="h-2.5 w-2.5 rounded-full bg-green-400"></span>
-                    Active
-                  </span>
+                  <span className="text-xs text-muted-foreground ">Active</span>
                 </div>
               </div>
             </CardHeader>
@@ -115,7 +112,7 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
                     <div className="flex items-center gap-4">
                       <div className="relative ">
                         <Avatar className="h-20 w-20 ring-8 ring-white shadow-lg">
-                          <AvatarFallback className="text-xl bg-primary/10 text-primary">
+                          <AvatarFallback className="text-xl">
                             {user ? getUserInitials(user.name) : 'U'}
                           </AvatarFallback>
                         </Avatar>
@@ -136,25 +133,25 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
                 {/* User Details */}
                 <div className="grid gap-4">
                   {/* Team Role Card */}
-                  <div className="flex items-center gap-4 rounded-[18px] border border-blue-100 bg-blue-50/60 px-4 py-4 shadow-sm">
-                    <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-blue-600 text-white">
+                  <div className="flex items-center gap-4 rounded-xl border bg-background px-4 py-4 shadow-sm">
+                    <div className="h-10 w-10 rounded-md flex items-center justify-center bg-muted text-foreground">
                       <UserIcon className="h-5 w-5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[11px] font-semibold tracking-widest text-blue-700 uppercase">Team Role</p>
-                      <p className="text-base font-semibold text-blue-900 truncate">{user?.role || 'Not provided'}</p>
+                      <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">Team Role</p>
+                      <p className="text-base font-semibold truncate">{user?.role || 'Not provided'}</p>
                     </div>
                   </div>
 
                   {/* Member Since Card */}
                   {user?.createdAt && (
-                    <div className="flex items-center gap-4 rounded-[18px] border border-purple-100 bg-purple-50/60 px-4 py-4 shadow-sm">
-                      <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-purple-600 text-white">
+                    <div className="flex items-center gap-4 rounded-xl border bg-background px-4 py-4 shadow-sm">
+                      <div className="h-10 w-10 rounded-md flex items-center justify-center bg-muted text-foreground">
                         <Calendar className="h-5 w-5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-semibold tracking-widest text-purple-700 uppercase">Member Since</p>
-                        <p className="text-base font-semibold text-purple-900 truncate">{formatDate(user.createdAt)}</p>
+                        <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">Member Since</p>
+                        <p className="text-base font-semibold truncate">{formatDate(user.createdAt)}</p>
                       </div>
                     </div>
                   )}
@@ -163,33 +160,32 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
                   <button
                     type="button"
                     onClick={() => setShowPasswordDialog(true)}
-                    className="flex items-center gap-4 rounded-[18px] border border-amber-300 bg-amber-50 px-4 py-4 shadow-sm w-full text-left hover:bg-amber-50/80 transition"
+                    className="flex items-center gap-4 rounded-xl border bg-background px-4 py-4 shadow-sm w-full text-left hover:bg-muted/50 transition"
                   >
-                    <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-amber-500 text-white">
+                    <div className="h-10 w-10 rounded-md flex items-center justify-center bg-muted text-foreground">
                       <Shield className="h-5 w-5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[11px] font-semibold tracking-widest text-amber-700 uppercase">Account Security</p>
-                      <p className="text-base font-semibold text-amber-900">Change Password</p>
+                      <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">Account Security</p>
+                      <p className="text-base font-semibold">Change Password</p>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-amber-700" />
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </button>
                 </div>
               </div>
             </CardContent>
             
-            <CardFooter className="flex-col justify-between sm:flex-row gap-3 bg-muted/30 p-5 border-t">
+            <CardFooter className="flex-col justify-between sm:flex-row gap-3 p-5 border-t">
               <Button
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                className="w-full sm:w-auto rounded-full shadow-sm px-5"
               >
                 Close
               </Button>
               <Button
                 onClick={handleLogout}
                 disabled={loading}
-                className="w-full sm:w-auto rounded-full bg-gradient-to-r from-red-500 to-rose-500 text-white hover:from-red-600 hover:to-rose-600 px-5"
+                variant="destructive"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 {loading ? 'Logging out...' : 'Logout'}
