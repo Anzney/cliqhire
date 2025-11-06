@@ -113,12 +113,12 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                   <FormItem>
                     <div className="flex items-center">
                       <FormLabel>Password</FormLabel>
-                      <a
+                      {/* <a
                         href="/forgot-password"
                         className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                       >
                         Forgot your password?
-                      </a>
+                      </a> */}
                     </div>
                     <FormControl>
                       <div className="relative">
