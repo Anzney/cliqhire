@@ -10,27 +10,36 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import Link from 'next/link'
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { clientLogin } from '@/services/clientAuthService'
+import { useRouter } from 'next/navigation'
 
 const schema = z.object({
   email: z.string().email('Enter a valid email'),
   password: z.string().min(6, 'At least 6 characters'),
-  confirmPassword: z.string().min(6, 'At least 6 characters')
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword']
 })
 
 export default function ClientLogin() {
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: { email: '', password: '', confirmPassword: '' }
+    defaultValues: { email: '', password: '' }
   })
 
   const [showPassword, setShowPassword] = React.useState(false)
-  const [showConfirm, setShowConfirm] = React.useState(false)
+  const router = useRouter()
+  const [submitting, setSubmitting] = React.useState(false)
 
-  function onSubmit(values: z.infer<typeof schema>) {
-    console.log(values)
+  async function onSubmit(values: z.infer<typeof schema>) {
+    try {
+      setSubmitting(true)
+      const res = await clientLogin({ email: values.email, password: values.password })
+      if (res.success) {
+        router.push('/dashboards')
+      } else {
+        form.setError('password', { message: res.message || 'Login failed' })
+      }
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -89,37 +98,7 @@ export default function ClientLogin() {
                 </FormItem>
               )}
             />
-
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Confirm Password</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                        <Lock className="h-4 w-4" />
-                      </span>
-                      <Input type={showConfirm ? 'text' : 'password'} placeholder="Enter your password again" className="pl-9" {...field} />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setShowConfirm((v) => !v)}
-                        className="absolute right-1.5 top-1/2 -translate-y-1/2"
-                        aria-label={showConfirm ? 'Hide confirm password' : 'Show confirm password'}
-                        aria-pressed={showConfirm}
-                      >
-                        {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" size="lg" className="w-full">Sign in</Button>
+            <Button type="submit" size="lg" className="w-full" disabled={submitting}>{submitting ? 'Signing in...' : 'Sign in'}</Button>
           </form>
         </Form>
       </CardContent>
