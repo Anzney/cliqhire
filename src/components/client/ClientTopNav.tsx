@@ -6,7 +6,16 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 
 export default function ClientTopNav() {
   const { user } = useAuth()
-  const name = user?.name || "Client"
+  const [clientName, setClientName] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("clientName")
+      if (stored) setClientName(stored)
+    }
+  }, [])
+
+  const name = user?.name || clientName || "Client"
   const initials = name
     .split(" ")
     .map((n) => n[0])

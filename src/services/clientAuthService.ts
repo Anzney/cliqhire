@@ -9,6 +9,7 @@ export interface ClientLoginResponse {
   success: boolean;
   message: string;
   token?: string;
+  name?: string;
 }
 
 const clientAuthApi = axios.create({
@@ -25,16 +26,22 @@ export async function clientLogin(payload: ClientLoginPayload): Promise<ClientLo
     };
 
     const res = await clientAuthApi.post("/api/clients/login", body);
-    const data = res.data as { success: boolean; message: string; token?: string };
+    const data = res.data as { success: boolean; message: string; token?: string; name?: string };
 
-    if (typeof window !== "undefined" && data?.token) {
-      localStorage.setItem("clientToken", data.token);
+    if (typeof window !== "undefined") {
+      if (data?.token) {
+        localStorage.setItem("clientToken", data.token);
+      }
+      if (data?.name) {
+        localStorage.setItem("clientName", data.name);
+      }
     }
 
     return {
       success: !!data?.success,
       message: data?.message || (data?.success ? "Login success" : "Login failed"),
       token: data?.token,
+      name: data?.name,
     };
   } catch (err: any) {
     const msg = err?.response?.data?.message || err?.message || "Login failed";
@@ -50,4 +57,6 @@ export function getClientToken(): string | null {
 export function clearClientToken() {
   if (typeof window === "undefined") return;
   localStorage.removeItem("clientToken");
+  localStorage.removeItem("clientName");
 }
+
