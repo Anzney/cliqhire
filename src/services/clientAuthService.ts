@@ -35,6 +35,10 @@ export async function clientLogin(payload: ClientLoginPayload): Promise<ClientLo
       if (data?.name) {
         localStorage.setItem("clientName", data.name);
       }
+      // Persist client email to support APIs that require it (e.g., logout)
+      if (payload?.email) {
+        localStorage.setItem("clientEmail", payload.email);
+      }
     }
 
     return {
@@ -58,5 +62,23 @@ export function clearClientToken() {
   if (typeof window === "undefined") return;
   localStorage.removeItem("clientToken");
   localStorage.removeItem("clientName");
+  localStorage.removeItem("clientEmail");
+}
+
+export async function clientLogout(): Promise<boolean> {
+  try {
+    let email: string | null = null;
+    if (typeof window !== "undefined") {
+      email = localStorage.getItem("clientEmail");
+    }
+    const body = email ? { email, emails: email } : {};
+    await clientAuthApi.post("/api/clients/logout", body);
+    return true;
+  } catch (err) {
+    // Even if API fails, proceed to clear local state to log the client out locally
+    return false;
+  } finally {
+    clearClientToken();
+  }
 }
 

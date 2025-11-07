@@ -2,8 +2,8 @@
 
 import React from "react"
 import { useAuth } from "@/contexts/AuthContext"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { useQuery } from "@tanstack/react-query"
+import ClientProfileDialog from "@/components/client/ClientProfileDialog"
 
 export default function ClientTopNav() {
   const { user } = useAuth()
@@ -34,10 +34,7 @@ export default function ClientTopNav() {
       <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-4">
         <div className="text-lg font-semibold tracking-tight">{name}</div>
         <div className="flex items-center gap-3">
-          <Avatar>
-            <AvatarImage src={""} alt={name} />
-            <AvatarFallback>{initials}</AvatarFallback>
-          </Avatar>
+          <ClientProfileDialog name={name} initials={initials} />
         </div>
       </div>
     </div>
