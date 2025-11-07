@@ -3,17 +3,23 @@
 import React from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { useQuery } from "@tanstack/react-query"
 
 export default function ClientTopNav() {
   const { user } = useAuth()
-  const [clientName, setClientName] = React.useState<string | null>(null)
-
-  React.useEffect(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("clientName")
-      if (stored) setClientName(stored)
-    }
-  }, [])
+  const { data: clientName } = useQuery({
+    queryKey: ["clientName"],
+    queryFn: async () => {
+      if (typeof window === "undefined") return null
+      return localStorage.getItem("clientName")
+    },
+    // Initialize immediately with current localStorage to avoid empty first render
+    initialData: typeof window !== "undefined" ? localStorage.getItem("clientName") : null,
+    // Refetch on mount to capture latest value written during login flow
+    refetchOnMount: "always",
+    refetchOnWindowFocus: false,
+    staleTime: 0,
+  })
 
   const name = user?.name || clientName || "Client"
   const initials = name
@@ -37,3 +43,4 @@ export default function ClientTopNav() {
     </div>
   )
 }
+

@@ -12,6 +12,7 @@ import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { clientLogin } from '@/services/clientAuthService'
 import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 
 const schema = z.object({
   emails: z.string().email('Enter a valid email'),
@@ -27,12 +28,17 @@ export default function ClientLogin() {
   const [showPassword, setShowPassword] = React.useState(false)
   const router = useRouter()
   const [submitting, setSubmitting] = React.useState(false)
+  const queryClient = useQueryClient()
 
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
       setSubmitting(true)
       const res = await clientLogin({ email: values.emails, password: values.password })
       if (res.success) {
+        if (res.name) {
+          // Update React Query cache so dependent UIs (like top nav) update immediately
+          queryClient.setQueryData(["clientName"], res.name)
+        }
         router.push('/dashboards')
       } else {
         form.setError('password', { message: res.message || 'Login failed' })
