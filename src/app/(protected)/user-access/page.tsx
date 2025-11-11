@@ -23,7 +23,7 @@ const UserAccess = () => {
         setFilterOpen={setFilterOpen}
         initialLoading={initialLoading}
         heading="User Management"
-        buttonText="Add Team Member"
+        buttonText="Create Team"
         showFilterButton={false}
         rightContent={<></>}
       />

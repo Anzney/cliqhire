@@ -139,7 +139,7 @@ export function UserAccessTabs({
     "Hiring Manager",
     "Team Lead",
     "No. of Recruiters",
-    "Team Status",
+    // "Team Status",
     "Action",
   ];
 
@@ -220,7 +220,7 @@ export function UserAccessTabs({
                       className="mb-4"
                       onClick={() => setDialogOpen(true)}
                     >
-                      Add Team Members
+                      Create Team
                     </Button>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Teams Management</h3>
@@ -238,12 +238,12 @@ export function UserAccessTabs({
         <TableCell className="text-sm">{team.hiringManagerId?.firstName + " " + team.hiringManagerId?.lastName || "—"}</TableCell>
         <TableCell className="text-sm">{team.teamLeadId?.firstName + " " + team.teamLeadId?.lastName || "—"}</TableCell>
         <TableCell className="text-sm">{team.recruiterCount}</TableCell>
-        <TableCell className="text-sm">
+        {/* <TableCell className="text-sm">
           <TeamStatusBadge 
             status={team.teamStatus || "Inactive"} 
             onStatusChange={(newStatus) => handleStatusChange(team._id, newStatus)}
           />
-        </TableCell>
+        </TableCell> */}
         <TableCell className="text-sm">
           <div className="relative">
             <DropdownMenu modal={false}>

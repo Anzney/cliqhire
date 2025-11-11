@@ -38,7 +38,6 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess, editTeam }
     hiringManager: "",
     teamLead: "",
     recruiters: [] as string[],
-    teamStatus: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -59,7 +58,6 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess, editTeam }
         hiringManager: editTeam.hiringManagerId?._id || "",
         teamLead: editTeam.teamLeadId?._id || "",
         recruiters: Array.isArray(editTeam.recruiters) ? editTeam.recruiters.map(r => r._id) : [],
-        teamStatus: editTeam.teamStatus || "",
       });
     } else if (open && !editTeam) {
       setFormData({
@@ -67,7 +65,6 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess, editTeam }
         hiringManager: "",
         teamLead: "",
         recruiters: [],
-        teamStatus: "",
       });
     }
   }, [open, editTeam]);
@@ -158,7 +155,7 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess, editTeam }
 
     try {
       // Validate required fields
-      if (!formData.teamName || !formData.hiringManager || !formData.teamLead || formData.recruiters.length === 0 || !formData.teamStatus) {
+      if (!formData.teamName || !formData.hiringManager || !formData.teamLead || formData.recruiters.length === 0) {
         throw new Error("Please fill in all required fields");
       }
 
@@ -167,7 +164,6 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess, editTeam }
         hiringManagerId: formData.hiringManager,
         teamLeadId: formData.teamLead,
         recruiterIds: formData.recruiters,
-        teamStatus: formData.teamStatus,
       };
 
       let result;
@@ -188,7 +184,6 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess, editTeam }
         hiringManager: "",
         teamLead: "",
         recruiters: [],
-        teamStatus: "",
       });
     } catch (error: any) {
       // You might want to show an error message to the user here
@@ -204,7 +199,6 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess, editTeam }
       hiringManager: "",
       teamLead: "",
       recruiters: [],
-      teamStatus: "",
     });
     onOpenChange(false);
   };
@@ -213,7 +207,7 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess, editTeam }
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{editTeam ? "Edit Team" : "Add Team Members"}</DialogTitle>
+          <DialogTitle>{editTeam ? "Edit Team" : "Create Team"}</DialogTitle>
           <DialogDescription>
             {editTeam ? "Update the team details and members." : "Create a new team with the required members and roles."}
           </DialogDescription>
@@ -331,7 +325,7 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess, editTeam }
             </div>
           </div>
 
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="teamStatus">Team Status</Label>
             <Select
               value={formData.teamStatus}
@@ -347,7 +341,7 @@ export function AddTeamMembersDialog({ open, onOpenChange, onSuccess, editTeam }
                 <SelectItem value="On Hold">On Hold</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </div> */}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={handleCancel}>
