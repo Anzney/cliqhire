@@ -5,11 +5,19 @@ import { useQuery } from "@tanstack/react-query"
 import { fetchClientPipelineJobsSummary } from "@/services/clientJobsService"
 import { TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
-export default function ClientJobsTableBody() {
+export interface ClientJobsTableBodyProps {
+  page?: number
+  pageSize?: number
+  status?: string
+}
+
+const ClientJobsTableBody: React.FC<ClientJobsTableBodyProps> = ({ page, pageSize, status }) => {
+  const params = { page, pageSize, status }
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["client", "pipeline-jobs-summary"],
-    queryFn: fetchClientPipelineJobsSummary,
+    queryKey: ["client", "pipeline-jobs-summary", params],
+    queryFn: () => fetchClientPipelineJobsSummary(params),
     refetchOnWindowFocus: false,
   })
 
@@ -54,10 +62,14 @@ export default function ClientJobsTableBody() {
           <TableCell>{row.jobStatus || "-"}</TableCell>
           <TableCell>{typeof row.candidateCount === "number" ? row.candidateCount : "-"}</TableCell>
           <TableCell>
-            <Button size="sm" variant="outline">View</Button>
+            <Button size="sm" variant="outline" asChild>
+              <Link href={`/client/jobs/${row.jobId}`}>View</Link>
+            </Button>
           </TableCell>
         </TableRow>
       ))}
     </TableBody>
   )
 }
+
+export default ClientJobsTableBody

@@ -15,6 +15,12 @@ export interface ClientPipelineJobsSummaryResponse {
   data: ClientPipelineJobSummaryItem[]
 }
 
+export interface ClientPipelineJobsSummaryQuery {
+  page?: number
+  pageSize?: number
+  status?: string
+}
+
 const clientApi = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
   withCredentials: true,
@@ -35,8 +41,10 @@ clientApi.interceptors.request.use((config) => {
   return config
 })
 
-export async function fetchClientPipelineJobsSummary(): Promise<ClientPipelineJobSummaryItem[]> {
-  const res = await clientApi.get<ClientPipelineJobsSummaryResponse>("/api/clients/pipeline-jobs-summary")
+export async function fetchClientPipelineJobsSummary(params?: ClientPipelineJobsSummaryQuery): Promise<ClientPipelineJobSummaryItem[]> {
+  const res = await clientApi.get<ClientPipelineJobsSummaryResponse>("/api/clients/pipeline-jobs-summary", {
+    params,
+  })
   const data = res.data
   if (!data?.success) {
     throw new Error(data?.message || "Failed to load jobs summary")
