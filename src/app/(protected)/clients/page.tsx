@@ -273,10 +273,10 @@ export default function ClientsPage() {
     const stagesQ = filterStages;
 
     if (nameQ) {
-      result = result.filter((client: Client) => client.name.toLowerCase().includes(nameQ));
+      result = result.filter((client: Client) => (client.name || "").toLowerCase().includes(nameQ));
     }
     if (indQ) {
-      result = result.filter((client: Client) => client.industry.toLowerCase().includes(indQ));
+      result = result.filter((client: Client) => (client.industry || "").toLowerCase().includes(indQ));
     }
     if (locQ) {
       result = result.filter((client: Client) => (client.countryOfBusiness || "").toLowerCase().includes(locQ));
@@ -296,8 +296,8 @@ export default function ClientsPage() {
     // Apply sorting only if sortConfig is for name
     if (sortConfig.field === 'name') {
       result.sort((a, b) => {
-        const aValue = a.name.toLowerCase();
-        const bValue = b.name.toLowerCase();
+        const aValue = (a.name || "").toLowerCase();
+        const bValue = (b.name || "").toLowerCase();
         
         if (aValue < bValue) {
           return sortConfig.order === "asc" ? -1 : 1;
