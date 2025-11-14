@@ -7,8 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getTeamMembers } from "@/services/teamMembersService";
-import { getReferredList } from "@/services/referredService";
+import { createReferredUser, getReferredList } from "@/services/referredService";
 import { Loader2, Search, Users, UserPlus } from "lucide-react";
+import { ReferredByDialog } from "@/components/Referred/referredBy-dialog";
+import { toast } from "sonner";
 
 type User = {
   _id?: string;
@@ -37,77 +39,87 @@ export default function UserSelectDialog({ open, onClose, onSelect, title = "Sel
   const [searchBy, setSearchBy] = useState<"name" | "email" | "role">("name");
   const [showTeam, setShowTeam] = useState(true);
   const [showReferred, setShowReferred] = useState(true);
+  const [isReferredDialogOpen, setIsReferredDialogOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+
+  const handleSaveReferredUser = async (data: { name: string; email: string; phone: string; position: string }) => {
+    try {
+      setIsCreating(true);
+      await createReferredUser(data);
+      toast.success('Referred user added successfully');
+      await loadUsers();
+      setIsReferredDialogOpen(false);
+    } catch (error) {
+      console.error('Error creating referred user:', error);
+      toast.error('Failed to add referred user');
+      throw error; // Re-throw to let the form handle the error
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      
+      const [teamRes, referredRes] = await Promise.all([
+        getTeamMembers(),
+        getReferredList()
+      ]);
+
+      const teamMembers = (teamRes.teamMembers || []).map((user: any) => ({
+        ...user,
+        type: 'team' as const,
+        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.name || user.email || 'Unknown'
+      }));
+
+      const referredUsers = (referredRes || []).map((user: any) => ({
+        ...user,
+        type: 'referred' as const,
+        name: user.name || user.email || 'Unknown',
+        email: user.email || '',
+        teamRole: user.position || 'Referred Contact'
+      }));
+
+      setUsers([...teamMembers, ...referredUsers]);
+    } catch (e) {
+      console.error('Error loading users:', e);
+      toast.error('Failed to load users');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        setLoading(true);
-        
-        const [teamRes, referredRes] = await Promise.all([
-          getTeamMembers(),
-          getReferredList()
-        ]);
-
-        if (cancelled) return;
-
-        const teamMembers = (teamRes.teamMembers || []).map((user: any) => ({
-          ...user,
-          type: 'team' as const,
-          name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.name || user.email || 'Unknown'
-        }));
-
-        const referredUsers = (referredRes || []).map((user: any) => ({
-          ...user,
-          type: 'referred' as const,
-          name: user.name || user.email || 'Unknown',
-          email: user.email || '',
-          teamRole: user.position || 'Referred Contact'
-        }));
-
-        setUsers([...teamMembers, ...referredUsers]);
-      } catch (e) {
-        console.error('Error loading users:', e);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    if (open) load();
-    return () => {
-      cancelled = true;
-    };
+    if (open) {
+      loadUsers();
+    }
   }, [open]);
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    let result = [...users];
-    
-    // Apply type filters
-    result = result.filter(u => {
-      if (showTeam && u.type === 'team') return true;
-      if (showReferred && u.type === 'referred') return true;
+    if (!users) return [];
+
+    let result = users;
+
+    // Filter by type (team/referred)
+    result = result.filter(user => {
+      if (showTeam && user.type === 'team') return true;
+      if (showReferred && user.type === 'referred') return true;
       return false;
     });
-    
-    // Apply search filter if query exists
-    if (q) {
-      result = result.filter(u => {
-        if (searchBy === "name") {
-          const fullName = u.name?.toLowerCase() || '';
-          return fullName.includes(q);
-        }
-        if (searchBy === "email") return (u.email || "").toLowerCase().includes(q);
-        return (u.teamRole || "").toLowerCase().includes(q);
+
+    // Filter by search
+    if (search.trim()) {
+      const searchLower = search.toLowerCase();
+      result = result.filter(user => {
+        if (searchBy === 'name' && user.name?.toLowerCase().includes(searchLower)) return true;
+        if (searchBy === 'email' && user.email?.toLowerCase().includes(searchLower)) return true;
+        if (searchBy === 'role' && user.teamRole?.toLowerCase().includes(searchLower)) return true;
+        return false;
       });
     }
-    
-    // Sort team members first, then referred users
-    return result.sort((a, b) => {
-      if (a.type === 'team' && b.type === 'referred') return -1;
-      if (a.type === 'referred' && b.type === 'team') return 1;
-      return 0;
-    });
+
+    return result;
   }, [users, search, searchBy, showTeam, showReferred]);
 
   return (
@@ -209,7 +221,18 @@ export default function UserSelectDialog({ open, onClose, onSelect, title = "Sel
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-between">
+          <ReferredByDialog
+            open={isReferredDialogOpen}
+            onOpenChange={setIsReferredDialogOpen}
+            onSave={handleSaveReferredUser}
+            loading={isCreating}
+          >
+            <Button variant="outline" type="button">
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add New Referred
+            </Button>
+          </ReferredByDialog>
           <Button variant="outline" onClick={onClose}>Close</Button>
         </div>
       </DialogContent>

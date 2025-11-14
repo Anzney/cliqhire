@@ -28,3 +28,16 @@ export const getReferredList = async (): Promise<ReferredUser[]> => {
     throw error;
   }
 };
+
+export const createReferredUser = async (userData: Omit<ReferredUser, '_id' | 'createdAt' | '__v'>): Promise<ReferredUser> => {
+  try {
+    const response = await api.post<ApiResponse<ReferredUser>>('/api/referred', userData);
+    if (response.data.success) {
+      return response.data.data;
+    }
+    throw new Error(response.data.message || 'Failed to create referred user');
+  } catch (error) {
+    console.error('Error creating referred user:', error);
+    throw error;
+  }
+};

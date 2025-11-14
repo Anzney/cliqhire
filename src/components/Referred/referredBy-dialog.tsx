@@ -34,14 +34,26 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>
 
+interface ReferredByDialogProps {
+  children: React.ReactNode;
+  onSave: (data: FormValues) => Promise<void> | void;
+  loading?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
 export function ReferredByDialog({
   children,
   onSave,
-}: {
-  children: React.ReactNode
-  onSave: (data: FormValues) => void
-}) {
-  const [open, setOpen] = React.useState(false)
+  loading = false,
+  open: propOpen,
+  onOpenChange: propOnOpenChange
+}: ReferredByDialogProps) {
+  const [internalOpen, setInternalOpen] = React.useState(false);
+  
+  // Use props if provided, otherwise use internal state
+  const open = propOpen !== undefined ? propOpen : internalOpen;
+  const setOpen = propOnOpenChange || setInternalOpen;
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -53,10 +65,15 @@ export function ReferredByDialog({
     },
   })
 
-  function onSubmit(data: FormValues) {
-    onSave(data)
-    setOpen(false)
-    form.reset()
+  async function onSubmit(data: FormValues) {
+    try {
+      await onSave(data);
+      form.reset();
+      setOpen(false);
+    } catch (error) {
+      // Error handling is done in the parent component
+      console.error('Error in onSubmit:', error);
+    }
   }
 
   return (
@@ -80,6 +97,7 @@ export function ReferredByDialog({
               <Input
                 id="name"
                 className="col-span-3"
+                disabled={loading}
                 {...form.register("name")}
               />
               {form.formState.errors.name && (
@@ -96,6 +114,7 @@ export function ReferredByDialog({
                 id="email"
                 type="email"
                 className="col-span-3"
+                disabled={loading}
                 {...form.register("email")}
               />
               {form.formState.errors.email && (
@@ -112,6 +131,7 @@ export function ReferredByDialog({
                 id="phone"
                 type="tel"
                 className="col-span-3"
+                disabled={loading}
                 {...form.register("phone")}
               />
               {form.formState.errors.phone && (
@@ -127,6 +147,7 @@ export function ReferredByDialog({
               <Input
                 id="position"
                 className="col-span-3"
+                disabled={loading}
                 {...form.register("position")}
               />
               {form.formState.errors.position && (
@@ -137,7 +158,9 @@ export function ReferredByDialog({
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit">Save</Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Saving...' : 'Save'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
