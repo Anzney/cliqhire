@@ -20,16 +20,16 @@ import { Label } from "@/components/ui/label"
 const formSchema = z.object({
   name: z.string().min(2, {
     message: "Name must be at least 2 characters.",
-  }),
+  }).nonempty("Name is required"),
   email: z.string().email({
     message: "Please enter a valid email address.",
-  }),
+  }).nonempty("Email is required"),
   phone: z.string().min(10, {
     message: "Phone number must be at least 10 digits.",
-  }),
+  }).nonempty("Phone is required"),
   position: z.string().min(2, {
     message: "Position must be at least 2 characters.",
-  }),
+  }).nonempty("Position is required"),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -89,69 +89,73 @@ export function ReferredByDialog({
               Enter the details of the person who referred you.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Name
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="flex items-center gap-1">
+                Name <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
-                className="col-span-3"
                 disabled={loading}
                 {...form.register("name")}
+                className={form.formState.errors.name ? "border-red-500" : ""}
+                placeholder="Enter Name"
               />
               {form.formState.errors.name && (
-                <p className="col-span-4 text-right text-sm text-red-500">
+                <p className="text-sm text-red-500">
                   {form.formState.errors.name.message}
                 </p>
               )}
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="email" className="text-right">
-                Email
+            <div className="space-y-2">
+              <Label htmlFor="email" className="flex items-center gap-1">
+                Email <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="email"
                 type="email"
-                className="col-span-3"
                 disabled={loading}
                 {...form.register("email")}
+                className={form.formState.errors.email ? "border-red-500" : ""}
+                placeholder="Enter email address"
               />
               {form.formState.errors.email && (
-                <p className="col-span-4 text-right text-sm text-red-500">
+                <p className="text-sm text-red-500">
                   {form.formState.errors.email.message}
                 </p>
               )}
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="phone" className="text-right">
-                Phone
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="flex items-center gap-1">
+                Phone <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="phone"
                 type="tel"
-                className="col-span-3"
                 disabled={loading}
                 {...form.register("phone")}
+                className={form.formState.errors.phone ? "border-red-500" : ""}
+                placeholder="Enter phone number"
               />
               {form.formState.errors.phone && (
-                <p className="col-span-4 text-right text-sm text-red-500">
+                <p className="text-sm text-red-500">
                   {form.formState.errors.phone.message}
                 </p>
               )}
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="position" className="text-right">
-                Position
+            <div className="space-y-2">
+              <Label htmlFor="position" className="flex items-center gap-1">
+                Position <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="position"
-                className="col-span-3"
                 disabled={loading}
                 {...form.register("position")}
+                className={form.formState.errors.position ? "border-red-500" : ""}
+                placeholder="eg, HR"
               />
               {form.formState.errors.position && (
-                <p className="col-span-4 text-right text-sm text-red-500">
+                <p className="text-sm text-red-500">
                   {form.formState.errors.position.message}
                 </p>
               )}
