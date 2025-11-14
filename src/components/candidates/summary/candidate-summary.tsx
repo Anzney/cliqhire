@@ -16,7 +16,7 @@ import SalaryRange from "./salary-range";
 import { ResumeUploadDialog } from "./resume-upload-dialog";
 import UserSelectDialog from "@/components/shared/UserSelectDialog";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ReferredByList } from "@/components/Referred/ReferredByList";
+// ReferredByList import removed as we're using UserSelectDialog instead
 
 const detailsFields = [
   { key: "name", label: "Candidate Name" },
@@ -142,17 +142,10 @@ const CandidateSummary = ({
   const handleReferredBySelect = useCallback((user: any) => {
     if (!user) return;
     
-    // Close the selection dialog first
-    setShowReferredByDialog(false);
-    
-    // Use a small timeout to ensure the first dialog is closed before opening the second one
-    const timer = setTimeout(() => {
-      setPendingUser(user);
-      setPendingReferrerName(user.name || user.email || '');
-      setShowConfirmReferrer(true);
-    }, 100);
-    
-    return () => clearTimeout(timer);
+    // Set the pending user and show confirmation dialog
+    setPendingUser(user);
+    setPendingReferrerName(user.name || user.email || '');
+    setShowConfirmReferrer(true);
   }, []);
 
   const confirmReferrer = () => {
@@ -394,11 +387,12 @@ const CandidateSummary = ({
             </div>
           </div>
 
-          {/* ReferredByList Dialog */}
-          <ReferredByList
+          {/* UserSelectDialog */}
+          <UserSelectDialog
             open={showReferredByDialog}
-            onOpenChange={setShowReferredByDialog}
+            onClose={() => setShowReferredByDialog(false)}
             onSelect={handleReferredBySelect}
+            title="Select Referrer"
           />
 
           {/* Confirmation Dialog */}
@@ -707,13 +701,13 @@ const CandidateSummary = ({
       )}
 
       {/* Referred By List Dialog */}
-      {canModify && (
+      {/* {canModify && (
         <ReferredByList
           open={showReferredByDialog}
           onOpenChange={setShowReferredByDialog}
           onSelect={handleReferredBySelect}
         />
-      )}
+      )} */}
 
     </div>
   );
