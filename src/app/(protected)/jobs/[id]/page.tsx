@@ -1,6 +1,6 @@
 "use client"
 
-import { Loader } from "lucide-react"
+import { Loader , MapPin ,  Building2} from "lucide-react"
 import { getJobById } from "@/services/jobService"
 import { notFound } from "next/navigation"
 import { useState } from "react"
@@ -96,7 +96,8 @@ export default function JobPage({ params }: PageProps) {
           <div>
             <h1 className="text-2xl font-bold">{jobTitle}</h1>
             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-              <span>{location}</span>
+            <span  className="flex items-center gap-2"> <Building2 className="size-4" /> {job.client.name || ""}</span>
+              <span className="flex items-center gap-2"> <MapPin className="size-4" /> {location}</span>
               <span>•</span>
               {/* Use the same color logic as JobStageBadge, but display-only */}
               <Badge

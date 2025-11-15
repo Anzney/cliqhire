@@ -36,8 +36,8 @@ export const createReferredUser = async (userData: Omit<ReferredUser, '_id' | 'c
       return response.data.data;
     }
     throw new Error(response.data.message || 'Failed to create referred user');
-  } catch (error) {
-    console.error('Error creating referred user:', error);
-    throw error;
+  } catch (error: any) {
+    console.error('Error creating referred user:', error);3
+    throw error.response?.data || error;
   }
 };

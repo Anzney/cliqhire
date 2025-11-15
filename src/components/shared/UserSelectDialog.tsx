@@ -42,7 +42,7 @@ export default function UserSelectDialog({ open, onClose, onSelect, title = "Sel
   const [isReferredDialogOpen, setIsReferredDialogOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
-  const handleSaveReferredUser = async (data: { name: string; email: string; phone: string; position: string }) => {
+  const handleSaveReferredUser = async (data: { name: string; email: string; phone: string; position: string ;}) => {
     try {
       setIsCreating(true);
       await createReferredUser(data);
@@ -50,9 +50,9 @@ export default function UserSelectDialog({ open, onClose, onSelect, title = "Sel
       await loadUsers();
       setIsReferredDialogOpen(false);
     } catch (error) {
-      console.error('Error creating referred user:', error);
-      toast.error('Failed to add referred user');
-      throw error; // Re-throw to let the form handle the error
+      console.log('Error creating referred user:', error);
+      toast.error(`${(error as any)?.message || 'Failed to add referred user'}`);
+      throw error; // Re-throw to let the dialog know
     } finally {
       setIsCreating(false);
     }
