@@ -508,6 +508,18 @@ const CandidateSummary = ({
     return (
       <div key={field.key} className="mb-4">
         <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-muted-foreground">{field.label}</span>
+          {canModify && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 flex items-center"
+              onClick={() => setEditField(field.key)}
+            >
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+          )}
         </div>
         <Textarea
           value={hasValue ? displayValue : ""}
