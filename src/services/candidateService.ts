@@ -179,29 +179,49 @@ class CandidateService {
   }
 
   /**
-   * Get all candidates with optional filtering
+   * Get all candidates with server-side pagination and filtering
    */
   async getCandidates(params?: {
     search?: string;
     status?: string;
+    page?: number;
     limit?: number;
-    offset?: number;
-  }): Promise<{ candidates: Candidate[]; total: number }> {
+    name?: string;
+    email?: string;
+    experience?: string;
+    location?: string;
+  }): Promise<{
+    candidates: Candidate[];
+    total: number;
+    currentPage: number;
+    totalPages: number;
+    results: number;
+  }> {
     try {
       const queryParams = new URLSearchParams();
+      
+      // Add pagination parameters
+      if (params?.page) queryParams.append('page', params.page.toString());
+      if (params?.limit) queryParams.append('limit', params.limit.toString());
+      
+      // Add filter parameters
       if (params?.search) queryParams.append('search', params.search);
       if (params?.status) queryParams.append('status', params.status);
-      if (params?.limit) queryParams.append('limit', params.limit.toString());
-      if (params?.offset) queryParams.append('offset', params.offset.toString());
-
-      const url = `/api/candidates${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      if (params?.name) queryParams.append('name', params.name);
+      if (params?.email) queryParams.append('email', params.email);
+      if (params?.experience) queryParams.append('experience', params.experience);
+      if (params?.location) queryParams.append('location', params.location);
       
+      const url = `/api/candidates?${queryParams.toString()}`;
       const response = await api.get(url);
+      const responseData = response.data;
 
-      const apiResponse: ApiResponse<Candidate[]> = response.data;
       return {
-        candidates: apiResponse.data || [],
-        total: apiResponse.results || 0
+        candidates: responseData.data || [],
+        total: responseData.totalCount || 0,
+        currentPage: responseData.currentPage || 1,
+        totalPages: responseData.totalPages || 1,
+        results: responseData.results || 0
       };
     } catch (error) {
       console.error('Error fetching candidates:', error);

@@ -4,7 +4,7 @@ import { Table, TableHeader, TableBody, TableCell, TableRow, TableHead } from "@
 import { Loader } from "lucide-react";
 import { CandidatesEmptyState } from "../../../components/candidates/empty-states";
 // import Link from 'next/link'
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Dashboardheader from "@/components/dashboard-header";
 import { CreateCandidateModal } from "@/components/candidates/create-candidate-modal";
@@ -39,17 +39,8 @@ export default function CandidatesPage() {
   const canDeleteCandidates = isAdmin || finalPermissions.includes('CANDIDATE_DELETE');
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data, isLoading: initialLoading, isFetching, refetch } = useQuery({
-    queryKey: ["candidates"],
-    queryFn: () => candidateService.getCandidates(),
-  });
-  const candidates: Candidate[] = data?.candidates ?? [];
-  const [open, setOpen] = useState(false);
-  // const [selected, setSelected] = useState("candidate");
-
-  // Pagination state (client-side, similar to clients page)
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(13);
+  const [pageSize, setPageSize] = useState<number>(100);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -60,35 +51,32 @@ export default function CandidatesPage() {
   const [filterLocation, setFilterLocation] = useState("");
   const [selectedStatuses, setSelectedStatuses] = useState<FilterStatus[]>([]);
 
-  // Derive filtered + paged candidates and totals (client-side)
-  const { pagedCandidates, totalCandidatesCalc, totalPagesCalc } = useMemo(() => {
-    let result: Candidate[] = initialLoading ? [] : candidates;
+  const { data, isLoading: initialLoading, isFetching, refetch } = useQuery({
+    queryKey: [
+      "candidates",
+      currentPage,
+      pageSize,
+      filterName,
+      filterEmail,
+      filterExperience,
+      filterLocation,
+      selectedStatuses.join(","),
+    ],
+    queryFn: () =>
+      candidateService.getCandidates({
+        page: currentPage,
+        limit: pageSize,
+        name: filterName || undefined,
+        email: filterEmail || undefined,
+        experience: filterExperience || undefined,
+        location: filterLocation || undefined,
+        status: selectedStatuses.join(",") || undefined,
+      }),
+  });
+  const candidates: Candidate[] = data?.candidates ?? [];
+  const [open, setOpen] = useState(false);
 
-    const nameQ = filterName.trim().toLowerCase();
-    const emailQ = filterEmail.trim().toLowerCase();
-    const expQ = filterExperience.trim().toLowerCase();
-    const locQ = filterLocation.trim().toLowerCase();
-
-    if (nameQ || emailQ || expQ || locQ || selectedStatuses.length > 0) {
-      result = result.filter((c) => {
-        const matchesName = nameQ === "" || (c.name || "").toLowerCase().includes(nameQ);
-        const matchesEmail = emailQ === "" || (c.email || "").toLowerCase().includes(emailQ);
-        const matchesExp = expQ === "" || (c.experience || "").toLowerCase().includes(expQ);
-        const matchesLoc = locQ === "" || (c.location || "").toLowerCase().includes(locQ);
-        const matchesStatus = selectedStatuses.length === 0 || (c.status ? selectedStatuses.includes(c.status as FilterStatus) : false);
-        return matchesName && matchesEmail && matchesExp && matchesLoc && matchesStatus;
-      });
-    }
-    const totalCandidatesCalc = result.length;
-    const totalPagesCalcRaw = Math.ceil(totalCandidatesCalc / pageSize);
-    const totalPagesCalc = totalPagesCalcRaw > 0 ? totalPagesCalcRaw : 1;
-
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = Math.min(startIndex + pageSize, totalCandidatesCalc);
-    const pagedCandidates = result.slice(startIndex, endIndex);
-
-    return { pagedCandidates, totalCandidatesCalc, totalPagesCalc };
-  }, [candidates, currentPage, pageSize, initialLoading, filterName, filterEmail, filterExperience, filterLocation, selectedStatuses]);
+  // Server-side pagination: totals come from API response
 
   const toggleRowSelection = (candidateId: string) => {
     if (!canDeleteCandidates) return;
@@ -105,11 +93,11 @@ export default function CandidatesPage() {
 
   const toggleSelectAll = () => {
     if (!canDeleteCandidates) return;
-    if (selectedRows.size === pagedCandidates.length) {
+    if (selectedRows.size === candidates.length) {
       setSelectedRows(new Set());
     } else {
       const newSelected = new Set<string>();
-      pagedCandidates.forEach((c) => {
+      candidates.forEach((c) => {
         if (c._id) newSelected.add(c._id);
       });
       setSelectedRows(newSelected);
@@ -172,7 +160,7 @@ export default function CandidatesPage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-screen overflow-hidden">
       {canModifyCandidates && (
         <CreateCandidateModal
           isOpen={open}
@@ -185,7 +173,7 @@ export default function CandidatesPage() {
       )}
 
       {/* Header */}
-
+      <div className="sticky top-0 z-30 bg-white">
       <Dashboardheader
         setOpen={setOpen}
         setFilterOpen={setFilterOpen}
@@ -202,20 +190,21 @@ export default function CandidatesPage() {
           refetch();
         }}
       />
+      </div>
 
       {/* Inline filters injected into header via rightContent below */}
 
       {/* Table + Pagination */}
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 flex flex-col min-h-0 ">
         {/* Scrollable area with sticky header */}
-        <div className="flex-1 overflow-auto" style={{ maxHeight: "calc(100vh - 30px)" }}>
+        <div className="flex-1 overflow-auto pb-20">
           <Table>
-            <TableHeader>
-              <TableRow className="sticky top-0 z-20 bg-white">
-                <TableHead className="w-12 px-4">
+            <TableHeader className="sticky top-0 z-20 bg-white">
+              <TableRow className="bg-white">
+                <TableHead className="w-12 px-4 sticky top-0 z-20 bg-white">
                   <div className="flex items-center justify-center">
                     <Checkbox
-                      checked={selectedRows.size > 0 && selectedRows.size === pagedCandidates.length}
+                      checked={selectedRows.size > 0 && selectedRows.size === candidates.length}
                       onCheckedChange={() => toggleSelectAll()}
                       className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
                       disabled={!canDeleteCandidates}
@@ -223,7 +212,7 @@ export default function CandidatesPage() {
                   </div>
                 </TableHead>
                 {columsArr.map((column) => (
-                  <TableHead key={column} className="text-xs uppercase text-muted-foreground font-medium">{column}</TableHead>
+                  <TableHead key={column} className="text-xs uppercase text-muted-foreground font-medium sticky top-0 z-20 bg-white">{column}</TableHead>
                 ))}
               </TableRow>
             </TableHeader>
@@ -246,7 +235,7 @@ export default function CandidatesPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                pagedCandidates.map((candidate) => (
+                candidates.map((candidate) => (
                   <TableRow
                     key={candidate._id}
                     className={`${candidate._id && selectedRows.has(candidate._id) ? 'bg-blue-50' : ''} cursor-pointer hover:bg-gray-100`}
@@ -300,25 +289,8 @@ export default function CandidatesPage() {
               )}
             </TableBody>
           </Table>
-        </div>
-        {/* Sticky bottom pagination */}
-        <div className="sticky bottom-0 bg-white z-10 border-t">
-          <CandidatePaginationControls
-            currentPage={currentPage}
-            totalPages={totalPagesCalc}
-            totalCandidates={totalCandidatesCalc}
-            pageSize={pageSize}
-            setPageSize={setPageSize}
-            handlePageChange={(page) => {
-              if (page >= 1 && page <= totalPagesCalc) setCurrentPage(page);
-            }}
-            candidatesLength={totalCandidatesCalc}
-          />
-        </div>
       </div>
-
-      {/* Content */}
-      {/* {showSelectedOption()} */}
+      </div>
 
       <DeleteConfirmationDialog
         isOpen={showDeleteDialog}
@@ -343,15 +315,33 @@ export default function CandidatesPage() {
         onLocationChange={setFilterLocation}
         selectedStatuses={selectedStatuses}
         onStatusesChange={setSelectedStatuses}
-        onApply={() => setFilterOpen(false)}
+        onApply={() => {
+          setFilterOpen(false);
+          setCurrentPage(1);
+        }}
         onClear={() => {
           setFilterName("");
           setFilterEmail("");
           setFilterExperience("");
           setFilterLocation("");
           setSelectedStatuses([]);
+          setCurrentPage(1);
         }}
       />
+
+      <div className="fixed bottom-0 left-0 right-0 bg-white z-30 border-t">
+        <CandidatePaginationControls
+          currentPage={currentPage}
+          totalPages={data?.totalPages || 1}
+          totalCandidates={data?.total || 0}
+          pageSize={pageSize}
+          setPageSize={setPageSize}
+          handlePageChange={(page) => {
+            if (page >= 1 && page <= (data?.totalPages || 1)) setCurrentPage(page);
+          }}
+          candidatesLength={candidates.length}
+        />
+      </div>
     </div>
   );
 }
