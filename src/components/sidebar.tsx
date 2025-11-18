@@ -17,7 +17,8 @@ import {
   DollarSign,
   Route,
   LockKeyhole,
-  ListTodo
+  ListTodo,
+  UserRoundSearch
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -41,6 +42,7 @@ const menuItems = [
   { name: "Jobs", icon: Briefcase, href: "/jobs", permission: "JOBS" },
   { name: "Candidates", icon: Users, href: "/candidates", permission: "CANDIDATE" },
   { name: "Recruitment Pipeline", icon: Route, href: "/reactruterpipeline", permission: "RECRUITMENT_PIPELINE" },
+  { name: "Head Hunter", icon:  UserRoundSearch, href: "/headhunter", permission: "HEAD_HUNTER" },
   { name: "Team Members", icon: Users, href: "/teammembers", permission: "TEAM_MEMBERS" },
   { name: "User Access", icon: LockKeyhole, href: "/user-access", permission: "USER_ACCESS" },
   // { name: "Placements", icon: UserCheck, href: "/placements", permission: "PLACEMENTS" },
