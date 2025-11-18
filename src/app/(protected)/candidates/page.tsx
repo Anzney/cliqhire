@@ -159,21 +159,9 @@ export default function CandidatesPage() {
   }
 
   return (
-    <div className="flex flex-col h-[100vh] overflow-hidden">
-      {canModifyCandidates && (
-        <CreateCandidateModal
-          isOpen={open}
-          onClose={() => setOpen(false)}
-          onCandidateCreated={async () => {
-            await queryClient.invalidateQueries({ queryKey: ["candidates"] });
-            setOpen(false);
-          }}
-        />
-      )}
-
-      {/* Header */}
-      <div className="sticky top-0 z-30 bg-white">
-      <Dashboardheader
+   <div className="h-full">
+    <div>
+       <Dashboardheader
         setOpen={setOpen}
         setFilterOpen={setFilterOpen}
         initialLoading={isFetching}
@@ -188,11 +176,11 @@ export default function CandidatesPage() {
         onRefresh={() => {
           refetch();
         }}
-      />
-      </div>
-         {/* Table */}
-      <div className="flex-1 overflow-auto pb-20 max-h-[calc(100vh-200px)]">
-          <Table>
+       />
+    </div>
+    {/* Table */}
+    <div className="h-[560px] overflow-y-auto">
+     <Table>
             <TableHeader className="sticky top-0 z-20 bg-white">
               <TableRow className="bg-white">
                 <TableHead className="w-12 px-4 sticky top-0 z-20 bg-white">
@@ -283,10 +271,9 @@ export default function CandidatesPage() {
               )}
             </TableBody>
           </Table>
-      </div>
-
-      <div className=" bottom-0 left-0 right-0 bg-white z-30 border-t">
-        <CandidatePaginationControls
+    </div>
+    <div>
+       <CandidatePaginationControls
           currentPage={currentPage}
           totalPages={data?.totalPages || 1}
           totalCandidates={data?.total || 0}
@@ -297,9 +284,9 @@ export default function CandidatesPage() {
           }}
           candidatesLength={candidates.length}
         />
-      </div>
+    </div>
 
-      <DeleteConfirmationDialog
+     <DeleteConfirmationDialog
         isOpen={showDeleteDialog}
         onClose={() => setShowDeleteDialog(false)}
         onConfirm={confirmDeleteSelected}
@@ -334,7 +321,7 @@ export default function CandidatesPage() {
           setSelectedStatuses([]);
           setCurrentPage(1);
         }}
-      />  
-    </div>
+      /> 
+   </div>
   );
 }

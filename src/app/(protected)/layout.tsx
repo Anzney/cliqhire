@@ -17,8 +17,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <SidebarInset>
             <main className="flex-1 min-h-screen flex flex-col overflow-hidden">
               <Header />
-              <div className="flex-1 overflow-auto">{children}</div>
-            </main>   
+              <div className="flex-1 overflow-hidden">{children}</div>
+            </main>
           </SidebarInset>
         </SidebarProvider>
       </QueryProvider>
