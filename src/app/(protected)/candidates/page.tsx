@@ -3,7 +3,6 @@ import { Candidate, candidateService } from "@/services/candidateService";
 import { Table, TableHeader, TableBody, TableCell, TableRow, TableHead } from "@/components/ui/table";
 import { Loader } from "lucide-react";
 import { CandidatesEmptyState } from "../../../components/candidates/empty-states";
-// import Link from 'next/link'
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Dashboardheader from "@/components/dashboard-header";
@@ -160,7 +159,7 @@ export default function CandidatesPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
+    <div className="flex flex-col h-[100vh] overflow-hidden">
       {canModifyCandidates && (
         <CreateCandidateModal
           isOpen={open}
@@ -191,13 +190,8 @@ export default function CandidatesPage() {
         }}
       />
       </div>
-
-      {/* Inline filters injected into header via rightContent below */}
-
-      {/* Table + Pagination */}
-      <div className="flex-1 flex flex-col min-h-0 ">
-        {/* Scrollable area with sticky header */}
-        <div className="flex-1 overflow-auto pb-20">
+         {/* Table */}
+      <div className="flex-1 overflow-auto pb-20 max-h-[calc(100vh-200px)]">
           <Table>
             <TableHeader className="sticky top-0 z-20 bg-white">
               <TableRow className="bg-white">
@@ -290,6 +284,19 @@ export default function CandidatesPage() {
             </TableBody>
           </Table>
       </div>
+
+      <div className=" bottom-0 left-0 right-0 bg-white z-30 border-t">
+        <CandidatePaginationControls
+          currentPage={currentPage}
+          totalPages={data?.totalPages || 1}
+          totalCandidates={data?.total || 0}
+          pageSize={pageSize}
+          setPageSize={setPageSize}
+          handlePageChange={(page) => {
+            if (page >= 1 && page <= (data?.totalPages || 1)) setCurrentPage(page);
+          }}
+          candidatesLength={candidates.length}
+        />
       </div>
 
       <DeleteConfirmationDialog
@@ -327,21 +334,7 @@ export default function CandidatesPage() {
           setSelectedStatuses([]);
           setCurrentPage(1);
         }}
-      />
-
-      <div className="fixed bottom-0 left-0 right-0 bg-white z-30 border-t">
-        <CandidatePaginationControls
-          currentPage={currentPage}
-          totalPages={data?.totalPages || 1}
-          totalCandidates={data?.total || 0}
-          pageSize={pageSize}
-          setPageSize={setPageSize}
-          handlePageChange={(page) => {
-            if (page >= 1 && page <= (data?.totalPages || 1)) setCurrentPage(page);
-          }}
-          candidatesLength={candidates.length}
-        />
-      </div>
+      />  
     </div>
   );
 }

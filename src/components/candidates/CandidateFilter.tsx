@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
@@ -59,6 +60,97 @@ export default function CandidateFilter({
   onApply,
   onClear,
 }: CandidateFilterProps) {
+  const [localName, setLocalName] = useState(name);
+  const [localEmail, setLocalEmail] = useState(email);
+  const [localExperience, setLocalExperience] = useState(experience);
+  const [localLocation, setLocalLocation] = useState(location);
+  const DEBOUNCE_MS = 500;
+
+  useEffect(() => {
+    setLocalName(name);
+  }, [name]);
+
+  useEffect(() => {
+    setLocalEmail(email);
+  }, [email]);
+
+  useEffect(() => {
+    setLocalExperience(experience);
+  }, [experience]);
+
+  useEffect(() => {
+    setLocalLocation(location);
+  }, [location]);
+
+  const { data: debouncedName } = useQuery({
+    queryKey: ["candidate-filter", "name", localName],
+    queryFn: ({ signal }) =>
+      new Promise<string>((resolve, reject) => {
+        const t = setTimeout(() => resolve(localName), DEBOUNCE_MS);
+        signal?.addEventListener("abort", () => {
+          clearTimeout(t);
+          reject(new Error("aborted"));
+        });
+      }),
+    refetchOnWindowFocus: false,
+  });
+
+  useEffect(() => {
+    if (debouncedName !== undefined && debouncedName !== name) onNameChange(debouncedName);
+  }, [debouncedName, name, onNameChange]);
+
+  const { data: debouncedEmail } = useQuery({
+    queryKey: ["candidate-filter", "email", localEmail],
+    queryFn: ({ signal }) =>
+      new Promise<string>((resolve, reject) => {
+        const t = setTimeout(() => resolve(localEmail), DEBOUNCE_MS);
+        signal?.addEventListener("abort", () => {
+          clearTimeout(t);
+          reject(new Error("aborted"));
+        });
+      }),
+    refetchOnWindowFocus: false,
+  });
+
+  useEffect(() => {
+    if (debouncedEmail !== undefined && debouncedEmail !== email) onEmailChange(debouncedEmail);
+  }, [debouncedEmail, email, onEmailChange]);
+
+  const { data: debouncedExperience } = useQuery({
+    queryKey: ["candidate-filter", "experience", localExperience],
+    queryFn: ({ signal }) =>
+      new Promise<string>((resolve, reject) => {
+        const t = setTimeout(() => resolve(localExperience), DEBOUNCE_MS);
+        signal?.addEventListener("abort", () => {
+          clearTimeout(t);
+          reject(new Error("aborted"));
+        });
+      }),
+    refetchOnWindowFocus: false,
+  });
+
+  useEffect(() => {
+    if (debouncedExperience !== undefined && debouncedExperience !== experience)
+      onExperienceChange(debouncedExperience);
+  }, [debouncedExperience, experience, onExperienceChange]);
+
+  const { data: debouncedLocation } = useQuery({
+    queryKey: ["candidate-filter", "location", localLocation],
+    queryFn: ({ signal }) =>
+      new Promise<string>((resolve, reject) => {
+        const t = setTimeout(() => resolve(localLocation), DEBOUNCE_MS);
+        signal?.addEventListener("abort", () => {
+          clearTimeout(t);
+          reject(new Error("aborted"));
+        });
+      }),
+    refetchOnWindowFocus: false,
+  });
+
+  useEffect(() => {
+    if (debouncedLocation !== undefined && debouncedLocation !== location) onLocationChange(debouncedLocation);
+  }, [debouncedLocation, location, onLocationChange]);
+
   const toggleStatus = (status: CandidateStatus) => {
     if (selectedStatuses.includes(status)) {
       onStatusesChange(selectedStatuses.filter((s) => s !== status));
@@ -79,8 +171,8 @@ export default function CandidateFilter({
             <Input
               id="candidateName"
               placeholder="Search by name"
-              value={name}
-              onChange={(e) => onNameChange(e.target.value)}
+              value={localName}
+              onChange={(e) => setLocalName(e.target.value)}
             />
           </div>
           <div className="space-y-2">
@@ -88,8 +180,8 @@ export default function CandidateFilter({
             <Input
               id="candidateEmail"
               placeholder="Search by email"
-              value={email}
-              onChange={(e) => onEmailChange(e.target.value)}
+              value={localEmail}
+              onChange={(e) => setLocalEmail(e.target.value)}
             />
           </div>
           <div className="space-y-2">
@@ -97,8 +189,8 @@ export default function CandidateFilter({
             <Input
               id="experience"
               placeholder="e.g. 3 years"
-              value={experience}
-              onChange={(e) => onExperienceChange(e.target.value)}
+              value={localExperience}
+              onChange={(e) => setLocalExperience(e.target.value)}
             />
           </div>
           <div className="space-y-2">
@@ -106,8 +198,8 @@ export default function CandidateFilter({
             <Input
               id="location"
               placeholder="e.g. New York"
-              value={location}
-              onChange={(e) => onLocationChange(e.target.value)}
+              value={localLocation}
+              onChange={(e) => setLocalLocation(e.target.value)}
             />
           </div>
 
