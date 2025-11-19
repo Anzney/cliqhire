@@ -326,7 +326,11 @@ export function PipelineJobCard({
   const handleAddCandidate = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering the card expansion
     if (!canModify) return;
-    setIsAddCandidateOpen(true);
+    if (isHeadhunterMode) {
+      setAutoCreateCandidateDialog({ isOpen: true, candidate: null });
+    } else {
+      setIsAddCandidateOpen(true);
+    }
   };
 
   const handleAddExistingCandidate = () => {
@@ -676,14 +680,16 @@ export function PipelineJobCard({
         newStage={stageChangeDialog.newStage}
       />
 
-      {/* Add Candidate Dialog */}
-      <AddCandidateDialog
-        open={isAddCandidateOpen}
-        onOpenChange={setIsAddCandidateOpen}
-        onAddExisting={handleAddExistingCandidate}
-        onAddNew={handleAddNewCandidate}
-        jobTitle={job.title}
-      />
+      {/* Add Candidate Dialog (disabled in headhunter mode) */}
+      {!isHeadhunterMode && (
+        <AddCandidateDialog
+          open={isAddCandidateOpen}
+          onOpenChange={setIsAddCandidateOpen}
+          onAddExisting={handleAddExistingCandidate}
+          onAddNew={handleAddNewCandidate}
+          jobTitle={job.title}
+        />
+      )}
 
       {/* Shared Existing Candidate selection dialog */}
       <AddExistingCandidateDialog
