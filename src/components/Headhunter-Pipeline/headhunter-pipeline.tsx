@@ -1,276 +1,340 @@
-// Client-side headhunter pipeline overview
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Search, Briefcase, Building2, Users, MapPin, ChevronDown, ChevronRight } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  getAllPipelineEntries, 
-  getPipelineEntry, 
-  type PipelineListItem, 
-  type PipelineEntryDetail 
-} from "@/services/recruitmentPipelineService";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
-interface HeadhunterJob {
-  id: string;
-  title: string;
-  clientName: string;
-  location: string;
-  jobType?: string;
-  totalCandidates: number;
-  stage?: string;
-}
-
-interface HeadhunterCandidate {
-  id: string;
-  name: string;
-  currentStage: string;
-  status: string;
-  email?: string;
-  phone?: string;
-  location?: string;
-  currentJobTitle?: string;
-}
+import { KPISection } from "@/components/Recruiter-Pipeline/kpi-section";
+import { PipelineJobCard } from "@/components/Recruiter-Pipeline/pipeline-job-card";
+import { type Job } from "@/components/Recruiter-Pipeline/dummy-data";
 
 export const HeadhunterPipeline: React.FC = () => {
-  const [jobs, setJobs] = useState<HeadhunterJob[]>([]);
+  const [jobs, setJobs] = useState<Job[]>(() => [
+    {
+      id: "hh-001",
+      title: "Senior Software Engineer",
+      clientName: "TechCorp Inc.",
+      location: "Remote",
+      salaryRange: "120000 - 150000 USD",
+      headcount: 2,
+      jobType: "Full-time",
+      isExpanded: false,
+      totalCandidates: 4,
+      jobId: {
+        _id: "job-001",
+        jobTitle: "Senior Software Engineer",
+        location: "Remote",
+        stage: "Active",
+        jobTeamInfo: {
+          hiringManager: { _id: "hm-1", name: "Sarah Johnson", email: "sarah@techcorp.com" },
+          recruiter: { _id: "rec-1", name: "Alex Lee", email: "alex@cliqhire.com" },
+        },
+      },
+      candidates: [
+        {
+          id: "cand-001",
+          name: "John Smith",
+          source: "LinkedIn",
+          currentStage: "Sourcing",
+          currentJobTitle: "Software Engineer",
+          subStatus: "Pending",
+          email: "john.smith@example.com",
+          location: "New York, USA",
+        },
+        {
+          id: "cand-002",
+          name: "Emily Davis",
+          source: "Referral",
+          currentStage: "Screening",
+          currentJobTitle: "Senior Engineer",
+          subStatus: "Submitted",
+          email: "emily.davis@example.com",
+          location: "San Francisco, USA",
+        },
+        {
+          id: "cand-003",
+          name: "David Wilson",
+          source: "Indeed",
+          currentStage: "Client Review",
+          currentJobTitle: "Backend Engineer",
+          subStatus: "Pending",
+          email: "david.wilson@example.com",
+          location: "Austin, USA",
+        },
+        {
+          id: "cand-004",
+          name: "Maria Garcia",
+          source: "Direct",
+          currentStage: "Interview",
+          currentJobTitle: "Software Engineer",
+          subStatus: "Accepted",
+          email: "maria.garcia@example.com",
+          location: "Remote",
+        },
+      ],
+    },
+    {
+      id: "hh-002",
+      title: "Product Manager",
+      clientName: "InnovateTech",
+      location: "Berlin, DE",
+      salaryRange: "90000 - 110000 EUR",
+      headcount: 1,
+      jobType: "Contract",
+      isExpanded: false,
+      totalCandidates: 3,
+      jobId: {
+        _id: "job-002",
+        jobTitle: "Product Manager",
+        location: "Berlin, DE",
+        stage: "Active",
+        jobTeamInfo: {
+          hiringManager: { _id: "hm-2", name: "Michael Chen", email: "michael@innovate.tech" },
+          recruiter: { _id: "rec-2", name: "Priya Patel", email: "priya@cliqhire.com" },
+        },
+      },
+      candidates: [
+        {
+          id: "cand-101",
+          name: "Alex Thompson",
+          source: "LinkedIn",
+          currentStage: "Verification",
+          currentJobTitle: "PM",
+          subStatus: "Pending",
+          email: "alex.thompson@example.com",
+          location: "Berlin, DE",
+        },
+        {
+          id: "cand-102",
+          name: "Jennifer Brown",
+          source: "Referral",
+          currentStage: "Interview",
+          currentJobTitle: "Senior PM",
+          subStatus: "Accepted",
+          email: "jennifer.brown@example.com",
+          location: "Munich, DE",
+        },
+        {
+          id: "cand-103",
+          name: "Grace Kim",
+          source: "Direct",
+          currentStage: "Screening",
+          currentJobTitle: "Associate PM",
+          subStatus: "Pending",
+          email: "grace.kim@example.com",
+          location: "Berlin, DE",
+        },
+      ],
+    },
+    {
+      id: "hh-003",
+      title: "UX Designer",
+      clientName: "DesignStudio",
+      location: "London, UK",
+      salaryRange: "60000 - 75000 GBP",
+      headcount: 1,
+      jobType: "Full-time",
+      isExpanded: false,
+      totalCandidates: 2,
+      jobId: {
+        _id: "job-003",
+        jobTitle: "UX Designer",
+        location: "London, UK",
+        stage: "Closed",
+        jobTeamInfo: {
+          hiringManager: { _id: "hm-3", name: "Lisa Rodriguez", email: "lisa@designstudio.co" },
+          recruiter: { _id: "rec-3", name: "Omar Hassan", email: "omar@cliqhire.com" },
+        },
+      },
+      candidates: [
+        {
+          id: "cand-201",
+          name: "Paul Williams",
+          source: "Referral",
+          currentStage: "Onboarding",
+          currentJobTitle: "UX Designer",
+          subStatus: "Accepted",
+          email: "paul.williams@example.com",
+          location: "London, UK",
+        },
+        {
+          id: "cand-202",
+          name: "Emily Zhang",
+          source: "LinkedIn",
+          currentStage: "Hired",
+          currentJobTitle: "UX Specialist",
+          subStatus: "Accepted",
+          email: "emily.zhang@example.com",
+          location: "London, UK",
+        },
+      ],
+    },
+  ]);
+
   const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
-  const [jobCandidates, setJobCandidates] = useState<Record<string, HeadhunterCandidate[]>>({});
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("date");
+  const [jobNameFilter, setJobNameFilter] = useState("");
+  const [clientNameFilter, setClientNameFilter] = useState("");
   const [loadingJobId, setLoadingJobId] = useState<string | null>(null);
+  const [highlightedJobId, setHighlightedJobId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      setIsLoading(true);
-      try {
-        const res = await getAllPipelineEntries();
-        if (res.success && res.data?.pipelines) {
-          const mapped: HeadhunterJob[] = res.data.pipelines.map((p: PipelineListItem) => ({
-            id: p._id,
-            title: p.jobId.jobTitle,
-            clientName: p.jobId.clientName || "Unknown client",
-            location: p.jobId.location,
-            jobType: p.jobId.jobType,
-            totalCandidates: p.totalCandidates,
-            stage: p.jobId.stage,
-          }));
-          setJobs(mapped);
-        }
-      } finally {
-        setIsLoading(false);
+  const kpiData = useMemo(() => {
+    const totalJobs = jobs.length;
+    const activeJobs = jobs.filter(job => job.jobId?.stage && job.jobId.stage.toLowerCase() !== "closed").length;
+    const inactiveJobs = jobs.filter(job => job.jobId?.stage && job.jobId.stage.toLowerCase() === "closed").length;
+
+    let appliedCandidates = jobs.reduce((total, job) => total + (job.totalCandidates || job.candidates.length || 0), 0);
+    let hiredCandidates = 0;
+    let disqualifiedCandidates = 0;
+
+    jobs.forEach(job => {
+      if (job.candidates && job.candidates.length > 0) {
+        hiredCandidates += job.candidates.filter(c => c.currentStage === "Hired").length;
+        disqualifiedCandidates += job.candidates.filter(c => c.status === "Disqualified").length;
       }
+    });
+
+    return {
+      totalJobs,
+      activeJobs,
+      inactiveJobs,
+      appliedCandidates,
+      hiredCandidates,
+      disqualifiedCandidates,
     };
+  }, [jobs]);
 
-    void load();
-  }, []);
+  const getFilteredAndSortedJobs = () => {
+    let filteredJobs = [...jobs];
 
-  const handleToggleJob = async (jobId: string) => {
-    if (expandedJobId === jobId) {
-      setExpandedJobId(null);
-      return;
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filteredJobs = filteredJobs.filter(job => {
+        if (job.title.toLowerCase().includes(searchLower)) return true;
+        if (job.clientName.toLowerCase().includes(searchLower)) return true;
+        if (job.candidates.some(candidate => candidate.name.toLowerCase().includes(searchLower))) return true;
+        if (job.notes?.toLowerCase().includes(searchLower)) return true;
+        return false;
+      });
     }
 
-    setExpandedJobId(jobId);
+    if (jobNameFilter.trim() || clientNameFilter.trim()) {
+      const jobLower = jobNameFilter.trim().toLowerCase();
+      const clientLower = clientNameFilter.trim().toLowerCase();
+      filteredJobs = filteredJobs.filter(job => {
+        const jobMatch = jobLower ? job.title.toLowerCase().includes(jobLower) : true;
+        const clientMatch = clientLower ? job.clientName.toLowerCase().includes(clientLower) : true;
+        return jobMatch && clientMatch;
+      });
+    }
 
-    if (!jobCandidates[jobId]) {
-      setLoadingJobId(jobId);
-      try {
-        const res = await getPipelineEntry(jobId);
-        if (res.success && res.data) {
-          const entry: PipelineEntryDetail = res.data;
-          const mappedCandidates: HeadhunterCandidate[] =
-            (entry.candidateIdArray || []).map((c) => ({
-              id: c.candidateId._id,
-              name: c.candidateId.name,
-              currentStage: c.currentStage,
-              status: c.status,
-              email: c.candidateId.email,
-              phone: c.candidateId.phone,
-              location: c.candidateId.location,
-              currentJobTitle: c.candidateId.currentJobTitle,
-            }));
-          setJobCandidates((prev) => ({ ...prev, [jobId]: mappedCandidates }));
+    if (statusFilter !== "all") {
+      filteredJobs = filteredJobs.filter(job => {
+        switch (statusFilter) {
+          case "active":
+            return job.jobId?.stage && job.jobId.stage.toLowerCase() !== "closed";
+          case "completed":
+            return job.jobId?.stage && job.jobId.stage.toLowerCase() === "closed";
+          case "paused":
+            return job.jobId?.stage && (
+              job.jobId.stage.toLowerCase().includes("hold") ||
+              job.jobId.stage.toLowerCase().includes("pause") ||
+              job.jobId.stage.toLowerCase().includes("suspended")
+            );
+          default:
+            return true;
         }
-      } finally {
-        setLoadingJobId(null);
-      }
+      });
     }
+
+    filteredJobs.sort((a, b) => {
+      switch (sortBy) {
+        case "title":
+          return a.title.localeCompare(b.title);
+        case "candidates":
+          return (b.totalCandidates || 0) - (a.totalCandidates || 0);
+        case "client":
+          return a.clientName.localeCompare(b.clientName);
+        case "date":
+        default:
+          return 0;
+      }
+    });
+
+    return filteredJobs;
   };
 
-  const filteredJobs = jobs.filter((job) => {
-    if (!searchTerm.trim()) return true;
-    const term = searchTerm.toLowerCase();
-    return (
-      job.title.toLowerCase().includes(term) ||
-      job.clientName.toLowerCase().includes(term) ||
-      job.location.toLowerCase().includes(term)
-    );
-  });
+  const toggleJobExpansion = (jobId: string) => {
+    setJobs(prev => prev.map(j => (j.id === jobId ? { ...j, isExpanded: !j.isExpanded } : j)));
+  };
+
+  const handleCandidateUpdate = (jobId: string, updatedCandidate: any) => {
+    setJobs(prev => prev.map(j => {
+      if (j.id !== jobId) return j;
+      return {
+        ...j,
+        candidates: j.candidates.map(c => c.id === updatedCandidate.id ? { ...c, ...updatedCandidate } : c),
+      };
+    }));
+  };
+  const updateCandidateStage = async (_jobId: string, _candidateId: string, _newStage: string) => {};
+
+  const filteredJobs = getFilteredAndSortedJobs();
 
   return (
-    <Card className="border-none shadow-none bg-transparent">
-      <CardHeader className="px-0 pt-0 pb-4">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-              <Briefcase className="h-4 w-4 text-primary" />
-              Open positions overview
-            </CardTitle>
-            <CardDescription>
-              A compact view of all positions and associated candidate volume for headhunting.
-            </CardDescription>
-          </div>
-          <div className="relative w-full md:w-72">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+    <div className="space-y-3">
+      <KPISection data={kpiData} />
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2"></div>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              className="pl-10"
-              placeholder="Search by role, client, or location"
+              placeholder="Search jobs, candidates, or clients..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 w-[300px]"
             />
           </div>
+          <Input
+            placeholder="Job name"
+            value={jobNameFilter}
+            onChange={(e) => setJobNameFilter(e.target.value)}
+            className="w-[200px]"
+          />
+          <Input
+            placeholder="Client name"
+            value={clientNameFilter}
+            onChange={(e) => setClientNameFilter(e.target.value)}
+            className="w-[200px]"
+          />
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="px-0">
-        {isLoading ? (
-          <div className="py-10 text-center text-sm text-muted-foreground">
-            Loading positions…
-          </div>
-        ) : filteredJobs.length === 0 ? (
-          <div className="py-10 text-center text-sm text-muted-foreground">
-            {searchTerm ? "No positions match your search." : "No positions available in the headhunter pipeline yet."}
-          </div>
-        ) : (
-          <ScrollArea className="h-[calc(100vh-260px)] pr-4">
-            <div className="grid gap-3 md:gap-4">
-              {filteredJobs.map((job) => {
-                const isExpanded = expandedJobId === job.id;
-                const candidates = jobCandidates[job.id] || [];
-
-                return (
-                  <Card key={job.id} className="transition-colors">
-                    <CardContent
-                      className="flex flex-col gap-3 py-4 cursor-pointer"
-                      onClick={() => void handleToggleJob(job.id)}
-                    >
-                      <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-                        <div className="space-y-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            {isExpanded ? (
-                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                            )}
-                            <span className="text-sm font-medium md:text-base">
-                              {job.title}
-                            </span>
-                            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                              <Building2 className="h-3.5 w-3.5" />
-                              {job.clientName}
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground md:text-sm">
-                            <span className="inline-flex items-center gap-1">
-                              <MapPin className="h-3.5 w-3.5" />
-                              {job.location || "Location not specified"}
-                            </span>
-                            {job.jobType && (
-                              <Badge variant="outline" className="text-xs">
-                                {job.jobType}
-                              </Badge>
-                            )}
-                            {job.stage && (
-                              <Badge variant="secondary" className="text-xs">
-                                {job.stage}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 md:gap-3">
-                          <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs md:text-sm">
-                            <Users className="h-3.5 w-3.5 text-primary" />
-                            <span className="font-medium">{job.totalCandidates}</span>
-                            <span className="text-muted-foreground">candidates</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {isExpanded && (
-                        <div
-                          className="mt-3 rounded-lg border bg-muted/30 p-3"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {loadingJobId === job.id ? (
-                            <div className="py-4 text-center text-xs text-muted-foreground">
-                              Loading candidates…
-                            </div>
-                          ) : candidates.length === 0 ? (
-                            <div className="py-4 text-center text-xs text-muted-foreground">
-                              No candidates in this pipeline yet.
-                            </div>
-                          ) : (
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead className="w-[26%]">Candidate</TableHead>
-                                  <TableHead className="w-[20%]">Role</TableHead>
-                                  <TableHead className="w-[16%]">Stage</TableHead>
-                                  <TableHead className="w-[16%]">Status</TableHead>
-                                  <TableHead className="w-[22%]">Location / Contact</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {candidates.map((c) => (
-                                  <TableRow key={c.id}>
-                                    <TableCell className="text-sm font-medium">
-                                      {c.name}
-                                    </TableCell>
-                                    <TableCell className="text-sm text-muted-foreground">
-                                      {c.currentJobTitle || "Not specified"}
-                                    </TableCell>
-                                    <TableCell className="text-sm">
-                                      {c.currentStage || "—"}
-                                    </TableCell>
-                                    <TableCell className="text-sm">
-                                      {c.status || "—"}
-                                    </TableCell>
-                                    <TableCell className="text-xs text-muted-foreground">
-                                      <div className="flex flex-col gap-0.5">
-                                        <span>{c.location || "Location N/A"}</span>
-                                        {c.email && <span>{c.email}</span>}
-                                        {c.phone && <span>{c.phone}</span>}
-                                      </div>
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          )}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </ScrollArea>
-        )}
-      </CardContent>
-    </Card>
+      {filteredJobs.length > 0 ? (
+        filteredJobs.map((job) => (
+          <PipelineJobCard
+            key={job.id}
+            job={job}
+            loadingJobId={loadingJobId}
+            isHighlighted={highlightedJobId === job.id}
+            onToggleExpansion={toggleJobExpansion}
+            onUpdateCandidateStage={updateCandidateStage}
+            onCandidateUpdate={(jid, c) => handleCandidateUpdate(jid, c)}
+            canModify={true}
+            hideCopyFormAndViewTableButtons={true}
+            tableOptions={{ showStageColumn: false }}
+            hideStageFilters={true}
+            hideClientName={true}
+            statusOptionsOverride={["Pending","Submitted","Accepted","Rejected"]}
+            isHeadhunterMode={true}
+          />
+        ))
+      ) : (
+        <div className="text-center py-8 text-gray-500">No jobs available</div>
+      )}
+    </div>
   );
 };
 

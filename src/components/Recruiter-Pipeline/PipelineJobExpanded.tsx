@@ -17,6 +17,9 @@ interface PipelineJobExpandedProps {
   onViewResume: (candidate: Candidate) => void;
   onDeleteCandidate: (candidate: Candidate) => void;
   canModify?: boolean;
+  tableOptions?: { showStageColumn?: boolean; showClientNameColumn?: boolean };
+  hideStageFilters?: boolean;
+  statusOptionsOverride?: string[];
 }
 
 export function PipelineJobExpanded({
@@ -30,6 +33,9 @@ export function PipelineJobExpanded({
   onViewResume,
   onDeleteCandidate,
   canModify = true,
+  tableOptions,
+  hideStageFilters = false,
+  statusOptionsOverride,
 }: PipelineJobExpandedProps) {
   // Calculate stage counts with resolution function
   const getUpdatedStageCounts = React.useCallback(() => {
@@ -57,40 +63,41 @@ export function PipelineJobExpanded({
     }
   };
 
-  const updatedCounts = getUpdatedStageCounts();
-  const filteredCandidates = getFilteredCandidates();
+  const updatedCounts = hideStageFilters ? {} : getUpdatedStageCounts();
+  const filteredCandidates = hideStageFilters ? job.candidates : getFilteredCandidates();
 
   return (
     <>
-      {/* Pipeline Stage Badges */}
-      <div className="flex flex-wrap gap-2 mb-6 ml-6">
-        {pipelineStages.map((stage) => {
-          const count = updatedCounts[stage] || 0;
-          const isActive = selectedStageFilter === stage;
-          return (
+      {!hideStageFilters && (
+        <div className="flex flex-wrap gap-2 mb-6 ml-6">
+          {pipelineStages.map((stage) => {
+            const count = (updatedCounts as any)[stage] || 0;
+            const isActive = selectedStageFilter === stage;
+            return (
+              <Badge
+                key={stage}
+                variant="outline"
+                className={`${getStageColor(stage)} border cursor-pointer hover:opacity-80 transition-opacity ${
+                  isActive ? "ring-2 ring-blue-500 ring-offset-2" : ""
+                }`}
+                onClick={() => handleStageBadgeClick(stage)}
+              >
+                {stage}: {count}
+              </Badge>
+            );
+          })}
+          {selectedStageFilter && (
             <Badge
-              key={stage}
               variant="outline"
-              className={`${getStageColor(stage)} border cursor-pointer hover:opacity-80 transition-opacity ${
-                isActive ? "ring-2 ring-blue-500 ring-offset-2" : ""
-              }`}
-              onClick={() => handleStageBadgeClick(stage)}
+              className="bg-gray-100 text-gray-600 border-gray-300 cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => onChangeStageFilter(null)}
             >
-              {stage}: {count}
+              <X className="text-red-500 h-3 w-3 mr-1" />
+              Clear Filter
             </Badge>
-          );
-        })}
-        {selectedStageFilter && (
-          <Badge
-            variant="outline"
-            className="bg-gray-100 text-gray-600 border-gray-300 cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => onChangeStageFilter(null)}
-          >
-            <X className="text-red-500 h-3 w-3 mr-1" />
-            Clear Filter
-          </Badge>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* Candidates Table */}
       <div className="border-2 border-blue-200 rounded-md bg-gray-50 max-h-[300px] overflow-hidden">
@@ -116,6 +123,8 @@ export function PipelineJobExpanded({
             onViewResume={onViewResume}
             onDeleteCandidate={onDeleteCandidate}
             canModify={canModify}
+            showStageColumn={tableOptions?.showStageColumn ?? true}
+            statusOptionsOverride={statusOptionsOverride}
           />
         </div>
       </div>

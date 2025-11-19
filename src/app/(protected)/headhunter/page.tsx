@@ -6,7 +6,6 @@ import { HeadhunterPipeline } from "@/components/Headhunter-Pipeline/headhunter-
 const HeadhunterPage = () => {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      {/* Content */}
       <div className="p-4">
         <HeadhunterPipeline />
       </div>
@@ -15,4 +14,3 @@ const HeadhunterPage = () => {
 };
 
 export default HeadhunterPage;
-
