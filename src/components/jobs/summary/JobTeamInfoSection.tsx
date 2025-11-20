@@ -148,7 +148,14 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdate
     }
   };
 
-  const headHunterName = jobDetails.headHunter || jobDetails.jobTeamInfo?.headHunter || "";
+  const headHunterObject = jobDetails.jobTeamInfo?.headhunter;
+  const headHunterName =
+    jobDetails.headHunter ||
+    (headHunterObject
+      ? `${headHunterObject.firstName || ""} ${headHunterObject.lastName || ""}`.trim() ||
+        headHunterObject.email ||
+        ""
+      : jobDetails.jobTeamInfo?.headHunter || "");
 
   return (
     <CollapsibleSection title="Job Team Info">
@@ -225,7 +232,14 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdate
             selectedHeadHunterName={headHunterName}
             onSelect={(member) => {
               const fullName = `${member.firstName || ""} ${member.lastName || ""}`.trim() || member.email || "";
-              handleUpdateField("headHunter")(fullName);
+
+              if (handleUpdateMultipleFields) {
+                handleUpdateMultipleFields({
+                  headhunter: member._id,
+                });
+              } else {
+                handleUpdateField("headHunter")(fullName);
+              }
               setIsHeadHunterDialogOpen(false);
             }}
           />
