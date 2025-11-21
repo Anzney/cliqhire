@@ -1,11 +1,6 @@
-import React from 'react'
+import React from "react"
+import RecruiterPage from "@/components/recruiter/RecruiterPage"
 
-const page = () => {
-  return (
-    <div>
-      <h1>Recruiter</h1>
-    </div>
-  )
+export default function Page() {
+  return <RecruiterPage />
 }
-
-export default page
