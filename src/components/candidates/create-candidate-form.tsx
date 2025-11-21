@@ -205,7 +205,7 @@ export default function CreateCandidateForm({
         // Add all form fields to FormData
         Object.keys(form).forEach(key => {
           if (key === 'cv' && form.cv) {
-            formData.append('cv', form.cv);
+            formData.append('resume', form.cv);
           } else if (key === 'dateOfBirth' && form.dateOfBirth) {
             formData.append('dateOfBirth', form.dateOfBirth.toISOString());
           } else if (key !== 'cv' && key !== 'dateOfBirth') {
