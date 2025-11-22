@@ -10,6 +10,8 @@ import { PDFViewer } from "@/components/ui/pdf-viewer";
 import { DeleteConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
+import type { Job } from "@/components/Recruiter-Pipeline/dummy-data";
 
 const HeadhunterPage = () => {
   const [filterOpen, setFilterOpen] = useState(false);
@@ -39,6 +41,9 @@ const HeadhunterPage = () => {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const { user } = useAuth();
+  const headhunterId = (user as any)?.profile?._id || "";
 
   useEffect(() => {
     setSelectedRows(new Set());
@@ -71,6 +76,38 @@ const HeadhunterPage = () => {
     if (selectedRows.size === 0) return;
     setShowDeleteDialog(true);
   };
+
+  const { data: jobsRaw, isLoading: jobsLoading, isFetching: jobsFetching, refetch: refetchJobs } = useQuery({
+    queryKey: ["headhunterJobsSummary", headhunterId],
+    queryFn: () => headhunterCandidatesService.getJobsSummary(headhunterId),
+    enabled: !!headhunterId && activeTab === "Jobs",
+  });
+
+  useEffect(() => {
+    if (activeTab === "Jobs" && headhunterId) {
+      refetchJobs();
+    }
+  }, [activeTab, headhunterId, refetchJobs]);
+
+  const jobs: Job[] = useMemo(() => {
+    const list = Array.isArray(jobsRaw) ? jobsRaw : [];
+    return list.map((j: any, idx: number) => ({
+      id: `hh-${idx + 1}`,
+      title: j.jobTitle || "",
+      clientName: j.clientName || "",
+      location: j.location || "",
+      salaryRange: `${j?.salaryRange?.min ?? ""} - ${j?.salaryRange?.max ?? ""} ${j?.salaryRange?.currency ?? ""}`.trim(),
+      headcount: 1,
+      jobType: (j.jobType || "").replace(/-/g, " "),
+      isExpanded: false,
+      candidates: [],
+      jobId: {
+        jobTitle: j.jobTitle,
+        location: j.location,
+        stage: "Active",
+      },
+    }));
+  }, [jobsRaw]);
   const confirmDeleteSelected = async () => {
     if (selectedRows.size === 0) return;
     setIsDeleting(true);
@@ -129,7 +166,7 @@ const HeadhunterPage = () => {
           </TabsContent>
 
           <TabsContent value="Jobs" className="pt-4">
-            <HeadhunterPipeline />
+            <HeadhunterPipeline jobs={jobs} />
           </TabsContent>
         </Tabs>
 

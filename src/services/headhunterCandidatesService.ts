@@ -42,6 +42,12 @@ class HeadhunterCandidatesService {
   async deleteCandidate(id: string): Promise<void> {
     await api.delete(`/api/headhunter-candidates/${id}`);
   }
+
+  async getJobsSummary(headhunterId: string): Promise<any[]> {
+    const response = await api.get(`/api/jobs/headhunter/${headhunterId}/summary`);
+    const data = response.data?.data || response.data?.jobs || [];
+    return Array.isArray(data) ? data : [];
+  }
 }
 
 export const headhunterCandidatesService = new HeadhunterCandidatesService();
