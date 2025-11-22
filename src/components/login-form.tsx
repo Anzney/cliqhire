@@ -19,6 +19,7 @@ import { useState } from "react";
 import * as z from "zod";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { authService } from "@/services/authService";
 import { useRouter } from "next/navigation";
 
 const loginSchema = z.object({
@@ -56,10 +57,13 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
         
         // Add a small delay to ensure state is updated
         setTimeout(() => {
-          // Redirect to the stored path or dashboard
-          const redirectPath = sessionStorage.getItem('redirectAfterLogin') || '/dashboard';
+          const profile = authService.getUserData();
+          const role = String(profile?.role || '').toUpperCase();
+          const perms = profile?.permissions || profile?.defaultPermissions || [];
+          const isHeadhunter = role === 'HEADHUNTER' || role === 'HEAD_HUNTER' || perms.includes('HEAD_HUNTER_VIEW');
+          const fallback = sessionStorage.getItem('redirectAfterLogin') || '/dashboard';
           sessionStorage.removeItem('redirectAfterLogin');
-          router.push(redirectPath);
+          router.push(isHeadhunter ? '/headhunter' : fallback);
         }, 100);
       } else {
         toast.error("Email or password is incorrect");

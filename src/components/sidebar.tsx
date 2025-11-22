@@ -64,6 +64,10 @@ export function Sidebar() {
   const isAdmin = user?.role === 'ADMIN';
   const isHiringManager = user?.role === 'HIRING_MANAGER';
   const isTeamLead = user?.role === 'TEAM_LEAD';
+  const isHeadhunter = (() => {
+    const role = user?.role ? String(user.role).toUpperCase() : '';
+    return role === 'HEADHUNTER' || role === 'HEAD_HUNTER';
+  })();
   const isManagerOrLead = isAdmin || isHiringManager || isTeamLead;
 
   // Determine which permissions to use
@@ -72,8 +76,8 @@ export function Sidebar() {
     ? user.permissions 
     : user?.defaultPermissions || [];
   
-  // Ensure TODAY_TASKS permission is available for all non-admin users
-  if (!isAdmin && !finalPermissions.includes('TODAY_TASKS')) {
+  // Ensure TODAY_TASKS permission is available for all non-admin users (except headhunters)
+  if (!isAdmin && !isHeadhunter && !finalPermissions.includes('TODAY_TASKS')) {
     finalPermissions = [...finalPermissions, 'TODAY_TASKS'];
   }
 
@@ -85,6 +89,7 @@ export function Sidebar() {
     RECRUITMENT_PIPELINE: 'RECRUITMENT_PIPELINE_VIEW',
     TEAM_MEMBERS: 'TEAM_MEMBERS_VIEW',
     USER_ACCESS: 'USER_ACCESS_VIEW',
+    HEAD_HUNTER: 'HEAD_HUNTER_VIEW',
   };
 
   // Special permissions for managers and leads
@@ -108,6 +113,9 @@ export function Sidebar() {
             <SidebarMenu className="group-data-[collapsible=icon]:gap-2">
               {menuItems
                 .filter((item) => {
+                  if (isHeadhunter && finalPermissions.includes('HEAD_HUNTER_VIEW')) {
+                    return item.permission === 'HEAD_HUNTER';
+                  }
                   if (isAdmin && item.permission === 'TODAY_TASKS') return false;
                   if (isAdmin) return true;
                   if (item.permission === 'HOME') return true;
