@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Table,
   TableBody,
@@ -24,24 +25,39 @@ interface HeadhunterCandidatesTableProps {
   candidates: HeadhunterCandidate[];
   onViewResume?: (candidate: HeadhunterCandidate) => void;
   onAction?: (candidate: HeadhunterCandidate) => void;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
+  onToggleSelectAll?: () => void;
 }
 
 export const HeadhunterCandidatesTable: React.FC<HeadhunterCandidatesTableProps> = ({
   candidates,
   onViewResume,
   onAction,
+  selectedIds = new Set<string>(),
+  onToggleSelect,
+  onToggleSelectAll,
 }) => {
   return (
-    <div className="bg-white border rounded-lg shadow-sm ">
+    <div className="bg-white  shadow-sm h-[560px] overflow-y-auto">
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Candidate Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Phone</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Resume</TableHead>
-            <TableHead>Action</TableHead>
+        <TableHeader className="sticky top-0 z-20 bg-white">
+          <TableRow className="bg-white">
+            <TableHead className="w-12 px-4 sticky top-0 z-20 bg-white">
+              <div className="flex items-center justify-center">
+                <Checkbox
+                  checked={selectedIds.size > 0 && selectedIds.size === candidates.length}
+                  onCheckedChange={() => onToggleSelectAll?.()}
+                  className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
+                />
+              </div>
+            </TableHead>
+            <TableHead className="text-xs uppercase text-muted-foreground font-medium sticky top-0 z-20 bg-white">Candidate Name</TableHead>
+            <TableHead className="text-xs uppercase text-muted-foreground font-medium sticky top-0 z-20 bg-white">Email</TableHead>
+            <TableHead className="text-xs uppercase text-muted-foreground font-medium sticky top-0 z-20 bg-white">Phone</TableHead>
+            <TableHead className="text-xs uppercase text-muted-foreground font-medium sticky top-0 z-20 bg-white">Status</TableHead>
+            <TableHead className="text-xs uppercase text-muted-foreground font-medium sticky top-0 z-20 bg-white">Resume</TableHead>
+            <TableHead className="text-xs uppercase text-muted-foreground font-medium sticky top-0 z-20 bg-white">Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -53,11 +69,20 @@ export const HeadhunterCandidatesTable: React.FC<HeadhunterCandidatesTableProps>
             </TableRow>
           ) : (
             candidates.map((c) => (
-              <TableRow key={c.id}>
-                <TableCell>{c.name}</TableCell>
-                <TableCell>{c.email}</TableCell>
-                <TableCell>{c.phone}</TableCell>
-                <TableCell>{c.status}</TableCell>
+              <TableRow key={c.id} className={`${selectedIds.has(c.id) ? 'bg-blue-50' : ''}`}>
+                <TableCell className="w-12 px-4">
+                  <div className="flex items-center justify-center">
+                    <Checkbox
+                      checked={selectedIds.has(c.id)}
+                      onCheckedChange={() => onToggleSelect?.(c.id)}
+                      className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
+                    />
+                  </div>
+                </TableCell>
+                <TableCell className="text-sm font-medium">{c.name}</TableCell>
+                <TableCell className="text-sm">{c.email}</TableCell>
+                <TableCell className="text-sm">{c.phone}</TableCell>
+                <TableCell className="text-sm">{c.status}</TableCell>
                 <TableCell>
                   {c.resumeUrl ? (
                     <span

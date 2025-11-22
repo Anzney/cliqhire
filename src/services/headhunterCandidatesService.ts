@@ -38,6 +38,10 @@ class HeadhunterCandidatesService {
     const response = await api.get(`/api/headhunter-candidates`);
     return response.data?.data || response.data || [];
   }
+
+  async deleteCandidate(id: string): Promise<void> {
+    await api.delete(`/api/headhunter-candidates/${id}`);
+  }
 }
 
 export const headhunterCandidatesService = new HeadhunterCandidatesService();
