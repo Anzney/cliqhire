@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { HeadhunterPipeline } from "@/components/Headhunter-Pipeline/headhunter-pipeline";
 import Dashboardheader from "@/components/dashboard-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,14 +9,28 @@ import { headhunterCandidatesService } from "@/services/headhunterCandidatesServ
 import { PDFViewer } from "@/components/ui/pdf-viewer";
 import { DeleteConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 
 const HeadhunterPage = () => {
   const [filterOpen, setFilterOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [isRefetching, setIsRefetching] = useState(false);
   const [activeTab, setActiveTab] = useState("Candidates");
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [candidates, setCandidates] = useState<any[]>([]);
+  const { data: rawData, isLoading, isFetching, refetch } = useQuery({
+    queryKey: ["headhunterCandidates"],
+    queryFn: () => headhunterCandidatesService.getCandidates(),
+  });
+  const candidates = useMemo(() => {
+    const list = Array.isArray(rawData) ? rawData : [];
+    return list.map((item: any) => ({
+      id: item._id || item.id || "",
+      name: item.name || "",
+      email: item.email || "",
+      phone: item.phone || item.otherPhone || "",
+      status: item.status || "Pending",
+      resumeUrl: item.resume || item.resumeUrl || undefined,
+    }));
+  }, [rawData]);
   const [pdfViewer, setPdfViewer] = useState<{ isOpen: boolean; pdfUrl: string | null; candidateName: string | null }>({
     isOpen: false,
     pdfUrl: null,
@@ -27,31 +41,8 @@ const HeadhunterPage = () => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
-    const fetchCandidates = async () => {
-      try {
-        setIsLoading(true);
-        const list = await headhunterCandidatesService.getCandidates();
-        if (!mounted) return;
-        const mapped = (Array.isArray(list) ? list : []).map((item: any) => ({
-          id: item._id || item.id || "",
-          name: item.name || "",
-          email: item.email || "",
-          phone: item.phone || item.otherPhone || "",
-          status: item.status || "Pending",
-          resumeUrl: item.resume || item.resumeUrl || undefined,
-        }));
-        setCandidates(mapped);
-        setSelectedRows(new Set());
-      } finally {
-        if (mounted) setIsLoading(false);
-      }
-    };
-    fetchCandidates();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    setSelectedRows(new Set());
+  }, [rawData]);
   const handleViewResume = (candidate: any) => {
     if (!candidate?.resumeUrl) return;
     setPdfViewer({ isOpen: true, pdfUrl: candidate.resumeUrl, candidateName: candidate.name || null });
@@ -85,7 +76,7 @@ const HeadhunterPage = () => {
     setIsDeleting(true);
     try {
       await Promise.all(Array.from(selectedRows).map(id => headhunterCandidatesService.deleteCandidate(id)));
-      setCandidates(prev => prev.filter(c => !selectedRows.has(c.id)));
+      await refetch();
       toast.success(`${selectedRows.size} candidate(s) deleted successfully`);
       setSelectedRows(new Set());
     } catch (error) {
@@ -101,28 +92,14 @@ const HeadhunterPage = () => {
         <Dashboardheader
           setOpen={setCreateModalOpen}
           setFilterOpen={setFilterOpen}
-          initialLoading={isLoading || isRefetching}
+          initialLoading={isLoading || isFetching || isRefetching}
           heading="Clients"
           buttonText="Create Candiadte"
           showCreateButton={true}
           selectedCount={selectedRows.size}
           onDelete={handleDeleteSelected}
           onRefresh={() => {
-            // re-fetch
-            (async () => {
-              await headhunterCandidatesService.getCandidates().then(list => {
-                const mapped = (Array.isArray(list) ? list : []).map((item: any) => ({
-                  id: item._id || item.id || "",
-                  name: item.name || "",
-                  email: item.email || "",
-                  phone: item.phone || item.otherPhone || "",
-                  status: item.status || "Pending",
-                  resumeUrl: item.resume || item.resumeUrl || undefined,
-                }));
-                setCandidates(mapped);
-                setSelectedRows(new Set());
-              });
-            })();
+            refetch();
           }}
         />
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full border-t">
@@ -160,6 +137,10 @@ const HeadhunterPage = () => {
           isOpen={createModalOpen}
           onClose={() => setCreateModalOpen(false)}
           isHeadhunterCreate={true}
+          onCandidateCreated={() => {
+            setCreateModalOpen(false);
+            refetch();
+          }}
         />
 
         <PDFViewer
