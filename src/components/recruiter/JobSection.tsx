@@ -1,9 +1,7 @@
 "use client"
 import React from "react"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { ChevronDown, ChevronUp, MapPin, Users, CalendarDays } from "lucide-react"
+import { ChevronDown, ChevronRight, MapPin, Users, CalendarDays } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { getPipelineEntry, type PipelineListItem, type CandidatePipelineInfo } from "@/services/recruitmentPipelineService"
 import CandidatesTable from "@/components/recruiter/CandidatesTable"
@@ -43,9 +41,15 @@ export default function JobSection({ item }: JobSectionProps) {
 
   return (
       <div className="p-4">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start justify-between gap-4 cursor-pointer hover:bg-gray-50 rounded-md"
+             onClick={() => setExpanded((v) => !v)}>
           <div className="space-y-1">
             <div className="flex items-center gap-2">
+              {expanded ? (
+                <ChevronDown className="h-5 w-5 text-gray-500" />
+              ) : (
+                <ChevronRight className="h-5 w-5 text-gray-500" />
+              )}
               <p className="font-medium">{item.jobId?.jobTitle}</p>
               <Badge className={statusColor(item.jobId?.stage)} variant="secondary">
                 {item.jobId?.stage || "Open"}
@@ -63,12 +67,7 @@ export default function JobSection({ item }: JobSectionProps) {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => setExpanded((v) => !v)} className="flex items-center gap-2">
-              {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              {expanded ? "Hide Candidates" : "View Candidates"}
-            </Button>
-          </div>
+          <div className="flex items-center gap-2" />
         </div>
 
         {expanded && (
