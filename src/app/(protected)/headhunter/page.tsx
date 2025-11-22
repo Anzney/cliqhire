@@ -92,7 +92,7 @@ const HeadhunterPage = () => {
   const jobs: Job[] = useMemo(() => {
     const list = Array.isArray(jobsRaw) ? jobsRaw : [];
     return list.map((j: any, idx: number) => ({
-      id: `hh-${idx + 1}`,
+      id: j.jobId || "",
       title: j.jobTitle || "",
       clientName: j.clientName || "",
       location: j.location || "",

@@ -48,6 +48,16 @@ class HeadhunterCandidatesService {
     const data = response.data?.data || response.data?.jobs || [];
     return Array.isArray(data) ? data : [];
   }
+
+  async applyJobToCandidates(jobId: string, candidates: string[] | string): Promise<any> {
+    const payload = Array.isArray(candidates)
+      ? { jobId, candidateIds: candidates }
+      : { jobId, candidateId: candidates };
+    const response = await api.post(`/api/headhunter-candidates/apply-job`, payload, {
+      headers: { "Content-Type": "application/json" },
+    });
+    return response.data?.data || response.data;
+  }
 }
 
 export const headhunterCandidatesService = new HeadhunterCandidatesService();

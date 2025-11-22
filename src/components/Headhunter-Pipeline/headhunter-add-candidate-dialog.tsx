@@ -19,8 +19,7 @@ import {
   MultiSelectorItem,
 } from "@/components/ui/multi-select";
 import { Loader2, User, Mail, X } from "lucide-react";
-import { candidateService, Candidate } from "@/services/candidateService";
-import { addCandidateToPipeline } from "@/services/recruitmentPipelineService";
+import { Candidate } from "@/services/candidateService";
 import { toast } from "sonner";
 import { headhunterCandidatesService } from "@/services/headhunterCandidatesService";
 import { useQueryClient } from "@tanstack/react-query";
@@ -141,15 +140,7 @@ export function HeadhunterAddCandidateDialog({
     }
 
     try {
-      if (isPipeline && pipelineId) {
-        await Promise.all(selectedCandidateIds.map((candidateId) =>
-          addCandidateToPipeline(pipelineId, candidateId)
-        ));
-      } else {
-        await Promise.all(selectedCandidateIds.map((candidateId) =>
-          candidateService.applyToJob(candidateId, jobId)
-        ));
-      }
+      await headhunterCandidatesService.applyJobToCandidates(jobId, selectedCandidateIds);
 
       const selectedCandidates = candidates.filter(candidate =>
         selectedCandidateIds.includes(candidate._id || "")
