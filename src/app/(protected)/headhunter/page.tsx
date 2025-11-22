@@ -3,18 +3,19 @@ import { useState } from "react";
 import { HeadhunterPipeline } from "@/components/Headhunter-Pipeline/headhunter-pipeline";
 import Dashboardheader from "@/components/dashboard-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CreateCandidateModal } from "@/components/candidates/create-candidate-modal";
 
 const HeadhunterPage = () => {
-  const [open, setOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefetching, setIsRefetching] = useState(false);
   const [activeTab, setActiveTab] = useState("Candidates");
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       <div className="">
         <Dashboardheader
-                  setOpen={setOpen}
+                  setOpen={setCreateModalOpen}
                   setFilterOpen={setFilterOpen}
                   initialLoading={isLoading || isRefetching}
                   heading="Clients"
@@ -45,6 +46,11 @@ const HeadhunterPage = () => {
             <HeadhunterPipeline />
           </TabsContent>
         </Tabs>
+
+        <CreateCandidateModal
+          isOpen={createModalOpen}
+          onClose={() => setCreateModalOpen(false)}
+        />
       </div>
     </div>
   );

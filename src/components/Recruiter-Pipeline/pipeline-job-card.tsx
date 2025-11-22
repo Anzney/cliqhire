@@ -5,7 +5,6 @@ import { ChevronDown, ChevronRight, Users, MapPin, HandCoins , Building2, Loader
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AddCandidateDialog } from "./add-candidate-dialog";
 import { AddExistingCandidateDialog } from "@/components/common/add-existing-candidate-dialog";
 import { CreateCandidateDialog, type CreateCandidateValues } from "./create-candidate-dialog";
 import { CreateCandidateModal } from "@/components/candidates/create-candidate-modal";
@@ -68,7 +67,6 @@ export function PipelineJobCard({
   const cardRef =useRef<HTMLDivElement | null>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isAddCandidateOpen, setIsAddCandidateOpen]= useState(false);
   const [isCreateCandidateOpen, setIsCreateCandidateOpen]= useState(false);
   // Consolidated UI state
   const [isAddExistingOpen, setIsAddExistingOpen] = useState(false);
@@ -324,13 +322,9 @@ export function PipelineJobCard({
   };
 
   const handleAddCandidate = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering the card expansion
+    e.stopPropagation();
     if (!canModify) return;
-    if (isHeadhunterMode) {
-      setAutoCreateCandidateDialog({ isOpen: true, candidate: null });
-    } else {
-      setIsAddCandidateOpen(true);
-    }
+    setIsAddExistingOpen(true);
   };
 
   const handleAddExistingCandidate = () => {
@@ -341,7 +335,11 @@ export function PipelineJobCard({
 
   const handleAddNewCandidate = () => {
     if (!canModify) return;
-    setIsCreateCandidateOpen(true);
+    if (isHeadhunterMode) {
+      setAutoCreateCandidateDialog({ isOpen: true, candidate: null });
+    } else {
+      setIsCreateCandidateOpen(true);
+    }
   };
 
   const handleCreateCandidateSubmit = async (_values: CreateCandidateValues) => {
@@ -680,16 +678,7 @@ export function PipelineJobCard({
         newStage={stageChangeDialog.newStage}
       />
 
-      {/* Add Candidate Dialog (disabled in headhunter mode) */}
-      {!isHeadhunterMode && (
-        <AddCandidateDialog
-          open={isAddCandidateOpen}
-          onOpenChange={setIsAddCandidateOpen}
-          onAddExisting={handleAddExistingCandidate}
-          onAddNew={handleAddNewCandidate}
-          jobTitle={job.title}
-        />
-      )}
+      
 
       {/* Shared Existing Candidate selection dialog */}
       <AddExistingCandidateDialog
