@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { KPISection } from "@/components/Recruiter-Pipeline/kpi-section";
 import { PipelineJobCard } from "@/components/Recruiter-Pipeline/pipeline-job-card";
 import { type Job } from "@/components/Recruiter-Pipeline/dummy-data";
 
@@ -178,32 +177,6 @@ export const HeadhunterPipeline: React.FC = () => {
   const [loadingJobId, setLoadingJobId] = useState<string | null>(null);
   const [highlightedJobId, setHighlightedJobId] = useState<string | null>(null);
 
-  const kpiData = useMemo(() => {
-    const totalJobs = jobs.length;
-    const activeJobs = jobs.filter(job => job.jobId?.stage && job.jobId.stage.toLowerCase() !== "closed").length;
-    const inactiveJobs = jobs.filter(job => job.jobId?.stage && job.jobId.stage.toLowerCase() === "closed").length;
-
-    let appliedCandidates = jobs.reduce((total, job) => total + (job.totalCandidates || job.candidates.length || 0), 0);
-    let hiredCandidates = 0;
-    let disqualifiedCandidates = 0;
-
-    jobs.forEach(job => {
-      if (job.candidates && job.candidates.length > 0) {
-        hiredCandidates += job.candidates.filter(c => c.currentStage === "Hired").length;
-        disqualifiedCandidates += job.candidates.filter(c => c.status === "Disqualified").length;
-      }
-    });
-
-    return {
-      totalJobs,
-      activeJobs,
-      inactiveJobs,
-      appliedCandidates,
-      hiredCandidates,
-      disqualifiedCandidates,
-    };
-  }, [jobs]);
-
   const getFilteredAndSortedJobs = () => {
     let filteredJobs = [...jobs];
 
@@ -283,8 +256,6 @@ export const HeadhunterPipeline: React.FC = () => {
 
   return (
     <div className="space-y-3">
-      <KPISection data={kpiData} />
-
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2"></div>
         <div className="flex items-center gap-3">
