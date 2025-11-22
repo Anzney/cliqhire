@@ -3,6 +3,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { MoreVertical } from "lucide-react";
 import { 
   Table,
   TableBody,
@@ -97,11 +98,12 @@ export const HeadhunterCandidatesTable: React.FC<HeadhunterCandidatesTableProps>
                 </TableCell>
                 <TableCell>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
+                    className="h-8 w-8 p-0"
                     onClick={() => onAction?.(c)}
                   >
-                    View
+                    <MoreVertical className="h-4 w-4" />
                   </Button>
                 </TableCell>
               </TableRow>
