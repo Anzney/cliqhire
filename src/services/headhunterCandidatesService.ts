@@ -58,6 +58,12 @@ class HeadhunterCandidatesService {
     });
     return response.data?.data || response.data;
   }
+
+  async getJobCandidates(jobId: string): Promise<any[]> {
+    const response = await api.get(`/api/jobs/${jobId}/headhunter-candidates`);
+    const data = response.data?.data || response.data?.candidates || [];
+    return Array.isArray(data) ? data : [];
+  }
 }
 
 export const headhunterCandidatesService = new HeadhunterCandidatesService();

@@ -4,7 +4,8 @@ import React, { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { PipelineJobCard } from "@/components/Recruiter-Pipeline/pipeline-job-card";
-import { type Job } from "@/components/Recruiter-Pipeline/dummy-data";
+import { type Job, type Candidate } from "@/components/Recruiter-Pipeline/dummy-data";
+import { headhunterCandidatesService } from "@/services/headhunterCandidatesService";
 
 export const HeadhunterPipeline: React.FC<{ jobs?: Job[] }> = ({ jobs: incomingJobs = [] }) => {
   const [jobs, setJobs] = useState<Job[]>(incomingJobs);
@@ -80,11 +81,76 @@ export const HeadhunterPipeline: React.FC<{ jobs?: Job[] }> = ({ jobs: incomingJ
     return filteredJobs;
   };
 
-  const toggleJobExpansion = (jobId: string) => {
+  const toggleJobExpansion = async (jobId: string) => {
     setJobs(prev => prev.map(j => (j.id === jobId ? { ...j, isExpanded: !j.isExpanded } : j)));
+    const job = jobs.find(j => j.id === jobId);
+    const willExpand = !(job?.isExpanded);
+    if (willExpand) {
+      setLoadingJobId(jobId);
+      try {
+        const raw = await headhunterCandidatesService.getJobCandidates(jobId);
+        const mapped: Candidate[] = (Array.isArray(raw) ? raw : []).map((hh: any, idx: number) => ({
+          id: hh._id || hh.id || hh.email || `${hh.name || ""}-${hh.phone || idx}`,
+          name: hh.name || "",
+          source: "Headhunter",
+          currentStage: "Sourcing",
+          email: hh.email || "",
+          phone: hh.phone || "",
+          location: hh.location || "",
+          experience: hh.experience || "",
+          currentSalary: hh.currentSalary ?? undefined,
+          currentSalaryCurrency: hh.currentSalaryCurrency || undefined,
+          expectedSalary: hh.expectedSalary ?? undefined,
+          expectedSalaryCurrency: hh.expectedSalaryCurrency || undefined,
+          skills: Array.isArray(hh.skills) ? hh.skills : undefined,
+          linkedin: hh.linkedin || undefined,
+          resume: hh.resume || hh.resumeUrl || undefined,
+          subStatus: hh.status || "Pending",
+        }));
+        setJobs(prev => prev.map(j => (j.id === jobId ? { ...j, candidates: mapped } : j)));
+      } catch (e) {
+        // silently fail for now; UI remains with no candidates
+      } finally {
+        setLoadingJobId(null);
+      }
+    }
+  };
+
+  const refreshJobCandidates = async (jobId: string) => {
+    setLoadingJobId(jobId);
+    try {
+      const raw = await headhunterCandidatesService.getJobCandidates(jobId);
+      const mapped: Candidate[] = (Array.isArray(raw) ? raw : []).map((hh: any, idx: number) => ({
+        id: hh._id || hh.id || hh.email || `${hh.name || ""}-${hh.phone || idx}`,
+        name: hh.name || "",
+        source: "Headhunter",
+        currentStage: "Sourcing",
+        email: hh.email || "",
+        phone: hh.phone || "",
+        location: hh.location || "",
+        experience: hh.experience || "",
+        currentSalary: hh.currentSalary ?? undefined,
+        currentSalaryCurrency: hh.currentSalaryCurrency || undefined,
+        expectedSalary: hh.expectedSalary ?? undefined,
+        expectedSalaryCurrency: hh.expectedSalaryCurrency || undefined,
+        skills: Array.isArray(hh.skills) ? hh.skills : undefined,
+        linkedin: hh.linkedin || undefined,
+        resume: hh.resume || hh.resumeUrl || undefined,
+        subStatus: hh.status || "Pending",
+      }));
+      setJobs(prev => prev.map(j => (j.id === jobId ? { ...j, candidates: mapped } : j)));
+    } catch (e) {
+      // ignore errors
+    } finally {
+      setLoadingJobId(null);
+    }
   };
 
   const handleCandidateUpdate = (jobId: string, updatedCandidate: any) => {
+    if (!updatedCandidate || !updatedCandidate.id) {
+      void refreshJobCandidates(jobId);
+      return;
+    }
     setJobs(prev => prev.map(j => {
       if (j.id !== jobId) return j;
       return {
