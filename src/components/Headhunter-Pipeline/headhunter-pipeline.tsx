@@ -255,7 +255,7 @@ export const HeadhunterPipeline: React.FC = () => {
   const filteredJobs = getFilteredAndSortedJobs();
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2"></div>
         <div className="flex items-center gap-3">
