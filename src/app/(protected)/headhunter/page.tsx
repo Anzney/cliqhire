@@ -4,6 +4,7 @@ import { HeadhunterPipeline } from "@/components/Headhunter-Pipeline/headhunter-
 import Dashboardheader from "@/components/dashboard-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CreateCandidateModal } from "@/components/candidates/create-candidate-modal";
+import { HeadhunterCandidatesTable } from "@/components/Headhunter-Pipeline/headhunter-candidates-table";
 
 const HeadhunterPage = () => {
   const [filterOpen, setFilterOpen] = useState(false);
@@ -38,8 +39,8 @@ const HeadhunterPage = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="Candidates" className="pt-4">
-            <div className="text-sm text-muted-foreground">Candidates tab content</div>
+          <TabsContent value="Candidates" className="">
+            <HeadhunterCandidatesTable candidates={[]} />
           </TabsContent>
 
           <TabsContent value="Jobs" className="pt-4">
