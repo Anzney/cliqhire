@@ -33,6 +33,11 @@ class HeadhunterCandidatesService {
       return response.data?.data || response.data;
     }
   }
+
+  async getCandidates(): Promise<any[]> {
+    const response = await api.get(`/api/headhunter-candidates`);
+    return response.data?.data || response.data || [];
+  }
 }
 
 export const headhunterCandidatesService = new HeadhunterCandidatesService();

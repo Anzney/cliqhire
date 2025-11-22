@@ -59,14 +59,16 @@ export const HeadhunterCandidatesTable: React.FC<HeadhunterCandidatesTableProps>
                 <TableCell>{c.phone}</TableCell>
                 <TableCell>{c.status}</TableCell>
                 <TableCell>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onViewResume?.(c)}
-                    disabled={!c.resumeUrl}
-                  >
-                    View
-                  </Button>
+                  {c.resumeUrl ? (
+                    <span
+                      className="text-blue-600 hover:underline cursor-pointer"
+                      onClick={() => onViewResume?.(c)}
+                    >
+                      Resume
+                    </span>
+                  ) : (
+                    <span className="text-gray-500">N/A</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <Button
