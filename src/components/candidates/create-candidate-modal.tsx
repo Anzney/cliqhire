@@ -33,6 +33,7 @@ interface CreateCandidateModalProps {
   isTempCandidateConversion?: boolean;
   pipelineId?: string;
   tempCandidateId?: string;
+  isHeadhunterCreate?: boolean;
 }
 
 interface OptionCardProps {
@@ -64,6 +65,7 @@ export function CreateCandidateModal({
   isTempCandidateConversion = false,
   pipelineId,
   tempCandidateId,
+  isHeadhunterCreate,
 }: CreateCandidateModalProps) {
   const [showForm, setShowForm] = useState(!!tempCandidateData);
   const [showUpload, setShowUpload] = useState(false);
@@ -125,6 +127,7 @@ export function CreateCandidateModal({
             isTempCandidateConversion={isTempCandidateConversion}
             pipelineId={pipelineId}
             tempCandidateId={tempCandidateId}
+            isHeadhunterCreate={isHeadhunterCreate}
           />
         ) : showUpload ? (
           <UploadResume

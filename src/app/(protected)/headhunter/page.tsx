@@ -51,6 +51,7 @@ const HeadhunterPage = () => {
         <CreateCandidateModal
           isOpen={createModalOpen}
           onClose={() => setCreateModalOpen(false)}
+          isHeadhunterCreate={true}
         />
       </div>
     </div>
