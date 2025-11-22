@@ -5,7 +5,9 @@ import { ChevronDown, ChevronRight, Users, MapPin, HandCoins , Building2, Loader
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { HeadhunterAddCandidateDialog } from "@/components/Headhunter-Pipeline/headhunter-add-candidate-dialog";
 import { AddExistingCandidateDialog } from "@/components/common/add-existing-candidate-dialog";
+import { AddCandidateDialog } from "@/components/Recruiter-Pipeline/add-candidate-dialog";
 import { CreateCandidateDialog, type CreateCandidateValues } from "./create-candidate-dialog";
 import { CreateCandidateModal } from "@/components/candidates/create-candidate-modal";
 import { Button } from "@/components/ui/button";
@@ -70,6 +72,7 @@ export function PipelineJobCard({
   const [isCreateCandidateOpen, setIsCreateCandidateOpen]= useState(false);
   // Consolidated UI state
   const [isAddExistingOpen, setIsAddExistingOpen] = useState(false);
+  const [isAddOptionsOpen, setIsAddOptionsOpen] = useState(false);
   const [selectedStageFilter, setSelectedStageFilter] = useState<string | null>(null);
   const [isFormLinkCopied, setIsFormLinkCopied] = useState(false);
   
@@ -324,7 +327,11 @@ export function PipelineJobCard({
   const handleAddCandidate = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!canModify) return;
-    setIsAddExistingOpen(true);
+    if (isHeadhunterMode) {
+      setIsAddExistingOpen(true);
+    } else {
+      setIsAddOptionsOpen(true);
+    }
   };
 
   const handleAddExistingCandidate = () => {
@@ -681,22 +688,44 @@ export function PipelineJobCard({
       
 
       {/* Shared Existing Candidate selection dialog */}
-      <AddExistingCandidateDialog
-        jobId={job.id}
-        jobTitle={job.title}
-        open={isAddExistingOpen}
-        onOpenChange={setIsAddExistingOpen}
-        isPipeline={true}
-        pipelineId={job.id}
-        onCandidatesAdded={() => {
-          // Ask parent to refresh this job and list
-          onCandidateUpdate?.(job.id, {} as any);
-          // Invalidate the broader list query used by parent: ["pipelineEntries", userId]
-          queryClient.invalidateQueries({ predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "pipelineEntries" });
-          // Force revalidation for any server-rendered segments
-          // router.refresh();
-        }}
-      />
+      {isHeadhunterMode ? (
+        <HeadhunterAddCandidateDialog
+          jobId={job.id}
+          jobTitle={job.title}
+          open={isAddExistingOpen}
+          onOpenChange={setIsAddExistingOpen}
+          isPipeline={true}
+          pipelineId={job.id}
+          onCandidatesAdded={() => {
+            onCandidateUpdate?.(job.id, {} as any);
+            queryClient.invalidateQueries({ predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "pipelineEntries" });
+          }}
+        />
+      ) : (
+        <AddExistingCandidateDialog
+          jobId={job.id}
+          jobTitle={job.title}
+          open={isAddExistingOpen}
+          onOpenChange={setIsAddExistingOpen}
+          isPipeline={true}
+          pipelineId={job.id}
+          onCandidatesAdded={() => {
+            onCandidateUpdate?.(job.id, {} as any);
+            queryClient.invalidateQueries({ predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "pipelineEntries" });
+          }}
+        />
+      )}
+
+      {/* Add Candidate options dialog for pipeline (non-headhunter) */}
+      {!isHeadhunterMode && (
+        <AddCandidateDialog
+          open={isAddOptionsOpen}
+          onOpenChange={setIsAddOptionsOpen}
+          onAddExisting={() => setIsAddExistingOpen(true)}
+          onAddNew={() => setIsCreateCandidateOpen(true)}
+          jobTitle={job.title}
+        />
+      )}
 
       <CreateCandidateDialog
         open={isCreateCandidateOpen}
