@@ -91,22 +91,35 @@ const HeadhunterPage = () => {
 
   const jobs: Job[] = useMemo(() => {
     const list = Array.isArray(jobsRaw) ? jobsRaw : [];
-    return list.map((j: any, idx: number) => ({
-      id: j.jobId || "",
-      title: j.jobTitle || "",
-      clientName: j.clientName || "",
-      location: j.location || "",
-      salaryRange: `${j?.salaryRange?.min ?? ""} - ${j?.salaryRange?.max ?? ""} ${j?.salaryRange?.currency ?? ""}`.trim(),
-      headcount: 1,
-      jobType: (j.jobType || "").replace(/-/g, " "),
-      isExpanded: false,
-      candidates: [],
-      jobId: {
-        jobTitle: j.jobTitle,
-        location: j.location,
-        stage: "Active",
-      },
-    }));
+    return list.map((j: any) => {
+      const hm = j?.jobTeamMembers?.hiringManager || {};
+      const rc = j?.jobTeamMembers?.recruiter || {};
+      const hiringManagerName = hm.fullName || [hm.firstName, hm.lastName].filter(Boolean).join(" ");
+      const recruiterName = rc.fullName || [rc.firstName, rc.lastName].filter(Boolean).join(" ");
+
+      return {
+        id: j.jobId || "",
+        title: j.jobTitle || "",
+        clientName: j.clientName || "",
+        location: j.location || "",
+        salaryRange: `${j?.salaryRange?.min ?? ""} - ${j?.salaryRange?.max ?? ""} ${j?.salaryRange?.currency ?? ""}`.trim(),
+        headcount: 1,
+        jobType: (j.jobType || "").replace(/-/g, " "),
+        isExpanded: false,
+        candidates: [],
+        jobId: {
+          _id: j.jobId,
+          jobTitle: j.jobTitle,
+          location: j.location,
+          stage: "Active",
+          jobType: j.jobType,
+          jobTeamInfo: {
+            hiringManager: hm?._id || hiringManagerName ? { _id: hm._id, name: hiringManagerName, email: hm.email } : undefined,
+            recruiter: rc?._id || recruiterName ? { _id: rc._id, name: recruiterName, email: rc.email } : undefined,
+          },
+        },
+      } as Job;
+    });
   }, [jobsRaw]);
   const confirmDeleteSelected = async () => {
     if (selectedRows.size === 0) return;
