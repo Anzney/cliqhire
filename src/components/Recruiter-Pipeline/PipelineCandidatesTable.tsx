@@ -26,6 +26,7 @@ type Props = {
   canModify?: boolean;
   showStageColumn?: boolean;
   statusOptionsOverride?: string[];
+  actionsVariant?: "full" | "viewOnly";
 };
 
 export function PipelineCandidatesTable({
@@ -39,6 +40,7 @@ export function PipelineCandidatesTable({
   canModify = true,
   showStageColumn = true,
   statusOptionsOverride,
+  actionsVariant = "full",
 }: Props) {
   return (
     <Table>
@@ -123,39 +125,68 @@ export function PipelineCandidatesTable({
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-50">
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onViewCandidate(candidate);
-                    }}
-                    className="cursor-pointer"
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    View & Edit Details
-                  </DropdownMenuItem>
-                  {candidate.resume && (
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onViewResume(candidate);
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <Briefcase className="h-4 w-4 mr-2" />
-                      View Resume
-                    </DropdownMenuItem>
-                  )}
-                  {canModify && (
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteCandidate(candidate);
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <Trash2 className="size-4 mr-2 text-red-500" />
-                      Delete Candidate
-                    </DropdownMenuItem>
+                  {actionsVariant === "full" ? (
+                    <>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewCandidate(candidate);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View & Edit Details
+                      </DropdownMenuItem>
+                      {candidate.resume && (
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onViewResume(candidate);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <Briefcase className="h-4 w-4 mr-2" />
+                          View Resume
+                        </DropdownMenuItem>
+                      )}
+                      {canModify && (
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteCandidate(candidate);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <Trash2 className="size-4 mr-2 text-red-500" />
+                          Delete Candidate
+                        </DropdownMenuItem>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewCandidate(candidate);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Details
+                      </DropdownMenuItem>
+                      {candidate.resume && (
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onViewResume(candidate);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <Briefcase className="h-4 w-4 mr-2" />
+                          View Resume
+                        </DropdownMenuItem>
+                      )}
+                    </>
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>

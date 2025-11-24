@@ -661,6 +661,7 @@ export function PipelineJobCard({
               tableOptions={tableOptions}
               hideStageFilters={hideStageFilters}
               statusOptionsOverride={statusOptionsOverride}
+              actionsVariant={isHeadhunterMode ? "viewOnly" : "full"}
             />
           </CardContent>
         )}

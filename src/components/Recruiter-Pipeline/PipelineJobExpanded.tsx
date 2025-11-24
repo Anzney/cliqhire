@@ -20,6 +20,7 @@ interface PipelineJobExpandedProps {
   tableOptions?: { showStageColumn?: boolean; showClientNameColumn?: boolean };
   hideStageFilters?: boolean;
   statusOptionsOverride?: string[];
+  actionsVariant?: "full" | "viewOnly";
 }
 
 export function PipelineJobExpanded({
@@ -36,6 +37,7 @@ export function PipelineJobExpanded({
   tableOptions,
   hideStageFilters = false,
   statusOptionsOverride,
+  actionsVariant = "full",
 }: PipelineJobExpandedProps) {
   // Calculate stage counts with resolution function
   const getUpdatedStageCounts = React.useCallback(() => {
@@ -125,6 +127,7 @@ export function PipelineJobExpanded({
             canModify={canModify}
             showStageColumn={tableOptions?.showStageColumn ?? true}
             statusOptionsOverride={statusOptionsOverride}
+            actionsVariant={actionsVariant}
           />
         </div>
       </div>
