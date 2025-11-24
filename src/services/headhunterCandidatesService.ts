@@ -65,11 +65,18 @@ class HeadhunterCandidatesService {
     return Array.isArray(data) ? data : [];
   }
 
-  async updateCandidate(id: string, payload: Record<string, any>): Promise<any> {
-    const response = await api.patch(`/api/headhunter-candidates/${id}`, payload, {
-      headers: { "Content-Type": "application/json" },
-    });
-    return response.data?.data || response.data;
+  async updateCandidate(id: string, payload: Record<string, any> | FormData): Promise<any> {
+    if (payload instanceof FormData) {
+      const response = await api.patch(`/api/headhunter-candidates/${id}`, payload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return response.data?.data || response.data;
+    } else {
+      const response = await api.patch(`/api/headhunter-candidates/${id}`, payload, {
+        headers: { "Content-Type": "application/json" },
+      });
+      return response.data?.data || response.data;
+    }
   }
 }
 

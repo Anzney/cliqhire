@@ -14,6 +14,7 @@ import { DeleteConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { headhunterCandidatesService } from "@/services/headhunterCandidatesService";
 import { toast } from "sonner";
 import { EditFieldDialog } from "@/components/jobs/summary/edit-field-dialog";
+import { ResumeUploadDialog } from "@/components/Headhunter-Pipeline/resume-upload-dialog";
 
 interface CandidateDetailsDialogProps {
     candidate: HeadhunterCandidate | null;
@@ -32,6 +33,8 @@ export const CandidateDetailsDialog: React.FC<CandidateDetailsDialogProps> = ({
     const [confirmOpen, setConfirmOpen] = React.useState(false);
     const [editDialogOpen, setEditDialogOpen] = React.useState(false);
     const [pendingFieldLabel, setPendingFieldLabel] = React.useState<string>("");
+    const [resumeDialogOpen, setResumeDialogOpen] = React.useState(false);
+    const [selectedResumeFile, setSelectedResumeFile] = React.useState<File | null>(null);
 
     React.useEffect(() => {
         setLocalCandidate(candidate);
@@ -66,7 +69,11 @@ export const CandidateDetailsDialog: React.FC<CandidateDetailsDialogProps> = ({
                     const currentValue = (localCandidate as any)[fieldKey];
                     const currentAsString = Array.isArray(currentValue) ? currentValue.join(', ') : (currentValue ?? '');
                     setEditedValue(String(currentAsString));
-                    setEditDialogOpen(true);
+                    if (fieldKey === 'resumeUrl') {
+                        setResumeDialogOpen(true);
+                    } else {
+                        setEditDialogOpen(true);
+                    }
                 }}
             >
                 <Pencil className="h-3 w-3" />
@@ -134,32 +141,49 @@ export const CandidateDetailsDialog: React.FC<CandidateDetailsDialogProps> = ({
             isDate={pendingField === 'dateOfBirth'}
             isTextArea={pendingField === 'description'}
         />
+        <ResumeUploadDialog
+            open={resumeDialogOpen}
+            onClose={() => setResumeDialogOpen(false)}
+            candidateName={localCandidate?.name}
+            onSelect={(file) => {
+                setSelectedResumeFile(file);
+                setResumeDialogOpen(false);
+                setConfirmOpen(true);
+            }}
+        />
         <DeleteConfirmationDialog
             isOpen={confirmOpen}
             onClose={() => { setConfirmOpen(false); setPendingField(null); }}
             onConfirm={() => {
                 if (pendingField) {
                     setConfirmOpen(false);
-                    const payload: Record<string, any> = {};
-                    if (pendingField === 'softSkill' || pendingField === 'technicalSkill') {
-                        const arr = editedValue.split(',').map((s) => s.trim()).filter(Boolean);
-                        payload[pendingField] = arr;
-                    } else {
-                        payload[pendingField] = editedValue;
-                    }
-                    headhunterCandidatesService.updateCandidate(localCandidate.id, payload)
-                      .then(() => {
-                        const nextVal = (pendingField === 'softSkill' || pendingField === 'technicalSkill')
-                          ? editedValue.split(',').map((s) => s.trim()).filter(Boolean)
-                          : editedValue;
+                    const doUpdate = async () => {
+                      try {
+                        let nextVal: any = editedValue;
+                        if (pendingField === 'softSkill' || pendingField === 'technicalSkill') {
+                          const arr = editedValue.split(',').map((s) => s.trim()).filter(Boolean);
+                          nextVal = arr;
+                          const payload: Record<string, any> = { [pendingField]: arr };
+                          await headhunterCandidatesService.updateCandidate(localCandidate.id, payload);
+                        } else if (pendingField === 'resumeUrl' && selectedResumeFile) {
+                          const form = new FormData();
+                          form.append('resume', selectedResumeFile);
+                          await headhunterCandidatesService.updateCandidate(localCandidate.id, form);
+                          nextVal = localCandidate.resumeUrl; // keep existing until backend returns URL
+                        } else {
+                          const payload: Record<string, any> = { [pendingField]: editedValue };
+                          await headhunterCandidatesService.updateCandidate(localCandidate.id, payload);
+                        }
                         setLocalCandidate({ ...localCandidate, [pendingField]: nextVal } as any);
                         setEditedValue('');
                         setPendingField(null);
+                        setSelectedResumeFile(null);
                         toast.success(`${pendingFieldLabel} updated`);
-                      })
-                      .catch(() => {
+                      } catch (err) {
                         toast.error(`Failed to update ${pendingFieldLabel}`);
-                      });
+                      }
+                    };
+                    void doUpdate();
                 }
             }}
             title="Confirm Edit"
