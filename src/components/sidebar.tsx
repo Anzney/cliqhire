@@ -116,8 +116,11 @@ export function Sidebar() {
                   if (isHeadhunter && finalPermissions.includes('HEAD_HUNTER_VIEW')) {
                     return item.permission === 'HEAD_HUNTER';
                   }
-                  if (isAdmin && item.permission === 'TODAY_TASKS') return false;
-                  if (isAdmin) return true;
+                  if (isAdmin) {
+                    if (item.permission === 'TODAY_TASKS') return false;
+                    if (item.permission === 'HEAD_HUNTER') return false;
+                    return true;
+                  }
                   if (item.permission === 'HOME') return true;
                   const requiredView = permissionViewMap[item.permission as keyof typeof permissionViewMap];
                   if (requiredView) {
