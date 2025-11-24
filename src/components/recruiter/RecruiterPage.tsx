@@ -20,6 +20,7 @@ export default function RecruiterPage() {
         {
           id: "cand-001",
           name: "John Doe",
+          source: "LinkedIn",
           currentJobTitle: "Frontend Engineer",
           email: "john.doe@example.com",
           phone: "+1 555-123-4567",
@@ -30,6 +31,7 @@ export default function RecruiterPage() {
         {
           id: "cand-002",
           name: "Jane Smith",
+          source: "LinkedIn",
           currentJobTitle: "React Developer",
           email: "jane.smith@example.com",
           phone: "+1 555-987-6543",
@@ -54,6 +56,7 @@ export default function RecruiterPage() {
         {
           id: "cand-101",
           name: "Alex Thompson",
+          source: "Referral",
           currentJobTitle: "Node.js Engineer",
           email: "alex.thompson@example.com",
           phone: "+49 30 123456",
@@ -64,6 +67,7 @@ export default function RecruiterPage() {
         {
           id: "cand-102",
           name: "Maria Garcia",
+          source: "Indeed",
           currentJobTitle: "API Developer",
           email: "maria.garcia@example.com",
           phone: "+34 600 123 456",
