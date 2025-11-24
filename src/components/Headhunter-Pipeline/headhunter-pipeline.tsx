@@ -219,7 +219,7 @@ export const HeadhunterPipeline: React.FC<{ jobs?: Job[] }> = ({ jobs: incomingJ
             tableOptions={{ showStageColumn: false }}
             hideStageFilters={true}
             hideClientName={true}
-            statusOptionsOverride={["Pending", "Submitted", "Accepted", "Rejected"]}
+            statusOptionsOverride={["Pending", "Accepted", "Rejected"]}
             isHeadhunterMode={true}
           />
         ))
