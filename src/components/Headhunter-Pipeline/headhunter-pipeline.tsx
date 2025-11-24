@@ -96,7 +96,6 @@ export const HeadhunterPipeline: React.FC<{ jobs?: Job[] }> = ({ jobs: incomingJ
           currentStage: "Sourcing",
           email: hh.email || "",
           phone: hh.phone || "",
-          location: hh.location || "",
           experience: hh.experience || "",
           currentSalary: hh.currentSalary ?? undefined,
           currentSalaryCurrency: hh.currentSalaryCurrency || undefined,
@@ -106,6 +105,13 @@ export const HeadhunterPipeline: React.FC<{ jobs?: Job[] }> = ({ jobs: incomingJ
           linkedin: hh.linkedin || undefined,
           resume: hh.resume || hh.resumeUrl || undefined,
           subStatus: hh.status || "Pending",
+          location: hh.location || "",
+          gender: hh.gender || "",
+          dateOfBirth: hh.dateOfBirth || "",
+          willingToRelocate: hh.willingToRelocate || "",
+          description: hh.description || "",
+          softSkill: Array.isArray(hh.softSkill) ? hh.softSkill : [],
+          technicalSkill: Array.isArray(hh.technicalSkill) ? hh.technicalSkill : [],
         }));
         setJobs(prev => prev.map(j => (j.id === jobId ? { ...j, candidates: mapped } : j)));
       } catch (e) {
@@ -137,6 +143,12 @@ export const HeadhunterPipeline: React.FC<{ jobs?: Job[] }> = ({ jobs: incomingJ
         linkedin: hh.linkedin || undefined,
         resume: hh.resume || hh.resumeUrl || undefined,
         subStatus: hh.status || "Pending",
+        gender: hh.gender || "",
+        dateOfBirth: hh.dateOfBirth || "",
+        willingToRelocate: hh.willingToRelocate || "",
+        description: hh.description || "",
+        softSkill: Array.isArray(hh.softSkill) ? hh.softSkill : [],
+        technicalSkill: Array.isArray(hh.technicalSkill) ? hh.technicalSkill : [],
       }));
       setJobs(prev => prev.map(j => (j.id === jobId ? { ...j, candidates: mapped } : j)));
     } catch (e) {
@@ -159,7 +171,7 @@ export const HeadhunterPipeline: React.FC<{ jobs?: Job[] }> = ({ jobs: incomingJ
       };
     }));
   };
-  const updateCandidateStage = async (_jobId: string, _candidateId: string, _newStage: string) => {};
+  const updateCandidateStage = async (_jobId: string, _candidateId: string, _newStage: string) => { };
 
   const filteredJobs = getFilteredAndSortedJobs();
 
@@ -207,7 +219,7 @@ export const HeadhunterPipeline: React.FC<{ jobs?: Job[] }> = ({ jobs: incomingJ
             tableOptions={{ showStageColumn: false }}
             hideStageFilters={true}
             hideClientName={true}
-            statusOptionsOverride={["Pending","Submitted","Accepted","Rejected"]}
+            statusOptionsOverride={["Pending", "Submitted", "Accepted", "Rejected"]}
             isHeadhunterMode={true}
           />
         ))

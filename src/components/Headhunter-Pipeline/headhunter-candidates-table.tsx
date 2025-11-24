@@ -4,7 +4,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MoreVertical } from "lucide-react";
-import { 
+import {
   Table,
   TableBody,
   TableCell,
@@ -12,6 +12,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { CandidateDetailsDialog } from "./candidate-details-dialog";
+import { useState } from "react";
 
 export interface HeadhunterCandidate {
   id: string;
@@ -20,6 +28,13 @@ export interface HeadhunterCandidate {
   phone: string;
   status: string;
   resumeUrl?: string;
+  location?: string;
+  gender?: string;
+  dateOfBirth?: string;
+  willingToRelocate?: string;
+  description?: string;
+  softSkill?: string[];
+  technicalSkill?: string[];
 }
 
 interface HeadhunterCandidatesTableProps {
@@ -39,6 +54,9 @@ export const HeadhunterCandidatesTable: React.FC<HeadhunterCandidatesTableProps>
   onToggleSelect,
   onToggleSelectAll,
 }) => {
+  const [selectedCandidate, setSelectedCandidate] = useState<HeadhunterCandidate | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   return (
     <div className="bg-white  shadow-sm h-[560px] overflow-y-auto">
       <Table>
@@ -97,20 +115,36 @@ export const HeadhunterCandidatesTable: React.FC<HeadhunterCandidatesTableProps>
                   )}
                 </TableCell>
                 <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={() => onAction?.(c)}
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
+                  <DropdownMenu modal={false}>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => {
+                        setSelectedCandidate(c);
+                        setIsDialogOpen(true);
+                      }}>
+                        View
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))
           )}
         </TableBody>
       </Table>
+      <CandidateDetailsDialog
+        candidate={selectedCandidate}
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+      />
     </div>
   );
 };
