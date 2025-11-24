@@ -1,0 +1,196 @@
+import React from "react";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Pencil } from "lucide-react";
+import { HeadhunterCandidate } from "./headhunter-candidates-table";
+import { ScrollArea } from "@/components/ui/scroll-area";
+// removed inline editors; editing occurs via EditFieldDialog
+import { DeleteConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { headhunterCandidatesService } from "@/services/headhunterCandidatesService";
+import { toast } from "sonner";
+import { EditFieldDialog } from "@/components/jobs/summary/edit-field-dialog";
+import { ResumeUploadDialog } from "@/components/Headhunter-Pipeline/resume-upload-dialog";
+
+interface CandidateDetailsDialogProps {
+    candidate: HeadhunterCandidate | null;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+}
+
+export const CandidateDetailsDialog: React.FC<CandidateDetailsDialogProps> = ({
+    candidate,
+    open,
+    onOpenChange,
+}) => {
+    const [localCandidate, setLocalCandidate] = React.useState<HeadhunterCandidate | null>(candidate);
+    const [pendingField, setPendingField] = React.useState<string | null>(null);
+    const [editedValue, setEditedValue] = React.useState<string>("");
+    const [confirmOpen, setConfirmOpen] = React.useState(false);
+    const [editDialogOpen, setEditDialogOpen] = React.useState(false);
+    const [pendingFieldLabel, setPendingFieldLabel] = React.useState<string>("");
+    const [resumeDialogOpen, setResumeDialogOpen] = React.useState(false);
+    const [selectedResumeFile, setSelectedResumeFile] = React.useState<File | null>(null);
+
+    React.useEffect(() => {
+        setLocalCandidate(candidate);
+        setEditedValue("");
+        setPendingField(null);
+        setEditDialogOpen(false);
+    }, [candidate]);
+
+    if (!localCandidate) return null;
+
+    const DetailItem = ({ label, fieldKey, value, isLink = false, fullWidth = false }: { label: string; fieldKey: string; value: string | undefined; isLink?: boolean; fullWidth?: boolean }) => (
+        <div className={`flex items-center justify-between p-3 border border-gray-100 rounded-lg bg-gray-50/50 ${fullWidth ? 'col-span-2' : 'col-span-1'}`}>
+            <div className="flex flex-col gap-1 overflow-hidden">
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</span>
+                {isLink && typeof value === 'string' ? (
+                    <a href={value} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-blue-600 hover:underline truncate">
+                        View Resume
+                    </a>
+                ) : (
+                    <span className="text-sm font-medium text-gray-900 truncate block" title={typeof value === 'string' ? value : undefined}>
+                        {value || "N/A"}
+                    </span>
+                )}
+            </div>
+            <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors flex-shrink-0 ml-2"
+                onClick={() => {
+                    setPendingField(fieldKey);
+                    setPendingFieldLabel(label);
+                    const currentValue = (localCandidate as any)[fieldKey];
+                    const currentAsString = Array.isArray(currentValue) ? currentValue.join(', ') : (currentValue ?? '');
+                    setEditedValue(String(currentAsString));
+                    if (fieldKey === 'resumeUrl') {
+                        setResumeDialogOpen(true);
+                    } else {
+                        setEditDialogOpen(true);
+                    }
+                }}
+            >
+                <Pencil className="h-3 w-3" />
+            </Button>
+        </div>
+    );
+
+    const formatDate = (dateString?: string) => {
+        if (!dateString) return undefined;
+        return new Date(dateString).toLocaleDateString();
+    };
+
+    const formatArray = (arr?: string[]) => {
+        if (!arr || arr.length === 0) return undefined;
+        return arr.join(", ");
+    };
+
+    return (
+        <>
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-[700px] bg-white p-0 overflow-hidden gap-0 max-h-[85vh] flex flex-col">
+                <DialogHeader className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex-shrink-0">
+                    <DialogTitle className="text-lg font-semibold text-gray-900">Candidate Details</DialogTitle>
+                </DialogHeader>
+
+                <ScrollArea className="h-[60vh]">
+                    <div className="p-6 grid grid-cols-2 gap-4">
+                        <DetailItem label="Name" fieldKey="name" value={localCandidate.name} />
+                        <DetailItem label="Email" fieldKey="email" value={localCandidate.email} />
+
+                        <DetailItem label="Phone" fieldKey="phone" value={localCandidate.phone} />
+                        <DetailItem label="Status" fieldKey="status" value={localCandidate.status} />
+
+                        <DetailItem label="Location" fieldKey="location" value={localCandidate.location} />
+                        <DetailItem label="Gender" fieldKey="gender" value={localCandidate.gender} />
+
+                        <DetailItem label="Date of Birth" fieldKey="dateOfBirth" value={formatDate(localCandidate.dateOfBirth)} />
+                        <DetailItem label="Willing to Relocate" fieldKey="willingToRelocate" value={localCandidate.willingToRelocate} />
+
+                        <DetailItem label="Resume" fieldKey="resumeUrl" value={localCandidate.resumeUrl} isLink={true} />
+                        <div className="col-span-1"></div>
+
+                        <DetailItem label="Soft Skills" fieldKey="softSkill" value={formatArray(localCandidate.softSkill)} fullWidth />
+                        <DetailItem label="Technical Skills" fieldKey="technicalSkill" value={formatArray(localCandidate.technicalSkill)} fullWidth />
+
+                        <DetailItem label="Description" fieldKey="description" value={localCandidate.description} fullWidth />
+                    </div>
+                </ScrollArea>
+
+                <div className="bg-gray-50 px-6 py-4 flex justify-end border-t border-gray-100 flex-shrink-0">
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
+                </div>
+            </DialogContent>
+        </Dialog>
+        <EditFieldDialog
+            open={editDialogOpen}
+            onClose={() => setEditDialogOpen(false)}
+            fieldName={pendingFieldLabel}
+            currentValue={editedValue}
+            onSave={(val) => {
+                setEditedValue(val);
+                setEditDialogOpen(false);
+                setConfirmOpen(true);
+            }}
+            isDate={pendingField === 'dateOfBirth'}
+            isTextArea={pendingField === 'description'}
+        />
+        <ResumeUploadDialog
+            open={resumeDialogOpen}
+            onClose={() => setResumeDialogOpen(false)}
+            candidateName={localCandidate?.name}
+            onSelect={(file) => {
+                setSelectedResumeFile(file);
+                setResumeDialogOpen(false);
+                setConfirmOpen(true);
+            }}
+        />
+        <DeleteConfirmationDialog
+            isOpen={confirmOpen}
+            onClose={() => { setConfirmOpen(false); setPendingField(null); }}
+            onConfirm={() => {
+                if (pendingField) {
+                    setConfirmOpen(false);
+                    const doUpdate = async () => {
+                      try {
+                        let nextVal: any = editedValue;
+                        if (pendingField === 'softSkill' || pendingField === 'technicalSkill') {
+                          const arr = editedValue.split(',').map((s) => s.trim()).filter(Boolean);
+                          nextVal = arr;
+                          const payload: Record<string, any> = { [pendingField]: arr };
+                          await headhunterCandidatesService.updateCandidate(localCandidate.id, payload);
+                        } else if (pendingField === 'resumeUrl' && selectedResumeFile) {
+                          const form = new FormData();
+                          form.append('resume', selectedResumeFile);
+                          await headhunterCandidatesService.updateCandidate(localCandidate.id, form);
+                          nextVal = localCandidate.resumeUrl; // keep existing until backend returns URL
+                        } else {
+                          const payload: Record<string, any> = { [pendingField]: editedValue };
+                          await headhunterCandidatesService.updateCandidate(localCandidate.id, payload);
+                        }
+                        setLocalCandidate({ ...localCandidate, [pendingField]: nextVal } as any);
+                        setEditedValue('');
+                        setPendingField(null);
+                        setSelectedResumeFile(null);
+                        toast.success(`${pendingFieldLabel} updated`);
+                      } catch (err) {
+                        toast.error(`Failed to update ${pendingFieldLabel}`);
+                      }
+                    };
+                    void doUpdate();
+                }
+            }}
+            title="Confirm Edit"
+            description="Do you want to save the changes?"
+            confirmText="Save"
+            cancelText="Cancel"
+        />
+        </>
+    );
+};

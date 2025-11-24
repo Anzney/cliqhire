@@ -17,7 +17,9 @@ import {
   DollarSign,
   Route,
   LockKeyhole,
-  ListTodo
+  ListTodo,
+  UserRoundSearch,
+  UserPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -41,6 +43,8 @@ const menuItems = [
   { name: "Jobs", icon: Briefcase, href: "/jobs", permission: "JOBS" },
   { name: "Candidates", icon: Users, href: "/candidates", permission: "CANDIDATE" },
   { name: "Recruitment Pipeline", icon: Route, href: "/reactruterpipeline", permission: "RECRUITMENT_PIPELINE" },
+  { name: "Recruiter", icon: UserPlus, href: "/recruiter", permission: "RECRUITER" },
+  { name: "Head Hunter", icon:  UserRoundSearch, href: "/headhunter", permission: "HEAD_HUNTER" },
   { name: "Team Members", icon: Users, href: "/teammembers", permission: "TEAM_MEMBERS" },
   { name: "User Access", icon: LockKeyhole, href: "/user-access", permission: "USER_ACCESS" },
   // { name: "Placements", icon: UserCheck, href: "/placements", permission: "PLACEMENTS" },
@@ -60,6 +64,10 @@ export function Sidebar() {
   const isAdmin = user?.role === 'ADMIN';
   const isHiringManager = user?.role === 'HIRING_MANAGER';
   const isTeamLead = user?.role === 'TEAM_LEAD';
+  const isHeadhunter = (() => {
+    const role = user?.role ? String(user.role).toUpperCase() : '';
+    return role === 'HEADHUNTER' || role === 'HEAD_HUNTER';
+  })();
   const isManagerOrLead = isAdmin || isHiringManager || isTeamLead;
 
   // Determine which permissions to use
@@ -68,8 +76,8 @@ export function Sidebar() {
     ? user.permissions 
     : user?.defaultPermissions || [];
   
-  // Ensure TODAY_TASKS permission is available for all non-admin users
-  if (!isAdmin && !finalPermissions.includes('TODAY_TASKS')) {
+  // Ensure TODAY_TASKS permission is available for all non-admin users (except headhunters)
+  if (!isAdmin && !isHeadhunter && !finalPermissions.includes('TODAY_TASKS')) {
     finalPermissions = [...finalPermissions, 'TODAY_TASKS'];
   }
 
@@ -81,6 +89,7 @@ export function Sidebar() {
     RECRUITMENT_PIPELINE: 'RECRUITMENT_PIPELINE_VIEW',
     TEAM_MEMBERS: 'TEAM_MEMBERS_VIEW',
     USER_ACCESS: 'USER_ACCESS_VIEW',
+    HEAD_HUNTER: 'HEAD_HUNTER_VIEW',
   };
 
   // Special permissions for managers and leads
@@ -104,8 +113,14 @@ export function Sidebar() {
             <SidebarMenu className="group-data-[collapsible=icon]:gap-2">
               {menuItems
                 .filter((item) => {
-                  if (isAdmin && item.permission === 'TODAY_TASKS') return false;
-                  if (isAdmin) return true;
+                  if (isHeadhunter && finalPermissions.includes('HEAD_HUNTER_VIEW')) {
+                    return item.permission === 'HEAD_HUNTER';
+                  }
+                  if (isAdmin) {
+                    if (item.permission === 'TODAY_TASKS') return false;
+                    if (item.permission === 'HEAD_HUNTER') return false;
+                    return true;
+                  }
                   if (item.permission === 'HOME') return true;
                   const requiredView = permissionViewMap[item.permission as keyof typeof permissionViewMap];
                   if (requiredView) {

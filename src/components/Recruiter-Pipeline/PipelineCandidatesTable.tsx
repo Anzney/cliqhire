@@ -24,6 +24,9 @@ type Props = {
   onViewResume: (candidate: Candidate) => void;
   onDeleteCandidate: (candidate: Candidate) => void;
   canModify?: boolean;
+  showStageColumn?: boolean;
+  statusOptionsOverride?: string[];
+  actionsVariant?: "full" | "viewOnly";
 };
 
 export function PipelineCandidatesTable({
@@ -35,6 +38,9 @@ export function PipelineCandidatesTable({
   onViewResume,
   onDeleteCandidate,
   canModify = true,
+  showStageColumn = true,
+  statusOptionsOverride,
+  actionsVariant = "full",
 }: Props) {
   return (
     <Table>
@@ -43,7 +49,7 @@ export function PipelineCandidatesTable({
           <TableHead></TableHead>
           <TableHead>Candidate</TableHead>
           <TableHead>Current Position</TableHead>
-          <TableHead>Stage</TableHead>
+          {showStageColumn && <TableHead>Stage</TableHead>}
           <TableHead>Status</TableHead>
           <TableHead>Hiring Manager</TableHead>
           <TableHead>Recruiter</TableHead>
@@ -67,12 +73,14 @@ export function PipelineCandidatesTable({
             <TableCell className="truncate max-w-[260px] text-gray-700">
               {candidate.currentJobTitle || "Position not specified"}
             </TableCell>
-            <TableCell>
-              <PipelineStageBadge
-                stage={candidate.currentStage}
-                onStageChange={(newStage) => { if (canModify) onStageChange(candidate, newStage); }}
-              />
-            </TableCell>
+            {showStageColumn && (
+              <TableCell>
+                <PipelineStageBadge
+                  stage={candidate.currentStage}
+                  onStageChange={(newStage) => { if (canModify) onStageChange(candidate, newStage); }}
+                />
+              </TableCell>
+            )}
             <TableCell>
               {(() => {
                 const stagesWithStatus = [
@@ -83,12 +91,15 @@ export function PipelineCandidatesTable({
                   "Verification",
                   "Onboarding",
                 ];
-                if (stagesWithStatus.includes(candidate.currentStage)) {
+                const alwaysShowStatus = !!statusOptionsOverride;
+                if (alwaysShowStatus || stagesWithStatus.includes(candidate.currentStage)) {
+                  const statusValue = (alwaysShowStatus ? (candidate.subStatus as any) : (candidate.status as any)) || null;
                   return (
                     <StatusBadge
-                      status={(candidate.status as any) || null}
+                      status={statusValue}
                       stage={candidate.currentStage}
                       onStatusChange={(newStatus) => { if (canModify) onStatusChange(candidate, newStatus as any); }}
+                      allowedStatuses={statusOptionsOverride}
                     />
                   );
                 } else {
@@ -114,39 +125,68 @@ export function PipelineCandidatesTable({
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-50">
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onViewCandidate(candidate);
-                    }}
-                    className="cursor-pointer"
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    View & Edit Details
-                  </DropdownMenuItem>
-                  {candidate.resume && (
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onViewResume(candidate);
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <Briefcase className="h-4 w-4 mr-2" />
-                      View Resume
-                    </DropdownMenuItem>
-                  )}
-                  {canModify && (
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteCandidate(candidate);
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <Trash2 className="size-4 mr-2 text-red-500" />
-                      Delete Candidate
-                    </DropdownMenuItem>
+                  {actionsVariant === "full" ? (
+                    <>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewCandidate(candidate);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View & Edit Details
+                      </DropdownMenuItem>
+                      {candidate.resume && (
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onViewResume(candidate);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <Briefcase className="h-4 w-4 mr-2" />
+                          View Resume
+                        </DropdownMenuItem>
+                      )}
+                      {canModify && (
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteCandidate(candidate);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <Trash2 className="size-4 mr-2 text-red-500" />
+                          Delete Candidate
+                        </DropdownMenuItem>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewCandidate(candidate);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Details
+                      </DropdownMenuItem>
+                      {candidate.resume && (
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onViewResume(candidate);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <Briefcase className="h-4 w-4 mr-2" />
+                          View Resume
+                        </DropdownMenuItem>
+                      )}
+                    </>
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>

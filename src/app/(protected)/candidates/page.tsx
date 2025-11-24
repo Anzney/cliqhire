@@ -322,6 +322,7 @@ export default function CandidatesPage() {
           setCurrentPage(1);
         }}
       /> 
+
      {/*Open the candidate Dialog  */}
      <CreateCandidateModal
         isOpen={open}

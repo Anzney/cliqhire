@@ -64,6 +64,14 @@ const statusColors: Record<StatusType, string> = {
   "Disqualified": "bg-red-100 text-red-800 border-red-200"
 };
 
+// Additional generic statuses for headhunter
+const genericStatusColors: Record<string, string> = {
+  "Pending": "bg-gray-100 text-gray-700 border-gray-200",
+  "Submitted": "bg-blue-100 text-blue-800 border-blue-200",
+  "Accepted": "bg-green-100 text-green-800 border-green-200",
+  "Rejected": "bg-red-100 text-red-800 border-red-200",
+};
+
 // Display label mapper to keep underlying values intact while changing UI labels
 const getDisplayLabel = (status: StatusType | string) => {
   switch (status) {
@@ -80,19 +88,21 @@ const getDisplayLabel = (status: StatusType | string) => {
 };
 
 interface StatusBadgeProps {
-  status: StatusType | null;
+  status: string | null;
   stage: string;
-  onStatusChange?: (newStatus: StatusType) => void;
+  onStatusChange?: (newStatus: string) => void;
   isReadOnly?: boolean;
+  allowedStatuses?: string[];
 }
 
 export function StatusBadge({ 
   status, 
   stage,
   onStatusChange, 
-  isReadOnly = false 
+  isReadOnly = false,
+  allowedStatuses,
 }: StatusBadgeProps) {
-  const availableStatuses = statusOptions[stage] || [];
+  const availableStatuses = allowedStatuses ?? (statusOptions[stage] || []);
   // Default status mapping for stages with default "Pending"
   const defaultStatusByStage: Record<string, StatusType | undefined> = {
     "Sourcing": "Pending",
@@ -103,7 +113,7 @@ export function StatusBadge({
 
   const effectiveStatus = (status ?? defaultStatusByStage[stage]) || null;
 
-  const handleClick = (statusOption: StatusType) => {
+  const handleClick = (statusOption: string) => {
     return (event: React.MouseEvent) => {
       event.stopPropagation();
       if (onStatusChange) {
@@ -150,7 +160,7 @@ export function StatusBadge({
             >
               <Badge 
                 variant="secondary" 
-                className={`${statusColors[statusOption]} border-none`}
+                className={`${statusColors[statusOption as StatusType] || genericStatusColors[statusOption] || "bg-gray-100 text-gray-700 border-gray-200"} border-none`}
               >
                 {getDisplayLabel(statusOption)}
               </Badge>
@@ -166,7 +176,7 @@ export function StatusBadge({
     return (
       <Badge 
         variant="secondary" 
-        className={`${statusColors[effectiveStatus]} border-none`}
+        className={`${statusColors[effectiveStatus as StatusType] || genericStatusColors[effectiveStatus] || "bg-gray-100 text-gray-700 border-gray-200"} border-none`}
       >
         {getDisplayLabel(effectiveStatus)}
       </Badge>
@@ -180,13 +190,13 @@ export function StatusBadge({
           variant="ghost" 
           className="h-auto p-0 hover:bg-transparent"
         >
-          <Badge 
-            variant="secondary" 
-            className={`${statusColors[effectiveStatus]} border-none flex items-center gap-1`}
-          >
-            {getDisplayLabel(effectiveStatus)}
-            <ChevronDown className="h-3 w-3" />
-          </Badge>
+        <Badge 
+          variant="secondary" 
+          className={`${statusColors[effectiveStatus as StatusType] || genericStatusColors[effectiveStatus] || "bg-gray-100 text-gray-700 border-gray-200"} border-none flex items-center gap-1`}
+        >
+          {getDisplayLabel(effectiveStatus)}
+          <ChevronDown className="h-3 w-3" />
+        </Badge>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
@@ -198,7 +208,7 @@ export function StatusBadge({
           >
             <Badge 
               variant="secondary" 
-              className={`${statusColors[statusOption]} border-none`}
+              className={`${statusColors[statusOption as StatusType] || genericStatusColors[statusOption] || "bg-gray-100 text-gray-700 border-gray-200"} border-none`}
             >
               {getDisplayLabel(statusOption)}
             </Badge>

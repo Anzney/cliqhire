@@ -260,16 +260,16 @@ export function UserPermissionDialog({
           delete: 'CLIENTS_DELETE'
         }
       },
-      {
-        base: 'TEAM_MEMBERS',
-        label: 'TEAM MEMBERS',
-        description: 'Access to view and manage team members',
-        actions: {
-          view: 'TEAM_MEMBERS_VIEW',
-          modify: 'TEAM_MEMBERS_MODIFY',
-          delete: 'TEAM_MEMBERS_DELETE'
-        }
-      }
+      // {
+      //   base: 'TEAM_MEMBERS',
+      //   label: 'TEAM MEMBERS',
+      //   description: 'Access to view and manage team members',
+      //   actions: {
+      //     view: 'TEAM_MEMBERS_VIEW',
+      //     modify: 'TEAM_MEMBERS_MODIFY',
+      //     delete: 'TEAM_MEMBERS_DELETE'
+      //   }
+      // }
     ];
 
     defaultGroups.forEach(group => {

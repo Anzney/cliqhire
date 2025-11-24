@@ -4,6 +4,7 @@ import { useState, startTransition } from "react";
 import { CollapsibleSection } from "@/components/clients/summary/collapsible-section";
 import { DetailRow } from "@/components/clients/summary/detail-row";
 import { TeamSelectionDialog } from "./team-selection-dialog";
+import { HeadHunterSelectionDialog } from "./HeadHunterSelectionDialog";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import {
@@ -24,6 +25,7 @@ interface JobInfoSectionProps {
 
 export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdateMultipleFields, canModify }: JobInfoSectionProps) {
   const [isTeamDialogOpen, setIsTeamDialogOpen] = useState(false);
+  const [isHeadHunterDialogOpen, setIsHeadHunterDialogOpen] = useState(false);
 
   // Helper function to parse team assignment data
   const getTeamAssignmentData = () => {
@@ -146,6 +148,15 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdate
     }
   };
 
+  const headHunterObject = jobDetails.jobTeamInfo?.headhunter;
+  const headHunterName =
+    jobDetails.headHunter ||
+    (headHunterObject
+      ? `${headHunterObject.firstName || ""} ${headHunterObject.lastName || ""}`.trim() ||
+        headHunterObject.email ||
+        ""
+      : jobDetails.jobTeamInfo?.headHunter || "");
+
   return (
     <CollapsibleSection title="Job Team Info">
       <div className="bg-white rounded-lg border shadow-sm p-4 space-y-3">
@@ -191,21 +202,48 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdate
             onUpdate={() => {}} // No edit functionality
             disableInternalEdit={true} // Disable edit button
           />
+          <DetailRow
+            label="Head Hunter"
+            value={headHunterName || "Not assigned"}
+            onUpdate={handleUpdateField("headHunter")}
+            customEdit={() => setIsHeadHunterDialogOpen(true)}
+            alwaysShowEdit
+          />
         </div>
       </div>
 
       {canModify && (
-        <TeamSelectionDialog
-          open={isTeamDialogOpen}
-          onClose={() => setIsTeamDialogOpen(false)}
-          onSave={handleTeamSelectionSave}
-          initialSelections={{
-            teamId: teamAssignmentData?.team?.id || (typeof jobDetails.teamId === 'object' ? jobDetails.teamId._id : jobDetails.teamId) || jobDetails.jobTeamInfo?.teamId?._id,
-            hiringManagerId: currentHiringManager?.id || jobDetails.hiringManagerId || jobDetails.jobTeamInfo?.hiringManager?._id || (typeof jobDetails.internalTeam?.hiringManager === 'string' ? jobDetails.internalTeam.hiringManager : jobDetails.internalTeam?.hiringManager?._id),
-            teamLeadId: currentTeamLead?.id || jobDetails.teamLeadId || jobDetails.jobTeamInfo?.teamLead?._id || (typeof jobDetails.internalTeam?.teamLead === 'string' ? jobDetails.internalTeam.teamLead : jobDetails.internalTeam?.teamLead?._id),
-            recruiterIds: currentRecruiters.length > 0 ? currentRecruiters.map((r: any) => r.id) : jobDetails.recruiterIds ? JSON.parse(jobDetails.recruiterIds) : (jobDetails.jobTeamInfo?.recruiter?._id ? [jobDetails.jobTeamInfo.recruiter._id] : (typeof jobDetails.internalTeam?.recruiter === 'string' ? [jobDetails.internalTeam.recruiter] : (jobDetails.internalTeam?.recruiter?._id ? [jobDetails.internalTeam.recruiter._id] : []))),
-          }}
-        />
+        <>
+          <TeamSelectionDialog
+            open={isTeamDialogOpen}
+            onClose={() => setIsTeamDialogOpen(false)}
+            onSave={handleTeamSelectionSave}
+            initialSelections={{
+              teamId: teamAssignmentData?.team?.id || (typeof jobDetails.teamId === 'object' ? jobDetails.teamId._id : jobDetails.teamId) || jobDetails.jobTeamInfo?.teamId?._id,
+              hiringManagerId: currentHiringManager?.id || jobDetails.hiringManagerId || jobDetails.jobTeamInfo?.hiringManager?._id || (typeof jobDetails.internalTeam?.hiringManager === 'string' ? jobDetails.internalTeam.hiringManager : jobDetails.internalTeam?.hiringManager?._id),
+              teamLeadId: currentTeamLead?.id || jobDetails.teamLeadId || jobDetails.jobTeamInfo?.teamLead?._id || (typeof jobDetails.internalTeam?.teamLead === 'string' ? jobDetails.internalTeam.teamLead : jobDetails.internalTeam?.teamLead?._id),
+              recruiterIds: currentRecruiters.length > 0 ? currentRecruiters.map((r: any) => r.id) : jobDetails.recruiterIds ? JSON.parse(jobDetails.recruiterIds) : (jobDetails.jobTeamInfo?.recruiter?._id ? [jobDetails.jobTeamInfo.recruiter._id] : (typeof jobDetails.internalTeam?.recruiter === 'string' ? [jobDetails.internalTeam.recruiter] : (jobDetails.internalTeam?.recruiter?._id ? [jobDetails.internalTeam.recruiter._id] : []))),
+            }}
+          />
+
+          <HeadHunterSelectionDialog
+            open={isHeadHunterDialogOpen}
+            onClose={() => setIsHeadHunterDialogOpen(false)}
+            selectedHeadHunterName={headHunterName}
+            onSelect={(member) => {
+              const fullName = `${member.firstName || ""} ${member.lastName || ""}`.trim() || member.email || "";
+
+              if (handleUpdateMultipleFields) {
+                handleUpdateMultipleFields({
+                  headhunter: member._id,
+                });
+              } else {
+                handleUpdateField("headHunter")(fullName);
+              }
+              setIsHeadHunterDialogOpen(false);
+            }}
+          />
+        </>
       )}
     </CollapsibleSection>
   );

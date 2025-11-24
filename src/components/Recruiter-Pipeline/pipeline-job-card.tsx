@@ -5,8 +5,9 @@ import { ChevronDown, ChevronRight, Users, MapPin, HandCoins , Building2, Loader
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AddCandidateDialog } from "./add-candidate-dialog";
+import { HeadhunterAddCandidateDialog } from "@/components/Headhunter-Pipeline/headhunter-add-candidate-dialog";
 import { AddExistingCandidateDialog } from "@/components/common/add-existing-candidate-dialog";
+import { AddCandidateDialog } from "@/components/Recruiter-Pipeline/add-candidate-dialog";
 import { CreateCandidateDialog, type CreateCandidateValues } from "./create-candidate-dialog";
 import { CreateCandidateModal } from "@/components/candidates/create-candidate-modal";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import {
   mapUIStageToBackendStage
 } from "./dummy-data";
 import { CandidateDetailsDialog } from "./candidate-details-dialog";
+import { HeadhunterCandidateViewDialog } from "@/components/Headhunter-Pipeline/headhunter-candidate-view-dialog";
 import { StatusChangeConfirmationDialog } from "./status-change-confirmation-dialog";
 import { useStageStore } from "./stage-store";
 import { useRouter } from "next/navigation";
@@ -41,6 +43,12 @@ interface PipelineJobCardProps {
   onCandidateUpdate?: (jobId: string, updatedCandidate: Candidate) => void;
   isHighlighted?: boolean;
   canModify?: boolean;
+  hideCopyFormAndViewTableButtons?: boolean;
+  tableOptions?: { showStageColumn?: boolean; showClientNameColumn?: boolean };
+  hideStageFilters?: boolean;
+  hideClientName?: boolean;
+  statusOptionsOverride?: string[];
+  isHeadhunterMode?: boolean;
 }
 
 export function PipelineJobCard({ 
@@ -51,15 +59,21 @@ export function PipelineJobCard({
   onCandidateUpdate,
   isHighlighted = false,
   canModify = true,
+  hideCopyFormAndViewTableButtons = false,
+  tableOptions,
+  hideStageFilters = false,
+  hideClientName = false,
+  statusOptionsOverride,
+  isHeadhunterMode = false,
 }: PipelineJobCardProps) {
   const router = useRouter();
   const cardRef =useRef<HTMLDivElement | null>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isAddCandidateOpen, setIsAddCandidateOpen]= useState(false);
   const [isCreateCandidateOpen, setIsCreateCandidateOpen]= useState(false);
   // Consolidated UI state
   const [isAddExistingOpen, setIsAddExistingOpen] = useState(false);
+  const [isAddOptionsOpen, setIsAddOptionsOpen] = useState(false);
   const [selectedStageFilter, setSelectedStageFilter] = useState<string | null>(null);
   const [isFormLinkCopied, setIsFormLinkCopied] = useState(false);
   
@@ -312,9 +326,13 @@ export function PipelineJobCard({
   };
 
   const handleAddCandidate = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering the card expansion
+    e.stopPropagation();
     if (!canModify) return;
-    setIsAddCandidateOpen(true);
+    if (isHeadhunterMode) {
+      setIsAddExistingOpen(true);
+    } else {
+      setIsAddOptionsOpen(true);
+    }
   };
 
   const handleAddExistingCandidate = () => {
@@ -325,7 +343,11 @@ export function PipelineJobCard({
 
   const handleAddNewCandidate = () => {
     if (!canModify) return;
-    setIsCreateCandidateOpen(true);
+    if (isHeadhunterMode) {
+      setAutoCreateCandidateDialog({ isOpen: true, candidate: null });
+    } else {
+      setIsCreateCandidateOpen(true);
+    }
   };
 
   const handleCreateCandidateSubmit = async (_values: CreateCandidateValues) => {
@@ -347,36 +369,31 @@ export function PipelineJobCard({
 
   // Function to handle status change
   const handleStatusChange = (candidate: Candidate, newStatus: any) => {
-    // Validate if candidate can change status (check for temp candidate)
-    const validation = validateTempCandidateStatusChange(candidate, newStatus);
-    
-    if (!validation.canChangeStage) {
-      // Show temp candidate alert instead of status change dialog
-      setTempCandidateAlert({
-        isOpen: true,
-        candidateName: candidate.name,
-        message: validation.message || null,
-      });
-      return;
-    }
-
-    // If this is a temp candidate changing to "CV Received", open create dialog
-    if (validation.shouldOpenCreateDialog) {
-      setAutoCreateCandidateDialog({
-        isOpen: true,
-        candidate: candidate,
-      });
-      return;
-    }
-
-    // If changing status to "Disqualified", show disqualification dialog
-    if (newStatus === 'Disqualified') {
-      setDisqualificationDialog({
-        isOpen: true,
-        candidate,
-        newStatus,
-      });
-      return;
+    if (!isHeadhunterMode) {
+      const validation = validateTempCandidateStatusChange(candidate, newStatus);
+      if (!validation.canChangeStage) {
+        setTempCandidateAlert({
+          isOpen: true,
+          candidateName: candidate.name,
+          message: validation.message || null,
+        });
+        return;
+      }
+      if (validation.shouldOpenCreateDialog) {
+        setAutoCreateCandidateDialog({
+          isOpen: true,
+          candidate: candidate,
+        });
+        return;
+      }
+      if (newStatus === 'Disqualified') {
+        setDisqualificationDialog({
+          isOpen: true,
+          candidate,
+          newStatus,
+        });
+        return;
+      }
     }
 
     setStatusChangeDialog({
@@ -390,25 +407,28 @@ export function PipelineJobCard({
   const handleConfirmStatusChange = async () => {
     if (statusChangeDialog.candidate && statusChangeDialog.newStatus) {
       try {
-        await updateStatusMutation.mutateAsync({
-          candidateId: statusChangeDialog.candidate.id,
-          payload: {
-            status: statusChangeDialog.newStatus,
-            stage: mapUIStageToBackendStage(statusChangeDialog.candidate.currentStage),
-            notes: `Status updated to ${statusChangeDialog.newStatus}`,
-          },
-        });
-        
-        // Notify the parent component about the update
-        onCandidateUpdate?.(job.id, {
-          ...statusChangeDialog.candidate,
-          subStatus: statusChangeDialog.newStatus,
-        });
-        
+        if (isHeadhunterMode) {
+          onCandidateUpdate?.(job.id, {
+            ...statusChangeDialog.candidate,
+            subStatus: statusChangeDialog.newStatus,
+          } as any);
+        } else {
+          await updateStatusMutation.mutateAsync({
+            candidateId: statusChangeDialog.candidate.id,
+            payload: {
+              status: statusChangeDialog.newStatus,
+              stage: mapUIStageToBackendStage(statusChangeDialog.candidate.currentStage),
+              notes: `Status updated to ${statusChangeDialog.newStatus}`,
+            },
+          });
+          onCandidateUpdate?.(job.id, {
+            ...statusChangeDialog.candidate,
+            subStatus: statusChangeDialog.newStatus,
+          });
+        }
         setStatusChangeDialog({ isOpen: false, candidate: null, newStatus: null });
       } catch (error: any) {
         console.error('Error updating candidate status:', error);
-        // Show user-friendly error message
         alert(error.message || 'Failed to update candidate status. Please try again.');
       }
     }
@@ -531,13 +551,17 @@ export function PipelineJobCard({
                 <ChevronRight className="h-5 w-5 text-gray-500" />
               )}
               <div className="flex-1">
-                                 <div className="flex items-center justify-between">
-                   <div className="flex items-center space-x-2">
-                     <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
-                     <Building2 className="h-4 w-4 text-gray-400" />
-                     <span className="text-sm text-gray-600">{job.clientName}</span>
-                   </div>
-                 </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
+                    {!hideClientName && (
+                      <>
+                        <Building2 className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm text-gray-600">{job.clientName}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
                 <div className="flex items-center space-x-6 mt-2 text-sm text-gray-600">
                   <div className="flex items-center space-x-1">
                     <MapPin className="h-4 w-4 text-red-500" />
@@ -568,39 +592,54 @@ export function PipelineJobCard({
             
             {/* View Table + Add Candidate (horizontal) */}
             <div className="flex items-center gap-2 ml-4">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleCopyCandidateFormLink}
-                title="Copy candidate form path"
-              >
-                {isFormLinkCopied ? (
-                  <Check className="size-4 mr-1 text-green-600" />
-                ) : (
-                  <Copy className="size-4 mr-1" />
-                )}
-                {isFormLinkCopied ? "Copied" : "Copy Form URL"}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  router.push(`/reactruterpipeline/${job.id}`);
-                }}
-              >
-                <TableIcon className="size-4 mr-1" />
-                View Table
-              </Button>
-              {canModify && (
-                <Button
-                  onClick={handleAddCandidate}
-                  size="sm"
-                  variant="outline"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Attach Candidate
-                </Button>
+              {hideCopyFormAndViewTableButtons ? (
+                canModify && (
+                  <Button
+                    onClick={handleAddCandidate}
+                    size="sm"
+                    variant="outline"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Candidate
+                  </Button>
+                )
+              ) : (
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleCopyCandidateFormLink}
+                    title="Copy candidate form path"
+                  >
+                    {isFormLinkCopied ? (
+                      <Check className="size-4 mr-1 text-green-600" />
+                    ) : (
+                      <Copy className="size-4 mr-1" />
+                    )}
+                    {isFormLinkCopied ? "Copied" : "Copy Form URL"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/reactruterpipeline/${job.id}`);
+                    }}
+                  >
+                    <TableIcon className="size-4 mr-1" />
+                    View Table
+                  </Button>
+                  {canModify && (
+                    <Button
+                      onClick={handleAddCandidate}
+                      size="sm"
+                      variant="outline"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Attach Candidate
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -620,19 +659,44 @@ export function PipelineJobCard({
               onViewResume={handleViewResume}
               onDeleteCandidate={handleDeleteCandidate}
               canModify={canModify}
+              tableOptions={tableOptions}
+              hideStageFilters={hideStageFilters}
+              statusOptionsOverride={statusOptionsOverride}
+              actionsVariant={isHeadhunterMode ? "viewOnly" : "full"}
             />
           </CardContent>
         )}
       </Card>
       
       {/* Candidate Details Dialog */}
-      <CandidateDetailsDialog
-        candidate={selectedCandidate}
-        isOpen={isDialogOpen}
-        onClose={handleCloseDialog}
-        pipelineId={job.id}
-        onCandidateUpdate={handleCandidateUpdate}
-      />
+      {isHeadhunterMode ? (
+        <HeadhunterCandidateViewDialog
+          candidate={selectedCandidate as any}
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            if (!open) handleCloseDialog();
+            else setIsDialogOpen(true);
+          }}
+          onConfirm={(data) => {
+            if (!selectedCandidate) return;
+            const updated: any = { ...selectedCandidate };
+            if (data?.rejectionReason || data?.rejectionDate) {
+              updated.subStatus = "Rejected";
+              if (data.rejectionReason) updated.rejectionReason = data.rejectionReason;
+              if (data.rejectionDate) updated.rejectionDate = data.rejectionDate;
+            }
+            handleCandidateUpdate(updated as any);
+          }}
+        />
+      ) : (
+        <CandidateDetailsDialog
+          candidate={selectedCandidate}
+          isOpen={isDialogOpen}
+          onClose={handleCloseDialog}
+          pipelineId={job.id}
+          onCandidateUpdate={handleCandidateUpdate}
+        />
+      )}
       
       {/* Status Change Confirmation Dialog */}
       <StatusChangeConfirmationDialog
@@ -644,32 +708,47 @@ export function PipelineJobCard({
         newStage={stageChangeDialog.newStage}
       />
 
-      {/* Add Candidate Dialog */}
-      <AddCandidateDialog
-        open={isAddCandidateOpen}
-        onOpenChange={setIsAddCandidateOpen}
-        onAddExisting={handleAddExistingCandidate}
-        onAddNew={handleAddNewCandidate}
-        jobTitle={job.title}
-      />
+      
 
       {/* Shared Existing Candidate selection dialog */}
-      <AddExistingCandidateDialog
-        jobId={job.id}
-        jobTitle={job.title}
-        open={isAddExistingOpen}
-        onOpenChange={setIsAddExistingOpen}
-        isPipeline={true}
-        pipelineId={job.id}
-        onCandidatesAdded={() => {
-          // Ask parent to refresh this job and list
-          onCandidateUpdate?.(job.id, {} as any);
-          // Invalidate the broader list query used by parent: ["pipelineEntries", userId]
-          queryClient.invalidateQueries({ predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "pipelineEntries" });
-          // Force revalidation for any server-rendered segments
-          // router.refresh();
-        }}
-      />
+      {isHeadhunterMode ? (
+        <HeadhunterAddCandidateDialog
+          jobId={job.id}
+          jobTitle={job.title}
+          open={isAddExistingOpen}
+          onOpenChange={setIsAddExistingOpen}
+          isPipeline={true}
+          pipelineId={job.id}
+          onCandidatesAdded={() => {
+            onCandidateUpdate?.(job.id, {} as any);
+            queryClient.invalidateQueries({ predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "pipelineEntries" });
+          }}
+        />
+      ) : (
+        <AddExistingCandidateDialog
+          jobId={job.id}
+          jobTitle={job.title}
+          open={isAddExistingOpen}
+          onOpenChange={setIsAddExistingOpen}
+          isPipeline={true}
+          pipelineId={job.id}
+          onCandidatesAdded={() => {
+            onCandidateUpdate?.(job.id, {} as any);
+            queryClient.invalidateQueries({ predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "pipelineEntries" });
+          }}
+        />
+      )}
+
+      {/* Add Candidate options dialog for pipeline (non-headhunter) */}
+      {!isHeadhunterMode && (
+        <AddCandidateDialog
+          open={isAddOptionsOpen}
+          onOpenChange={setIsAddOptionsOpen}
+          onAddExisting={() => setIsAddExistingOpen(true)}
+          onAddNew={() => setIsCreateCandidateOpen(true)}
+          jobTitle={job.title}
+        />
+      )}
 
       <CreateCandidateDialog
         open={isCreateCandidateOpen}

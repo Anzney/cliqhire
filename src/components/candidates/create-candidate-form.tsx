@@ -18,6 +18,7 @@ import ReactCountryFlag from "react-country-flag";
 import { Upload } from "lucide-react";
 import { subDays } from "date-fns";
 import { candidateService } from "@/services/candidateService";
+import { headhunterCandidatesService } from "@/services/headhunterCandidatesService";
 import { convertTempCandidateToReal, type ConvertTempCandidateRequest } from "@/services/recruitmentPipelineService";
 import { toast } from "sonner";
 import PhoneInput from "react-phone-input-2";
@@ -46,6 +47,7 @@ interface CreateCandidateFormProps {
   isTempCandidateConversion?: boolean;
   pipelineId?: string;
   tempCandidateId?: string;
+  isHeadhunterCreate?: boolean;
 }
 
 export default function CreateCandidateForm({
@@ -58,6 +60,7 @@ export default function CreateCandidateForm({
   isTempCandidateConversion = false,
   pipelineId,
   tempCandidateId,
+  isHeadhunterCreate,
 }: CreateCandidateFormProps) {
   const [form, setForm] = useState({
     name: tempCandidateData?.name || "",
@@ -213,8 +216,10 @@ export default function CreateCandidateForm({
           }
         });
 
-        // Send data to backend using candidateService
-        const createdCandidate = await candidateService.createCandidate(formData);
+        // Send data to backend
+        const createdCandidate = isHeadhunterCreate
+          ? await headhunterCandidatesService.createCandidate(formData)
+          : await candidateService.createCandidate(formData);
         
         // Show success toast message
         toast.success("Candidate created successfully!");
@@ -227,9 +232,10 @@ export default function CreateCandidateForm({
         // Close the modal
         onClose();
         
-        // Redirect to candidate summary page
-        const candidateId = createdCandidate._id;
-        router.push(`/candidates/${candidateId}`);
+        if (!isHeadhunterCreate) {
+          const candidateId = createdCandidate._id;
+          router.push(`/candidates/${candidateId}`);
+        }
       }
       
     } catch (error: any) {
