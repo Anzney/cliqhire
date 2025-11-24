@@ -64,6 +64,13 @@ class HeadhunterCandidatesService {
     const data = response.data?.data || response.data?.candidates || [];
     return Array.isArray(data) ? data : [];
   }
+
+  async updateCandidate(id: string, payload: Record<string, any>): Promise<any> {
+    const response = await api.patch(`/api/headhunter-candidates/${id}`, payload, {
+      headers: { "Content-Type": "application/json" },
+    });
+    return response.data?.data || response.data;
+  }
 }
 
 export const headhunterCandidatesService = new HeadhunterCandidatesService();
