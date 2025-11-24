@@ -19,6 +19,7 @@ import {
   mapUIStageToBackendStage
 } from "./dummy-data";
 import { CandidateDetailsDialog } from "./candidate-details-dialog";
+import { HeadhunterCandidateViewDialog } from "@/components/Headhunter-Pipeline/headhunter-candidate-view-dialog";
 import { StatusChangeConfirmationDialog } from "./status-change-confirmation-dialog";
 import { useStageStore } from "./stage-store";
 import { useRouter } from "next/navigation";
@@ -668,13 +669,34 @@ export function PipelineJobCard({
       </Card>
       
       {/* Candidate Details Dialog */}
-      <CandidateDetailsDialog
-        candidate={selectedCandidate}
-        isOpen={isDialogOpen}
-        onClose={handleCloseDialog}
-        pipelineId={job.id}
-        onCandidateUpdate={handleCandidateUpdate}
-      />
+      {isHeadhunterMode ? (
+        <HeadhunterCandidateViewDialog
+          candidate={selectedCandidate as any}
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            if (!open) handleCloseDialog();
+            else setIsDialogOpen(true);
+          }}
+          onConfirm={(data) => {
+            if (!selectedCandidate) return;
+            const updated: any = { ...selectedCandidate };
+            if (data?.rejectionReason || data?.rejectionDate) {
+              updated.subStatus = "Rejected";
+              if (data.rejectionReason) updated.rejectionReason = data.rejectionReason;
+              if (data.rejectionDate) updated.rejectionDate = data.rejectionDate;
+            }
+            handleCandidateUpdate(updated as any);
+          }}
+        />
+      ) : (
+        <CandidateDetailsDialog
+          candidate={selectedCandidate}
+          isOpen={isDialogOpen}
+          onClose={handleCloseDialog}
+          pipelineId={job.id}
+          onCandidateUpdate={handleCandidateUpdate}
+        />
+      )}
       
       {/* Status Change Confirmation Dialog */}
       <StatusChangeConfirmationDialog
