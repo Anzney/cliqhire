@@ -6,6 +6,8 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import type { RecruiterJob } from "./types"
 import { StatusBadge, type StatusOption } from "@/components/common/StatusBadge"
 import { useState } from "react"
+import { Button } from "../ui/button"
+import { EllipsisVertical } from 'lucide-react';
 
 type RecruiterJobCardProps = {
   job: RecruiterJob
@@ -76,6 +78,7 @@ export function RecruiterJobCard({ job, loadingJobId, onToggleExpansion }: Recru
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
                   <TableHead>Location</TableHead>
+                  <TableCell>Action</TableCell>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -94,6 +97,11 @@ export function RecruiterJobCard({ job, loadingJobId, onToggleExpansion }: Recru
                     <TableCell>{c.email || ""}</TableCell>
                     <TableCell>{c.phone || ""}</TableCell>
                     <TableCell>{c.location || ""}</TableCell>
+                    <TableCell>
+                      <Button type="button" variant="ghost" size="icon">
+                        <EllipsisVertical className="size-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
