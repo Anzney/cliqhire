@@ -1,42 +1,79 @@
-"use client"
+"use client";
+
 import { Badge } from "@/components/ui/badge"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
-import { Check } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { ChevronDown } from "lucide-react"
 
 export type StatusOption = "Pending" | "Accepted" | "Rejected"
 
-type StatusBadgeProps = {
+const statusColors: Record<StatusOption, string> = {
+  'Pending': "bg-yellow-100 text-yellow-800",
+  'Accepted': "bg-green-100 text-green-800",
+  'Rejected': "bg-red-100 text-red-800",
+}
+
+const statuses: StatusOption[] = [
+  'Pending',
+  'Accepted',
+  'Rejected'
+]
+
+interface StatusBadgeProps {
   value: StatusOption
-  onChange?: (next: StatusOption) => void
+  onChange?: (newStatus: StatusOption) => void
   disabled?: boolean
   className?: string
 }
 
-const styles: Record<StatusOption, string> = {
-  Pending: "text-yellow-600",
-  Accepted: "text-green-600",
-  Rejected: "text-red-600",
-}
-
 export function StatusBadge({ value, onChange, disabled, className }: StatusBadgeProps) {
+
+  const handleClick = (statusOption: StatusOption) => {
+    return (event: React.MouseEvent) => {
+      event.stopPropagation();
+      if (onChange) {
+        onChange(statusOption);
+      }
+    };
+  }
+
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild disabled={disabled}>
-        <Badge variant="outline" className={`bg-gray-100 ${styles[value]} capitalize ${className || ""}`}>{value}</Badge>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[160px]">
-        {(["Pending", "Accepted", "Rejected"] as StatusOption[]).map((opt) => (
-          <DropdownMenuItem
-            key={opt}
-            onClick={() => onChange?.(opt)}
-            className="flex items-center justify-between"
+        <Button
+          variant="ghost"
+          className={`h-auto p-0 hover:bg-transparent ${className || ""}`}
+        >
+          <Badge
+            variant="secondary"
+            className={`${statusColors[value]} border-none flex items-center gap-1`}
           >
-            <span className="capitalize">{opt}</span>
-            {value === opt && <Check className="h-4 w-4" />}
+            {value}
+            <ChevronDown className="h-3 w-3" />
+          </Badge>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        {statuses.map((statusOption) => (
+          <DropdownMenuItem
+            key={statusOption}
+            onClick={handleClick(statusOption)}
+            className="flex items-center gap-2"
+          >
+            <Badge
+              variant="secondary"
+              className={`${statusColors[statusOption]} border-none`}
+            >
+              {statusOption}
+            </Badge>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
   )
 }
-
