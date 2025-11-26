@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ChevronDown } from "lucide-react"
 import { useState } from "react"
+import { StatusChangeDialog } from "./StatusChangeDialog"
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
 
 export type StatusOption = "Pending" | "Accepted" | "Rejected"
@@ -28,13 +29,14 @@ const statuses: StatusOption[] = [
 
 interface StatusBadgeProps {
   value: StatusOption
-  onChange?: (newStatus: StatusOption) => void
+  onChange?: (newStatus: StatusOption, details?: { rejectionReason?: string; comments?: string }) => void
   disabled?: boolean
   className?: string
 }
 
 export function StatusBadge({ value, onChange, disabled, className }: StatusBadgeProps) {
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false)
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
   const [pendingStatus, setPendingStatus] = useState<StatusOption | null>(null)
 
   const handleClick = (statusOption: StatusOption) => {
@@ -43,15 +45,27 @@ export function StatusBadge({ value, onChange, disabled, className }: StatusBadg
       if (statusOption === value) return; // No change if clicking same status
 
       setPendingStatus(statusOption);
-      setIsConfirmOpen(true);
+      if (statusOption === "Rejected") {
+        setIsStatusDialogOpen(true);
+      } else {
+        setIsConfirmDialogOpen(true);
+      }
     };
   }
 
-  const handleConfirm = () => {
+  const handleStatusDialogConfirm = (data: { status: StatusOption; rejectionReason?: string; comments?: string }) => {
+    if (onChange) {
+      onChange(data.status, { rejectionReason: data.rejectionReason, comments: data.comments });
+    }
+    setIsStatusDialogOpen(false);
+    setPendingStatus(null);
+  }
+
+  const handleConfirmDialogConfirm = () => {
     if (onChange && pendingStatus) {
       onChange(pendingStatus);
     }
-    setIsConfirmOpen(false);
+    setIsConfirmDialogOpen(false);
     setPendingStatus(null);
   }
 
@@ -90,10 +104,17 @@ export function StatusBadge({ value, onChange, disabled, className }: StatusBadg
         </DropdownMenuContent>
       </DropdownMenu>
 
+      <StatusChangeDialog
+        open={isStatusDialogOpen}
+        onOpenChange={setIsStatusDialogOpen}
+        status={pendingStatus}
+        onConfirm={handleStatusDialogConfirm}
+      />
+
       <ConfirmDialog
-        open={isConfirmOpen}
-        onOpenChange={setIsConfirmOpen}
-        onConfirm={handleConfirm}
+        open={isConfirmDialogOpen}
+        onOpenChange={setIsConfirmDialogOpen}
+        onConfirm={handleConfirmDialogConfirm}
         title="Change Status"
         description={`Are you sure you want to change the status to '${pendingStatus}'?`}
         confirmText="Yes, Change"
