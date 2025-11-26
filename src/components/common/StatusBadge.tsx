@@ -9,6 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ChevronDown } from "lucide-react"
+import { useState } from "react"
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
 
 export type StatusOption = "Pending" | "Accepted" | "Rejected"
 
@@ -32,48 +34,72 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ value, onChange, disabled, className }: StatusBadgeProps) {
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [pendingStatus, setPendingStatus] = useState<StatusOption | null>(null)
 
   const handleClick = (statusOption: StatusOption) => {
     return (event: React.MouseEvent) => {
       event.stopPropagation();
-      if (onChange) {
-        onChange(statusOption);
-      }
+      if (statusOption === value) return; // No change if clicking same status
+
+      setPendingStatus(statusOption);
+      setIsConfirmOpen(true);
     };
   }
 
+  const handleConfirm = () => {
+    if (onChange && pendingStatus) {
+      onChange(pendingStatus);
+    }
+    setIsConfirmOpen(false);
+    setPendingStatus(null);
+  }
+
   return (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild disabled={disabled}>
-        <Button
-          variant="ghost"
-          className={`h-auto p-0 hover:bg-transparent ${className || ""}`}
-        >
-          <Badge
-            variant="secondary"
-            className={`${statusColors[value]} border-none flex items-center gap-1`}
-          >
-            {value}
-            <ChevronDown className="h-3 w-3" />
-          </Badge>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
-        {statuses.map((statusOption) => (
-          <DropdownMenuItem
-            key={statusOption}
-            onClick={handleClick(statusOption)}
-            className="flex items-center gap-2"
+    <>
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger asChild disabled={disabled}>
+          <Button
+            variant="ghost"
+            className={`h-auto p-0 hover:bg-transparent ${className || ""}`}
           >
             <Badge
               variant="secondary"
-              className={`${statusColors[statusOption]} border-none`}
+              className={`${statusColors[value]} border-none flex items-center gap-1`}
             >
-              {statusOption}
+              {value}
+              <ChevronDown className="h-3 w-3" />
             </Badge>
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          {statuses.map((statusOption) => (
+            <DropdownMenuItem
+              key={statusOption}
+              onClick={handleClick(statusOption)}
+              className="flex items-center gap-2"
+            >
+              <Badge
+                variant="secondary"
+                className={`${statusColors[statusOption]} border-none`}
+              >
+                {statusOption}
+              </Badge>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <ConfirmDialog
+        open={isConfirmOpen}
+        onOpenChange={setIsConfirmOpen}
+        onConfirm={handleConfirm}
+        title="Change Status"
+        description={`Are you sure you want to change the status to '${pendingStatus}'?`}
+        confirmText="Yes, Change"
+        cancelText="Cancel"
+        confirmVariant="default"
+      />
+    </>
   )
 }
