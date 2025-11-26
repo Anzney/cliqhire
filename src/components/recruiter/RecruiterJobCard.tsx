@@ -4,6 +4,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import type { RecruiterJob } from "./types"
+import { StatusBadge, type StatusOption } from "@/components/common/StatusBadge"
+import { useState } from "react"
 
 type RecruiterJobCardProps = {
   job: RecruiterJob
@@ -13,6 +15,7 @@ type RecruiterJobCardProps = {
 
 export function RecruiterJobCard({ job, loadingJobId, onToggleExpansion }: RecruiterJobCardProps) {
   const isLoading = loadingJobId === job.id
+  const [candidateStatuses, setCandidateStatuses] = useState<Record<string, StatusOption>>({})
 
   return (
     <Card className="p-4">
@@ -55,11 +58,6 @@ export function RecruiterJobCard({ job, loadingJobId, onToggleExpansion }: Recru
           </div>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          {job.jobId?.stage && (
-            <Badge variant="outline" className="bg-gray-100 text-gray-700 capitalize">
-              {job.jobId.stage}
-            </Badge>
-          )}
           {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
         </div>
       </button>
@@ -74,7 +72,7 @@ export function RecruiterJobCard({ job, loadingJobId, onToggleExpansion }: Recru
                 <TableRow>
                   <TableHead>Candidate</TableHead>
                   <TableHead>Title</TableHead>
-                  <TableHead>Stage</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
                   <TableHead>Location</TableHead>
@@ -85,7 +83,14 @@ export function RecruiterJobCard({ job, loadingJobId, onToggleExpansion }: Recru
                   <TableRow key={c.id}>
                     <TableCell className="font-medium">{c.name}</TableCell>
                     <TableCell>{c.currentJobTitle || ""}</TableCell>
-                    <TableCell>{c.currentStage || ""}</TableCell>
+                    <TableCell>
+                      <StatusBadge
+                        value={(candidateStatuses?.[c.id] || ((c.status?.toLowerCase() === "accepted") ? "Accepted" : (c.status?.toLowerCase() === "rejected") ? "Rejected" : "Pending")) as StatusOption}
+                        onChange={(next) =>
+                          setCandidateStatuses((prev) => ({ ...prev, [c.id]: next }))
+                        }
+                      />
+                    </TableCell>
                     <TableCell>{c.email || ""}</TableCell>
                     <TableCell>{c.phone || ""}</TableCell>
                     <TableCell>{c.location || ""}</TableCell>
