@@ -250,7 +250,7 @@ export function CreateCandidateModal({
     >
       <DialogContent
         className={`max-w-3xl ${
-          showAdvanced ? "w-full h-[80vh] max-h-[80vh] " : ""
+          showAdvanced || showUpload ? "w-full h-[80vh] max-h-[80vh]" : ""
         }`}
       >
         <DialogHeader>
@@ -294,6 +294,7 @@ export function CreateCandidateModal({
             open={showUpload}
             onClose={() => setShowUpload(false)}
             goBack={() => setShowUpload(false)}
+            useDialog={false}
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">

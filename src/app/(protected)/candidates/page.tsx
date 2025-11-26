@@ -283,14 +283,14 @@ export default function CandidatesPage() {
                     <TableCell className="text-sm">
                       {candidate.resume ? (
                         <a
-                          href={candidate.resume}
+                          href={candidate.resume.startsWith('http') ? candidate.resume : `${process.env.NEXT_PUBLIC_API_URL || ''}${candidate.resume.startsWith('/') ? '' : '/'}${candidate.resume}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:underline"
                           onClick={(e) => e.stopPropagation()}
                         >
                           View Resume
-                        </a>
+                        </a>                                                                                         
                       ) : (
                         "N/A"
                       )}
