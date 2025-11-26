@@ -25,17 +25,18 @@ export function ResumeUploadDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl h-[80vh] max-h-[80vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Upload Resume</DialogTitle>
         </DialogHeader>
-        <div className="py-4">
+        <div className="py-4 h-full">
           <UploadResume
             open={true}
             onUploaded={handleUploaded}
             onClose={onClose}
             goBack={onClose}
             candidateId={candidateId}
+            useDialog={false}
           />
         </div>
       </DialogContent>

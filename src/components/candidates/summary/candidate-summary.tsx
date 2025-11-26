@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { CandidateTeamInfoSection } from "./CandidateTeamInfoSection";
 import SalaryRange from "./salary-range";
-import { ResumeUploadDialog } from "./resume-upload-dialog";
+import EditResumeDialog from "@/components/candidates/EditResumeDialog";
 import UserSelectDialog from "@/components/shared/UserSelectDialog";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 // ReferredByList import removed as we're using UserSelectDialog instead
@@ -31,9 +31,16 @@ const detailsFields = [
     label: "Resume",
     render: (val: string | undefined) =>
       val ? (
-        <a href={val} target="_blank" rel="noopener noreferrer" className="underline">
-          View Resume
-        </a>
+        (() => {
+          const href = val.startsWith("http")
+            ? val
+            : `${process.env.NEXT_PUBLIC_API_URL || ''}${val.startsWith('/') ? '' : '/'}${val}`;
+          return (
+            <a href={href} target="_blank" rel="noopener noreferrer" className="underline">
+              View Resume
+            </a>
+          );
+        })()
       ) : undefined,
     isUpload: true,
   },
@@ -129,7 +136,7 @@ const CandidateSummary = ({
 }: CandidateSummaryProps) => {
   const [editField, setEditField] = useState<string | null>(null);
   const [localCandidate, setLocalCandidate] = useState(candidate);
-  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [showEditResumeDialog, setShowEditResumeDialog] = useState(false);
   const [showDateOfBirthDialog, setShowDateOfBirthDialog] = useState(false);
   const [showMaritalStatusDialog, setShowMaritalStatusDialog] = useState(false);
   const [showGenderDialog, setShowGenderDialog] = useState(false);
@@ -187,9 +194,11 @@ const CandidateSummary = ({
     }
   };
 
-  const handleResumeUpload = (resumeUrl: string) => {
-    handleSave("resume", resumeUrl);
-    setShowUploadDialog(false);
+  const handleResumeUpdated = (updated: any) => {
+    const newCandidate = { ...localCandidate, resume: updated?.resume };
+    setLocalCandidate(newCandidate);
+    if (onCandidateUpdate) onCandidateUpdate(newCandidate, "resume");
+    setShowEditResumeDialog(false);
   };
 
   const handleDateOfBirthSave = (value: string) => {
@@ -236,7 +245,7 @@ const CandidateSummary = ({
                   variant="outline"
                   size="sm"
                   className="h-8 flex items-center ml-2"
-                  onClick={() => setShowUploadDialog(true)}
+                  onClick={() => setShowEditResumeDialog(true)}
                 >
                   <Pencil className="h-4 w-4 mr-2" />
                   Edit
@@ -662,13 +671,13 @@ const CandidateSummary = ({
         /> */}
       </div>
 
-      {/* Resume Upload Dialog */}
+      {/* Edit Resume Dialog */}
       {canModify && (
-        <ResumeUploadDialog
-          open={showUploadDialog}
-          onClose={() => setShowUploadDialog(false)}
-          onResumeUploaded={handleResumeUpload}
-          candidateId={localCandidate?._id}
+        <EditResumeDialog
+          open={showEditResumeDialog}
+          onOpenChange={setShowEditResumeDialog}
+          candidate={localCandidate}
+          onUpdated={handleResumeUpdated}
         />
       )}
 
