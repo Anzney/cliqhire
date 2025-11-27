@@ -7,7 +7,13 @@ import type { RecruiterJob } from "./types"
 import { StatusBadge, type StatusOption } from "@/components/common/StatusBadge"
 import { useState } from "react"
 import { Button } from "../ui/button"
-import { EllipsisVertical } from 'lucide-react';
+import { EllipsisVertical, Eye, FileText } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 type RecruiterJobCardProps = {
   job: RecruiterJob
@@ -69,43 +75,59 @@ export function RecruiterJobCard({ job, loadingJobId, onToggleExpansion }: Recru
           {job.candidates.length === 0 ? (
             <div className="py-4 text-sm text-muted-foreground">No candidates added</div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Candidate</TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableCell>Action</TableCell>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {job.candidates.map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell className="font-medium">{c.name}</TableCell>
-                    <TableCell>{c.currentJobTitle || ""}</TableCell>
-                    <TableCell>
-                      <StatusBadge
-                        value={(candidateStatuses?.[c.id] || ((c.status?.toLowerCase() === "accepted") ? "Accepted" : (c.status?.toLowerCase() === "rejected") ? "Rejected" : "Pending")) as StatusOption}
-                        onChange={(next) =>
-                          setCandidateStatuses((prev) => ({ ...prev, [c.id]: next }))
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>{c.email || ""}</TableCell>
-                    <TableCell>{c.phone || ""}</TableCell>
-                    <TableCell>{c.location || ""}</TableCell>
-                    <TableCell>
-                      <Button type="button" variant="ghost" size="icon">
-                        <EllipsisVertical className="size-4" />
-                      </Button>
-                    </TableCell>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Candidate</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableCell>Action</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {job.candidates.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell className="font-medium">{c.name}</TableCell>
+                      <TableCell>{c.currentJobTitle || ""}</TableCell>
+                      <TableCell>
+                        <StatusBadge
+                          value={(candidateStatuses?.[c.id] || ((c.status?.toLowerCase() === "accepted") ? "Accepted" : (c.status?.toLowerCase() === "rejected") ? "Rejected" : "Pending")) as StatusOption}
+                          onChange={(next) =>
+                            setCandidateStatuses((prev) => ({ ...prev, [c.id]: next }))
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>{c.email || ""}</TableCell>
+                      <TableCell>{c.phone || ""}</TableCell>
+                      <TableCell>{c.location || ""}</TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button type="button" variant="ghost" size="icon">
+                              <EllipsisVertical className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <FileText className="mr-2 h-4 w-4" />
+                              View Resume
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       )}
