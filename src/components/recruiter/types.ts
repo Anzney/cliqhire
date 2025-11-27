@@ -8,6 +8,9 @@ export type RecruiterCandidate = {
   location?: string
   currentStage?: string
   status?: string | undefined
+  resume?: string
+  rejectedDate?: string
+  rejectionReason?: string
 }
 
 export type RecruiterJob = {

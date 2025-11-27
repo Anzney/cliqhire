@@ -3,7 +3,7 @@ import { Loader2, ChevronRight, ChevronDown, Building, MapPin, HandCoins, Users 
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
-import type { RecruiterJob } from "./types"
+import type { RecruiterJob, RecruiterCandidate } from "./types"
 import { StatusBadge, type StatusOption } from "@/components/common/StatusBadge"
 import { useState } from "react"
 import { Button } from "../ui/button"
@@ -14,6 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { CandidateDetailsDialog } from "./CandidateDetailsDialog"
 
 type RecruiterJobCardProps = {
   job: RecruiterJob
@@ -24,6 +25,8 @@ type RecruiterJobCardProps = {
 export function RecruiterJobCard({ job, loadingJobId, onToggleExpansion }: RecruiterJobCardProps) {
   const isLoading = loadingJobId === job.id
   const [candidateStatuses, setCandidateStatuses] = useState<Record<string, StatusOption>>({})
+  const [selectedCandidate, setSelectedCandidate] = useState<RecruiterCandidate | null>(null)
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false)
 
   return (
     <Card className="p-4">
@@ -105,14 +108,17 @@ export function RecruiterJobCard({ job, loadingJobId, onToggleExpansion }: Recru
                       <TableCell>{c.phone || ""}</TableCell>
                       <TableCell>{c.location || ""}</TableCell>
                       <TableCell>
-                        <DropdownMenu>
+                        <DropdownMenu modal={false}>
                           <DropdownMenuTrigger asChild>
                             <Button type="button" variant="ghost" size="icon">
                               <EllipsisVertical className="size-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              setSelectedCandidate(c)
+                              setIsDetailsOpen(true)
+                            }}>
                               <Eye className="mr-2 h-4 w-4" />
                               View Details
                             </DropdownMenuItem>
@@ -131,6 +137,12 @@ export function RecruiterJobCard({ job, loadingJobId, onToggleExpansion }: Recru
           )}
         </CardContent>
       )}
+
+      <CandidateDetailsDialog
+        candidate={selectedCandidate}
+        open={isDetailsOpen}
+        onOpenChange={setIsDetailsOpen}
+      />
     </Card>
   )
 }
