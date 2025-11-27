@@ -1,12 +1,11 @@
 "use client"
 import React, { useState } from "react"
-import { Input } from "@/components/ui/input"
-import { Search } from "lucide-react"
-import { PipelineJobCard } from "@/components/Recruiter-Pipeline/pipeline-job-card"
-import { type Job } from "@/components/Recruiter-Pipeline/dummy-data"
+import { RecruiterSearchBar } from "@/components/recruiter/RecruiterSearchBar"
+import { RecruiterJobList } from "@/components/recruiter/RecruiterJobList"
+import { type RecruiterJob } from "@/components/recruiter/types"
 
 export default function RecruiterPage() {
-  const [jobs, setJobs] = useState<Job[]>([
+  const [jobs, setJobs] = useState<RecruiterJob[]>([
     {
       id: "job-001",
       title: "Frontend Developer",
@@ -105,35 +104,17 @@ export default function RecruiterPage() {
   return (
     <div className="space-y-3 p-4">
       <div className="flex items-center justify-between">
-        <div className="relative w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search jobs, clients, or candidates"
-            className="pl-9"
-          />
-        </div>
+        <RecruiterSearchBar value={search} onChange={setSearch} />
       </div>
 
       {filteredJobs.length === 0 ? (
         <div className="py-6 text-sm text-muted-foreground">No jobs found</div>
       ) : (
-        <div className="space-y-3">
-          {filteredJobs.map((job) => (
-            <PipelineJobCard
-              key={job.id}
-              job={job}
-              loadingJobId={loadingJobId}
-              onToggleExpansion={toggleJobExpansion}
-              onUpdateCandidateStage={async () => {}}
-              canModify={false}
-              hideCopyFormAndViewTableButtons={true}
-              hideStageFilters={true}
-              tableOptions={{ showStageColumn: false, showClientNameColumn: true }}
-            />
-          ))}
-        </div>
+        <RecruiterJobList
+          jobs={filteredJobs}
+          loadingJobId={loadingJobId}
+          onToggleExpansion={toggleJobExpansion}
+        />
       )}
     </div>
   )

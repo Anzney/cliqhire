@@ -1,0 +1,126 @@
+"use client";
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { ChevronDown } from "lucide-react"
+import { useState } from "react"
+import { StatusChangeDialog } from "./StatusChangeDialog"
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
+
+export type StatusOption = "Pending" | "Accepted" | "Rejected"
+
+const statusColors: Record<StatusOption, string> = {
+  'Pending': "bg-yellow-100 text-yellow-800",
+  'Accepted': "bg-green-100 text-green-800",
+  'Rejected': "bg-red-100 text-red-800",
+}
+
+const statuses: StatusOption[] = [
+  'Pending',
+  'Accepted',
+  'Rejected'
+]
+
+interface StatusBadgeProps {
+  value: StatusOption
+  onChange?: (newStatus: StatusOption, details?: { rejectionReason?: string; comments?: string }) => void
+  disabled?: boolean
+  className?: string
+}
+
+export function StatusBadge({ value, onChange, disabled, className }: StatusBadgeProps) {
+  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false)
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
+  const [pendingStatus, setPendingStatus] = useState<StatusOption | null>(null)
+
+  const handleClick = (statusOption: StatusOption) => {
+    return (event: React.MouseEvent) => {
+      event.stopPropagation();
+      if (statusOption === value) return; // No change if clicking same status
+
+      setPendingStatus(statusOption);
+      if (statusOption === "Rejected") {
+        setIsStatusDialogOpen(true);
+      } else {
+        setIsConfirmDialogOpen(true);
+      }
+    };
+  }
+
+  const handleStatusDialogConfirm = (data: { status: StatusOption; rejectionReason?: string; comments?: string }) => {
+    if (onChange) {
+      onChange(data.status, { rejectionReason: data.rejectionReason, comments: data.comments });
+    }
+    setIsStatusDialogOpen(false);
+    setPendingStatus(null);
+  }
+
+  const handleConfirmDialogConfirm = () => {
+    if (onChange && pendingStatus) {
+      onChange(pendingStatus);
+    }
+    setIsConfirmDialogOpen(false);
+    setPendingStatus(null);
+  }
+
+  return (
+    <>
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger asChild disabled={disabled}>
+          <Button
+            variant="ghost"
+            className={`h-auto p-0 hover:bg-transparent ${className || ""}`}
+          >
+            <Badge
+              variant="secondary"
+              className={`${statusColors[value]} border-none flex items-center gap-1`}
+            >
+              {value}
+              <ChevronDown className="h-3 w-3" />
+            </Badge>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          {statuses.map((statusOption) => (
+            <DropdownMenuItem
+              key={statusOption}
+              onClick={handleClick(statusOption)}
+              className="flex items-center gap-2"
+            >
+              <Badge
+                variant="secondary"
+                className={`${statusColors[statusOption]} border-none`}
+              >
+                {statusOption}
+              </Badge>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <StatusChangeDialog
+        open={isStatusDialogOpen}
+        onOpenChange={setIsStatusDialogOpen}
+        status={pendingStatus}
+        onConfirm={handleStatusDialogConfirm}
+      />
+
+      <ConfirmDialog
+        open={isConfirmDialogOpen}
+        onOpenChange={setIsConfirmDialogOpen}
+        onConfirm={handleConfirmDialogConfirm}
+        title="Change Status"
+        description={`Are you sure you want to change the status to '${pendingStatus}'?`}
+        confirmText="Yes, Change"
+        cancelText="Cancel"
+        confirmVariant="default"
+      />
+    </>
+  )
+}
