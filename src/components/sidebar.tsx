@@ -113,6 +113,9 @@ export function Sidebar() {
             <SidebarMenu className="group-data-[collapsible=icon]:gap-2">
               {menuItems
                 .filter((item) => {
+                  if (item.permission === 'RECRUITER') {
+                    return !isAdmin && !isHeadhunter;
+                  }
                   if (isHeadhunter && finalPermissions.includes('HEAD_HUNTER_VIEW')) {
                     return item.permission === 'HEAD_HUNTER';
                   }
