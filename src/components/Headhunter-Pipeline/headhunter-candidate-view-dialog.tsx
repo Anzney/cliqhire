@@ -30,13 +30,14 @@ export function HeadhunterCandidateViewDialog({ candidate, open, onOpenChange, o
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px]">
+      <DialogContent className="sm:max-w-[700px] h-[600px] flex flex-col">
         <DialogHeader>
           <DialogTitle>Candidate Details</DialogTitle>
           <DialogDescription>View candidate information and optionally record rejection details.</DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-4 py-4">
+        <div className="flex-1 overflow-y-auto">
+          <div className="grid grid-cols-2 gap-4 py-4">
           <div className="space-y-2">
             <Label>Name</Label>
             <Input value={candidate.name || ""} disabled className="bg-gray-50" />
@@ -70,6 +71,7 @@ export function HeadhunterCandidateViewDialog({ candidate, open, onOpenChange, o
           <div className="space-y-2 col-span-2">
             <Label>Rejection</Label>
             <Textarea value={rejectionReason1} rows={3} className="resize-none bg-gray-50" disabled />
+          </div>
           </div>
         </div>
 
