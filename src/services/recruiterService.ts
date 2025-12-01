@@ -17,8 +17,10 @@ type HeadhunterAssignedJob = {
   updatedAt?: string;
   jobTeamInfo?: any;
   headhunterCandidates?: Array<{
-    _id: string;
-    name: string;
+    candidateId?: string;
+    _id?: string;
+    id?: string;
+    name?: string;
     location?: string;
     skills?: string[];
     status?: string;
@@ -40,18 +42,23 @@ export async function getHeadhunterAssignedJobs(
   const items: HeadhunterAssignedJob[] = res?.data?.data || [];
 
   return items.map((job) => {
-    const candidates: RecruiterCandidate[] = (job.headhunterCandidates || []).map((c) => ({
-      id: c._id || "",
-      name: c.name || "",
-      email: c.email || "",
-      phone: c.phone || "",
-      location: c.location || "",
-      status: c.status || "",
-      currentStage: "",
-      resume: c.resume || c.resumeUrl || "",
-      rejectedDate: c.rejectedDate || undefined,
-      rejectionReason: c.rejectionReason || undefined,
-    }));
+    const candidates: RecruiterCandidate[] = (job.headhunterCandidates || []).map((c, idx) => {
+      const candidateApiId = c.candidateId || c._id || c.id || undefined;
+
+      return {
+        id: candidateApiId || c.email || c.phone || `${c.name || ""}-${idx}`,
+        apiId: candidateApiId,
+        name: c.name || "",
+        email: c.email || "",
+        phone: c.phone || "",
+        location: c.location || "",
+        status: (c.status || "").toString(),
+        currentStage: "",
+        resume: c.resume || c.resumeUrl || "",
+        rejectedDate: c.rejectedDate || undefined,
+        rejectionReason: c.rejectionReason || undefined,
+      };
+    });
 
     const sr = job.salaryRange;
     const min = sr?.min ?? job.minimumSalary;
@@ -78,4 +85,14 @@ export async function getHeadhunterAssignedJobs(
 
     return mapped;
   });
+}
+
+export async function updateCandidateStatusForJob(
+  candidateId: string,
+  jobId: string,
+  body: { status: string; rejectionReason?: string; rejectionReason1?: string }
+): Promise<any> {
+  const url = `/api/headhunter-candidates/${candidateId}/jobs/${jobId}/status`;
+  const res = await api.patch(url, body, { headers: { "Content-Type": "application/json" } });
+  return res.data?.data || res.data;
 }

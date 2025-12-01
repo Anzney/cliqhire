@@ -15,6 +15,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { CandidateDetailsDialog } from "./CandidateDetailsDialog"
+import { updateCandidateStatusForJob } from "@/services/recruiterService"
+import { toast } from "sonner"
 
 type RecruiterJobCardProps = {
   job: RecruiterJob
@@ -99,9 +101,25 @@ export function RecruiterJobCard({ job, loadingJobId, onToggleExpansion }: Recru
                       <TableCell>
                         <StatusBadge
                           value={(candidateStatuses?.[c.id] || ((c.status?.toLowerCase() === "accepted") ? "Accepted" : (c.status?.toLowerCase() === "rejected") ? "Rejected" : "Pending")) as StatusOption}
-                          onChange={(next) =>
+                          onChange={async (next, details) => {
                             setCandidateStatuses((prev) => ({ ...prev, [c.id]: next }))
-                          }
+                            try {
+                              const payload: any = { status: next.toUpperCase() }
+                              if (next === "Rejected") {
+                                if (details?.rejectionReason) payload.rejectionReason = details.rejectionReason
+                                if (details?.comments) payload.rejectionReason1 = details.comments
+                              }
+                              const candidateApiId = c.apiId
+                              if (!candidateApiId) {
+                                toast.error("Missing candidate id for update")
+                                return;
+                              }
+                              await updateCandidateStatusForJob(candidateApiId, job.id, payload)
+                              toast.success("Status updated")
+                            } catch (e) {
+                              toast.error("Failed to update status")
+                            }
+                          }}
                         />
                       </TableCell>
                       <TableCell>{c.email || ""}</TableCell>

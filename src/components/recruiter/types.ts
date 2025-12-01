@@ -1,5 +1,6 @@
 export type RecruiterCandidate = {
   id: string
+  apiId?: string
   name: string
   source?: string
   currentJobTitle?: string
@@ -26,4 +27,3 @@ export type RecruiterJob = {
   jobId: { stage: string }
   totalCandidates: number
 }
-
