@@ -110,16 +110,21 @@ export const CandidateDetailsDialog: React.FC<CandidateDetailsDialogProps> = ({
                         <DetailItem label="Location" fieldKey="location" value={localCandidate.location} />
                         <DetailItem label="Gender" fieldKey="gender" value={localCandidate.gender} />
 
+                        <DetailItem label="Country" fieldKey="country" value={(localCandidate as any).country} />
+                        <DetailItem label="Nationality" fieldKey="nationality" value={(localCandidate as any).nationality} />
+
                         <DetailItem label="Date of Birth" fieldKey="dateOfBirth" value={formatDate(localCandidate.dateOfBirth)} />
                         <DetailItem label="Willing to Relocate" fieldKey="willingToRelocate" value={localCandidate.willingToRelocate} />
 
                         <DetailItem label="Resume" fieldKey="resumeUrl" value={localCandidate.resumeUrl} isLink={true} />
-                        <div className="col-span-1"></div>
 
                         <DetailItem label="Soft Skills" fieldKey="softSkill" value={formatArray(localCandidate.softSkill)} fullWidth />
                         <DetailItem label="Technical Skills" fieldKey="technicalSkill" value={formatArray(localCandidate.technicalSkill)} fullWidth />
 
                         <DetailItem label="Description" fieldKey="description" value={localCandidate.description} fullWidth />
+
+
+
                     </div>
                 </ScrollArea>
 

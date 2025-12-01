@@ -35,6 +35,17 @@ export interface HeadhunterCandidate {
   description?: string;
   softSkill?: string[];
   technicalSkill?: string[];
+  country?: string;
+  nationality?: string;
+  overallStatus?: string;
+  isTransferred?: boolean;
+  transferredToCandidateId?: string | null;
+  transferredAt?: string | null;
+  transferredViaAssignment?: string | null;
+  jobAssignments?: any[];
+  createdAt?: string;
+  updatedAt?: string;
+  stats?: any;
 }
 
 interface HeadhunterCandidatesTableProps {
