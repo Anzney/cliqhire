@@ -24,7 +24,7 @@ export function CandidateDetailsDialog({
     if (!candidate) return null
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
+        <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
             <DialogContent className="sm:max-w-[600px] h-[500px] flex flex-col p-0 gap-0">
                 <DialogHeader className="px-6 py-4 border-b">
                     <DialogTitle className="text-xl flex items-center gap-2">
