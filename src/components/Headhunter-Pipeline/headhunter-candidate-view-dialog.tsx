@@ -12,29 +12,21 @@ interface Props {
   candidate: Candidate | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm?: (data: { rejectionDate?: string; rejectionReason?: string }) => void;
+  onConfirm?: (data: { rejectionDate?: string; rejectionReason?: string; rejectionReason1?: string }) => void;
 }
 
 export function HeadhunterCandidateViewDialog({ candidate, open, onOpenChange, onConfirm }: Props) {
-  const [rejectionReason, setRejectionReason] = React.useState<string>("");
   const formatDate = (value?: string) => {
     if (!value) return "";
     const d = new Date(value);
     return isNaN(d.getTime()) ? value : d.toLocaleDateString();
   };
 
-  React.useEffect(() => {
-    if (open) {
-      setRejectionReason("");
-    }
-  }, [open]);
-
   if (!candidate) return null;
 
-  const handleSave = async () => {
-    await onConfirm?.({ rejectionDate: undefined, rejectionReason: rejectionReason || undefined });
-    onOpenChange(false);
-  };
+  const rejectionReason = (candidate as any)?.rejectionReason || "";
+  const rejectionReason1 = (candidate as any)?.rejectionReason1 || "";
+  const rejectionDate = (candidate as any)?.rejectionDate || (candidate as any)?.rejectedDate || "";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -68,18 +60,21 @@ export function HeadhunterCandidateViewDialog({ candidate, open, onOpenChange, o
 
           <div className="space-y-2">
             <Label>Rejection Date</Label>
-            <Input value={formatDate((candidate as any).rejectionDate)} disabled className="bg-gray-50" />
+            <Input value={formatDate(rejectionDate)} disabled className="bg-gray-50" />
           </div>
           <div className="space-y-2"></div>
           <div className="space-y-2 col-span-2">
             <Label>Rejection Reason</Label>
-            <Textarea value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} rows={3} className="resize-none" />
+            <Textarea value={rejectionReason} rows={3} className="resize-none bg-gray-50" disabled />
+          </div>
+          <div className="space-y-2 col-span-2">
+            <Label>Rejection</Label>
+            <Textarea value={rejectionReason1} rows={3} className="resize-none bg-gray-50" disabled />
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
-          <Button onClick={handleSave}>Save</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
