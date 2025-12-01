@@ -3,7 +3,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical , Eye} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -128,10 +128,10 @@ export const HeadhunterCandidatesTable: React.FC<HeadhunterCandidatesTableProps>
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
+                        size="icon"
+                        className="size-4 p-0"
                       >
-                        <MoreVertical className="h-4 w-4" />
+                        <MoreVertical className="size-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -139,7 +139,10 @@ export const HeadhunterCandidatesTable: React.FC<HeadhunterCandidatesTableProps>
                         setSelectedCandidate(c);
                         setIsDialogOpen(true);
                       }}>
-                        View
+                        
+                          <Eye className="size-4"/>
+                         View
+                        
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
