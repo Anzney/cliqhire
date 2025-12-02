@@ -20,6 +20,7 @@ import {
 } from "./dummy-data";
 import { CandidateDetailsDialog } from "./candidate-details-dialog";
 import { HeadhunterCandidateViewDialog } from "@/components/Headhunter-Pipeline/headhunter-candidate-view-dialog";
+import { headhunterCandidatesService } from "@/services/headhunterCandidatesService";
 import { StatusChangeConfirmationDialog } from "./status-change-confirmation-dialog";
 import { useStageStore } from "./stage-store";
 import { useRouter } from "next/navigation";
@@ -683,7 +684,17 @@ export function PipelineJobCard({
             if (data?.rejectionReason || data?.rejectionDate) {
               updated.subStatus = "Rejected";
               if (data.rejectionReason) updated.rejectionReason = data.rejectionReason;
+              if (data.rejectionReason1) updated.rejectionReason1 = data.rejectionReason1;
               if (data.rejectionDate) updated.rejectionDate = data.rejectionDate;
+              const payload: Record<string, any> = {
+                status: "REJECTED",
+                rejectionReason: data.rejectionReason,
+                rejectionReason1: data.rejectionReason1,
+                rejectedDate: data.rejectionDate,
+              };
+              if (updated.id) {
+                headhunterCandidatesService.updateCandidate(updated.id, payload).catch(() => {});
+              }
             }
             handleCandidateUpdate(updated as any);
           }}

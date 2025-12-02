@@ -33,6 +33,13 @@ export interface User {
   updatedAt?: string;
   permissions?: string[];
   defaultPermissions?: string[];
+  profile?: {
+    _id?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    teamRole?: string;
+  };
 }
 
 // API Response interfaces

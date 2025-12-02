@@ -1,5 +1,6 @@
 export type RecruiterCandidate = {
   id: string
+  apiId?: string
   name: string
   source?: string
   currentJobTitle?: string
@@ -8,6 +9,9 @@ export type RecruiterCandidate = {
   location?: string
   currentStage?: string
   status?: string | undefined
+  resume?: string
+  rejectedDate?: string
+  rejectionReason?: string
 }
 
 export type RecruiterJob = {
@@ -23,4 +27,3 @@ export type RecruiterJob = {
   jobId: { stage: string }
   totalCandidates: number
 }
-

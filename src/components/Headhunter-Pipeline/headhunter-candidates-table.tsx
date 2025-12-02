@@ -3,7 +3,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical , Eye} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -35,6 +35,17 @@ export interface HeadhunterCandidate {
   description?: string;
   softSkill?: string[];
   technicalSkill?: string[];
+  country?: string;
+  nationality?: string;
+  overallStatus?: string;
+  isTransferred?: boolean;
+  transferredToCandidateId?: string | null;
+  transferredAt?: string | null;
+  transferredViaAssignment?: string | null;
+  jobAssignments?: any[];
+  createdAt?: string;
+  updatedAt?: string;
+  stats?: any;
 }
 
 interface HeadhunterCandidatesTableProps {
@@ -74,7 +85,6 @@ export const HeadhunterCandidatesTable: React.FC<HeadhunterCandidatesTableProps>
             <TableHead className="text-xs uppercase text-muted-foreground font-medium sticky top-0 z-20 bg-white">Candidate Name</TableHead>
             <TableHead className="text-xs uppercase text-muted-foreground font-medium sticky top-0 z-20 bg-white">Email</TableHead>
             <TableHead className="text-xs uppercase text-muted-foreground font-medium sticky top-0 z-20 bg-white">Phone</TableHead>
-            <TableHead className="text-xs uppercase text-muted-foreground font-medium sticky top-0 z-20 bg-white">Status</TableHead>
             <TableHead className="text-xs uppercase text-muted-foreground font-medium sticky top-0 z-20 bg-white">Resume</TableHead>
             <TableHead className="text-xs uppercase text-muted-foreground font-medium sticky top-0 z-20 bg-white">Action</TableHead>
           </TableRow>
@@ -101,7 +111,6 @@ export const HeadhunterCandidatesTable: React.FC<HeadhunterCandidatesTableProps>
                 <TableCell className="text-sm font-medium">{c.name}</TableCell>
                 <TableCell className="text-sm">{c.email}</TableCell>
                 <TableCell className="text-sm">{c.phone}</TableCell>
-                <TableCell className="text-sm">{c.status}</TableCell>
                 <TableCell>
                   {c.resumeUrl ? (
                     <span
@@ -119,10 +128,10 @@ export const HeadhunterCandidatesTable: React.FC<HeadhunterCandidatesTableProps>
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
+                        size="icon"
+                        className="size-4 p-0"
                       >
-                        <MoreVertical className="h-4 w-4" />
+                        <MoreVertical className="size-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -130,7 +139,10 @@ export const HeadhunterCandidatesTable: React.FC<HeadhunterCandidatesTableProps>
                         setSelectedCandidate(c);
                         setIsDialogOpen(true);
                       }}>
-                        View
+                        
+                          <Eye className="size-4"/>
+                         View
+                        
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

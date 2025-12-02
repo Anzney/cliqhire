@@ -1,86 +1,35 @@
 "use client"
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { RecruiterSearchBar } from "@/components/recruiter/RecruiterSearchBar"
 import { RecruiterJobList } from "@/components/recruiter/RecruiterJobList"
 import { type RecruiterJob } from "@/components/recruiter/types"
+import { useQuery } from "@tanstack/react-query"
+import { getHeadhunterAssignedJobs } from "@/services/recruiterService"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function RecruiterPage() {
-  const [jobs, setJobs] = useState<RecruiterJob[]>([
-    {
-      id: "job-001",
-      title: "Frontend Developer",
-      clientName: "Acme Corp",
-      location: "Remote",
-      salaryRange: "50000 - 70000 USD",
-      headcount: 2,
-      jobType: "Full-time",
-      isExpanded: false,
-      candidates: [
-        {
-          id: "cand-001",
-          name: "John Doe",
-          source: "LinkedIn",
-          currentJobTitle: "Frontend Engineer",
-          email: "john.doe@example.com",
-          phone: "+1 555-123-4567",
-          location: "New York, USA",
-          currentStage: "",
-          status: undefined,
-        },
-        {
-          id: "cand-002",
-          name: "Jane Smith",
-          source: "LinkedIn",
-          currentJobTitle: "React Developer",
-          email: "jane.smith@example.com",
-          phone: "+1 555-987-6543",
-          location: "Remote",
-          currentStage: "",
-          status: undefined,
-        },
-      ],
-      jobId: { stage: "" },
-      totalCandidates: 2,
-    },
-    {
-      id: "job-002",
-      title: "Backend Engineer",
-      clientName: "Globex",
-      location: "Berlin, DE",
-      salaryRange: "70000 - 90000 EUR",
-      headcount: 1,
-      jobType: "Contract",
-      isExpanded: false,
-      candidates: [
-        {
-          id: "cand-101",
-          name: "Alex Thompson",
-          source: "Referral",
-          currentJobTitle: "Node.js Engineer",
-          email: "alex.thompson@example.com",
-          phone: "+49 30 123456",
-          location: "Berlin, DE",
-          currentStage: "",
-          status: undefined,
-        },
-        {
-          id: "cand-102",
-          name: "Maria Garcia",
-          source: "Indeed",
-          currentJobTitle: "API Developer",
-          email: "maria.garcia@example.com",
-          phone: "+34 600 123 456",
-          location: "Madrid, ES",
-          currentStage: "",
-          status: undefined,
-        },
-      ],
-      jobId: { stage: "" },
-      totalCandidates: 2,
-    },
-  ])
+  const [jobs, setJobs] = useState<RecruiterJob[]>([])
   const [search, setSearch] = useState("")
   const [loadingJobId, setLoadingJobId] = useState<string | null>(null)
+
+  const { user } = useAuth()
+  const role = String(user?.role || "").toUpperCase()
+  const userId = (user?.profile?._id || user?._id || user?.id || "") as string
+
+  const roleSegment =
+    role === "RECRUITER" ? "recruiter" :
+    role === "TEAM_LEAD" ? "teamLead" :
+    role === "HIRING_MANAGER" ? "hiringManager" : "hiringManager"
+
+  const { data: fetchedJobs = [], isLoading } = useQuery({
+    queryKey: ["headhunter-assigned-jobs", roleSegment, userId],
+    queryFn: () => getHeadhunterAssignedJobs(roleSegment, userId),
+    enabled: !!userId,
+  })
+
+  useEffect(() => {
+    setJobs((fetchedJobs || []).map((j) => ({ ...j, isExpanded: false })))
+  }, [fetchedJobs])
 
   const toggleJobExpansion = async (jobId: string) => {
     const job = jobs.find((j) => j.id === jobId)
@@ -107,7 +56,9 @@ export default function RecruiterPage() {
         <RecruiterSearchBar value={search} onChange={setSearch} />
       </div>
 
-      {filteredJobs.length === 0 ? (
+      {isLoading ? (
+        <div className="py-6 text-sm text-muted-foreground">Loading jobs...</div>
+      ) : filteredJobs.length === 0 ? (
         <div className="py-6 text-sm text-muted-foreground">No jobs found</div>
       ) : (
         <RecruiterJobList

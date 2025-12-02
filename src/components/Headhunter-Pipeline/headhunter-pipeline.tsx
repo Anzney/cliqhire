@@ -90,7 +90,7 @@ export const HeadhunterPipeline: React.FC<{ jobs?: Job[] }> = ({ jobs: incomingJ
       try {
         const raw = await headhunterCandidatesService.getJobCandidates(jobId);
         const mapped: Candidate[] = (Array.isArray(raw) ? raw : []).map((hh: any, idx: number) => ({
-          id: hh._id || hh.id || hh.email || `${hh.name || ""}-${hh.phone || idx}`,
+          id: hh.candidateId || hh._id || hh.id || hh.email || `${hh.name || ""}-${hh.phone || idx}`,
           name: hh.name || "",
           source: "Headhunter",
           currentStage: "Sourcing",
@@ -112,6 +112,9 @@ export const HeadhunterPipeline: React.FC<{ jobs?: Job[] }> = ({ jobs: incomingJ
           description: hh.description || "",
           softSkill: Array.isArray(hh.softSkill) ? hh.softSkill : [],
           technicalSkill: Array.isArray(hh.technicalSkill) ? hh.technicalSkill : [],
+          rejectionDate: hh.rejectedDate || hh.rejectionDate || undefined,
+          rejectionReason: hh.rejectionReason || undefined,
+          rejectionReason1: hh.rejectionReason1 || undefined,
         }));
         setJobs(prev => prev.map(j => (j.id === jobId ? { ...j, candidates: mapped } : j)));
       } catch (e) {
@@ -127,7 +130,7 @@ export const HeadhunterPipeline: React.FC<{ jobs?: Job[] }> = ({ jobs: incomingJ
     try {
       const raw = await headhunterCandidatesService.getJobCandidates(jobId);
       const mapped: Candidate[] = (Array.isArray(raw) ? raw : []).map((hh: any, idx: number) => ({
-        id: hh._id || hh.id || hh.email || `${hh.name || ""}-${hh.phone || idx}`,
+        id: hh.candidateId || hh._id || hh.id || hh.email || `${hh.name || ""}-${hh.phone || idx}`,
         name: hh.name || "",
         source: "Headhunter",
         currentStage: "Sourcing",
@@ -149,6 +152,9 @@ export const HeadhunterPipeline: React.FC<{ jobs?: Job[] }> = ({ jobs: incomingJ
         description: hh.description || "",
         softSkill: Array.isArray(hh.softSkill) ? hh.softSkill : [],
         technicalSkill: Array.isArray(hh.technicalSkill) ? hh.technicalSkill : [],
+        rejectionDate: hh.rejectedDate || hh.rejectionDate || undefined,
+        rejectionReason: hh.rejectionReason || undefined,
+        rejectionReason1: hh.rejectionReason1 || undefined,
       }));
       setJobs(prev => prev.map(j => (j.id === jobId ? { ...j, candidates: mapped } : j)));
     } catch (e) {
