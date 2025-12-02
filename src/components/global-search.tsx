@@ -281,7 +281,7 @@ export function GlobalSearch() {
 
                             {!loading && filteredFlatResults.length === 0 && (
                                 <CommandEmpty className="py-6 text-center text-sm">
-                                    No results found for "{query}"
+                                    No results found for &quot;{query}&quot;
                                 </CommandEmpty>
                             )}
 
