@@ -29,6 +29,7 @@ import { TeamMember, TeamMemberStatus } from "@/types/teamMember";
 
 interface TeamMembersTabsProps {
   onTeamMemberClick?: (teamMemberId: string) => void;
+  highlightId?: string; // ID of team member to highlight
 }
 
 const headerArr = [
@@ -46,7 +47,7 @@ const headerArr = [
 // Team role color mapping
 const getTeamRoleBadgeVariant = (role: string): "default" | "secondary" | "destructive" | "outline" => {
   const normalizedRole = role?.toLowerCase() || "";
-  
+
   switch (normalizedRole) {
     case "admin":
     case "administrator":
@@ -80,7 +81,7 @@ const getTeamRoleBadgeVariant = (role: string): "default" | "secondary" | "destr
 // Team role color classes for custom styling - matching status badge style
 const getTeamRoleColorClass = (role: string): string => {
   const normalizedRole = role?.toLowerCase() || "";
-  
+
   switch (normalizedRole) {
     case "admin":
     case "administrator":
@@ -117,7 +118,7 @@ const formatTeamRoleDisplay = (role: string): string => {
   return role.replace(/_/g, " ");
 };
 
-export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
+export function TeamMembersTabs({ onTeamMemberClick, highlightId }: TeamMembersTabsProps) {
   const [activeTab, setActiveTab] = useState("all");
   const [registerDialogOpen, setRegisterDialogOpen] = useState(false);
   const [selectedTeamMember, setSelectedTeamMember] = useState<TeamMember | null>(null);
@@ -192,7 +193,7 @@ export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
     setTeamMemberToDelete(null);
   };
 
-  
+
 
   // Get counts for each role
   const getCountByRole = (role: string) => {
@@ -207,7 +208,7 @@ export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
       return base;
     };
     const target = normalize(role);
-    return dataTeamMembers.filter(member => 
+    return dataTeamMembers.filter(member =>
       normalize(member.teamRole) === target ||
       normalize((member as any).role) === target
     ).length;
@@ -219,7 +220,7 @@ export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
       case "all":
         return dataTeamMembers;
       case "admin":
-        return dataTeamMembers.filter(member => 
+        return dataTeamMembers.filter(member =>
           member.teamRole === "ADMIN" ||
           member.teamRole === "Admin" ||
           (member as any).role === "Admin" ||
@@ -227,32 +228,32 @@ export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
           (member as any).role === "Administrator"
         );
       case "hiring-manager":
-        return dataTeamMembers.filter(member => 
-          member.teamRole === "HIRING_MANAGER" || 
+        return dataTeamMembers.filter(member =>
+          member.teamRole === "HIRING_MANAGER" ||
           member.teamRole === "Hiring Manager" ||
           member.role === "Hiring Manager"
         );
       case "team-lead":
-        return dataTeamMembers.filter(member => 
-          member.teamRole === "TEAM_LEAD" || 
+        return dataTeamMembers.filter(member =>
+          member.teamRole === "TEAM_LEAD" ||
           member.teamRole === "Team Lead" ||
           member.role === "Team Lead"
         );
       case "recruiters":
-        return dataTeamMembers.filter(member => 
-          member.teamRole === "RECRUITER" || 
+        return dataTeamMembers.filter(member =>
+          member.teamRole === "RECRUITER" ||
           member.teamRole === "Recruiters" ||
           member.role === "Recruiters"
         );
       case "sales-team":
-        return dataTeamMembers.filter(member => 
+        return dataTeamMembers.filter(member =>
           member.teamRole === "SALES_TEAM" ||
           member.teamRole === "Sales Team" ||
           member.role === "Sales Team"
         );
       case "head-enter":
-        return dataTeamMembers.filter(member => 
-          member.teamRole === "HEAD_HUNTER" || 
+        return dataTeamMembers.filter(member =>
+          member.teamRole === "HEAD_HUNTER" ||
           member.teamRole === "Head Enter" ||
           member.role === "HEAD_HUNTER"
         );
@@ -288,77 +289,82 @@ export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
       );
     }
 
-    return members.map((teamMember) => (
-      <TableRow
-        key={teamMember._id}
-        className="hover:bg-muted/50 cursor-default"
-      >
-        <TableCell className="text-sm font-medium">{teamMember.firstName}</TableCell>
-        <TableCell className="text-sm">{teamMember.lastName}</TableCell>
-        <TableCell className="text-sm">{teamMember.email}</TableCell>
-        <TableCell className="text-sm">{teamMember.phone}</TableCell>
-        <TableCell className="text-sm">{teamMember.location}</TableCell>
-        <TableCell className="text-sm">{teamMember.experience}</TableCell>
-                 <TableCell className="text-sm">
-           <span 
-             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getTeamRoleColorClass(teamMember.teamRole || "")}`}
-             style={{ 
-               transition: 'none',
-               pointerEvents: 'none'
-             }}
-           >
-             {formatTeamRoleDisplay(teamMember.teamRole || "")}
-           </span>
-         </TableCell>
-        
-        <TableCell className="text-sm">
-          <TeamMemberStatusBadge
-            id={teamMember._id}
-            status={teamMember.status}
-            onStatusChange={handleStatusChange}
-          />
-        </TableCell>
-                 <TableCell className="text-sm">
-           <DropdownMenu modal={false}>
-             <DropdownMenuTrigger asChild>
-               <Button
-                 variant="ghost"
-                 className="h-8 w-8 p-0"
-                 onClick={(e) => e.stopPropagation()}
-               >
-                 <MoreVertical className="h-4 w-4" />
-               </Button>
-             </DropdownMenuTrigger>
-             <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-               <DropdownMenuItem onClick={(e) => {
-                 e.stopPropagation();
-                 handleViewTeamMember(teamMember._id);
-               }}>
-                 <Eye className="mr-2 h-4 w-4" />
-                 View
-               </DropdownMenuItem>
-               <DropdownMenuItem onClick={(e) => {
-                 e.stopPropagation();
-                 handleRegisterUser(teamMember);
-               }}>
-                 <UserCheck className="mr-2 h-4 w-4" />
-                 Register User
-               </DropdownMenuItem>
-               <DropdownMenuItem
-                 onClick={(e) => {
-                   e.stopPropagation();
-                   handleDeleteTeamMember(teamMember);
-                 }}
-                 className="text-red-600"
-               >
-                 <Trash2 className="mr-2 h-4 w-4" />
-                 Delete
-               </DropdownMenuItem>
-             </DropdownMenuContent>
-           </DropdownMenu>
-         </TableCell>
-      </TableRow>
-    ));
+    return members.map((teamMember) => {
+      const isHighlighted = highlightId && teamMember._id === highlightId;
+
+      return (
+        <TableRow
+          key={teamMember._id}
+          className={`hover:bg-muted/50 cursor-default transition-colors ${isHighlighted ? 'bg-blue-100 hover:bg-blue-200' : ''
+            }`}
+        >
+          <TableCell className="text-sm font-medium">{teamMember.firstName}</TableCell>
+          <TableCell className="text-sm">{teamMember.lastName}</TableCell>
+          <TableCell className="text-sm">{teamMember.email}</TableCell>
+          <TableCell className="text-sm">{teamMember.phone}</TableCell>
+          <TableCell className="text-sm">{teamMember.location}</TableCell>
+          <TableCell className="text-sm">{teamMember.experience}</TableCell>
+          <TableCell className="text-sm">
+            <span
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getTeamRoleColorClass(teamMember.teamRole || "")}`}
+              style={{
+                transition: 'none',
+                pointerEvents: 'none'
+              }}
+            >
+              {formatTeamRoleDisplay(teamMember.teamRole || "")}
+            </span>
+          </TableCell>
+
+          <TableCell className="text-sm">
+            <TeamMemberStatusBadge
+              id={teamMember._id}
+              status={teamMember.status}
+              onStatusChange={handleStatusChange}
+            />
+          </TableCell>
+          <TableCell className="text-sm">
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="h-8 w-8 p-0"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuItem onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewTeamMember(teamMember._id);
+                }}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  View
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => {
+                  e.stopPropagation();
+                  handleRegisterUser(teamMember);
+                }}>
+                  <UserCheck className="mr-2 h-4 w-4" />
+                  Register User
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteTeamMember(teamMember);
+                  }}
+                  className="text-red-600"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </TableCell>
+        </TableRow>
+      );
+    });
   };
 
   return (
@@ -568,44 +574,44 @@ export function TeamMembersTabs({ onTeamMemberClick }: TeamMembersTabsProps) {
               </TableBody>
             </Table>
           </div>
-                 </TabsContent>
-       </Tabs>
-       
-               {selectedTeamMember && (
-          <RegisterUserDialog
-            isOpen={registerDialogOpen}
-            onClose={handleCloseRegisterDialog}
-            teamMemberId={selectedTeamMember._id}
-            teamMemberName={selectedTeamMember.firstName + " " + selectedTeamMember.lastName}
-            teamMemberEmail={selectedTeamMember.email}
-          />
-        )}
+        </TabsContent>
+      </Tabs>
 
-        <DeleteTeamMemberDialog
-          open={deleteDialogOpen}
-          onOpenChange={setDeleteDialogOpen}
-          teamMemberName={teamMemberToDelete?.firstName + " " + teamMemberToDelete?.lastName || ""}
-          onConfirm={confirmDeleteTeamMember}
-          isLoading={deleteMutation.isPending}
+      {selectedTeamMember && (
+        <RegisterUserDialog
+          isOpen={registerDialogOpen}
+          onClose={handleCloseRegisterDialog}
+          teamMemberId={selectedTeamMember._id}
+          teamMemberName={selectedTeamMember.firstName + " " + selectedTeamMember.lastName}
+          teamMemberEmail={selectedTeamMember.email}
         />
-        <ViewEditTeamMemberDialog
-          open={viewDialogOpen}
-          onOpenChange={setViewDialogOpen}
-          teamMember={teamMemberToView}
-          onUpdated={(updated) => {
-            queryClient.setQueryData(["teamMembers"], (oldData: any) => {
-              if (!oldData?.teamMembers) return oldData;
-              return {
-                ...oldData,
-                teamMembers: oldData.teamMembers.map((tm: TeamMember) =>
-                  tm._id === updated._id ? updated : tm
-                ),
-              };
-            });
-            // Ensure fresh data from server
-            queryClient.invalidateQueries({ queryKey: ["teamMembers"] });
-          }}
-        />
-     </div>
-   );
- }
+      )}
+
+      <DeleteTeamMemberDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        teamMemberName={teamMemberToDelete?.firstName + " " + teamMemberToDelete?.lastName || ""}
+        onConfirm={confirmDeleteTeamMember}
+        isLoading={deleteMutation.isPending}
+      />
+      <ViewEditTeamMemberDialog
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        teamMember={teamMemberToView}
+        onUpdated={(updated) => {
+          queryClient.setQueryData(["teamMembers"], (oldData: any) => {
+            if (!oldData?.teamMembers) return oldData;
+            return {
+              ...oldData,
+              teamMembers: oldData.teamMembers.map((tm: TeamMember) =>
+                tm._id === updated._id ? updated : tm
+              ),
+            };
+          });
+          // Ensure fresh data from server
+          queryClient.invalidateQueries({ queryKey: ["teamMembers"] });
+        }}
+      />
+    </div>
+  );
+}
