@@ -1,11 +1,12 @@
 "use client";
 
-import { Bell, Gift, HelpCircle, Plus, Search, ArrowLeft } from "lucide-react";
+import { Bell, Gift, HelpCircle, Plus, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { GlobalSearch } from "@/components/global-search";
 import { UserProfileDialog } from "@/components/user-profile/user-profile-dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -79,14 +80,7 @@ export function Header() {
             </Button>
           )}
           <div className="flex justify-center w-full">
-            {/* <div className="relative max-w-[400px] w-full mx-auto">
-              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search by Name, Job, Email or Client"
-                className="pl-8 bg-blue-50"
-              />
-            </div> */}
+            <GlobalSearch />
           </div>
           <div className="flex items-center gap-4">
             <ModeToggle />
@@ -102,7 +96,7 @@ export function Header() {
             <Button variant="ghost" size="icon">
               <Bell className="h-4 w-4" />
             </Button>
-            <Avatar 
+            <Avatar
               className="cursor-pointer hover:opacity-80 transition-opacity"
               onClick={handleAvatarClick}
             >
@@ -112,9 +106,9 @@ export function Header() {
         </div>
       </header>
 
-      <UserProfileDialog 
-        open={isProfileDialogOpen} 
-        onOpenChange={setIsProfileDialogOpen} 
+      <UserProfileDialog
+        open={isProfileDialogOpen}
+        onOpenChange={setIsProfileDialogOpen}
       />
     </>
   );

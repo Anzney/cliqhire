@@ -2,7 +2,7 @@
 import React from "react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Dashboardheader from "@/components/dashboard-header";
 import { TeamMembersTabs } from "@/components/teamMembers/team-members-tabs";
 import { CreateTeamMemberModal } from "@/components/create-teamMembers-modal/create-teamMembers-modal";
@@ -13,6 +13,10 @@ export default function TeamMembersPage() {
   const [initialLoading, setInitialLoading] = useState(false);
   const router = useRouter();
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+
+  // Get highlight ID from URL query parameter
+  const highlightId = searchParams?.get('highlight') || undefined;
 
   const handleCreateSuccess = () => {
     // Invalidate team members list to refetch after create
@@ -37,7 +41,10 @@ export default function TeamMembersPage() {
 
       {/* Tabbed Interface */}
       <div className="flex-1">
-        <TeamMembersTabs onTeamMemberClick={handleTeamMemberClick} />
+        <TeamMembersTabs
+          onTeamMemberClick={handleTeamMemberClick}
+          highlightId={highlightId}
+        />
       </div>
 
       <CreateTeamMemberModal open={open} onOpenChange={setOpen} onSuccess={handleCreateSuccess} />
