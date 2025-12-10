@@ -1,3 +1,4 @@
+
 "use client";
 import React, { useState, useEffect } from "react";
 import { JobStage } from "@/types/job";
@@ -21,6 +22,7 @@ import { api, initializeAuth } from "@/lib/axios-config";
 interface JobsContentProps {
   clientId: string;
   clientName: string;
+  setJobsAvailable: (jobsAvailable: boolean) => void;
 }
 
 const jobStages: JobStage[] = [
@@ -68,7 +70,7 @@ function ConfirmStageChangeDialog({
   );
 }
 
-export function JobsContent({ clientId, clientName }: JobsContentProps) {
+export function JobsContent({ clientId, clientName, setJobsAvailable }: JobsContentProps) {
   const [clientJobs, setClientJobs] = useState<Job[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingStageChange, setPendingStageChange] = useState<{
@@ -89,13 +91,14 @@ export function JobsContent({ clientId, clientName }: JobsContentProps) {
         const legacyList = Array.isArray(rLegacy?.data?.data)
           ? (rLegacy.data.data as Job[])
           : Array.isArray(rLegacy?.data?.jobs)
-          ? (rLegacy.data.jobs as Job[])
-          : Array.isArray(rLegacy?.data)
-          ? (rLegacy.data as Job[])
-          : [];
+            ? (rLegacy.data.jobs as Job[])
+            : Array.isArray(rLegacy?.data)
+              ? (rLegacy.data as Job[])
+              : [];
         if (legacyList.length > 0) {
           console.debug('[JobsContent] Using legacy endpoint results:', legacyList.length);
           setClientJobs(legacyList);
+          setJobsAvailable(true);
           return;
         }
       } catch (e) {
