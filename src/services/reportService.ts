@@ -19,12 +19,17 @@ export async function generateWeeklyReport({
 }: GenerateWeeklyReportParams): Promise<{ blob: Blob; filename: string }> {
     const url = `${API_URL}/api/reports/generate-weekly-report`;
 
+    // Flatten candidate statuses from the record to a single array then join
+    const candidateStatusesStr = Object.values(candidateStageStatuses)
+        .flat()
+        .join(",");
+
     const response = await axios.get(url, {
         params: {
             clientId,
-            jobStages,
-            candidateStages,
-            candidateStageStatuses,
+            jobStages: jobStages.join(","),
+            candidateStages: candidateStages.join(","),
+            candidateStatuses: candidateStatusesStr,
         },
         responseType: "blob",
         onDownloadProgress: (progressEvent) => {
