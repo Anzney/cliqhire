@@ -145,25 +145,27 @@ export function SummaryContent({ jobId, jobData, canModify }: SummaryContentProp
     }
   };
 
-  const handleDateRangeSave = async (startDate: Date | undefined, endDate: Date | undefined) => {
+  const handleDateRangeSave = async (startDate: Date | undefined, endDate: Date | undefined, totalCVs: number | undefined) => {
     if (!jobDetails) return;
     try {
       const updatedDetails = {
         ...jobDetails,
         startDateByInternalTeam: startDate,
         endDateByInternalTeam: endDate,
+        totalCVs: totalCVs !== undefined ? totalCVs : jobDetails.totalCVs,
       };
 
       // Send Date objects to backend
       await updateJobById(jobId, {
         startDateByInternalTeam: startDate,
         endDateByInternalTeam: endDate,
+        totalCVs: totalCVs,
       });
 
       setJobDetails(updatedDetails);
-      toast.success("Date range updated successfully");
+      toast.success("Date range and CV count updated successfully");
     } catch (err) {
-      toast.error("Failed to update date range");
+      toast.error("Failed to update date range and CV count");
     }
   };
 
@@ -311,6 +313,20 @@ export function SummaryContent({ jobId, jobData, canModify }: SummaryContentProp
                   handleDateRangeSave(
                     jobDetails.startDateByInternalTeam,
                     jobDetails.endDateByInternalTeam,
+                    jobDetails.totalCVs
+                  )
+                }
+                customEdit={canEdit ? () => setIsDateRangeDialogOpen(true) : undefined}
+                disableInternalEdit={!canEdit}
+              />
+              <DetailRow
+                label="Total No. of CVs"
+                value={jobDetails.totalCVs?.toString() || ""}
+                onUpdate={() =>
+                  handleDateRangeSave(
+                    jobDetails.startDateByInternalTeam,
+                    jobDetails.endDateByInternalTeam,
+                    jobDetails.totalCVs
                   )
                 }
                 customEdit={canEdit ? () => setIsDateRangeDialogOpen(true) : undefined}
@@ -581,8 +597,9 @@ export function SummaryContent({ jobId, jobData, canModify }: SummaryContentProp
             ? `${jobDetails.startDateByInternalTeam} to ${jobDetails.endDateByInternalTeam}`
             : ""
         }
-        onSave={async (startDate: Date | undefined, endDate: Date | undefined) => {
-          await handleDateRangeSave(startDate, endDate);
+        initialTotalCVs={jobDetails.totalCVs}
+        onSave={async (startDate: Date | undefined, endDate: Date | undefined, totalCVs: number | undefined) => {
+          await handleDateRangeSave(startDate, endDate, totalCVs);
           setIsDateRangeDialogOpen(false);
         }}
       />

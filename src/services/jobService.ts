@@ -47,6 +47,7 @@ export interface JobData {
   deadlineByClient?: Date | undefined;
   startDateByInternalTeam?: Date | undefined;
   endDateByInternalTeam?: Date | undefined;
+  totalCVs?: number;
   reportingTo?: string;
   teamSize?: number | string;
   link?: string;
