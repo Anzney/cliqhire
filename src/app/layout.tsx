@@ -12,6 +12,9 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "CliqHire",
   description: "Recruitment Platform",
+  icons: {
+    icon: "/cliqhire-icon.png",
+  },
 }
 
 export default function RootLayout({
