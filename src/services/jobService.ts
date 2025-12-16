@@ -48,7 +48,7 @@ export interface JobData {
   startDateByInternalTeam?: Date | undefined;
   endDateByInternalTeam?: Date | undefined;
   reportingTo?: string;
-  teamSize?: number;
+  teamSize?: number | string;
   link?: string;
   keySkills?: string;
   numberOfPositions?: number;

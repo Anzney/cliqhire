@@ -26,7 +26,7 @@ export interface JobData {
   salaryRange: { min: number; max: number; currency: string };
   specialization: string[];
   stage: string;
-  teamSize: number;
+  teamSize: number | string;
   updatedAt: string;
   deadlineByClient: Date | undefined;
   startDateByInternalTeam: Date | undefined;

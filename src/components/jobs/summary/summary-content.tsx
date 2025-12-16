@@ -22,6 +22,7 @@ import { JobStageSelector } from "./job-stage-selector";
 import { format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { EditExperienceDialog } from "./edit-experience-dialog";
+import { EditTeamSizeDialog } from "./edit-team-size-dialog";
 
 interface SummaryContentProps {
   jobId: string;
@@ -54,6 +55,7 @@ export function SummaryContent({ jobId, jobData, canModify }: SummaryContentProp
   const [isNationalityDialogOpen, setIsNationalityDialogOpen] = useState(false);
   const [isJobStageDialogOpen, setIsJobStageDialogOpen] = useState(false);
   const [isExperienceDialogOpen, setIsExperienceDialogOpen] = useState(false);
+  const [isTeamSizeDialogOpen, setIsTeamSizeDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const canEdit = canModify ?? true;
 
@@ -329,8 +331,9 @@ export function SummaryContent({ jobId, jobData, canModify }: SummaryContentProp
               />
               <DetailRow
                 label="Team Size"
-                value={jobDetails.teamSize.toString()}
+                value={jobDetails.teamSize?.toString() || ""}
                 onUpdate={handleUpdateField("teamSize")}
+                customEdit={canEdit ? () => setIsTeamSizeDialogOpen(true) : undefined}
                 disableInternalEdit={!canEdit}
               />
               <DetailRow
@@ -551,6 +554,19 @@ export function SummaryContent({ jobId, jobData, canModify }: SummaryContentProp
           onSave={async (val: string) => {
             await handleFieldSave("experience", val);
             setIsExperienceDialogOpen(false);
+          }}
+        />
+      )}
+
+      {/* Team Size Edit Dialog */}
+      {canEdit && (
+        <EditTeamSizeDialog
+          open={isTeamSizeDialogOpen}
+          onClose={() => setIsTeamSizeDialogOpen(false)}
+          currentValue={jobDetails.teamSize?.toString() || ""}
+          onSave={async (val: string) => {
+            await handleFieldSave("teamSize", val);
+            setIsTeamSizeDialogOpen(false);
           }}
         />
       )}
