@@ -21,6 +21,7 @@ import { NationalitySelector } from "./nationality-selector";
 import { JobStageSelector } from "./job-stage-selector";
 import { format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
+import { EditExperienceDialog } from "./edit-experience-dialog";
 
 interface SummaryContentProps {
   jobId: string;
@@ -52,6 +53,7 @@ export function SummaryContent({ jobId, jobData, canModify }: SummaryContentProp
   const [isDateRangeDialogOpen, setIsDateRangeDialogOpen] = useState(false);
   const [isNationalityDialogOpen, setIsNationalityDialogOpen] = useState(false);
   const [isJobStageDialogOpen, setIsJobStageDialogOpen] = useState(false);
+  const [isExperienceDialogOpen, setIsExperienceDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const canEdit = canModify ?? true;
 
@@ -275,6 +277,7 @@ export function SummaryContent({ jobId, jobData, canModify }: SummaryContentProp
                 label="Experience"
                 value={capitalize(jobDetails.experience)}
                 onUpdate={handleUpdateField("experience")}
+                customEdit={canEdit ? () => setIsExperienceDialogOpen(true) : undefined}
                 disableInternalEdit={!canEdit}
               />
               <DetailRow
@@ -537,6 +540,19 @@ export function SummaryContent({ jobId, jobData, canModify }: SummaryContentProp
           setIsDeadlineDialogOpen(false);
         }}
       />
+      )}
+
+      {/* Experience Edit Dialog */}
+      {canEdit && (
+        <EditExperienceDialog
+          open={isExperienceDialogOpen}
+          onClose={() => setIsExperienceDialogOpen(false)}
+          currentValue={jobDetails.experience || ""}
+          onSave={async (val: string) => {
+            await handleFieldSave("experience", val);
+            setIsExperienceDialogOpen(false);
+          }}
+        />
       )}
 
       {/* Date Range Picker Dialog */}
