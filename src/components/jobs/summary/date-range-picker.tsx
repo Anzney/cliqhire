@@ -96,7 +96,6 @@ export function DateRangePicker({
                     selected={startDate}
                     onSelect={setStartDate}
                     initialFocus
-                    disabled={(date) => date < new Date()}
                   />
                 </PopoverContent>
               </Popover>
@@ -124,7 +123,7 @@ export function DateRangePicker({
                     selected={endDate}
                     onSelect={setEndDate}
                     initialFocus
-                    disabled={(date) => date < new Date() || (startDate ? date < startDate : false)}
+                    disabled={(date) => (startDate ? date < startDate : false)}
                   />
                 </PopoverContent>
               </Popover>
