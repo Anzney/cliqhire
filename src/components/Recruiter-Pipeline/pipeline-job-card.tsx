@@ -859,6 +859,7 @@ export function PipelineJobCard({
           dateOfBirth: autoCreateCandidateDialog.candidate.dateOfBirth,
           country: autoCreateCandidateDialog.candidate.country,
           nationality: autoCreateCandidateDialog.candidate.nationality,
+          educationDegree: autoCreateCandidateDialog.candidate.educationDegree,
           willingToRelocate: autoCreateCandidateDialog.candidate.willingToRelocate,
         } : undefined}
         isTempCandidateConversion={true}

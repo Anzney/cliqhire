@@ -41,6 +41,7 @@ interface CreateCandidateFormProps {
     dateOfBirth?: string;
     country?: string;
     nationality?: string;
+    educationDegree?: string;
     willingToRelocate?: string;
   };
   // Props for temp candidate conversion
@@ -72,6 +73,7 @@ export default function CreateCandidateForm({
     dateOfBirth: tempCandidateData?.dateOfBirth ? new Date(tempCandidateData.dateOfBirth) : null as Date | null,
     country: tempCandidateData?.country || "",
     nationality: tempCandidateData?.nationality || "",
+    educationDegree: tempCandidateData?.educationDegree || "",
     willingToRelocate: tempCandidateData?.willingToRelocate || "",
     cv: null as File | null,
   });
@@ -95,6 +97,7 @@ export default function CreateCandidateForm({
         dateOfBirth: tempCandidateData.dateOfBirth ? new Date(tempCandidateData.dateOfBirth) : null,
         country: tempCandidateData.country || "",
         nationality: tempCandidateData.nationality || "",
+        educationDegree: tempCandidateData.educationDegree || "",
         willingToRelocate: tempCandidateData.willingToRelocate || "",
         cv: null,
       });
@@ -181,6 +184,7 @@ export default function CreateCandidateForm({
           dateOfBirth: form.dateOfBirth ? form.dateOfBirth.toISOString() : undefined,
           country: form.country,
           nationality: form.nationality,
+          educationDegree: form.educationDegree,
           willingToRelocate: form.willingToRelocate,
         };
 
@@ -265,6 +269,7 @@ export default function CreateCandidateForm({
       dateOfBirth: null,
       country: "",
       nationality: "",
+      educationDegree: "",
       willingToRelocate: "",
       cv: null,
     });
@@ -472,6 +477,19 @@ export default function CreateCandidateForm({
                   placeholder="Select nationality"
                   isClearable
                   styles={customStyles}
+                />
+              </div>
+
+              {/* Education Degree/Certificate */}
+              <div className="space-y-2">
+                <Label htmlFor="educationDegree">Education Degree/Certificate</Label>
+                <Input
+                  id="educationDegree"
+                  name="educationDegree"
+                  value={form.educationDegree || ""}
+                  onChange={handleChange}
+                  placeholder="e.g. Bachelor's in Computer Science"
+                  maxLength={255}
                 />
               </div>
 

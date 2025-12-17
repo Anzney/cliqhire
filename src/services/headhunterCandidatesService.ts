@@ -10,6 +10,7 @@ export interface HeadhunterCandidatePayload {
   dateOfBirth?: string;
   country?: string;
   nationality?: string;
+  educationDegree?: string;
   willingToRelocate?: string;
 }
 

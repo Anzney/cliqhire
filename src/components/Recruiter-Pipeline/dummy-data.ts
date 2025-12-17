@@ -45,12 +45,12 @@ export interface Candidate {
   dateOfBirth?: string;
   country?: string;
   nationality?: string;
+  educationDegree?: string;
   willingToRelocate?: string;
   description?: string;
   linkedin?: string;
   reportingTo?: string;
   // Additional fields for dialog
-  educationDegree?: string;
   primaryLanguage?: string;
   resume?: string;
   // Pipeline-specific data
