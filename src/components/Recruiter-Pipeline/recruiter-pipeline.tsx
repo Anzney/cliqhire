@@ -377,7 +377,7 @@ export function RecruiterPipeline() {
       <KPISection data={kpiData} />
 
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           {canModifyPipeline && (
             <CreatePipelineDialog 
               trigger={
@@ -389,7 +389,7 @@ export function RecruiterPipeline() {
               onPipelineCreated={handlePipelineCreated}
             />
           )}
-        </div>
+        </div> */}
         
         <div className="flex items-center gap-3">
           {/* Search Input */}

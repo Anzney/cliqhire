@@ -3,24 +3,27 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 interface DateRangePickerProps {
   open: boolean;
   onClose: () => void;
   currentValue?: string;
-  onSave: (startDate: Date | undefined, endDate: Date | undefined) => void;
+  initialTotalCVs?: number;
+  onSave: (startDate: Date | undefined, endDate: Date | undefined, totalCVs: number | undefined) => void;
 }
 
 export function DateRangePicker({
   open,
   onClose,
   currentValue = "",
+  initialTotalCVs,
   onSave,
 }: DateRangePickerProps) {
   // Helper function to safely parse dates
@@ -42,9 +45,24 @@ export function DateRangePicker({
     return parseDateSafely(endDateStr);
   });
 
+  const [totalCVs, setTotalCVs] = useState<string>(initialTotalCVs ? initialTotalCVs.toString() : "");
+
+  // Update states when open/props change
+  useEffect(() => {
+    if (open) {
+      if (currentValue && currentValue.includes(" to ")) {
+        const [start, end] = currentValue.split(" to ");
+        setStartDate(parseDateSafely(start));
+        setEndDate(parseDateSafely(end));
+      }
+      setTotalCVs(initialTotalCVs ? initialTotalCVs.toString() : "");
+    }
+  }, [open, currentValue, initialTotalCVs]);
+
   const handleSave = () => {
     if (startDate && endDate) {
-      onSave(startDate, endDate);
+      const cvs = totalCVs ? parseInt(totalCVs) : undefined;
+      onSave(startDate, endDate, cvs);
     }
     onClose();
   };
@@ -78,7 +96,6 @@ export function DateRangePicker({
                     selected={startDate}
                     onSelect={setStartDate}
                     initialFocus
-                    disabled={(date) => date < new Date()}
                   />
                 </PopoverContent>
               </Popover>
@@ -106,10 +123,22 @@ export function DateRangePicker({
                     selected={endDate}
                     onSelect={setEndDate}
                     initialFocus
-                    disabled={(date) => date < new Date() || (startDate ? date < startDate : false)}
+                    disabled={(date) => (startDate ? date < startDate : false)}
                   />
                 </PopoverContent>
               </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="totalCVs">Total No. of CVs</Label>
+              <Input
+                id="totalCVs"
+                type="number"
+                min="0"
+                placeholder="Enter total number of CVs"
+                value={totalCVs}
+                onChange={(e) => setTotalCVs(e.target.value)}
+              />
             </div>
           </div>
           <div className="flex justify-end gap-2">

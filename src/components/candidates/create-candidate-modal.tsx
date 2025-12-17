@@ -27,6 +27,7 @@ interface CreateCandidateModalProps {
     dateOfBirth?: string;
     country?: string;
     nationality?: string;
+    educationDegree?: string;
     willingToRelocate?: string;
   };
   // Props for temp candidate conversion

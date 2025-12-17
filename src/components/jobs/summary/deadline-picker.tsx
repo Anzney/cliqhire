@@ -64,7 +64,6 @@ export function DeadlinePicker({ open, onClose, currentValue = "", onSave }: Dea
                   selected={selectedDate}
                   onSelect={setSelectedDate}
                   initialFocus
-                  disabled={(date) => date < new Date()}
                 />
               </PopoverContent>
             </Popover>
