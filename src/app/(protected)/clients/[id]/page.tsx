@@ -16,7 +16,7 @@ import {
   Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
+import { api } from "@/lib/axios-config"; // Import directly as used in jobs-content
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SummaryContent } from "@/components/clients/summary/summary-content";
@@ -42,7 +42,28 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { generateWeeklyReport } from "@/services/reportService";
+import { getJobs, Job } from "@/services/jobService";
+
+const JOB_STAGES = ["Open", "Active", "Onboarding", "Hired", "On Hold", "Closed"];
+
+const CANDIDATE_STAGES = [
+  "Sourcing",
+  "Screening",
+  "Client Review",
+  "Interview",
+  "Verification",
+  "Onboarding",
+  "Hired",
+];
 
 const CANDIDATE_STAGE_STATUS_MAP: Record<string, string[]> = {
   Sourcing: [
@@ -79,6 +100,7 @@ export default function ClientPage({ params }: PageProps) {
   >({});
   const downloadUrlRef = useRef<string | null>(null);
   const [downloadFilename, setDownloadFilename] = useState<string | null>(null);
+  const [selectedPositionId, setSelectedPositionId] = useState<string>("");
   const { user } = useAuth();
   const isAdmin = user?.role === "ADMIN";
   let finalPermissions =
@@ -104,6 +126,71 @@ export default function ClientPage({ params }: PageProps) {
     queryFn: () => getClientById(id),
     enabled: Boolean(id), // Only run the query if id is available
   });
+
+  const { data: clientJobsData } = useQuery({
+    queryKey: ["clientJobsForReport", id],
+    queryFn: async () => {
+      let allJobs: any[] = [];
+
+      // 1. Try legacy endpoint first (as in jobs-content.tsx)
+      try {
+        const legacy = await api.get(`/api/jobs/client/${id}`);
+        // Handle every possible shape
+        const r: any = legacy || {};
+        const data = r.data;
+        if (Array.isArray(data?.data)) {
+          allJobs = data.data;
+        } else if (Array.isArray(data?.jobs)) {
+          allJobs = data.jobs;
+        } else if (Array.isArray(data)) {
+          allJobs = data;
+        }
+
+        if (allJobs.length > 0) {
+          return { jobs: allJobs };
+        }
+      } catch (e) {
+        console.warn("Legacy job fetch failed for report", e);
+      }
+
+      // 2. Fallback: modern getJobs
+      try {
+        let res = await getJobs({ client: id, clientId: id, limit: 100 });
+        if (Array.isArray(res.jobs) && res.jobs.length > 0) {
+          return { jobs: res.jobs };
+        }
+        if (Array.isArray((res as any).data) && (res as any).data.length > 0) {
+          return { jobs: (res as any).data };
+        }
+      } catch (e) {
+        console.warn("Modern job fetch failed for report", e);
+      }
+
+      // 3. Last fallback: fetching larger set and client-side filter
+      try {
+        const allRes = await getJobs({ limit: 500 });
+        const sourceJobs = allRes.jobs || (allRes as any).data || [];
+        const filtered = sourceJobs.filter((job: any) => {
+          const c = job.client;
+          if (typeof c === "string") return c === id;
+          if (typeof c === "object") return c?._id === id || c?.id === id;
+          return false;
+        });
+        return { jobs: filtered };
+      } catch (e) {
+        console.error("All fallbacks failed", e);
+      }
+      return { jobs: [] };
+    },
+    enabled: Boolean(id) && isReportDialogOpen,
+  });
+
+  // Effect to select the first job by default when jobs are loaded
+  useEffect(() => {
+    if (clientJobsData?.jobs && clientJobsData.jobs.length > 0 && !selectedPositionId) {
+      setSelectedPositionId(clientJobsData.jobs[0]._id);
+    }
+  }, [clientJobsData, selectedPositionId]);
 
   const handleRefresh = () => {
     refetch();
@@ -186,6 +273,7 @@ export default function ClientPage({ params }: PageProps) {
         jobStages: selectedJobStages,
         candidateStages: selectedCandidateStages,
         candidateStageStatuses: selectedCandidateStageStatuses,
+        positionId: selectedPositionId === "all" ? undefined : selectedPositionId,
         onProgress: (percent: number) => {
           if (percent > 0) {
             if (progressIntervalRef.current) {
@@ -453,7 +541,7 @@ export default function ClientPage({ params }: PageProps) {
 
       {/* Generate Report Dialog */}
       <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
-        <DialogContent className="sm:max-w-[700px] h-[400px] grid-rows-[auto,1fr,auto] overflow-hidden">
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Generate Weekly Report</DialogTitle>
             <DialogDescription>
@@ -461,12 +549,58 @@ export default function ClientPage({ params }: PageProps) {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-4 py-4 overflow-y-auto pr-2">
+          <div className="grid gap-4 py-4 pr-2">
+            <div className="grid gap-2">
+              <Label>Position</Label>
+              <Select
+                value={selectedPositionId}
+                onValueChange={(val) => {
+                  setSelectedPositionId(val);
+                  if (val !== "all") {
+                    // Find the job to get its current stage
+                    const selectedJob = clientJobsData?.jobs?.find((j: Job) => j._id === val);
+                    const currentStage = selectedJob?.stage || "Open";
+
+                    // Select ONLY the current stage of the specific job
+                    setSelectedJobStages([currentStage]);
+
+                    // Auto-select ALL candidate stages
+                    setSelectedCandidateStages(CANDIDATE_STAGES);
+
+                    // Also populate statuses map
+                    const allStatuses: Record<string, string[]> = {};
+                    CANDIDATE_STAGES.forEach((stage) => {
+                      if (CANDIDATE_STAGE_STATUS_MAP[stage]) {
+                        allStatuses[stage] = [...CANDIDATE_STAGE_STATUS_MAP[stage]];
+                      }
+                    });
+                    setSelectedCandidateStageStatuses(allStatuses);
+                  } else {
+                    // Clear selections so user must choose manually
+                    setSelectedJobStages([]);
+                    setSelectedCandidateStages([]);
+                    setSelectedCandidateStageStatuses({});
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a position" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Positions</SelectItem>
+                  {clientJobsData?.jobs?.map((job: Job) => (
+                    <SelectItem key={job._id} value={job._id}>
+                      {job.jobTitle}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex gap-20 items-start">
               <div className="grid gap-3">
                 <Label>Job Stages</Label>
                 <div className="grid gap-2">
-                  {["Open", "Active", "Onboarding", "Hired", "On Hold", "Closed"].map((stage) => {
+                  {JOB_STAGES.map((stage) => {
                     const checked = selectedJobStages.includes(stage);
                     return (
                       <label key={stage} className="flex items-center gap-2">
@@ -489,15 +623,7 @@ export default function ClientPage({ params }: PageProps) {
               <div className="grid gap-3">
                 <Label>Candidate Stages</Label>
                 <div className="grid gap-2">
-                  {[
-                    "Sourcing",
-                    "Screening",
-                    "Client Review",
-                    "Interview",
-                    "Verification",
-                    "Onboarding",
-                    "Hired",
-                  ].map((stage) => {
+                  {CANDIDATE_STAGES.map((stage) => {
                     const checked = selectedCandidateStages.includes(stage);
                     return (
                       <label key={stage} className="flex items-center gap-2">
@@ -528,41 +654,7 @@ export default function ClientPage({ params }: PageProps) {
                 </div>
               </div>
             </div>
-            {/* Candidate Statuses for selected stages */}
-            {selectedCandidateStages
-              .filter((stage) => Boolean(CANDIDATE_STAGE_STATUS_MAP[stage]))
-              .map((stage) => {
-                const allStatuses = CANDIDATE_STAGE_STATUS_MAP[stage] || [];
-                const selectedForStage = selectedCandidateStageStatuses[stage] || allStatuses;
-                return (
-                  <div key={`${stage}-statuses`} className="grid gap-3">
-                    <Label>{stage} Statuses</Label>
-                    <div className="grid gap-2">
-                      {allStatuses.map((status) => {
-                        const statusChecked = selectedForStage.includes(status);
-                        return (
-                          <label key={`${stage}-${status}`} className="flex items-center gap-2">
-                            <Checkbox
-                              checked={statusChecked}
-                              onCheckedChange={(v) => {
-                                const isChecked = Boolean(v);
-                                setSelectedCandidateStageStatuses((prev) => {
-                                  const prevForStage = prev[stage] ?? [];
-                                  const nextForStage = isChecked
-                                    ? Array.from(new Set([...prevForStage, status]))
-                                    : prevForStage.filter((s) => s !== status);
-                                  return { ...prev, [stage]: nextForStage };
-                                });
-                              }}
-                            />
-                            <span className="text-sm">{status}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
+            {/* Candidate Statuses removed as per request to remove extra options */}
           </div>
 
           <DialogFooter>
@@ -576,9 +668,9 @@ export default function ClientPage({ params }: PageProps) {
               Confirm
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+        </DialogContent >
+      </Dialog >
+    </div >
   );
 }
 

@@ -7,6 +7,7 @@ export interface GenerateWeeklyReportParams {
     jobStages: string[];
     candidateStages: string[];
     candidateStageStatuses: Record<string, string[]>;
+    positionId?: string;
     onProgress?: (percent: number) => void;
 }
 
@@ -15,6 +16,7 @@ export async function generateWeeklyReport({
     jobStages,
     candidateStages,
     candidateStageStatuses,
+    positionId,
     onProgress,
 }: GenerateWeeklyReportParams): Promise<{ blob: Blob; filename: string }> {
     const url = `${API_URL}/api/reports/generate-weekly-report`;
@@ -27,9 +29,10 @@ export async function generateWeeklyReport({
     const response = await axios.get(url, {
         params: {
             clientId,
-            jobStages: jobStages.join(","),
-            candidateStages: candidateStages.join(","),
-            candidateStatuses: candidateStatusesStr,
+            jobStages,
+            candidateStages,
+            candidateStageStatuses,
+            positionId,
         },
         responseType: "blob",
         onDownloadProgress: (progressEvent) => {
