@@ -43,6 +43,12 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdate
 
   const teamAssignmentData = getTeamAssignmentData();
 
+  // Helper to safely format name
+  const formatName = (first?: string, last?: string) => {
+    const name = `${first || ""} ${last || ""}`.trim();
+    return name || undefined;
+  };
+
   // Get current team member details (prefer JSON data, fallback to individual fields, then jobTeamInfo structure, then internalTeam structure)
   const currentHiringManager = teamAssignmentData?.hiringManager
     ? teamAssignmentData.hiringManager
@@ -51,12 +57,12 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdate
       : jobDetails.jobTeamInfo?.hiringManager
         ? { 
             id: jobDetails.jobTeamInfo.hiringManager._id, 
-            name: jobDetails.jobTeamInfo.hiringManager.name || `${jobDetails.jobTeamInfo.hiringManager.firstName} ${jobDetails.jobTeamInfo.hiringManager.lastName}`.trim()
+            name: jobDetails.jobTeamInfo.hiringManager.name || formatName(jobDetails.jobTeamInfo.hiringManager.firstName, jobDetails.jobTeamInfo.hiringManager.lastName)
           }
         : jobDetails.internalTeam?.hiringManager
           ? (typeof jobDetails.internalTeam.hiringManager === 'string' 
               ? { id: jobDetails.internalTeam.hiringManager, name: jobDetails.internalTeam.hiringManager }
-              : { id: jobDetails.internalTeam.hiringManager._id, name: jobDetails.internalTeam.hiringManager.name || `${jobDetails.internalTeam.hiringManager.firstName} ${jobDetails.internalTeam.hiringManager.lastName}`.trim() })
+              : { id: jobDetails.internalTeam.hiringManager._id, name: jobDetails.internalTeam.hiringManager.name || formatName(jobDetails.internalTeam.hiringManager.firstName, jobDetails.internalTeam.hiringManager.lastName) })
           : null;
 
   const currentTeamLead = teamAssignmentData?.teamLead
@@ -66,12 +72,12 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdate
       : jobDetails.jobTeamInfo?.teamLead
         ? { 
             id: jobDetails.jobTeamInfo.teamLead._id, 
-            name: jobDetails.jobTeamInfo.teamLead.name || `${jobDetails.jobTeamInfo.teamLead.firstName} ${jobDetails.jobTeamInfo.teamLead.lastName}`.trim()
+            name: jobDetails.jobTeamInfo.teamLead.name || formatName(jobDetails.jobTeamInfo.teamLead.firstName, jobDetails.jobTeamInfo.teamLead.lastName)
           }
         : jobDetails.internalTeam?.teamLead
           ? (typeof jobDetails.internalTeam.teamLead === 'string'
               ? { id: jobDetails.internalTeam.teamLead, name: jobDetails.internalTeam.teamLead }
-              : { id: jobDetails.internalTeam.teamLead._id, name: jobDetails.internalTeam.teamLead.name || `${jobDetails.internalTeam.teamLead.firstName} ${jobDetails.internalTeam.teamLead.lastName}`.trim() })
+              : { id: jobDetails.internalTeam.teamLead._id, name: jobDetails.internalTeam.teamLead.name || formatName(jobDetails.internalTeam.teamLead.firstName, jobDetails.internalTeam.teamLead.lastName) })
           : null;
 
   const currentRecruiters = teamAssignmentData?.recruiters
@@ -81,12 +87,12 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdate
       : jobDetails.jobTeamInfo?.recruiter
         ? [{ 
             id: jobDetails.jobTeamInfo.recruiter._id, 
-            name:`${jobDetails.jobTeamInfo.recruiter.firstName} ${jobDetails.jobTeamInfo.recruiter.lastName}`.trim()
+            name: jobDetails.jobTeamInfo.recruiter.name || formatName(jobDetails.jobTeamInfo.recruiter.firstName, jobDetails.jobTeamInfo.recruiter.lastName)
           }]
         : jobDetails.internalTeam?.recruiter
           ? (typeof jobDetails.internalTeam.recruiter === 'string'
               ? [{ id: jobDetails.internalTeam.recruiter, name: jobDetails.internalTeam.recruiter }]
-              : [{ id: jobDetails.internalTeam.recruiter._id, name: jobDetails.internalTeam.recruiter.name || `${jobDetails.internalTeam.recruiter.firstName} ${jobDetails.internalTeam.recruiter.lastName}`.trim() }])
+              : [{ id: jobDetails.internalTeam.recruiter._id, name: jobDetails.internalTeam.recruiter.name || formatName(jobDetails.internalTeam.recruiter.firstName, jobDetails.internalTeam.recruiter.lastName) }])
           : [];
 
   const updateTeamAssignment = (updates: Partial<any>) => {
@@ -154,14 +160,14 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdate
         <div className="space-y-3 pt-1">
           <DetailRow
             label="Hiring Manager"
-            value={currentHiringManager?.name || jobDetails.hiringManager || jobDetails.jobTeamInfo?.hiringManager?.firstName + " " + jobDetails.jobTeamInfo?.hiringManager?.lastName || jobDetails.internalTeam?.hiringManager?.name || "Not assigned"}
+            value={currentHiringManager?.name || jobDetails.hiringManager || "Not assigned"}
             onUpdate={() => {}} 
             customEdit={canModify ? () => setIsHiringManagerDialogOpen(true) : undefined}
             alwaysShowEdit={canModify}
           />
           <DetailRow
             label="Team Lead"
-            value={currentTeamLead?.name || jobDetails.teamLead || jobDetails.jobTeamInfo?.teamLead?.firstName + " " + jobDetails.jobTeamInfo?.teamLead?.lastName || jobDetails.internalTeam?.teamLead?.name || "Not assigned"}
+            value={currentTeamLead?.name || jobDetails.teamLead || "Not assigned"}
             onUpdate={() => {}}
             customEdit={canModify ? () => setIsTeamLeadDialogOpen(true) : undefined}
             alwaysShowEdit={canModify}
@@ -171,7 +177,7 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdate
             value={ 
                 currentRecruiters.length > 0 
                 ? currentRecruiters[0].name
-                : jobDetails.recruiter || jobDetails.jobTeamInfo?.recruiter?.firstName + " " + jobDetails.jobTeamInfo?.recruiter?.lastName || jobDetails.internalTeam?.recruiter?.firstName + " " + jobDetails.internalTeam?.recruiter?.lastName|| "Not assigned"
+                : jobDetails.recruiter || "Not assigned"
             }
             onUpdate={() => {}}
             customEdit={canModify ? () => setIsRecruiterDialogOpen(true) : undefined}
