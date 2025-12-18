@@ -162,8 +162,8 @@ export function MemberSelectionDialog({
               <div className="divide-y">
                 {filteredMembers.length === 0 ? (
                   <div className="p-4 text-center text-sm text-muted-foreground">
-                    No members found matching "{roleFilter}"
-                    {search && ` and "${search}"`}
+                    No members found matching &quot;{roleFilter}&quot;
+                    {search && ` and &quot;${search}&quot;`}
                   </div>
                 ) : (
                   filteredMembers.map((member) => (
