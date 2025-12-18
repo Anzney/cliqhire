@@ -3,7 +3,7 @@
 import { useState, startTransition } from "react";
 import { CollapsibleSection } from "@/components/clients/summary/collapsible-section";
 import { DetailRow } from "@/components/clients/summary/detail-row";
-import { TeamSelectionDialog } from "./team-selection-dialog";
+import { MemberSelectionDialog } from "./member-selection-dialog";
 import { HeadHunterSelectionDialog } from "./HeadHunterSelectionDialog";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
@@ -24,7 +24,9 @@ interface JobInfoSectionProps {
 }
 
 export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdateMultipleFields, canModify }: JobInfoSectionProps) {
-  const [isTeamDialogOpen, setIsTeamDialogOpen] = useState(false);
+  const [isHiringManagerDialogOpen, setIsHiringManagerDialogOpen] = useState(false);
+  const [isTeamLeadDialogOpen, setIsTeamLeadDialogOpen] = useState(false);
+  const [isRecruiterDialogOpen, setIsRecruiterDialogOpen] = useState(false);
   const [isHeadHunterDialogOpen, setIsHeadHunterDialogOpen] = useState(false);
 
   // Helper function to parse team assignment data
@@ -47,11 +49,14 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdate
     : jobDetails.hiringManagerId
       ? getRecruitmentManagerById(jobDetails.hiringManagerId)
       : jobDetails.jobTeamInfo?.hiringManager
-        ? { id: jobDetails.jobTeamInfo.hiringManager._id, name: jobDetails.jobTeamInfo.hiringManager.name }
+        ? { 
+            id: jobDetails.jobTeamInfo.hiringManager._id, 
+            name: jobDetails.jobTeamInfo.hiringManager.name || `${jobDetails.jobTeamInfo.hiringManager.firstName} ${jobDetails.jobTeamInfo.hiringManager.lastName}`.trim()
+          }
         : jobDetails.internalTeam?.hiringManager
           ? (typeof jobDetails.internalTeam.hiringManager === 'string' 
               ? { id: jobDetails.internalTeam.hiringManager, name: jobDetails.internalTeam.hiringManager }
-              : { id: jobDetails.internalTeam.hiringManager._id, name: jobDetails.internalTeam.hiringManager.name })
+              : { id: jobDetails.internalTeam.hiringManager._id, name: jobDetails.internalTeam.hiringManager.name || `${jobDetails.internalTeam.hiringManager.firstName} ${jobDetails.internalTeam.hiringManager.lastName}`.trim() })
           : null;
 
   const currentTeamLead = teamAssignmentData?.teamLead
@@ -59,11 +64,14 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdate
     : jobDetails.teamLeadId
       ? getTeamLeadById(jobDetails.teamLeadId)
       : jobDetails.jobTeamInfo?.teamLead
-        ? { id: jobDetails.jobTeamInfo.teamLead._id, name: jobDetails.jobTeamInfo.teamLead.name }
+        ? { 
+            id: jobDetails.jobTeamInfo.teamLead._id, 
+            name: jobDetails.jobTeamInfo.teamLead.name || `${jobDetails.jobTeamInfo.teamLead.firstName} ${jobDetails.jobTeamInfo.teamLead.lastName}`.trim()
+          }
         : jobDetails.internalTeam?.teamLead
           ? (typeof jobDetails.internalTeam.teamLead === 'string'
               ? { id: jobDetails.internalTeam.teamLead, name: jobDetails.internalTeam.teamLead }
-              : { id: jobDetails.internalTeam.teamLead._id, name: jobDetails.internalTeam.teamLead.name })
+              : { id: jobDetails.internalTeam.teamLead._id, name: jobDetails.internalTeam.teamLead.name || `${jobDetails.internalTeam.teamLead.firstName} ${jobDetails.internalTeam.teamLead.lastName}`.trim() })
           : null;
 
   const currentRecruiters = teamAssignmentData?.recruiters
@@ -71,79 +79,56 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdate
     : jobDetails.recruiterIds
       ? JSON.parse(jobDetails.recruiters || "[]").map((id: string) => getRecruiterById(id)).filter(Boolean)
       : jobDetails.jobTeamInfo?.recruiter
-        ? [{ id: jobDetails.jobTeamInfo.recruiter._id, name: jobDetails.jobTeamInfo.recruiter.name }]
+        ? [{ 
+            id: jobDetails.jobTeamInfo.recruiter._id, 
+            name:`${jobDetails.jobTeamInfo.recruiter.firstName} ${jobDetails.jobTeamInfo.recruiter.lastName}`.trim()
+          }]
         : jobDetails.internalTeam?.recruiter
           ? (typeof jobDetails.internalTeam.recruiter === 'string'
               ? [{ id: jobDetails.internalTeam.recruiter, name: jobDetails.internalTeam.recruiter }]
-              : [{ id: jobDetails.internalTeam.recruiter._id, name: jobDetails.internalTeam.recruiter.name }])
+              : [{ id: jobDetails.internalTeam.recruiter._id, name: jobDetails.internalTeam.recruiter.name || `${jobDetails.internalTeam.recruiter.firstName} ${jobDetails.internalTeam.recruiter.lastName}`.trim() }])
           : [];
 
-  const handleTeamSelectionSave = (selections: {
-    team?: { id: string; name: string };
-    hiringManager?: { id: string; name: string };
-    teamLead?: { id: string; name: string };
-    recruiters?: { id: string; name: string }[];
-  }) => {
-    // Create a comprehensive team data object
-    const teamData = {
-      team: selections.team
-        ? {
-            id: selections.team.id,
-            name: selections.team.name,
-          }
-        : null,
-      hiringManager: selections.hiringManager
-        ? {
-            id: selections.hiringManager.id,
-            name: selections.hiringManager.name,
-          }
-        : null,
-      teamLead: selections.teamLead
-        ? {
-            id: selections.teamLead.id,
-            name: selections.teamLead.name,
-          }
-        : null,
-      recruiters: selections.recruiters || [],
+  const updateTeamAssignment = (updates: Partial<any>) => {
+    // Current state
+    const currentData = {
+      team: teamAssignmentData?.team || null,
+      hiringManager: currentHiringManager,
+      teamLead: currentTeamLead,
+      recruiters: currentRecruiters,
       lastUpdated: new Date().toISOString(),
+      ...updates
     };
 
-    // Create single payload for all team-related fields
     const teamPayload = {
-      teamAssignment: JSON.stringify(teamData),
-      teamId: teamData.team?.id ? {
-        _id: teamData.team.id,
-        teamName: teamData.team.name,
-        teamStatus: "Active"
-      } : "",
-      teamName: teamData.team?.name || "",
-      hiringManagerId: teamData.hiringManager?.id || "",
-      teamLeadId: teamData.teamLead?.id || "",
-      recruiterIds: JSON.stringify(teamData.recruiters.map(r => r.id)) || "",
-      hiringManager: teamData.hiringManager?.name || "",
-      teamLead: teamData.teamLead?.name || "",
-      recruiters: JSON.stringify(teamData.recruiters.map(r => r.name)) || "",
+      teamAssignment: JSON.stringify(currentData),
+      // Update individual fields
+      hiringManagerId: currentData.hiringManager?.id || "",
+      hiringManager: currentData.hiringManager?.name || "",
+      teamLeadId: currentData.teamLead?.id || "",
+      teamLead: currentData.teamLead?.name || "",
+      recruiterIds: JSON.stringify(currentData.recruiters.map((r: any) => r.id)) || "",
+      recruiters: JSON.stringify(currentData.recruiters.map((r: any) => r.name)) || "",
     };
 
-    // Use single API call if available, otherwise fallback to multiple calls
     if (handleUpdateMultipleFields) {
       handleUpdateMultipleFields(teamPayload);
     } else {
-             // Fallback: Update individual fields for backward compatibility
-       handleUpdateField("teamAssignment")(JSON.stringify(teamData));
-       startTransition(() => {
-         handleUpdateField("teamId")(teamData.team?.id ? JSON.stringify({
-           _id: teamData.team.id,
-           teamName: teamData.team.name,
-           teamStatus: "Active"
-         }) : "");
-         handleUpdateField("teamName")(teamData.team?.name || "");
-        handleUpdateField("hiringManagerId")(teamData.hiringManager?.id || "");
-        handleUpdateField("teamLeadId")(teamData.teamLead?.id || "");
-        handleUpdateField("recruiterIds")(JSON.stringify(teamData.recruiters.map(r => r.id)) || "");
-        handleUpdateField("hiringManager")(teamData.hiringManager?.name || "");
-        handleUpdateField("teamLead")(teamData.teamLead?.name || "");
-        handleUpdateField("recruiters")(JSON.stringify(teamData.recruiters.map(r => r.name)) || "");
+      // Fallback
+      handleUpdateField("teamAssignment")(JSON.stringify(currentData));
+      startTransition(() => {
+        if (updates.hiringManager !== undefined) {
+           handleUpdateField("hiringManagerId")(currentData.hiringManager?.id || "");
+           handleUpdateField("hiringManager")(currentData.hiringManager?.name || "");
+        }
+        if (updates.teamLead !== undefined) {
+           handleUpdateField("teamLeadId")(currentData.teamLead?.id || "");
+           handleUpdateField("teamLead")(currentData.teamLead?.name || "");
+        }
+        if (updates.recruiters !== undefined) {
+           handleUpdateField("recruiterIds")(JSON.stringify(currentData.recruiters.map((r: any) => r.id)) || "");
+           handleUpdateField("recruiters")(JSON.stringify(currentData.recruiters.map((r: any) => r.name)) || "");
+        }
       });
     }
   };
@@ -160,69 +145,90 @@ export function JobTeamInfoSection({ jobDetails, handleUpdateField, handleUpdate
   return (
     <CollapsibleSection title="Job Team Info">
       <div className="bg-white rounded-lg border shadow-sm p-4 space-y-3">
-        {/* Section Header with Edit Button */}
+        {/* Section Header */}
         <div className="flex items-center justify-between pb-2 border-b">
           <h3 className="text-sm font-medium text-gray-900">Team Assignment</h3>
-          {canModify && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8"
-              onClick={() => setIsTeamDialogOpen(true)}
-            >
-              <Pencil className="h-4 w-4 mr-2" />
-              Edit Team
-            </Button>
-          )}
         </div>
 
-        {/* Team Details - Read Only */}
+        {/* Team Details */}
         <div className="space-y-3 pt-1">
-          <DetailRow
-            label="Position Name"
-            value={teamAssignmentData?.team?.name || jobDetails.teamName || (typeof jobDetails.teamId === 'object' ? jobDetails.teamId.teamName : null) || jobDetails.jobTeamInfo?.teamId?.teamName || "Not assigned"}
-            onUpdate={() => {}} // No edit functionality
-            disableInternalEdit={true} // Disable edit button
-          />
           <DetailRow
             label="Hiring Manager"
             value={currentHiringManager?.name || jobDetails.hiringManager || jobDetails.jobTeamInfo?.hiringManager?.firstName + " " + jobDetails.jobTeamInfo?.hiringManager?.lastName || jobDetails.internalTeam?.hiringManager?.name || "Not assigned"}
-            onUpdate={() => {}} // No edit functionality
-            disableInternalEdit={true} // Disable edit button
+            onUpdate={() => {}} 
+            customEdit={canModify ? () => setIsHiringManagerDialogOpen(true) : undefined}
+            alwaysShowEdit={canModify}
           />
           <DetailRow
             label="Team Lead"
             value={currentTeamLead?.name || jobDetails.teamLead || jobDetails.jobTeamInfo?.teamLead?.firstName + " " + jobDetails.jobTeamInfo?.teamLead?.lastName || jobDetails.internalTeam?.teamLead?.name || "Not assigned"}
-            onUpdate={() => {}} // No edit functionality
-            disableInternalEdit={true} // Disable edit button
+            onUpdate={() => {}}
+            customEdit={canModify ? () => setIsTeamLeadDialogOpen(true) : undefined}
+            alwaysShowEdit={canModify}
           />
           <DetailRow
-            label="Recruiters"
-           value={ jobDetails.recruiter || jobDetails.jobTeamInfo?.recruiter?.firstName + " " + jobDetails.jobTeamInfo?.recruiter?.lastName || jobDetails.internalTeam?.recruiter?.firstName + " " + jobDetails.internalTeam?.recruiter?.lastName|| "Not assigned"}
-            onUpdate={() => {}} // No edit functionality
-            disableInternalEdit={true} // Disable edit button
+            label="Recruiter"
+            value={ 
+                currentRecruiters.length > 0 
+                ? currentRecruiters[0].name
+                : jobDetails.recruiter || jobDetails.jobTeamInfo?.recruiter?.firstName + " " + jobDetails.jobTeamInfo?.recruiter?.lastName || jobDetails.internalTeam?.recruiter?.firstName + " " + jobDetails.internalTeam?.recruiter?.lastName|| "Not assigned"
+            }
+            onUpdate={() => {}}
+            customEdit={canModify ? () => setIsRecruiterDialogOpen(true) : undefined}
+            alwaysShowEdit={canModify}
           />
           <DetailRow
             label="Head Hunter"
             value={headHunterName || "Not assigned"}
             onUpdate={handleUpdateField("headHunter")}
-            customEdit={() => setIsHeadHunterDialogOpen(true)}
-            alwaysShowEdit
+            customEdit={canModify ? () => setIsHeadHunterDialogOpen(true) : undefined}
+            alwaysShowEdit={canModify}
           />
         </div>
       </div>
 
       {canModify && (
         <>
-          <TeamSelectionDialog
-            open={isTeamDialogOpen}
-            onClose={() => setIsTeamDialogOpen(false)}
-            onSave={handleTeamSelectionSave}
-            initialSelections={{
-              teamId: teamAssignmentData?.team?.id || (typeof jobDetails.teamId === 'object' ? jobDetails.teamId._id : jobDetails.teamId) || jobDetails.jobTeamInfo?.teamId?._id,
-              hiringManagerId: currentHiringManager?.id || jobDetails.hiringManagerId || jobDetails.jobTeamInfo?.hiringManager?._id || (typeof jobDetails.internalTeam?.hiringManager === 'string' ? jobDetails.internalTeam.hiringManager : jobDetails.internalTeam?.hiringManager?._id),
-              teamLeadId: currentTeamLead?.id || jobDetails.teamLeadId || jobDetails.jobTeamInfo?.teamLead?._id || (typeof jobDetails.internalTeam?.teamLead === 'string' ? jobDetails.internalTeam.teamLead : jobDetails.internalTeam?.teamLead?._id),
-              recruiterIds: currentRecruiters.length > 0 ? currentRecruiters.map((r: any) => r.id) : jobDetails.recruiterIds ? JSON.parse(jobDetails.recruiterIds) : (jobDetails.jobTeamInfo?.recruiter?._id ? [jobDetails.jobTeamInfo.recruiter._id] : (typeof jobDetails.internalTeam?.recruiter === 'string' ? [jobDetails.internalTeam.recruiter] : (jobDetails.internalTeam?.recruiter?._id ? [jobDetails.internalTeam.recruiter._id] : []))),
+          <MemberSelectionDialog
+            open={isHiringManagerDialogOpen}
+            onClose={() => setIsHiringManagerDialogOpen(false)}
+            title="Select Hiring Manager"
+            roleFilter="Hiring Manager"
+            initialSelections={currentHiringManager?.id ? [currentHiringManager.id] : []}
+            onSelect={(members) => {
+              const member = members[0];
+              updateTeamAssignment({
+                hiringManager: member ? { id: member._id, name: member.firstName + " " + member.lastName } : null
+              });
+            }}
+          />
+
+          <MemberSelectionDialog
+            open={isTeamLeadDialogOpen}
+            onClose={() => setIsTeamLeadDialogOpen(false)}
+            title="Select Team Lead"
+            roleFilter="Team Lead"
+            initialSelections={currentTeamLead?.id ? [currentTeamLead.id] : []}
+            onSelect={(members) => {
+              const member = members[0];
+              updateTeamAssignment({
+                teamLead: member ? { id: member._id, name: member.firstName + " " + member.lastName } : null
+              });
+            }}
+          />
+
+          <MemberSelectionDialog
+            open={isRecruiterDialogOpen}
+            onClose={() => setIsRecruiterDialogOpen(false)}
+            title="Select Recruiter"
+            roleFilter="Recruiters"
+            multiple={false}
+            initialSelections={currentRecruiters.length > 0 ? [currentRecruiters[0].id] : []}
+            onSelect={(members) => {
+              const member = members[0];
+              updateTeamAssignment({
+                recruiters: member ? [{ id: member._id, name: member.firstName + " " + member.lastName }] : []
+              });
             }}
           />
 
