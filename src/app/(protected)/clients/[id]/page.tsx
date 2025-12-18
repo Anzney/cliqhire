@@ -185,10 +185,10 @@ export default function ClientPage({ params }: PageProps) {
     enabled: Boolean(id) && isReportDialogOpen,
   });
 
-  // Effect to select the first job by default when jobs are loaded
+  // Effect to set default position to "all" when dialog opens
   useEffect(() => {
     if (clientJobsData?.jobs && clientJobsData.jobs.length > 0 && !selectedPositionId) {
-      setSelectedPositionId(clientJobsData.jobs[0]._id);
+      setSelectedPositionId("all");
     }
   }, [clientJobsData, selectedPositionId]);
 
