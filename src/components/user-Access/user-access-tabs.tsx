@@ -38,10 +38,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AddTeamMembersDialog } from "./add-team-members-dialog";
+// import { AddTeamMembersDialog } from "./add-team-members-dialog";
 import { UserPermissionTab } from "./user-permission-tab";
 import { ViewTeamDialog } from "./view-team-dialog";
-import { TeamStatusBadge } from "./team-status-badge";
+// import { TeamStatusBadge } from "./team-status-badge";
 import { TeamMember } from "@/types/teamMember";
 import { getTeamMembers } from "@/services/teamMembersService";
 import { getTeams, deleteTeam, updateTeamStatus, Team } from "@/services/teamService";
@@ -59,7 +59,7 @@ export function UserAccessTabs({
   setAddTeamDialogOpen, 
   onTeamCreated 
 }: UserAccessTabsProps) {
-  const [activeTab, setActiveTab] = useState("teams");
+  const [activeTab, setActiveTab] = useState("user-permission");
   const [internalDialogOpen, setInternalDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
@@ -285,7 +285,7 @@ export function UserAccessTabs({
     <div className="flex flex-col h-full">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="flex border-b w-full rounded-none justify-start h-12 bg-transparent p-0">
-          <TabsTrigger
+          {/* <TabsTrigger
             value="teams"
             className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
           >
@@ -294,7 +294,7 @@ export function UserAccessTabs({
             <Badge variant="secondary" className="ml-1 text-xs">
               {teams.length}
             </Badge>
-          </TabsTrigger>
+          </TabsTrigger> */}
           <TabsTrigger
             value="user-permission"
             className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
@@ -307,7 +307,7 @@ export function UserAccessTabs({
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="teams" className="p-0 mt-0">
+        {/* <TabsContent value="teams" className="p-0 mt-0">
           <div className="flex-1 relative overflow-visible">
             <Table>
               <TableHeader>
@@ -324,7 +324,7 @@ export function UserAccessTabs({
               </TableBody>
             </Table>
           </div>
-        </TabsContent>
+        </TabsContent> */}
 
         <TabsContent value="user-permission" className="p-0 mt-0">
           <div className="flex-1">
@@ -337,7 +337,7 @@ export function UserAccessTabs({
         </TabsContent>
       </Tabs>
 
-      <AddTeamMembersDialog
+      {/* <AddTeamMembersDialog
         open={dialogOpen}
         onOpenChange={(open) => {
           setDialogOpen(open);
@@ -347,7 +347,7 @@ export function UserAccessTabs({
         }}
         onSuccess={handleAddTeamSuccess}
         editTeam={editTeam}
-      />
+      /> */}
 
       <ViewTeamDialog
         open={viewDialogOpen}
