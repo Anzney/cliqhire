@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, UserPlus } from "lucide-react";
-import { TeamSelectionDialog } from "@/components/jobs/summary/team-selection-dialog";
+import { MemberSelectionDialog } from "@/components/jobs/summary/member-selection-dialog";
 import { type RecruitmentManager, type TeamLead, type Recruiter } from "@/data/teamData";
 import { updateJobById } from "@/services/jobService";
 import { toast } from "sonner";
@@ -16,7 +16,9 @@ interface InternalTeamProps {
 }
 
 export function InternalTeam({ jobId, jobData, canModify }: InternalTeamProps) {
-  const [isTeamDialogOpen, setIsTeamDialogOpen] = useState(false);
+  const [isHiringManagerDialogOpen, setIsHiringManagerDialogOpen] = useState(false);
+  const [isTeamLeadDialogOpen, setIsTeamLeadDialogOpen] = useState(false);
+  const [isRecruiterDialogOpen, setIsRecruiterDialogOpen] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<{
     team?: { id: string; name: string };
     hiringManager?: { id: string; name: string; email?: string; phone?: string };
@@ -78,38 +80,28 @@ export function InternalTeam({ jobId, jobData, canModify }: InternalTeamProps) {
     }
   }, [jobData]);
 
-  const handleTeamSelectionSave = async (selections: {
-    team?: { id: string; name: string };
-    hiringManager?: { id: string; name: string };
-    teamLead?: { id: string; name: string };
-    recruiters?: { id: string; name: string }[];
-  }) => {
+  const updateTeamAssignment = async (updates: Partial<any>) => {
     try {
       // Update local UI first
-      setSelectedTeam(selections);
-      setIsTeamDialogOpen(false);
+      const current = selectedTeam || {};
+      const updatedSelection = { ...current, ...updates };
+      
+      // Ensure we keep the structure consistent
+      const newSelection = {
+        team: updatedSelection.team || undefined,
+        hiringManager: updatedSelection.hiringManager || undefined,
+        teamLead: updatedSelection.teamLead || undefined,
+        recruiters: updatedSelection.recruiters || [],
+      };
+
+      setSelectedTeam(newSelection);
 
       // Build the same payload structure used in Summary -> JobTeamInfoSection
       const teamData = {
-        team: selections.team
-          ? {
-              id: selections.team.id,
-              name: selections.team.name,
-            }
-          : null,
-        hiringManager: selections.hiringManager
-          ? {
-              id: selections.hiringManager.id,
-              name: selections.hiringManager.name,
-            }
-          : null,
-        teamLead: selections.teamLead
-          ? {
-              id: selections.teamLead.id,
-              name: selections.teamLead.name,
-            }
-          : null,
-        recruiters: selections.recruiters || [],
+        team: newSelection.team ? { id: newSelection.team.id, name: newSelection.team.name } : null,
+        hiringManager: newSelection.hiringManager ? { id: newSelection.hiringManager.id, name: newSelection.hiringManager.name } : null,
+        teamLead: newSelection.teamLead ? { id: newSelection.teamLead.id, name: newSelection.teamLead.name } : null,
+        recruiters: newSelection.recruiters || [],
         lastUpdated: new Date().toISOString(),
       };
 
@@ -125,10 +117,10 @@ export function InternalTeam({ jobId, jobData, canModify }: InternalTeamProps) {
         teamName: teamData.team?.name || "",
         hiringManagerId: teamData.hiringManager?.id || "",
         teamLeadId: teamData.teamLead?.id || "",
-        recruiterIds: JSON.stringify(teamData.recruiters.map((r) => r.id)) || "",
+        recruiterIds: JSON.stringify(teamData.recruiters.map((r: any) => r.id)) || "",
         hiringManager: teamData.hiringManager?.name || "",
         teamLead: teamData.teamLead?.name || "",
-        recruiters: JSON.stringify(teamData.recruiters.map((r) => r.name)) || "",
+        recruiters: JSON.stringify(teamData.recruiters.map((r: any) => r.name)) || "",
       } as any;
 
       await updateJobById(jobId, teamPayload);
@@ -143,46 +135,68 @@ export function InternalTeam({ jobId, jobData, canModify }: InternalTeamProps) {
     title: string,
     member: { id: string; name: string; email?: string; phone?: string } | undefined,
     roleColor: string,
+    onEdit?: () => void,
   ) => {
-    if (!member) return null;
-
     return (
       <div className="border rounded-lg p-4 space-y-2">
-        <div className={`text-xs font-medium uppercase tracking-wide ${roleColor}`}>{title}</div>
-        <div className="space-y-1">
-          <div className="font-medium text-gray-900">{member.name}</div>
-          {member.email && (
-            <div className="text-sm text-gray-500">Email: {member.email}</div>
-          )}
-          {member.phone && (
-            <div className="text-sm text-gray-500">Phone: {member.phone}</div>
+        <div className="flex items-center justify-between">
+          <div className={`text-xs font-medium uppercase tracking-wide ${roleColor}`}>{title}</div>
+          {onEdit && canModify && (
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onEdit}>
+              <Pencil className="h-3 w-3" />
+            </Button>
           )}
         </div>
+        {member ? (
+          <div className="space-y-1">
+            <div className="font-medium text-gray-900">{member.name}</div>
+            {member.email && (
+              <div className="text-sm text-gray-500">Email: {member.email}</div>
+            )}
+            {member.phone && (
+              <div className="text-sm text-gray-500">Phone: {member.phone}</div>
+            )}
+          </div>
+        ) : (
+          <div className="text-sm text-gray-500 italic">Not assigned</div>
+        )}
       </div>
     );
   };
 
-  const renderRecruitersCard = (recruiters: { id: string; name: string; email?: string; phone?: string }[] | undefined) => {
-    if (!recruiters || recruiters.length === 0) return null;
-
+  const renderRecruitersCard = (
+    recruiters: { id: string; name: string; email?: string; phone?: string }[] | undefined,
+    onEdit?: () => void,
+  ) => {
     return (
       <div className="border rounded-lg p-4 space-y-2">
-        <div className="text-xs font-medium uppercase tracking-wide text-purple-600">Recruiters</div>
-        <div className="space-y-1">
-          {recruiters.map((recruiter, index) => (
-            <div key={recruiter.id} className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-gray-900">{recruiter.name}</div>
-                {recruiter.email && (
-                  <div className="text-sm text-gray-500">Email: {recruiter.email}</div>
-                )}
-                {recruiter.phone && (
-                  <div className="text-sm text-gray-500">Phone: {recruiter.phone}</div>
-                )}
-              </div>
-            </div>
-          ))}
+        <div className="flex items-center justify-between">
+          <div className="text-xs font-medium uppercase tracking-wide text-purple-600">Recruiters</div>
+          {onEdit && canModify && (
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onEdit}>
+              <Pencil className="h-3 w-3" />
+            </Button>
+          )}
         </div>
+        {recruiters && recruiters.length > 0 ? (
+          <div className="space-y-1">
+            {recruiters.map((recruiter, index) => (
+              <div key={recruiter.id} className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium text-gray-900">{recruiter.name}</div>
+                  {recruiter.email && (
+                    <div className="text-sm text-gray-500">Email: {recruiter.email}</div>
+                  )}
+                  {recruiter.phone && (
+                    <div className="text-sm text-gray-500">Phone: {recruiter.phone}</div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-sm text-gray-500 italic">Not assigned</div>
+        )}
       </div>
     );
   };
@@ -192,48 +206,47 @@ export function InternalTeam({ jobId, jobData, canModify }: InternalTeamProps) {
       {/* Header with title and button */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-semibold">Internal Team</h2>
-        <Button
-          size="sm"
-          className="h-8"
-          disabled={!canModify}
-          onClick={() => {
-            if (!canModify) return;
-            setIsTeamDialogOpen(true)
-          }}
-        >
-          {selectedTeam &&
-          (selectedTeam.hiringManager || selectedTeam.teamLead || selectedTeam.recruiters?.length) ? (
-            <>
-              <Pencil className="h-4 w-4 mr-2" />
-              Edit Internal Team
-            </>
-          ) : (
-            <>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Internal Team
-            </>
-          )}
-        </Button>
+        {!selectedTeam && (
+          <Button
+            size="sm"
+            className="h-8"
+            disabled={!canModify}
+            onClick={() => {
+              if (!canModify) return;
+              setSelectedTeam({});
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Internal Team
+          </Button>
+        )}
       </div>
 
       {/* Team Information Display */}
-      {selectedTeam && (
+      {selectedTeam ? (
         <div className="space-y-4">
           <div className="grid gap-4">
             {renderTeamMemberCard(
               "Hiring Manager",
               selectedTeam.hiringManager,
               "text-blue-600",
+              () => setIsHiringManagerDialogOpen(true)
             )}
 
-            {renderTeamMemberCard("Team Lead", selectedTeam.teamLead, "text-green-600")}
+            {renderTeamMemberCard(
+              "Team Lead", 
+              selectedTeam.teamLead, 
+              "text-green-600",
+              () => setIsTeamLeadDialogOpen(true)
+            )}
 
-            {renderRecruitersCard(selectedTeam.recruiters)}
+            {renderRecruitersCard(
+              selectedTeam.recruiters,
+              () => setIsRecruiterDialogOpen(true)
+            )}
           </div>
         </div>
-      )}
-
-      {!selectedTeam && (
+      ) : (
         <div className="flex flex-col items-center justify-center h-[calc(100%-90px)] text-gray-500 text-sm">
           <UserPlus className="w-10 h-10 mb-2" />
           <span className="text-base">
@@ -242,26 +255,57 @@ export function InternalTeam({ jobId, jobData, canModify }: InternalTeamProps) {
         </div>
       )}
 
-      {/* Team Selection Dialog */}
-      <TeamSelectionDialog
-        open={isTeamDialogOpen}
-        onClose={() => setIsTeamDialogOpen(false)}
-        onSave={handleTeamSelectionSave}
-        initialSelections={{
-          teamId:
-            selectedTeam?.team?.id ||
-            ((jobData as any)?.jobTeamInfo?.teamId?._id as string | undefined),
-          hiringManagerId:
-            selectedTeam?.hiringManager?.id ||
-            ((jobData as any)?.jobTeamInfo?.hiringManager?._id as string | undefined),
-          teamLeadId:
-            selectedTeam?.teamLead?.id ||
-            ((jobData as any)?.jobTeamInfo?.teamLead?._id as string | undefined),
-          recruiterIds:
-            selectedTeam?.recruiters?.map((r) => r.id) ||
-            (((jobData as any)?.jobTeamInfo?.recruiter?._id ? [(jobData as any).jobTeamInfo.recruiter._id] : []) as string[]),
-        }}
-      />
+      {/* Member Selection Dialogs */}
+      {canModify && (
+        <>
+          <MemberSelectionDialog
+            open={isHiringManagerDialogOpen}
+            onClose={() => setIsHiringManagerDialogOpen(false)}
+            title="Select Hiring Manager"
+            roleFilter="Hiring Manager"
+            initialSelections={selectedTeam?.hiringManager?.id ? [selectedTeam.hiringManager.id] : []}
+            onSelect={(members) => {
+              const member = members[0];
+              updateTeamAssignment({
+                hiringManager: member ? { id: member._id, name: member.firstName + " " + member.lastName, email: member.email, phone: member.phone } : null
+              });
+            }}
+          />
+
+          <MemberSelectionDialog
+            open={isTeamLeadDialogOpen}
+            onClose={() => setIsTeamLeadDialogOpen(false)}
+            title="Select Team Lead"
+            roleFilter="Team Lead"
+            initialSelections={selectedTeam?.teamLead?.id ? [selectedTeam.teamLead.id] : []}
+            onSelect={(members) => {
+              const member = members[0];
+              updateTeamAssignment({
+                teamLead: member ? { id: member._id, name: member.firstName + " " + member.lastName, email: member.email, phone: member.phone } : null
+              });
+            }}
+          />
+
+          <MemberSelectionDialog
+            open={isRecruiterDialogOpen}
+            onClose={() => setIsRecruiterDialogOpen(false)}
+            title="Select Recruiters"
+            roleFilter="Recruiters"
+            multiple={true}
+            initialSelections={selectedTeam?.recruiters?.map(r => r.id) || []}
+            onSelect={(members) => {
+              updateTeamAssignment({
+                recruiters: members.map(member => ({
+                  id: member._id,
+                  name: member.firstName + " " + member.lastName,
+                  email: member.email,
+                  phone: member.phone
+                }))
+              });
+            }}
+          />
+        </>
+      )}
     </div>
   );
 }
