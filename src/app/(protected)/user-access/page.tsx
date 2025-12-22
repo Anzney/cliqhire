@@ -18,15 +18,16 @@ const UserAccess = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <Dashboardheader
+      {/* <Dashboardheader
         setOpen={setOpen}
         setFilterOpen={setFilterOpen}
         initialLoading={initialLoading}
         heading="User Management"
-        buttonText="Create Team"
+        buttonText=""
+        showCreateButton={false}
         showFilterButton={false}
         rightContent={<></>}
-      />
+      /> */}
 
       {/* Tabbed Interface */}
       <div className="flex-1">
