@@ -24,6 +24,7 @@ interface MultiSelectorProps
   values: string[];
   onValuesChange: (value: string[]) => void;
   loop?: boolean;
+  onSearch?: (value: string) => void;
 }
 
 interface MultiSelectContextProps {
@@ -62,6 +63,7 @@ const MultiSelector = ({
   className,
   children,
   dir,
+  onSearch,
   ...props
 }: MultiSelectorProps) => {
   const [inputValue, setInputValue] = useState("");
@@ -81,6 +83,18 @@ const MultiSelector = ({
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [value],
+  );
+
+  // Wrapper to trigger onSearch when input value changes
+  const setInputValueWrapper = useCallback(
+    (val: React.SetStateAction<string>) => {
+      setInputValue((prev) => {
+        const newValue = typeof val === "function" ? val(prev) : val;
+        onSearch?.(newValue);
+        return newValue;
+      });
+    },
+    [onSearch]
   );
 
   const handleSelect = React.useCallback(
@@ -193,7 +207,7 @@ const MultiSelector = ({
         open,
         setOpen,
         inputValue,
-        setInputValue,
+        setInputValue: setInputValueWrapper,
         activeIndex,
         setActiveIndex,
         ref: inputRef,
@@ -320,7 +334,7 @@ MultiSelectorContent.displayName = "MultiSelectorContent";
 const MultiSelectorList = forwardRef<
   React.ElementRef<typeof CommandPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.List>
->(({ className, children }, ref) => {
+>(({ className, children, ...props }, ref) => {
   return (
     <CommandList
       ref={ref}
@@ -328,6 +342,7 @@ const MultiSelectorList = forwardRef<
         "p-2 flex flex-col gap-2 rounded-md scrollbar-thin scrollbar-track-transparent transition-colors scrollbar-thumb-muted-foreground dark:scrollbar-thumb-muted scrollbar-thumb-rounded-lg w-full absolute bg-background shadow-md z-10 border border-muted top-0",
         className,
       )}
+      {...props}
     >
       {children}
       <CommandEmpty>
