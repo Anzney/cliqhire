@@ -72,12 +72,41 @@ export interface AssignedJobApiResponse {
   createdAt: string;
   updatedAt: string;
   status: string;
-  _id: string;
+  _id?: string; // Made optional as per new response might not have it or it might be 'id'
   position: string;
   clientName: string;
   candidateCount: number;
   jobId: string;
   clientId: string;
+}
+
+export interface ReminderTask {
+  candidateName: string;
+  candidateEmail: string;
+  jobTitle: string;
+  clientName: string;
+  interviewDateTime: string;
+  interviewMeetingLinks: string[];
+  status: string;
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MyTasksData {
+  assignedJobs: AssignedJobApiResponse[];
+  personalTasks: Task[];
+  reminderTasks: ReminderTask[];
+}
+
+export interface MyTasksResponse {
+  success: boolean;
+  data: MyTasksData;
+  counts: {
+    assignedJobs: number;
+    personalTasks: number;
+    reminderTasks: number;
+  };
 }
 
 export interface AssignedJobsApiResponse {
@@ -186,11 +215,29 @@ class TaskService {
   }
 
   /**
-   * Get assigned jobs for the current user
+   * Get all tasks (assigned jobs, personal tasks, reminders) for the current user
+   */
+  async getMyTasks(): Promise<MyTasksResponse> {
+    try {
+      const response = await api.get('/api/tasks/my-tasks');
+      return response.data;
+    } catch (error) {
+      console.error('TaskService: Error fetching my tasks:', error);
+      throw new Error('Failed to fetch my tasks');
+    }
+  }
+
+  /**
+   * Get assigned jobs for the current user (Legacy/Specific)
    */
   async getAssignedJobs(): Promise<AssignedJobApiResponse[]> {
     try {
+      // This endpoint now returns the composite object, so we extract assignedJobs
       const response = await api.get('/api/tasks/my-tasks');
+      if (response.data && response.data.data && Array.isArray(response.data.data.assignedJobs)) {
+        return response.data.data.assignedJobs;
+      }
+      // Fallback for previous behavior if API hasn't fully switched or if handling differntly
       return response.data.data;
     } catch (error) {
       console.error('TaskService: Error fetching assigned jobs:', error);
