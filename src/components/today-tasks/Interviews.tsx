@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
+import {
   Table,
   TableBody,
   TableCell,
@@ -20,9 +20,9 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { 
-  Calendar, 
-  Clock, 
+import {
+  Calendar,
+  Clock,
   Video,
   ChevronDown,
   ChevronRight,
@@ -37,7 +37,7 @@ interface InterviewsProps {
 
 export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsProps) {
   const [isOpen, setIsOpen] = useState(false);
-  
+
   const isToday = (dateTime: string) => {
     const today = new Date();
     const interviewDate = new Date(dateTime);
@@ -46,7 +46,7 @@ export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsPr
 
   // Filter interviews for today
   const todaysInterviews = interviews.filter(interview => isToday(interview.scheduledTime));
-  
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'scheduled':
@@ -112,7 +112,7 @@ export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsPr
                         <TableHead>Time</TableHead>
                         <TableHead>Meeting</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
+                        {/* <TableHead>Actions</TableHead> */}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -144,12 +144,12 @@ export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsPr
                               </div>
                             </div>
                           </TableCell>
-                          
+
                           <TableCell>
                             {interview.meetingLink ? (
-                              <a 
-                                href={interview.meetingLink} 
-                                target="_blank" 
+                              <a
+                                href={interview.meetingLink}
+                                target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-1 text-blue-600 hover:underline text-sm"
                               >
@@ -165,7 +165,7 @@ export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsPr
                               {interview.status}
                             </Badge>
                           </TableCell>
-                          <TableCell>
+                          {/* <TableCell>
                             <DropdownMenu>
                               <DropdownMenuTrigger className="hover:bg-gray-100 p-1 rounded">
                                 <MoreHorizontal className="w-4 h-4" />
@@ -179,7 +179,7 @@ export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsPr
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
-                          </TableCell>
+                          </TableCell> */}
                         </TableRow>
                       ))}
                     </TableBody>
