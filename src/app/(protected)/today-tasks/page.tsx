@@ -187,6 +187,13 @@ export default function TodayTasksPage() {
     });
   };
 
+  const handleEditTask = (taskId: string, taskData: { title: string; description: string; category: string; dueDate: string }) => {
+    updatePersonalTaskMutation.mutate({
+      taskId,
+      data: taskData
+    });
+  };
+
   const filteredPersonalTasks = personalTasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.description?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -279,6 +286,7 @@ export default function TodayTasksPage() {
           updatePersonalTaskStatus.mutate({ taskId, status: apiStatus });
         }}
         onDeleteTask={handleDeleteTask}
+        onEditTask={handleEditTask}
       />
 
     </div>

@@ -220,44 +220,15 @@ export function PersonalTasks({
   };
 
   const handleEditSubmit = async (taskData: { title: string; description: string; category: string; dueDate: string }) => {
-    if (taskToEdit) {
-      try {
-        // Use the taskService for API calls
-        await taskService.updatePersonalTask(taskToEdit.id, {
-          title: taskData.title,
-          description: taskData.description,
-          category: taskData.category,
-          dueDate: taskData.dueDate
-        });
-
-        // Call the parent component's onEditTask if provided
-        if (onEditTask) {
-          onEditTask(taskToEdit.id, taskData);
-        }
-      } catch (error) {
-        console.error('Error updating task:', error);
-        // You might want to show a toast notification here
-      }
+    if (taskToEdit && onEditTask) {
+      onEditTask(taskToEdit.id, taskData);
     }
     handleCloseEditForm();
   };
 
   const updateTaskStatus = async (taskId: string, newStatus: JobStatus) => {
-    try {
-      const apiStatus = convertStatus(newStatus, true) as 'to-do' | 'inprogress' | 'completed';
-
-      // Use the taskService for API calls
-      await taskService.updatePersonalTask(taskId, {
-        status: apiStatus
-      });
-
-      // Call the parent component's onUpdateStatus if provided
-      if (onUpdateStatus) {
-        onUpdateStatus(taskId, newStatus);
-      }
-    } catch (error) {
-      console.error('Error updating task status:', error);
-      // You might want to show a toast notification here
+    if (onUpdateStatus) {
+      onUpdateStatus(taskId, newStatus);
     }
   };
 
