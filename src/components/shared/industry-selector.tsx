@@ -24,9 +24,10 @@ interface IndustrySelectorProps {
     value?: string;
     onValueChange: (value: string) => void;
     modal?: boolean;
+    disabled?: boolean;
 }
 
-export function IndustrySelector({ value, onValueChange, modal = false }: IndustrySelectorProps) {
+export function IndustrySelector({ value, onValueChange, modal = false, disabled = false }: IndustrySelectorProps) {
     const [open, setOpen] = useState(false);
     const { industries, addIndustry, isAdding } = useIndustries();
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -59,6 +60,7 @@ export function IndustrySelector({ value, onValueChange, modal = false }: Indust
                         role="combobox"
                         aria-expanded={open}
                         className="w-full justify-between font-normal"
+                        disabled={disabled}
                     >
                         {value ? value : "Select industry..."}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

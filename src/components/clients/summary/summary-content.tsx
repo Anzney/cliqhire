@@ -319,11 +319,12 @@ export function SummaryContent({
                 label="Client Industry"
                 value={clientData?.industry}
                 onUpdate={handleUpdateField("industry")}
-                disableInternalEdit={!canModify}
+                disableInternalEdit={true}
                 customInput={
                   <IndustrySelector
                     value={clientData?.industry}
                     onValueChange={handleUpdateField("industry")}
+                    disabled={!canModify}
                   />
                 }
               />
