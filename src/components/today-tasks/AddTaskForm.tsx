@@ -129,9 +129,10 @@ export function AddTaskForm({ onClose, onSubmit, initialValues }: AddTaskFormPro
 
       <div>
         <Label>Due Date (Optional)</Label>
-        <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+        <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen} modal={true}>
           <PopoverTrigger asChild>
             <Button
+              type="button"
               variant="outline"
               className={cn(
                 "w-full justify-start text-left font-normal",

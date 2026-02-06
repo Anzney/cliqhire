@@ -9,9 +9,9 @@ export const usePersonalTasks = () => {
     const createPersonalTask = useMutation({
         mutationFn: (taskData: Partial<CreateTaskRequest> & { title: string }) =>
             taskService.createPersonalTask(taskData),
-        onSuccess: (data) => {
+        onSuccess: async (data) => {
             toast.success('Personal task created successfully');
-            queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
+            await queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
         },
         onError: (error: Error) => {
             toast.error(`Failed to create task: ${error.message}`);
@@ -22,9 +22,9 @@ export const usePersonalTasks = () => {
     const updatePersonalTask = useMutation({
         mutationFn: ({ taskId, data }: { taskId: string; data: Partial<Task> }) =>
             taskService.updatePersonalTask(taskId, data),
-        onSuccess: () => {
+        onSuccess: async () => {
             toast.success('Personal task updated successfully');
-            queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
+            await queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
         },
         onError: (error: Error) => {
             toast.error(`Failed to update task: ${error.message}`);
@@ -35,9 +35,9 @@ export const usePersonalTasks = () => {
     const updatePersonalTaskStatus = useMutation({
         mutationFn: ({ taskId, status }: { taskId: string; status: 'to-do' | 'inprogress' | 'completed' }) =>
             taskService.updatePersonalTaskStatus(taskId, status),
-        onSuccess: () => {
+        onSuccess: async () => {
             toast.success('Task status updated');
-            queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
+            await queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
         },
         onError: (error: Error) => {
             toast.error(`Failed to update status: ${error.message}`);
@@ -47,9 +47,9 @@ export const usePersonalTasks = () => {
     // Delete Personal Task
     const deletePersonalTask = useMutation({
         mutationFn: (taskId: string) => taskService.deletePersonalTask(taskId),
-        onSuccess: () => {
+        onSuccess: async () => {
             toast.success('Personal task deleted successfully');
-            queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
+            await queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
         },
         onError: (error: Error) => {
             toast.error(`Failed to delete task: ${error.message}`);
