@@ -36,7 +36,7 @@ export const usePersonalTasks = () => {
         mutationFn: ({ taskId, status }: { taskId: string; status: 'to-do' | 'inprogress' | 'completed' }) =>
             taskService.updatePersonalTaskStatus(taskId, status),
         onSuccess: () => {
-            // Don't toast here to avoid spamming if dragged/dropped or quick check
+            toast.success('Task status updated');
             queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
         },
         onError: (error: Error) => {

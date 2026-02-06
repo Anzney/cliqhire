@@ -3,18 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import {
   Collapsible,
@@ -31,9 +31,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { 
-  CheckCircle, 
-  User, 
+import {
+  CheckCircle,
+  User,
   Calendar,
   Edit,
   Trash2,
@@ -62,9 +62,9 @@ interface PersonalTasksProps {
   onEditTask?: (taskId: string, taskData: { title: string; description: string; category: string; dueDate: string }) => void;
 }
 
-export function PersonalTasks({ 
-  personalTasks, 
-  completedTasks, 
+export function PersonalTasks({
+  personalTasks,
+  completedTasks,
   searchQuery,
   loading = false,
   onCompleteTask,
@@ -116,10 +116,10 @@ export function PersonalTasks({
     });
   };
 
-  const truncateText = (text: string, maxWords: number) => {
-    const words = text.split(' ');
-    if (words.length <= maxWords) return text;
-    return words.slice(0, maxWords).join(' ') + '...';
+  const truncateText = (text: string, maxLength: number = 40) => {
+    if (!text) return '';
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
   };
 
   const truncateTextWithEditIcon = (text: string, maxWords: number) => {
@@ -158,7 +158,7 @@ export function PersonalTasks({
 
   const filteredPersonalTasks = personalTasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         task.description?.toLowerCase().includes(searchQuery.toLowerCase());
+      task.description?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || task.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -245,7 +245,7 @@ export function PersonalTasks({
   const updateTaskStatus = async (taskId: string, newStatus: JobStatus) => {
     try {
       const apiStatus = convertStatus(newStatus, true) as 'to-do' | 'inprogress' | 'completed';
-      
+
       // Use the taskService for API calls
       await taskService.updatePersonalTask(taskId, {
         status: apiStatus
@@ -280,12 +280,12 @@ export function PersonalTasks({
                       <SelectTrigger className="w-32 h-8">
                         <SelectValue />
                       </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="to-do">To-do</SelectItem>
-                  <SelectItem value="inprogress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="to-do">To-do</SelectItem>
+                        <SelectItem value="inprogress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                      </SelectContent>
                     </Select>
                   </div>
                 )}
@@ -301,7 +301,7 @@ export function PersonalTasks({
         </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="space-y-4 max-h-96 overflow-y-auto">
-            
+
             {loading ? (
               <div className="text-center py-8">
                 <div className="flex items-center justify-center">
@@ -311,158 +311,156 @@ export function PersonalTasks({
               </div>
             ) : filteredPersonalTasks.length > 0 ? (
               filteredPersonalTasks.map((task) => (
-              <div 
-                key={task.id} 
-                className={`border rounded-lg p-3 hover:bg-gray-50 transition-all duration-300 ${
-                  completedTasks.has(task.id) 
-                    ? 'bg-green-50 border-green-200 opacity-75' 
+                <div
+                  key={task.id}
+                  className={`border rounded-lg p-3 hover:bg-gray-50 transition-all duration-300 ${completedTasks.has(task.id)
+                    ? 'bg-green-50 border-green-200 opacity-75'
                     : ''
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  {/* Checkbox */}
-                  <div className="flex-shrink-0">
-                    <Checkbox
-                      checked={task.status === 'completed'}
-                      onCheckedChange={() => handleCheckboxChange(task.id)}
-                      disabled={task.status === 'completed'}
-                      className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
-                    />
-                  </div>
-                  
-                  {/* Title - Flexible width */}
-                  <div className="flex-1 min-w-0 max-w-md">
-                    <h3 
-                      className={`font-medium text-sm truncate cursor-pointer hover:text-blue-600 hover:underline transition-colors ${
-                        task.status === 'completed' 
-                          ? 'line-through text-gray-500' 
-                          : 'text-gray-900'
-                      }`}
-                      onClick={() => handleViewDetails(task)}
-                    >
-                      {truncateText(task.title, 6)}
-                    </h3>
-                  </div>
-                  
-                  {/* Description - Flexible width */}
-                  <div className="flex-1 min-w-0 max-w-lg">
-                    {task.description && (
-                      <div className="group relative inline-block w-full">
-                        <span 
-                          className="text-xs text-gray-600 cursor-pointer hover:text-blue-600 hover:underline transition-colors"
-                          onClick={() => handleViewDetails(task)}
-                        >
-                          {truncateText(task.description, 6)}
-                          {/* Edit icon that appears on hover */}
-                          <button
-                            className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-100 rounded p-0.5 align-middle"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditTask(task);
-                            }}
-                            title="Edit description"
-                          >
-                            <SquarePen className="w-3 h-3 text-gray-500 hover:text-blue-600" />
-                          </button>
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Category */}
-                  <div className="flex-shrink-0 w-28">
-                    <span className="text-xs text-gray-500 capitalize">{task.category}</span>
-                  </div>
-                  
-                  {/* Due Date */}
-                  <div className="flex-shrink-0 w-32">
-                    {task.dueDate && (
-                      <div className="flex items-center gap-1 text-xs text-gray-500">
-                        <Calendar className="w-3 h-3" />
-                        <span>{formatDate(task.dueDate)}</span>
-                        {task.dueTime && <span className="text-xs">at {task.dueTime}</span>}
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Status */}
-                  <div className="flex-shrink-0 w-28">
-                    <StatusDropdown
-                      currentStatus={convertStatus(task.status, false) as JobStatus}
-                      onStatusChange={(newStatus) => updateTaskStatus(task.id, newStatus)}
-                      jobTitle={task.title}
-                    />
-                  </div>
-                  
-                  {/* Follow-up status dropdown for follow-up tasks */}
-                  {task.category === 'follow-up' && task.followUpStatus && (
+                    }`}
+                >
+                  <div className="flex items-center gap-4">
+                    {/* Checkbox */}
                     <div className="flex-shrink-0">
-                      <FollowUpStatusDropdown
-                        currentStatus={task.followUpStatus}
-                        onStatusChange={(status) => onUpdateFollowUpStatus(task.id, status)}
-                        taskTitle={task.title}
+                      <Checkbox
+                        checked={task.status === 'completed'}
+                        onCheckedChange={() => handleCheckboxChange(task.id)}
+                        disabled={task.status === 'completed'}
+                        className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
                       />
                     </div>
-                  )}
-                  
-                  {/* Options Menu */}
-                  <div className="flex-shrink-0">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleViewDetails(task)}>
-                          <Eye className="w-4 h-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEditTask(task)}>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleDeleteClick(task.id)}
-                          className="text-red-600"
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-                
-                {/* Follow-up specific information */}
-                {task.category === 'follow-up' && task.relatedCandidate && (
-                  <div className="mt-2 ml-8 p-2 bg-blue-50 rounded text-xs">
-                    <div className="flex items-center gap-2 text-blue-700">
-                      <User className="w-3 h-3" />
-                      <span><strong>Candidate:</strong> {task.relatedCandidate}</span>
-                      {task.relatedJob && <span>• <strong>Job:</strong> {task.relatedJob}</span>}
-                      {task.relatedClient && <span>• <strong>Client:</strong> {task.relatedClient}</span>}
+
+                    {/* Title - Flexible width */}
+                    <div className="flex-1 min-w-0 max-w-md">
+                      <h3
+                        className={`font-medium text-sm truncate cursor-pointer hover:text-blue-600 hover:underline transition-colors ${task.status === 'completed'
+                          ? 'line-through text-gray-500'
+                          : 'text-gray-900'
+                          }`}
+                        onClick={() => handleViewDetails(task)}
+                      >
+                        {truncateText(task.title, 30)}
+                      </h3>
+                    </div>
+
+                    {/* Description - Flexible width */}
+                    <div className="flex-1 min-w-0 max-w-lg">
+                      {task.description && (
+                        <div className="group relative inline-block w-full">
+                          <span
+                            className="text-xs text-gray-600 cursor-pointer hover:text-blue-600 hover:underline transition-colors"
+                            onClick={() => handleViewDetails(task)}
+                          >
+                            {truncateText(task.description, 50)}
+                            {/* Edit icon that appears on hover */}
+                            <button
+                              className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-100 rounded p-0.5 align-middle"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditTask(task);
+                              }}
+                              title="Edit description"
+                            >
+                              <SquarePen className="w-3 h-3 text-gray-500 hover:text-blue-600" />
+                            </button>
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Category */}
+                    <div className="flex-shrink-0 w-28">
+                      <span className="text-xs text-gray-500 capitalize">{task.category}</span>
+                    </div>
+
+                    {/* Due Date */}
+                    <div className="flex-shrink-0 w-32">
+                      {task.dueDate && (
+                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                          <Calendar className="w-3 h-3" />
+                          <span>{formatDate(task.dueDate)}</span>
+                          {task.dueTime && <span className="text-xs">at {task.dueTime}</span>}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Status */}
+                    <div className="flex-shrink-0 w-28">
+                      <StatusDropdown
+                        currentStatus={convertStatus(task.status, false) as JobStatus}
+                        onStatusChange={(newStatus) => updateTaskStatus(task.id, newStatus)}
+                        jobTitle={task.title}
+                      />
+                    </div>
+
+                    {/* Follow-up status dropdown for follow-up tasks */}
+                    {task.category === 'follow-up' && task.followUpStatus && (
+                      <div className="flex-shrink-0">
+                        <FollowUpStatusDropdown
+                          currentStatus={task.followUpStatus}
+                          onStatusChange={(status) => onUpdateFollowUpStatus(task.id, status)}
+                          taskTitle={task.title}
+                        />
+                      </div>
+                    )}
+
+                    {/* Options Menu */}
+                    <div className="flex-shrink-0">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleViewDetails(task)}>
+                            <Eye className="w-4 h-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditTask(task)}>
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteClick(task.id)}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
-                )}
-                
-                {/* Completion message */}
-                {completedTasks.has(task.id) && (
-                  <div className="mt-2 ml-8 p-2 bg-green-100 border border-green-200 rounded text-xs text-green-700 flex items-center gap-2">
-                    <CheckCircle className="w-3 h-3" />
-                    <span>Task completed! Removing from list...</span>
-                  </div>
-                )}
+
+                  {/* Follow-up specific information */}
+                  {task.category === 'follow-up' && task.relatedCandidate && (
+                    <div className="mt-2 ml-8 p-2 bg-blue-50 rounded text-xs">
+                      <div className="flex items-center gap-2 text-blue-700">
+                        <User className="w-3 h-3" />
+                        <span><strong>Candidate:</strong> {task.relatedCandidate}</span>
+                        {task.relatedJob && <span>• <strong>Job:</strong> {task.relatedJob}</span>}
+                        {task.relatedClient && <span>• <strong>Client:</strong> {task.relatedClient}</span>}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Completion message */}
+                  {completedTasks.has(task.id) && (
+                    <div className="mt-2 ml-8 p-2 bg-green-100 border border-green-200 rounded text-xs text-green-700 flex items-center gap-2">
+                      <CheckCircle className="w-3 h-3" />
+                      <span>Task completed! Removing from list...</span>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <User className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                <p className="text-lg font-medium">No personal tasks found</p>
+                <p className="text-sm">
+                  {searchQuery ? 'Try adjusting your search criteria' : 'Add a new task to get started'}
+                </p>
               </div>
-            ))
-        ) : (
-          <div className="text-center py-8 text-gray-500">
-            <User className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-            <p className="text-lg font-medium">No personal tasks found</p>
-            <p className="text-sm">
-              {searchQuery ? 'Try adjusting your search criteria' : 'Add a new task to get started'}
-            </p>
-          </div>
             )}
           </CardContent>
         </CollapsibleContent>
@@ -501,7 +499,7 @@ export function PersonalTasks({
             <AlertDialogCancel onClick={handleCancelDelete}>
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleConfirmDelete}
               className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
             >
