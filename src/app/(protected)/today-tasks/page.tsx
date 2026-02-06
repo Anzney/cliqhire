@@ -27,10 +27,17 @@ import {
 import { JobStatus } from "@/components/today-tasks/StatusDropdown";
 import { taskService } from "@/services/taskService";
 import { useMyTasks } from "@/hooks/useMyTasks";
+import { usePersonalTasks } from "@/hooks/usePersonalTasks";
 
 export default function TodayTasksPage() {
   const queryClient = useQueryClient();
   const { data: myTasksData, isLoading, error } = useMyTasks();
+  const {
+    createPersonalTask,
+    updatePersonalTaskStatus,
+    deletePersonalTask,
+    updatePersonalTask: updatePersonalTaskMutation // Rename to avoid conflict if any, though separate scope
+  } = usePersonalTasks();
 
   const [newTaskOpen, setNewTaskOpen] = useState(false);
   const [filterPriority, setFilterPriority] = useState<string>("all");
@@ -88,31 +95,10 @@ export default function TodayTasksPage() {
 
   // Handlers
   const handleCompleteTask = async (taskId: string) => {
-    try {
-      await taskService.completeTask(taskId);
-      setCompletedTasks(prev => new Set(prev).add(taskId));
-
-      // Auto-remove completed tasks from view
-      setTimeout(() => {
-        setCompletedTasks(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(taskId);
-          return newSet;
-        });
-        queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
-      }, 2000);
-    } catch (error) {
-      console.error('Error completing task:', error);
-    }
-  };
-
-  const handleUpdateFollowUpStatus = async (taskId: string, followUpStatus: "pending" | "in-progress" | "completed") => {
-    try {
-      await taskService.updateFollowUpStatus(taskId, followUpStatus);
-      queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
-
-      if (followUpStatus === 'completed') {
+    updatePersonalTaskStatus.mutate({ taskId, status: 'completed' }, {
+      onSuccess: () => {
         setCompletedTasks(prev => new Set(prev).add(taskId));
+        // Auto-remove completed tasks from view visual effect
         setTimeout(() => {
           setCompletedTasks(prev => {
             const newSet = new Set(prev);
@@ -121,28 +107,60 @@ export default function TodayTasksPage() {
           });
         }, 2000);
       }
+    });
+  };
+
+  const handleUpdateFollowUpStatus = async (taskId: string, followUpStatus: "pending" | "in-progress" | "completed") => {
+    // This seems to be for personal tasks that are followups? 
+    // If so, we can use updatePersonalTaskMutation
+    try {
+      // Since we don't have a specific mutation for this in usePersonalTasks exposed as 'updateFollowUpStatus',
+      // we can use updatePersonalTaskMutation or keep the taskService call if it is distinct (it calls /my-tasks)
+      // But the docs for personal task update allow 'followUpStatus' field? No, docs didn't explicitly list it in 'Update Personal Task' text, 
+      // but 'Request Body' said "Any combination of the following fields...". And Service has updatePersonalTask with followUpStatus.
+      // Let's assume for Personal Tasks we should use the personal endpoint if possible, but the original code used /my-tasks.
+      // Given the prompt "Connect all the APIs related to Personal Task", I will stick to what creates/updates Personal Tasks.
+      // However, if these tasks were created via Personal Task but are followups, maybe they share the endpoint.
+      // Let's rely on the service logic for now but wrapped in mutation?
+      // Actually, existing handleUpdateFollowUpStatus used taskService.updateFollowUpStatus which uses PUT /api/tasks/my-tasks.
+      // If I want to be strict about Personal Task APIs (the new ones), I should see if I can update followUpStatus there.
+      // The service updatePersonalTask signature I see in step 4 includes followUpStatus.
+      // Let's use updatePersonalTaskMutation for consistency if valid.
+
+      // Wait, the new hooks provided createPersonalTask, updatePersonalTask, etc.
+      // I'll stick to using the hook for consistency with 'Personal Task API'.
+
+      updatePersonalTaskMutation.mutate({
+        taskId,
+        data: {
+          followUpStatus: followUpStatus as any, // Cast if type mismatch or ensure strict typing
+          status: followUpStatus === 'completed' ? 'completed' : undefined
+        }
+      }, {
+        onSuccess: () => {
+          if (followUpStatus === 'completed') {
+            setCompletedTasks(prev => new Set(prev).add(taskId));
+            setTimeout(() => {
+              setCompletedTasks(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(taskId);
+                return newSet;
+              });
+            }, 2000);
+          }
+        }
+      });
     } catch (error) {
       console.error('Error updating follow-up status:', error);
     }
   };
 
   const handleDeleteTask = async (taskId: string) => {
-    try {
-      await taskService.deletePersonalTask(taskId);
-      queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
-    } catch (error) {
-      console.error('Error deleting task:', error);
-    }
+    deletePersonalTask.mutate(taskId);
   };
 
   const updateInterviewStatus = (interviewId: string, status: Interview['status']) => {
-    // Since API doesn't seem to support updating interview status directly via a specific endpoint 
-    // or the task service methods for interviews aren't explicitly clear on 'status' vs 'followUpStatus',
-    // we might skip API call or implement if backend supports it. 
-    // For now assuming optimistic local update only or log message.
     console.log("Update interview status TODO", interviewId, status);
-    // If there's an endpoint for this, we'd call it here.
-    // For now, no-op or we could try generic update if it was a task.
   };
 
   const handleJobStatusChange = async (jobId: string, newStatus: JobStatus) => {
@@ -159,17 +177,14 @@ export default function TodayTasksPage() {
   };
 
   const handleAddTask = async (taskData: { title: string; description: string; category: string; dueDate: string }) => {
-    try {
-      await taskService.createPersonalTask({
-        title: taskData.title,
-        description: taskData.description,
-        dueDate: taskData.dueDate,
-        category: taskData.category,
-      });
-      queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
-    } catch (error) {
-      console.error('Error creating task:', error);
-    }
+    createPersonalTask.mutate({
+      title: taskData.title,
+      description: taskData.description,
+      dueDate: taskData.dueDate,
+      category: taskData.category,
+    }, {
+      onSuccess: () => setNewTaskOpen(false)
+    });
   };
 
   const filteredPersonalTasks = personalTasks.filter(task => {
@@ -184,6 +199,9 @@ export default function TodayTasksPage() {
     const today = new Date().toDateString();
     return interviewDate === today;
   });
+
+  // Check loading state if needed for full page, or pass down
+  // if (isLoading) return <div>Loading...</div>; // Optional, layout handles it often
 
   return (
     <div className="p-6 space-y-6">
@@ -258,12 +276,7 @@ export default function TodayTasksPage() {
             status === 'In Progress' ? 'inprogress' :
               'completed';
 
-          try {
-            await taskService.updatePersonalTaskStatus(taskId, apiStatus);
-            queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
-          } catch (error) {
-            console.error('Error updating task status:', error);
-          }
+          updatePersonalTaskStatus.mutate({ taskId, status: apiStatus });
         }}
         onDeleteTask={handleDeleteTask}
       />

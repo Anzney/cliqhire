@@ -23,10 +23,15 @@ export interface Task {
 export interface CreateTaskRequest {
   title: string;
   description?: string;
-  priority: 'high' | 'medium' | 'low';
+  priority?: 'high' | 'medium' | 'low';
   dueDate?: string;
   dueTime?: string;
-  category: 'follow-up' | 'admin' | 'research' | 'meeting' | 'other';
+  category?: string;
+  tags?: string[];
+  notes?: string;
+  isReminder?: boolean;
+  reminderDate?: string;
+  // Specific fields for other internal task types if needed
   followUpType?: 'cv-received' | 'candidate-response' | 'client-feedback' | 'interview-scheduled' | 'offer-sent' | 'other';
   relatedCandidate?: string;
   relatedJob?: string;
@@ -134,10 +139,10 @@ class TaskService {
   /**
    * Create a personal task
    */
-  async createPersonalTask(taskData: { title: string; description: string; dueDate: string; category: string }): Promise<Task> {
+  async createPersonalTask(taskData: Partial<CreateTaskRequest> & { title: string }): Promise<Task> {
     try {
       const response = await api.post('/api/tasks/personal', taskData);
-      return response.data.data.task;
+      return response.data.data;
     } catch (error) {
       console.error('TaskService: Error creating personal task:', error);
       throw new Error('Failed to create personal task');
