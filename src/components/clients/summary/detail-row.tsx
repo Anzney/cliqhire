@@ -24,6 +24,7 @@ interface DetailRowProps {
   alwaysShowEdit?: boolean;
   disableInternalEdit?: boolean; // NEW PROP
   customEdit?: () => void; // NEW PROP for custom edit handlers
+  customInput?: React.ReactNode; // NEW PROP for custom input component
 }
 
 export function DetailRow({
@@ -41,6 +42,7 @@ export function DetailRow({
   alwaysShowEdit,
   disableInternalEdit,
   customEdit,
+  customInput,
 }: DetailRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -91,7 +93,9 @@ export function DetailRow({
           {optional && <span className="text-xs ml-1">(optional)</span>}
         </span>
         <div className="flex items-center justify-between flex-1">
-          {isSelect ? (
+          {customInput ? (
+            <div className="w-full">{customInput}</div>
+          ) : isSelect ? (
             <Select
               value={
                 typeof value === "string" ? value : value instanceof Date ? value.toISOString() : ""

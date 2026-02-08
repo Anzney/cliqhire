@@ -23,19 +23,19 @@ export function StatsOverview({ assignedJobs, todayInterviews, personalTasks }: 
           </div>
         </CardContent>
       </Card>
-      
+
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Today&apos;s Interviews</p>
+              <p className="text-sm font-medium text-gray-600">Reminder Task</p>
               <p className="text-2xl font-bold text-gray-900">{todayInterviews.length}</p>
             </div>
             <Calendar className="w-8 h-8 text-green-600" />
           </div>
         </CardContent>
       </Card>
-      
+
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
@@ -49,7 +49,7 @@ export function StatsOverview({ assignedJobs, todayInterviews, personalTasks }: 
           </div>
         </CardContent>
       </Card>
-      
+
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center justify-between">

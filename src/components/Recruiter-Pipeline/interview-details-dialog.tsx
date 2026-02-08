@@ -35,19 +35,14 @@ export function InterviewDetailsDialog({
 }: InterviewDetailsDialogProps) {
   const [date, setDate] = React.useState<Date | undefined>(undefined);
   const [time, setTime] = React.useState<string>("00:00");
-  const [hour12, setHour12] = React.useState<string>("09");
+  const [hour, setHour] = React.useState<string>("09");
   const [minute, setMinute] = React.useState<string>("00");
-  const [period, setPeriod] = React.useState<"AM" | "PM">("AM");
   const [interviewMode, setInterviewMode] = React.useState<"online" | "offline">("online");
   const [meetingLink, setMeetingLink] = React.useState<string>(initialMeetingLink);
   const [submitting, setSubmitting] = React.useState(false);
   const [dateOpen, setDateOpen] = React.useState(false);
 
-  const isValid = Boolean(date)
-    && Boolean(hour12)
-    && Boolean(minute)
-    && Boolean(period)
-    && (interviewMode === "offline" || meetingLink.trim().length > 0);
+  const isValid = true;
 
   React.useEffect(() => {
     // Parse initialDateTime formatted like 'yyyy-MM-ddTHH:mm'
@@ -59,21 +54,16 @@ export function InterviewDetailsDialog({
       }
       if (t) {
         setTime(t);
-        // Initialize 12-hour selectors
+        // Initialize 24-hour selectors
         const [hh, mm] = t.split(":");
-        let h = parseInt(hh || "0", 10);
-        const isPM = h >= 12;
-        const h12 = h % 12 === 0 ? 12 : h % 12;
-        setHour12(h12.toString().padStart(2, "0"));
+        setHour((hh || "00").padStart(2, "0"));
         setMinute((mm || "00").padStart(2, "0"));
-        setPeriod(isPM ? "PM" : "AM");
       }
     } else {
       setDate(undefined);
       setTime("00:00");
-      setHour12("09");
+      setHour("09");
       setMinute("00");
-      setPeriod("AM");
     }
   }, [initialDateTime, isOpen]);
 
@@ -86,14 +76,15 @@ export function InterviewDetailsDialog({
   }, [initialMeetingLink, isOpen]);
 
   const handleConfirm = async () => {
-    if (!isValid) return; // require all fields
-    // Compose 24-hour HH:mm from 12-hour selections
-    const h = parseInt(hour12, 10) % 12 + (period === "PM" ? 12 : 0);
-    const hh = h.toString().padStart(2, "0");
+    // Compose 24-hour HH:mm
+    const hh = (hour || "00").padStart(2, "0");
     const mm = (minute || "00").padStart(2, "0");
-    if (!date) return; // Type narrowing: ensure date is defined before formatting
-    const datePart = format(date, "yyyy-MM-dd");
-    const composite = `${datePart}T${hh}:${mm}`;
+
+    let composite = "";
+    if (date) {
+      const datePart = format(date, "yyyy-MM-dd");
+      composite = `${datePart}T${hh}:${mm}`;
+    }
     setSubmitting(true);
     try {
       onConfirm(composite, meetingLink);
@@ -114,7 +105,7 @@ export function InterviewDetailsDialog({
 
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Interview Type <span className="text-red-500">*</span></label>
+            <label className="text-sm font-medium">Interview Type</label>
             <Select value={interviewMode} onValueChange={(v) => setInterviewMode(v as any)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select type" />
@@ -126,7 +117,7 @@ export function InterviewDetailsDialog({
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Interview Date <span className="text-red-500">*</span></label>
+            <label className="text-sm font-medium">Interview Date</label>
             <Popover modal={true} open={dateOpen} onOpenChange={setDateOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start text-left font-normal">
@@ -151,24 +142,24 @@ export function InterviewDetailsDialog({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Interview Time <span className="text-red-500">*</span></label>
+            <label className="text-sm font-medium">Interview Time</label>
             <Popover modal={true}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start text-left font-normal">
                   <Clock className="mr-2 h-4 w-4" />
-                  {`${hour12}:${minute} ${period}`}
+                  {`${hour}:${minute}`}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[320px] p-3" align="start">
-                <div className="grid grid-cols-3 gap-3">
+              <PopoverContent className="w-[220px] p-3" align="start">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <div className="text-xs text-muted-foreground mb-1">Hour</div>
-                    <Select value={hour12} onValueChange={setHour12}>
+                    <Select value={hour} onValueChange={setHour}>
                       <SelectTrigger className="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="max-h-60">
-                        {Array.from({ length: 12 }, (_, i) => (i + 1)).map((h) => (
+                        {Array.from({ length: 24 }, (_, i) => i).map((h) => (
                           <SelectItem key={h} value={h.toString().padStart(2, "0")}>{h.toString().padStart(2, "0")}</SelectItem>
                         ))}
                       </SelectContent>
@@ -181,21 +172,9 @@ export function InterviewDetailsDialog({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {['00','15','30','45'].map((m) => (
+                        {['00', '15', '30', '45'].map((m) => (
                           <SelectItem key={m} value={m}>{m}</SelectItem>
                         ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-1">AM/PM</div>
-                    <Select value={period} onValueChange={(v) => setPeriod(v as any)}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="AM">AM</SelectItem>
-                        <SelectItem value="PM">PM</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -206,13 +185,12 @@ export function InterviewDetailsDialog({
 
           {interviewMode === "online" && (
             <div className="space-y-1">
-              <label className="text-sm font-medium">Meeting Link <span className="text-red-500">*</span></label>
+              <label className="text-sm font-medium">Meeting Link</label>
               <Input
                 type="url"
                 placeholder="https://meet.google.com/..."
                 value={meetingLink}
                 onChange={(e) => setMeetingLink(e.target.value)}
-                required
               />
             </div>
           )}
@@ -220,7 +198,7 @@ export function InterviewDetailsDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={submitting}>Cancel</Button>
-          <Button onClick={handleConfirm} disabled={!isValid || submitting}>
+          <Button onClick={handleConfirm} disabled={submitting}>
             {submitting ? "Saving..." : "Continue"}
           </Button>
         </DialogFooter>

@@ -60,7 +60,7 @@ export const clientContactInfoSchema = z.object({
 
 // Client Contract Information Schema
 export const clientContractInfoSchema = z.object({
-  lineOfBusiness: z.array(z.string()).min(1, "At least one line of business must be selected"),
+  lineOfBusiness: z.array(z.string()),
   contractForms: z.record(z.any()).refine((contractForms) => {
     // Check if contract forms are filled for selected line of business
     return true; // We'll handle this validation in the component level

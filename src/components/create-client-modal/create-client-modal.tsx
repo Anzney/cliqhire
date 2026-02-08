@@ -83,14 +83,8 @@ export function CreateClientModal({
         case 2: // Contract Information
           await createClientFormSchema.shape.clientContractInfo.parseAsync(formValues.clientContractInfo);
           // Additional validation for contract forms
-          const selectedBusinesses = formValues.clientContractInfo.lineOfBusiness;
-          const filledForms = Object.keys(formValues.clientContractInfo.contractForms);
-          const missingForms = selectedBusinesses.filter(
-            (business: string) => !filledForms.includes(business)
-          );
-          if (missingForms.length > 0) {
-            return false;
-          }
+          // Additional validation for contract forms - REMOVED
+
           break;
         case 3: // Documents (optional)
           // No required fields in documents tab
@@ -152,22 +146,22 @@ export function CreateClientModal({
 
   const handleFileChange =
     (field: keyof CreateClientFormData["uploadedFiles"]) =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files && e.target.files[0]) {
-        const file = e.target.files[0];
-        const maxSize = 5 * 1024 * 1024; // 5MB
-        if (file.size > maxSize) {
-          toast.error(`File ${file.name} is too large. Maximum size is 5MB.`);
-          return;
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+          const file = e.target.files[0];
+          const maxSize = 5 * 1024 * 1024; // 5MB
+          if (file.size > maxSize) {
+            toast.error(`File ${file.name} is too large. Maximum size is 5MB.`);
+            return;
+          }
+          const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "application/pdf"];
+          if (!allowedTypes.includes(file.type)) {
+            toast.error(`Invalid file type for ${file.name}. Allowed types are: JPEG, PNG, PDF`);
+            return;
+          }
+          form.setValue(`uploadedFiles.${field}`, file);
         }
-        const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "application/pdf"];
-        if (!allowedTypes.includes(file.type)) {
-          toast.error(`Invalid file type for ${file.name}. Allowed types are: JPEG, PNG, PDF`);
-          return;
-        }
-        form.setValue(`uploadedFiles.${field}`, file);
-      }
-    };
+      };
 
   const handlePreview = (file: File | string | null) => {
     if (!file) {
@@ -256,16 +250,7 @@ export function CreateClientModal({
             formData.clientContractInfo,
           );
           // Additional validation for contract forms
-          const selectedBusinesses = formData.clientContractInfo.lineOfBusiness;
-          const filledForms = Object.keys(formData.clientContractInfo.contractForms);
-          const missingForms = selectedBusinesses.filter(
-            (business) => !filledForms.includes(business),
-          );
-
-          if (missingForms.length > 0) {
-            toast.error(`Please fill contract forms for: ${missingForms.join(", ")}`);
-            return false;
-          }
+          // Additional validation for contract forms - REMOVED
           break;
         case 3: // Documents (optional)
           break;
@@ -355,39 +340,39 @@ export function CreateClientModal({
     // Now take all the documents from the contracts
     Object.entries(clientContractInfo.contractForms).forEach(([key, value]) => {
       const formData = value as any;
-      if(key === "HR Consulting"){
-        if(formData.technicalProposalDocument){
+      if (key === "HR Consulting") {
+        if (formData.technicalProposalDocument) {
           submissionFormData.append("techProposalDocHRC", formData.technicalProposalDocument);
         }
-        if(formData.financialProposalDocument){
+        if (formData.financialProposalDocument) {
           submissionFormData.append("finProposalDocHRC", formData.financialProposalDocument);
         }
       }
-      if(key === "Mgt Consulting"){
-        if(formData.technicalProposalDocument){
+      if (key === "Mgt Consulting") {
+        if (formData.technicalProposalDocument) {
           submissionFormData.append("techProposalDocMGTC", formData.technicalProposalDocument);
         }
-        if(formData.financialProposalDocument){
+        if (formData.financialProposalDocument) {
           submissionFormData.append("finProposalDocMGTC", formData.financialProposalDocument);
         }
       }
-      if(key === "Recruitment"){
-        if(formData.contractDocument){
+      if (key === "Recruitment") {
+        if (formData.contractDocument) {
           submissionFormData.append("businessContractRQTDocument", formData.contractDocument);
         }
       }
-      if(key === "HR Managed Services"){
-        if(formData.contractDocument){
+      if (key === "HR Managed Services") {
+        if (formData.contractDocument) {
           submissionFormData.append("businessContractHMSDocument", formData.contractDocument);
         }
       }
-      if(key === "IT & Technology"){
-        if(formData.contractDocument){
+      if (key === "IT & Technology") {
+        if (formData.contractDocument) {
           submissionFormData.append("businessContractITDocument", formData.contractDocument);
         }
       }
-      if(key === "Outsourcing"){
-        if(formData.contractDocument){
+      if (key === "Outsourcing") {
+        if (formData.contractDocument) {
           submissionFormData.append("outsourcingContractDocument", formData.contractDocument);
         }
       }
@@ -528,9 +513,9 @@ export function CreateClientModal({
                             >
                               Cancel
                             </Button>
-                            <Button 
-                              type="submit" 
-                              disabled={loading || !isFormValid} 
+                            <Button
+                              type="submit"
+                              disabled={loading || !isFormValid}
                               className="w-full sm:w-auto"
                               title={!isFormValid ? "Please fill all required fields" : ""}
                             >

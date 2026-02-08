@@ -3,12 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
 import {
   Popover,
@@ -34,25 +34,44 @@ export function AddTaskForm({ onClose, onSubmit, initialValues }: AddTaskFormPro
     dueDate: initialValues?.dueDate || '',
   });
 
+  // Helper to parse YYYY-MM-DD or ISO string to local Date
+  const parseDate = (dateStr: string | undefined) => {
+    if (!dateStr) return undefined;
+
+    // Handle ISO string or simple date string
+    const cleanDateStr = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+    const [year, month, day] = cleanDateStr.split('-').map(Number);
+
+    // Check if parts are valid numbers
+    if (!year || isNaN(year) || isNaN(month) || isNaN(day)) return undefined;
+
+    const date = new Date(year, month - 1, day);
+
+    // Check if result is valid date
+    if (isNaN(date.getTime())) return undefined;
+
+    return date;
+  };
+
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    initialValues?.dueDate ? new Date(initialValues.dueDate) : undefined
+    parseDate(initialValues?.dueDate)
   );
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
     if (date) {
-      setFormData(prev => ({ 
-        ...prev, 
-        dueDate: format(date, 'yyyy-MM-dd') 
+      setFormData(prev => ({
+        ...prev,
+        dueDate: format(date, 'yyyy-MM-dd')
       }));
+      setIsDatePickerOpen(false); // Close on selection
     } else {
-      setFormData(prev => ({ 
-        ...prev, 
-        dueDate: '' 
+      setFormData(prev => ({
+        ...prev,
+        dueDate: ''
       }));
     }
-    setIsDatePickerOpen(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -77,7 +96,7 @@ export function AddTaskForm({ onClose, onSubmit, initialValues }: AddTaskFormPro
           required
         />
       </div>
-      
+
       <div>
         <Label htmlFor="description">Description</Label>
         <Textarea
@@ -89,10 +108,10 @@ export function AddTaskForm({ onClose, onSubmit, initialValues }: AddTaskFormPro
           required
         />
       </div>
-      
+
       <div>
         <Label htmlFor="category">Category</Label>
-        <Select value={formData.category} onValueChange={(value: 'follow-up' | 'admin' | 'research' | 'meeting' | 'other') => 
+        <Select value={formData.category} onValueChange={(value: 'follow-up' | 'admin' | 'research' | 'meeting' | 'other') =>
           setFormData(prev => ({ ...prev, category: value }))
         }>
           <SelectTrigger>
@@ -107,12 +126,13 @@ export function AddTaskForm({ onClose, onSubmit, initialValues }: AddTaskFormPro
           </SelectContent>
         </Select>
       </div>
-      
+
       <div>
         <Label>Due Date (Optional)</Label>
-        <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+        <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen} modal={true}>
           <PopoverTrigger asChild>
             <Button
+              type="button"
               variant="outline"
               className={cn(
                 "w-full justify-start text-left font-normal",
@@ -120,7 +140,7 @@ export function AddTaskForm({ onClose, onSubmit, initialValues }: AddTaskFormPro
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
+              {selectedDate && !isNaN(selectedDate.getTime()) ? format(selectedDate, "PPP") : "Pick a date"}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -133,7 +153,7 @@ export function AddTaskForm({ onClose, onSubmit, initialValues }: AddTaskFormPro
           </PopoverContent>
         </Popover>
       </div>
-      
+
       <div className="flex justify-end gap-2 pt-4">
         <Button type="button" variant="outline" onClick={onClose}>
           Cancel

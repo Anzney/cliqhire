@@ -21,6 +21,8 @@ import { api } from "@/lib/axios-config";
 import { useQueryClient } from "@tanstack/react-query";
 import { PDFViewer } from "@/components/ui/pdf-viewer";
 import UserSelectDialog from "@/components/shared/UserSelectDialog";
+import { useIndustries } from "@/hooks/useIndustries";
+import { IndustrySelector } from "@/components/shared/industry-selector";
 
 export function SummaryContent({
   clientId,
@@ -34,6 +36,7 @@ export function SummaryContent({
   canModify?: boolean;
 }) {
   const queryClient = useQueryClient();
+  const { industries } = useIndustries();
 
   const [teamMembers, setTeamMembers] = useState<TeamMemberType[]>([
     { name: "Shaswat singh", role: "Admin", email: "shaswat@example.com", isActive: true },
@@ -111,27 +114,27 @@ export function SummaryContent({
   // Legacy handler (kept for backward compatibility if needed)
   const handleFileUpload =
     (field: keyof ClientDetails) =>
-    (file: File | null): void => {
-      if (!file) return;
-      if (!canModify) return;
-      (async () => {
-        try {
-          const formData = new FormData();
-          formData.append("file", file); // The file itself
-          formData.append("field", field); // The field name (e.g., "vatCopy" or "crCopy")
+      (file: File | null): void => {
+        if (!file) return;
+        if (!canModify) return;
+        (async () => {
+          try {
+            const formData = new FormData();
+            formData.append("file", file); // The file itself
+            formData.append("field", field); // The field name (e.g., "vatCopy" or "crCopy")
 
-          const response = await api.post(`/api/clients/${clientId}/upload`, formData);
-          const result = response.data;
-          const fileUrl = result.data?.filePath || file.name;
-          toast.success("File uploaded successfully");
+            const response = await api.post(`/api/clients/${clientId}/upload`, formData);
+            const result = response.data;
+            const fileUrl = result.data?.filePath || file.name;
+            toast.success("File uploaded successfully");
 
-          await updateClientDetails(field, fileUrl);
-        } catch (error) {
-          console.error(`Error uploading ${field}:`, error);
-          toast.error("Failed to upload file");
-        }
-      })();
-    };
+            await updateClientDetails(field, fileUrl);
+          } catch (error) {
+            console.error(`Error uploading ${field}:`, error);
+            toast.error("Failed to upload file");
+          }
+        })();
+      };
 
   const handleUpdateField = (field: keyof ClientDetails) => (value: string) => {
     if (!canModify) return;
@@ -316,7 +319,14 @@ export function SummaryContent({
                 label="Client Industry"
                 value={clientData?.industry}
                 onUpdate={handleUpdateField("industry")}
-                disableInternalEdit={!canModify}
+                disableInternalEdit={true}
+                customInput={
+                  <IndustrySelector
+                    value={clientData?.industry}
+                    onValueChange={handleUpdateField("industry")}
+                    disabled={!canModify}
+                  />
+                }
               />
               <DetailRow
                 label="Client Website"
@@ -359,8 +369,8 @@ export function SummaryContent({
                 id="vat-copy-upload"
                 label="VAT Copy"
                 className="border-b"
-                onFileSelect={canModify ? handleFileUpload("vatCopy") : () => {}}
-                onUploadClick={canModify ? () => handleOpenFileUploadModal("vatCopy", "VAT Copy") : () => {}}
+                onFileSelect={canModify ? handleFileUpload("vatCopy") : () => { }}
+                onUploadClick={canModify ? () => handleOpenFileUploadModal("vatCopy", "VAT Copy") : () => { }}
                 docUrl={clientData?.vatCopy?.url}
                 currentFileName={clientData?.vatCopy?.fileName}
                 onPreview={() =>
@@ -375,8 +385,8 @@ export function SummaryContent({
                 id="cr-copy-upload"
                 label="CR Copy"
                 className="border-b"
-                onFileSelect={canModify ? handleFileUpload("crCopy") : () => {}}
-                onUploadClick={canModify ? () => handleOpenFileUploadModal("crCopy", "CR Copy") : () => {}}
+                onFileSelect={canModify ? handleFileUpload("crCopy") : () => { }}
+                onUploadClick={canModify ? () => handleOpenFileUploadModal("crCopy", "CR Copy") : () => { }}
                 docUrl={clientData?.crCopy?.url}
                 currentFileName={clientData?.crCopy?.fileName}
                 onPreview={() =>
@@ -390,9 +400,9 @@ export function SummaryContent({
               <FileUploadRow
                 id="gst-tin-document-upload"
                 label="GST IN Doc"
-                onFileSelect={canModify ? handleFileUpload("gstTinDocument") : () => {}}
+                onFileSelect={canModify ? handleFileUpload("gstTinDocument") : () => { }}
                 onUploadClick={canModify ? () =>
-                  handleOpenFileUploadModal("gstTinDocument", "GST TIN Document") : () => {}}
+                  handleOpenFileUploadModal("gstTinDocument", "GST TIN Document") : () => { }}
                 docUrl={clientData?.gstTinDocument?.url}
                 currentFileName={clientData?.gstTinDocument?.fileName}
                 onPreview={() =>
@@ -478,7 +488,7 @@ export function SummaryContent({
         onClose={() => setIsPdfPreviewOpen(false)}
         pdfUrl={previewFileUrl}
         candidateName={previewFileName}
-        
+
       />
 
       {/* File Upload Modal */}

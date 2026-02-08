@@ -16,12 +16,13 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { Info } from "lucide-react";
 import { optionsForClient } from "./constants";
-import { INDUSTRIES } from "@/lib/constants";
+
 import { UseFormReturn } from "react-hook-form";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import UserSelectDialog from "@/components/shared/UserSelectDialog";
 import { CreateClientFormData } from "./schema";
+import { IndustrySelector } from "@/components/shared/industry-selector";
 
 // Removed hardcoded sales leads; using UserSelectDialog instead
 
@@ -31,6 +32,7 @@ interface ClientInformationTabProps {
 
 export function ClientInformationTab({ form }: ClientInformationTabProps) {
   const [showSalesLeadDialog, setShowSalesLeadDialog] = useState(false);
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pb-2">
       <FormField
@@ -230,25 +232,11 @@ export function ClientInformationTab({ form }: ClientInformationTabProps) {
         render={({ field }) => (
           <FormItem className="space-y-1 ml-2">
             <FormLabel>Client Industry</FormLabel>
-            <Select value={field.value || ""} onValueChange={field.onChange}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select industry" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent className="max-h-[300px]">
-                {Object.entries(INDUSTRIES).map(([category, industries]) => (
-                  <SelectGroup key={category}>
-                    <SelectLabel className="font-semibold">{category}</SelectLabel>
-                    {industries.map((industry) => (
-                      <SelectItem key={industry} value={industry}>
-                        {industry}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                ))}
-              </SelectContent>
-            </Select>
+            <IndustrySelector
+              value={field.value}
+              onValueChange={field.onChange}
+              modal
+            />
             <FormMessage />
           </FormItem>
         )}

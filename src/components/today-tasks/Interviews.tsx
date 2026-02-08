@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
+import {
   Table,
   TableBody,
   TableCell,
@@ -20,9 +20,9 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { 
-  Calendar, 
-  Clock, 
+import {
+  Calendar,
+  Clock,
   Video,
   ChevronDown,
   ChevronRight,
@@ -37,16 +37,10 @@ interface InterviewsProps {
 
 export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsProps) {
   const [isOpen, setIsOpen] = useState(false);
-  
-  const isToday = (dateTime: string) => {
-    const today = new Date();
-    const interviewDate = new Date(dateTime);
-    return today.toDateString() === interviewDate.toDateString();
-  };
 
-  // Filter interviews for today
-  const todaysInterviews = interviews.filter(interview => isToday(interview.scheduledTime));
-  
+  // No filtering, show all
+  const todaysInterviews = interviews;
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'scheduled':
@@ -62,7 +56,8 @@ export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsPr
     }
   };
 
-  const formatTime = (dateTime: string) => {
+  const formatTime = (dateTime: string | null) => {
+    if (!dateTime) return '-';
     return new Date(dateTime).toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
@@ -70,7 +65,8 @@ export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsPr
     });
   };
 
-  const formatDate = (dateTime: string) => {
+  const formatDate = (dateTime: string | null) => {
+    if (!dateTime) return '-';
     const d = new Date(dateTime);
     const day = d.getDate();
     const mon = d.toLocaleString('en-US', { month: 'short' });
@@ -85,7 +81,7 @@ export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsPr
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
-                Today Interviews
+                Reminder Task
               </div>
               <div className="flex items-center gap-4 text-sm text-gray-600">
                 <span>Total: <span className="font-semibold text-gray-900">{todaysInterviews.length}</span></span>
@@ -112,7 +108,7 @@ export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsPr
                         <TableHead>Time</TableHead>
                         <TableHead>Meeting</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
+                        {/* <TableHead>Actions</TableHead> */}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -144,12 +140,12 @@ export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsPr
                               </div>
                             </div>
                           </TableCell>
-                          
+
                           <TableCell>
                             {interview.meetingLink ? (
-                              <a 
-                                href={interview.meetingLink} 
-                                target="_blank" 
+                              <a
+                                href={interview.meetingLink}
+                                target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-1 text-blue-600 hover:underline text-sm"
                               >
@@ -165,7 +161,7 @@ export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsPr
                               {interview.status}
                             </Badge>
                           </TableCell>
-                          <TableCell>
+                          {/* <TableCell>
                             <DropdownMenu>
                               <DropdownMenuTrigger className="hover:bg-gray-100 p-1 rounded">
                                 <MoreHorizontal className="w-4 h-4" />
@@ -179,7 +175,7 @@ export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsPr
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
-                          </TableCell>
+                          </TableCell> */}
                         </TableRow>
                       ))}
                     </TableBody>
@@ -189,7 +185,7 @@ export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsPr
             ) : (
               <div className="text-center py-8 text-gray-500">
                 <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                <p className="text-lg font-medium">No interviews scheduled for today</p>
+                <p className="text-lg font-medium">No reminder tasks found</p>
                 <p className="text-sm">You are all caught up!</p>
               </div>
             )}

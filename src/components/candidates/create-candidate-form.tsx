@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useRef } from 'react';
-import {DialogFooter} from "@/components/ui/dialog";
+import { DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,6 +43,7 @@ interface CreateCandidateFormProps {
     nationality?: string;
     educationDegree?: string;
     willingToRelocate?: string;
+    linkedin?: string;
   };
   // Props for temp candidate conversion
   isTempCandidateConversion?: boolean;
@@ -75,6 +76,7 @@ export default function CreateCandidateForm({
     nationality: tempCandidateData?.nationality || "",
     educationDegree: tempCandidateData?.educationDegree || "",
     willingToRelocate: tempCandidateData?.willingToRelocate || "",
+    linkedin: tempCandidateData?.linkedin || "",
     cv: null as File | null,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -99,6 +101,7 @@ export default function CreateCandidateForm({
         nationality: tempCandidateData.nationality || "",
         educationDegree: tempCandidateData.educationDegree || "",
         willingToRelocate: tempCandidateData.willingToRelocate || "",
+        linkedin: tempCandidateData.linkedin || "",
         cv: null,
       });
     }
@@ -116,7 +119,7 @@ export default function CreateCandidateForm({
   const handleCountryChange = (option: SingleValue<Country>) => {
     setForm((prev) => ({ ...prev, country: option ? option.label : "" }));
   };
-  
+
   const handleNationalityChange = (option: SingleValue<Country>) => {
     setForm((prev) => ({ ...prev, nationality: option ? option.label : "" }));
   };
@@ -186,19 +189,20 @@ export default function CreateCandidateForm({
           nationality: form.nationality,
           educationDegree: form.educationDegree,
           willingToRelocate: form.willingToRelocate,
+          linkedin: form.linkedin,
         };
 
         const result = await convertTempCandidateToReal(pipelineId, tempCandidateId, candidateData);
-        
+
         if (result.success) {
           // Show success toast message
           toast.success("Temp candidate converted to real candidate successfully!");
-          
+
           // Call the callback with the converted candidate
           if (onCandidateCreated) {
             onCandidateCreated(result.data);
           }
-          
+
           // Close the modal
           onClose();
         } else {
@@ -208,7 +212,7 @@ export default function CreateCandidateForm({
         // Handle regular candidate creation
         // Create FormData for file upload
         const formData = new FormData();
-        
+
         // Add all form fields to FormData
         Object.keys(form).forEach(key => {
           if (key === 'cv' && form.cv) {
@@ -224,27 +228,27 @@ export default function CreateCandidateForm({
         const createdCandidate = isHeadhunterCreate
           ? await headhunterCandidatesService.createCandidate(formData)
           : await candidateService.createCandidate(formData);
-        
+
         // Show success toast message
         toast.success("Candidate created successfully!");
-        
+
         // Call the callback with the created candidate
         if (onCandidateCreated) {
           onCandidateCreated(createdCandidate);
         }
-        
+
         // Close the modal
         onClose();
-        
+
         if (!isHeadhunterCreate) {
           const candidateId = createdCandidate._id;
           router.push(`/candidates/${candidateId}`);
         }
       }
-      
+
     } catch (error: any) {
       console.error('Error creating/converting candidate:', error);
-      
+
       // Show error toast message
       if (error.message) {
         toast.error(`Failed to ${isTempCandidateConversion ? 'convert' : 'create'} candidate: ${error.message}`);
@@ -271,20 +275,21 @@ export default function CreateCandidateForm({
       nationality: "",
       educationDegree: "",
       willingToRelocate: "",
+      linkedin: "",
       cv: null,
     });
-    
+
     // Reset advanced options to hidden
     setShowAdvanced(false);
-    
+
     // Reset date picker state
     setDobOpen(false);
-    
+
     // Clear file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-    
+
     // Call the original goBack function
     goBack();
   };
@@ -391,6 +396,19 @@ export default function CreateCandidateForm({
                 {form.email.length} / 255
               </span>
             </div>
+          </div>
+
+          {/* LinkedIn Profile - Optional */}
+          <div className="space-y-2">
+            <Label htmlFor="linkedin">LinkedIn Profile URL</Label>
+            <Input
+              id="linkedin"
+              name="linkedin"
+              value={form.linkedin}
+              onChange={handleChange}
+              placeholder="Enter LinkedIn profile URL"
+              maxLength={255}
+            />
           </div>
 
           {showAdvanced && (
@@ -510,12 +528,12 @@ export default function CreateCandidateForm({
               {/* Location - Required when advanced is shown */}
               <div className="space-y-2">
                 <Label htmlFor="location">Location</Label>
-                <Input 
-                  id="location" 
-                  name="location" 
-                  value={form.location} 
-                  onChange={handleChange} 
-                  placeholder="Enter location" 
+                <Input
+                  id="location"
+                  name="location"
+                  value={form.location}
+                  onChange={handleChange}
+                  placeholder="Enter location"
                 />
               </div>
 
@@ -536,7 +554,7 @@ export default function CreateCandidateForm({
               {/* Upload CV */}
               <div className="space-y-2">
                 <Label htmlFor="cv">Upload CV</Label>
-                <div 
+                <div
                   className="relative border-2 border-dashed border-gray-300 rounded-md p-6 text-center cursor-pointer hover:border-gray-400 transition-colors"
                   onClick={handleFileClick}
                 >
@@ -575,14 +593,14 @@ export default function CreateCandidateForm({
           </button>
         </div>
       </form>
-             <DialogFooter>
-         <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
-           Cancel
-         </Button>
-         <Button type="submit" form="candidate-form" disabled={isSubmitting}>
-           {isSubmitting ? "Creating..." : "Continue"}
-         </Button>
-       </DialogFooter>
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
+          Cancel
+        </Button>
+        <Button type="submit" form="candidate-form" disabled={isSubmitting}>
+          {isSubmitting ? "Creating..." : "Continue"}
+        </Button>
+      </DialogFooter>
     </>
   );
 }

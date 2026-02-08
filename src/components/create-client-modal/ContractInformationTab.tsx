@@ -225,7 +225,7 @@ export function ContractInformationTab({ form }: ContractInformationTabProps) {
         render={({ field }) => (
           <FormItem className="space-y-1">
             <FormLabel>
-              Line of Business<span className="text-red-700">*</span>
+              Line of Business
             </FormLabel>
             <FormControl>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border rounded-md p-2">
@@ -240,9 +240,8 @@ export function ContractInformationTab({ form }: ContractInformationTabProps) {
                     />
                     <label
                       htmlFor={`lob-${option}`}
-                      className={`text-xs sm:text-sm font-medium leading-none cursor-pointer ${
-                        lineOfBusiness?.includes(option) ? "font-bold text-primary" : ""
-                      }`}
+                      className={`text-xs sm:text-sm font-medium leading-none cursor-pointer ${lineOfBusiness?.includes(option) ? "font-bold text-primary" : ""
+                        }`}
                     >
                       {option
                         .split("-")
