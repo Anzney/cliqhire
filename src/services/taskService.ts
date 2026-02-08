@@ -90,7 +90,7 @@ export interface ReminderTask {
   candidateEmail: string;
   jobTitle: string;
   clientName: string;
-  interviewDateTime: string;
+  interviewDateTime: string | null;
   interviewMeetingLinks: string[];
   status: string;
   id: string;

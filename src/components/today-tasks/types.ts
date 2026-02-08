@@ -30,7 +30,7 @@ export interface Interview {
   jobTitle: string;
   clientName: string;
   interviewType: "phone" | "video" | "in-person";
-  scheduledTime: string;
+  scheduledTime: string | null;
   duration: number;
   status: "scheduled" | "completed" | "cancelled" | "rescheduled";
   meetingLink?: string;

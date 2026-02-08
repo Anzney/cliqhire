@@ -201,11 +201,7 @@ export default function TodayTasksPage() {
     return matchesSearch && matchesPriority;
   });
 
-  const todayInterviews = interviews.filter(interview => {
-    const interviewDate = new Date(interview.scheduledTime).toDateString();
-    const today = new Date().toDateString();
-    return interviewDate === today;
-  });
+  const allInterviews = interviews;
 
   // Check loading state if needed for full page, or pass down
   // if (isLoading) return <div>Loading...</div>; // Optional, layout handles it often
@@ -253,7 +249,7 @@ export default function TodayTasksPage() {
       {/* Stats Overview */}
       <StatsOverview
         assignedJobs={assignedJobs}
-        todayInterviews={todayInterviews}
+        todayInterviews={allInterviews}
         personalTasks={personalTasks}
       />
 
@@ -266,7 +262,7 @@ export default function TodayTasksPage() {
 
       {/* Today's Interviews */}
       <Interviews
-        interviews={todayInterviews}
+        interviews={allInterviews}
         onUpdateInterviewStatus={updateInterviewStatus}
       />
 
