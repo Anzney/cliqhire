@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 // import { CreateJobModal } from "@/components/jobs/create-job-modal"
-import {  
+import {
   Table,
   TableHead,
   TableBody,
@@ -44,6 +44,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { DeleteConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Input } from "@/components/ui/input";
 import JobsFilter from "@/components/jobs/JobsFilter";
+import { ExportDialog, ExportFilterParams } from "@/components/common/export-dialog";
+import { useExportJobs } from "@/hooks/useExportJobs";
 
 const columsArr = [
   "Position Name",
@@ -108,6 +110,8 @@ export default function JobsPage() {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [openExportDialog, setOpenExportDialog] = useState(false);
+  const { mutateAsync: exportJobsMutation } = useExportJobs();
 
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -117,11 +121,11 @@ export default function JobsPage() {
     queryFn: () => getJobs(),
     placeholderData: (prev) => prev, // keep previous page data while fetching
   });
-  
+
   // Get all jobs and handle different response formats
-  let allJobs = Array.isArray(jobsData?.data) ? jobsData.data : 
-               (jobsData as any)?.jobs ?? 
-               (Array.isArray(jobsData) ? jobsData : []);
+  let allJobs = Array.isArray(jobsData?.data) ? jobsData.data :
+    (jobsData as any)?.jobs ??
+    (Array.isArray(jobsData) ? jobsData : []);
 
   console.log('All Jobs:', allJobs); // Debug log
   console.log('Selected Stages:', selectedStages); // Debug log
@@ -145,11 +149,11 @@ export default function JobsPage() {
       return matchesStage && matchesTitle && matchesOwner;
     });
   }
-  
+
   // Calculate pagination
   const totalJobs = allJobs.length;
   const totalPages = Math.max(1, Math.ceil(totalJobs / pageSize));
-  
+
   // Get current page jobs
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
@@ -243,7 +247,7 @@ export default function JobsPage() {
 
   const confirmDeleteSelected = async () => {
     if (selectedRows.size === 0 || !canDeleteJobs) return;
-    
+
     setIsDeleting(true);
     try {
       // Delete all selected jobs in parallel
@@ -255,13 +259,13 @@ export default function JobsPage() {
           })
         )
       );
-      
+
       // Refresh the job list after successful deletion
       await refetch();
-      
+
       // Clear the selection
       setSelectedRows(new Set());
-      
+
       // Show success message
       toast.success(`${selectedRows.size} job(s) deleted successfully`);
     } catch (error) {
@@ -293,10 +297,10 @@ export default function JobsPage() {
 
         <div className="flex items-center justify-between p-4">
           {canModifyJobs && (
-          <Button size="sm" onClick={() => setOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Job Requirement
-          </Button>
+            <Button size="sm" onClick={() => setOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Job Requirement
+            </Button>
           )}
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setFilterOpen(true)}>
@@ -338,7 +342,7 @@ export default function JobsPage() {
     <>
       <div className="flex flex-col h-full">
         {/* Header */}
-       <Dashboardheader 
+        <Dashboardheader
           setOpen={setOpen}
           setFilterOpen={setFilterOpen}
           initialLoading={isLoading}
@@ -352,9 +356,11 @@ export default function JobsPage() {
           filterCount={
             (selectedStages.length > 0 ? 1 : 0) +
             (filterPositionName.trim() ? 1 : 0) +
+            (filterPositionName.trim() ? 1 : 0) +
             (filterJobOwner.trim() ? 1 : 0)
           }
-       />
+          onExport={() => setOpenExportDialog(true)}
+        />
         {/* Content */}
         <div className="flex-1 flex flex-col min-h-0 ">
           <div className="flex-1 overflow-auto" style={{ maxHeight: "calc(100vh - 30px)" }}>
@@ -365,7 +371,7 @@ export default function JobsPage() {
                     <div className="flex items-center justify-center">
                       <Checkbox
                         checked={selectedRows.size > 0 && selectedRows.size === jobs.length}
-                        onCheckedChange={()=>toggleSelectAll()}
+                        onCheckedChange={() => toggleSelectAll()}
                         className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
                         disabled={!canDeleteJobs}
                       />
@@ -378,9 +384,9 @@ export default function JobsPage() {
               </TableHeader>
               <TableBody>
                 {jobs.length > 0 ? (
-                  jobs.map((job:any) => (
-                    <TableRow 
-                      key={job._id} 
+                  jobs.map((job: any) => (
+                    <TableRow
+                      key={job._id}
                       className={`${selectedRows.has(job._id) ? 'bg-blue-50' : ''} hover:bg-muted/50 cursor-pointer`}
                       onClick={() => router.push(`/jobs/${job._id}`)}
                     >
@@ -400,15 +406,15 @@ export default function JobsPage() {
                       <TableCell className="text-sm">{Array.isArray(job.location) ? job.location.join(", ") : job.location ?? ""}</TableCell>
                       <TableCell className="text-sm">{job.headcount}</TableCell>
                       <TableCell className="text-sm"
-                        onClick={(e)=>e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <JobStageBadge
                           stage={toJobStage(job.stage)}
                           onStageChange={(newStage) => handleStageChange(job._id, newStage)}
                         />
                       </TableCell>
-                      <TableCell className="text-sm">{job.salaryCurrency+" "+ job.minimumSalary}</TableCell>
-                      <TableCell className="text-sm">{job.salaryCurrency+" "+ job.maximumSalary}</TableCell>
+                      <TableCell className="text-sm">{job.salaryCurrency + " " + job.minimumSalary}</TableCell>
+                      <TableCell className="text-sm">{job.salaryCurrency + " " + job.maximumSalary}</TableCell>
                       <TableCell className="text-sm">
                         {job.client}
                       </TableCell>
@@ -478,6 +484,15 @@ export default function JobsPage() {
         }}
       />
       {canModifyJobs && <CreateJobRequirementForm open={open} onOpenChange={setOpen} />}
+
+      <ExportDialog
+        isOpen={openExportDialog}
+        onClose={() => setOpenExportDialog(false)}
+        title="Export Job Data"
+        description="Select whether to export all job data or filter by a specific period."
+        onExport={(params: ExportFilterParams | undefined) => exportJobsMutation(params)}
+        filename="jobs_export"
+      />
     </>
   );
 }

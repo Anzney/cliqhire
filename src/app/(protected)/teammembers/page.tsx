@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Dashboardheader from "@/components/dashboard-header";
 import { TeamMembersTabs } from "@/components/teamMembers/team-members-tabs";
 import { CreateTeamMemberModal } from "@/components/create-teamMembers-modal/create-teamMembers-modal";
+import { ExportDialog, ExportFilterParams } from "@/components/common/export-dialog";
+import { useExportUsers } from "@/hooks/useExportUsers";
 
 export default function TeamMembersPage() {
   const [open, setOpen] = useState(false);
@@ -14,6 +16,8 @@ export default function TeamMembersPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
+  const [openExportDialog, setOpenExportDialog] = useState(false);
+  const { mutateAsync: exportUsersMutation } = useExportUsers();
 
   // Get highlight ID from URL query parameter
   const highlightId = searchParams?.get('highlight') || undefined;
@@ -34,9 +38,10 @@ export default function TeamMembersPage() {
         setFilterOpen={setFilterOpen}
         initialLoading={initialLoading}
         showFilterButton={false}
-        rightContent={<></>}
+        rightContent={undefined}
         heading="Team Members"
         buttonText="Add Team Member"
+        onExport={() => setOpenExportDialog(true)}
       />
 
       {/* Tabbed Interface */}
@@ -48,6 +53,15 @@ export default function TeamMembersPage() {
       </div>
 
       <CreateTeamMemberModal open={open} onOpenChange={setOpen} onSuccess={handleCreateSuccess} />
+
+      <ExportDialog
+        isOpen={openExportDialog}
+        onClose={() => setOpenExportDialog(false)}
+        title="Export User Data"
+        description="Select whether to export all user data or filter by a specific period."
+        onExport={(params: ExportFilterParams | undefined) => exportUsersMutation(params)}
+        filename="users_export"
+      />
     </div>
   );
 }
