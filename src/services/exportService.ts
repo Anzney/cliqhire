@@ -42,4 +42,16 @@ export const exportService = {
             throw error;
         }
     },
+    exportUsers: async (params?: ExportCandidatesParams) => {
+        try {
+            const response = await api.get('/api/export/users', {
+                params,
+                responseType: 'blob', // Important for file download
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error exporting users:', error);
+            throw error;
+        }
+    },
 };
