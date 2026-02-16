@@ -25,6 +25,8 @@ import { toast } from "sonner";
 import { DeleteConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import ClientsFilter from "@/components/clients/ClientsFilter";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ExportDialog, ExportFilterParams } from "@/components/common/export-dialog";
+import { useExportClients } from "@/hooks/useExportClients";
 
 const columnsArr = [
   "", // Empty header for the checkbox column
@@ -37,7 +39,7 @@ const columnsArr = [
   "Job Count",
 ];
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ;
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface Client {
   _id?: string;
@@ -86,6 +88,8 @@ export default function ClientsPage() {
   const [filterStages, setFilterStages] = useState<Client["clientStage"][]>([]);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: "name", order: "asc" });
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [openExportDialog, setOpenExportDialog] = useState(false);
+  const { mutateAsync: exportClientsMutation } = useExportClients();
 
   // Toggle row selection
   const toggleRowSelection = (clientId: string) => {
@@ -125,7 +129,7 @@ export default function ClientsPage() {
 
   const confirmDeleteSelected = async () => {
     if (selectedRows.size === 0 || !canDeleteClients) return;
-    
+
     setIsDeleting(true);
     try {
       // Delete all selected clients in parallel
@@ -137,13 +141,13 @@ export default function ClientsPage() {
           })
         )
       );
-      
+
       // Refresh the client list after successful deletion
       await refetch();
-      
+
       // Clear the selection
       setSelectedRows(new Set());
-      
+
       // Show success message
       toast.success(`${selectedRows.size} client(s) deleted successfully`);
     } catch (error) {
@@ -157,7 +161,7 @@ export default function ClientsPage() {
 
   const handleSort = (field: string) => {
     if (field !== 'name') return; // Only allow sorting by name
-    
+
     setSortConfig(prevConfig => {
       // If clicking the same column, toggle the order
       if (prevConfig.field === field) {
@@ -172,7 +176,7 @@ export default function ClientsPage() {
         order: 'asc'
       };
     });
-    
+
     setCurrentPage(1); // Reset to first page when sorting changes
   };
   const [filters, setFilters] = useState<Filters>({
@@ -222,12 +226,12 @@ export default function ClientsPage() {
     })) as Client[];
   }
 
-   const { data: allClients = [], isLoading, isRefetching, refetch } = useQuery<Client[]>({
+  const { data: allClients = [], isLoading, isRefetching, refetch } = useQuery<Client[]>({
     queryKey: ['clients', filters],
     queryFn: () => fetchClients(),
   })
 
-  
+
 
   // Note: handlePageChange moved below after we derive total pages
 
@@ -298,7 +302,7 @@ export default function ClientsPage() {
       result.sort((a, b) => {
         const aValue = (a.name || "").toLowerCase();
         const bValue = (b.name || "").toLowerCase();
-        
+
         if (aValue < bValue) {
           return sortConfig.order === "asc" ? -1 : 1;
         }
@@ -424,7 +428,7 @@ export default function ClientsPage() {
 
       <div className="flex flex-col h-full">
         {/* Header */}
-         <Dashboardheader
+        <Dashboardheader
           setOpen={setOpen}
           setFilterOpen={setFilterOpen}
           initialLoading={isLoading || isRefetching}
@@ -436,6 +440,7 @@ export default function ClientsPage() {
           onDelete={handleDeleteSelected}
           isFilterActive={Boolean(filterName || filterIndustry || filterLocation || filterStages.length > 0)}
           filterCount={(filterName ? 1 : 0) + (filterIndustry ? 1 : 0) + (filterLocation ? 1 : 0) + (filterStages.length > 0 ? 1 : 0)}
+          onExport={() => setOpenExportDialog(true)}
         />
 
         {/* Table */}
@@ -449,8 +454,8 @@ export default function ClientsPage() {
                     <div className="flex items-center justify-center">
                       <Checkbox
                         checked={selectedRows.size > 0 && selectedRows.size === pagedClients.length}
-                        onCheckedChange={()=>toggleSelectAll()}
-                       className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
+                        onCheckedChange={() => toggleSelectAll()}
+                        className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
                       />
                     </div>
                   </TableHead>
@@ -483,7 +488,7 @@ export default function ClientsPage() {
                   </TableRow>
                 ) : (
                   pagedClients.map((client: Client) => (
-                    <TableRow 
+                    <TableRow
                       key={client.id ?? client._id}
                       className={`hover:bg-muted/50 cursor-pointer ${selectedRows.has(client.id) ? 'bg-blue-50' : ''}`}
                     >
@@ -525,7 +530,7 @@ export default function ClientsPage() {
         </div>
 
         {canModifyClients && <CreateClientModal open={open} onOpenChange={setOpen} />}
-        
+
         <DeleteConfirmationDialog
           isOpen={showDeleteDialog}
           onClose={() => setShowDeleteDialog(false)}
@@ -555,6 +560,15 @@ export default function ClientsPage() {
             setFilterLocation("");
             setFilterStages([]);
           }}
+        />
+
+        <ExportDialog
+          isOpen={openExportDialog}
+          onClose={() => setOpenExportDialog(false)}
+          title="Export Client Data"
+          description="Select whether to export all client data or filter by a specific period."
+          onExport={(params: ExportFilterParams | undefined) => exportClientsMutation(params)}
+          filename="clients_export"
         />
       </div>
     </>

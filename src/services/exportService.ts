@@ -18,4 +18,16 @@ export const exportService = {
             throw error;
         }
     },
+    exportClients: async (params?: ExportCandidatesParams) => {
+        try {
+            const response = await api.get('/api/export/clients', {
+                params,
+                responseType: 'blob', // Important for file download
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error exporting clients:', error);
+            throw error;
+        }
+    },
 };
