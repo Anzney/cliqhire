@@ -15,6 +15,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DeleteConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import CandidateFilter, { CandidateStatus as FilterStatus } from "@/components/candidates/CandidateFilter";
+import { ExportDialog, ExportFilterParams } from "@/components/common/export-dialog";
+import { useExportCandidates } from "@/hooks/useExportCandidates";
 
 const columsArr = [
   "Candidate Name",
@@ -38,6 +40,7 @@ export default function CandidatesPage() {
   const canDeleteCandidates = isAdmin || finalPermissions.includes('CANDIDATE_DELETE');
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { mutateAsync: exportCandidatesMutation } = useExportCandidates();
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(100);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
@@ -49,6 +52,7 @@ export default function CandidatesPage() {
   const [filterExperience, setFilterExperience] = useState("");
   const [filterLocation, setFilterLocation] = useState("");
   const [selectedStatuses, setSelectedStatuses] = useState<FilterStatus[]>([]);
+  const [openExportDialog, setOpenExportDialog] = useState(false);
 
   const { data, isLoading: initialLoading, isFetching, refetch } = useQuery({
     queryKey: [
@@ -159,121 +163,122 @@ export default function CandidatesPage() {
   }
 
   return (
-   <div className="h-full">
-    <div>
-       <Dashboardheader
-        setOpen={setOpen}
-        setFilterOpen={setFilterOpen}
-        initialLoading={isFetching}
-        heading="Candidates"
-        buttonText="Create Candidate"
-        showCreateButton={canModifyCandidates}
-        showFilterButton={true}
-        isFilterActive={selectedStatuses.length > 0 || !!filterName.trim() || !!filterEmail.trim() || !!filterExperience.trim() || !!filterLocation.trim()}
-        filterCount={(selectedStatuses.length > 0 ? 1 : 0) + (filterName.trim() ? 1 : 0) + (filterEmail.trim() ? 1 : 0) + (filterExperience.trim() ? 1 : 0) + (filterLocation.trim() ? 1 : 0)}
-        selectedCount={selectedRows.size}
-        onDelete={handleDeleteSelected}
-        onRefresh={() => {
-          refetch();
-        }}
-       />
-    </div>
-    {/* Table */}
-    <div className="h-[560px] overflow-y-auto">
-     <Table>
-            <TableHeader className="sticky top-0 z-20 bg-white">
-              <TableRow className="bg-white">
-                <TableHead className="w-12 px-4 sticky top-0 z-20 bg-white">
-                  <div className="flex items-center justify-center">
-                    <Checkbox
-                      checked={selectedRows.size > 0 && selectedRows.size === candidates.length}
-                      onCheckedChange={() => toggleSelectAll()}
-                      className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
-                      disabled={!canDeleteCandidates}
-                    />
+    <div className="h-full">
+      <div>
+        <Dashboardheader
+          setOpen={setOpen}
+          setFilterOpen={setFilterOpen}
+          initialLoading={isFetching}
+          heading="Candidates"
+          buttonText="Create Candidate"
+          showCreateButton={canModifyCandidates}
+          showFilterButton={true}
+          isFilterActive={selectedStatuses.length > 0 || !!filterName.trim() || !!filterEmail.trim() || !!filterExperience.trim() || !!filterLocation.trim()}
+          filterCount={(selectedStatuses.length > 0 ? 1 : 0) + (filterName.trim() ? 1 : 0) + (filterEmail.trim() ? 1 : 0) + (filterExperience.trim() ? 1 : 0) + (filterLocation.trim() ? 1 : 0)}
+          selectedCount={selectedRows.size}
+          onDelete={handleDeleteSelected}
+          onRefresh={() => {
+            refetch();
+          }}
+          onExport={() => setOpenExportDialog(true)}
+        />
+      </div>
+      {/* Table */}
+      <div className="h-[560px] overflow-y-auto">
+        <Table>
+          <TableHeader className="sticky top-0 z-20 bg-white">
+            <TableRow className="bg-white">
+              <TableHead className="w-12 px-4 sticky top-0 z-20 bg-white">
+                <div className="flex items-center justify-center">
+                  <Checkbox
+                    checked={selectedRows.size > 0 && selectedRows.size === candidates.length}
+                    onCheckedChange={() => toggleSelectAll()}
+                    className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
+                    disabled={!canDeleteCandidates}
+                  />
+                </div>
+              </TableHead>
+              {columsArr.map((column) => (
+                <TableHead key={column} className="text-xs uppercase text-muted-foreground font-medium sticky top-0 z-20 bg-white">{column}</TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {initialLoading ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center h-[calc(100vh-300px)]">
+                  <div className="flex items-center justify-center gap-2 flex-col">
+                    <Loader className="size-6 animate-spin" />
+                    <div className="text-center">Loading candidates...</div>
                   </div>
-                </TableHead>
-                {columsArr.map((column) => (
-                  <TableHead key={column} className="text-xs uppercase text-muted-foreground font-medium sticky top-0 z-20 bg-white">{column}</TableHead>
-                ))}
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {initialLoading ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center h-[calc(100vh-300px)]">
-                    <div className="flex items-center justify-center gap-2 flex-col">
-                      <Loader className="size-6 animate-spin" />
-                      <div className="text-center">Loading candidates...</div>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : candidates.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="h-[calc(100vh-300px)] text-center">
-                    <div className="py-24">
-                      <CandidatesEmptyState />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                candidates.map((candidate) => (
-                  <TableRow
-                    key={candidate._id}
-                    className={`${candidate._id && selectedRows.has(candidate._id) ? 'bg-blue-50' : ''} cursor-pointer hover:bg-gray-100`}
-                    onClick={(e) => {
-                      // Don't navigate if clicking on the status badge
-                      if (!(e.target as HTMLElement).closest(".candidate-status-badge")) {
-                        router.push(`/candidates/${candidate._id}`);
-                      }
-                    }}
-                  >
-                    <TableCell className="w-12 px-4" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-center">
-                        <Checkbox
-                          checked={candidate._id ? selectedRows.has(candidate._id) : false}
-                          onCheckedChange={() => candidate._id && toggleRowSelection(candidate._id)}
-                          className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
-                          disabled={!canDeleteCandidates}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm font-medium">{candidate.name || "N/A"}</TableCell>
-                    <TableCell className="text-sm">{candidate.email || "N/A"}</TableCell>
-                    <TableCell className="text-sm">{candidate.phone || "N/A"}</TableCell>
-                    <TableCell className="text-sm">{candidate.location || "N/A"}</TableCell>
-                    <TableCell className="text-sm">
-                      <CandidateStatusBadge
-                        id={candidate._id}
-                        status={(candidate.status as any) || "Active"}
-                        onStatusChange={handleStatusChange}
+            ) : candidates.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="h-[calc(100vh-300px)] text-center">
+                  <div className="py-24">
+                    <CandidatesEmptyState />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              candidates.map((candidate) => (
+                <TableRow
+                  key={candidate._id}
+                  className={`${candidate._id && selectedRows.has(candidate._id) ? 'bg-blue-50' : ''} cursor-pointer hover:bg-gray-100`}
+                  onClick={(e) => {
+                    // Don't navigate if clicking on the status badge
+                    if (!(e.target as HTMLElement).closest(".candidate-status-badge")) {
+                      router.push(`/candidates/${candidate._id}`);
+                    }
+                  }}
+                >
+                  <TableCell className="w-12 px-4" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-center">
+                      <Checkbox
+                        checked={candidate._id ? selectedRows.has(candidate._id) : false}
+                        onCheckedChange={() => candidate._id && toggleRowSelection(candidate._id)}
+                        className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
+                        disabled={!canDeleteCandidates}
+                        onClick={(e) => e.stopPropagation()}
                       />
-                    </TableCell>
-                    <TableCell className="text-sm">{candidate.experience || "N/A"}</TableCell>
-                    <TableCell className="text-sm">
-                      {candidate.resume ? (
-                        <a
-                          href={candidate.resume.startsWith('http') ? candidate.resume : `${process.env.NEXT_PUBLIC_API_URL || ''}${candidate.resume.startsWith('/') ? '' : '/'}${candidate.resume}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          View Resume
-                        </a>                                                                                         
-                      ) : (
-                        "N/A"
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-    </div>
-    <div>
-       <CandidatePaginationControls
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm font-medium">{candidate.name || "N/A"}</TableCell>
+                  <TableCell className="text-sm">{candidate.email || "N/A"}</TableCell>
+                  <TableCell className="text-sm">{candidate.phone || "N/A"}</TableCell>
+                  <TableCell className="text-sm">{candidate.location || "N/A"}</TableCell>
+                  <TableCell className="text-sm">
+                    <CandidateStatusBadge
+                      id={candidate._id}
+                      status={(candidate.status as any) || "Active"}
+                      onStatusChange={handleStatusChange}
+                    />
+                  </TableCell>
+                  <TableCell className="text-sm">{candidate.experience || "N/A"}</TableCell>
+                  <TableCell className="text-sm">
+                    {candidate.resume ? (
+                      <a
+                        href={candidate.resume.startsWith('http') ? candidate.resume : `${process.env.NEXT_PUBLIC_API_URL || ''}${candidate.resume.startsWith('/') ? '' : '/'}${candidate.resume}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        View Resume
+                      </a>
+                    ) : (
+                      "N/A"
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      <div>
+        <CandidatePaginationControls
           currentPage={currentPage}
           totalPages={data?.totalPages || 1}
           totalCandidates={data?.total || 0}
@@ -284,9 +289,9 @@ export default function CandidatesPage() {
           }}
           candidatesLength={candidates.length}
         />
-    </div>
+      </div>
 
-     <DeleteConfirmationDialog
+      <DeleteConfirmationDialog
         isOpen={showDeleteDialog}
         onClose={() => setShowDeleteDialog(false)}
         onConfirm={confirmDeleteSelected}
@@ -321,10 +326,10 @@ export default function CandidatesPage() {
           setSelectedStatuses([]);
           setCurrentPage(1);
         }}
-      /> 
+      />
 
-     {/*Open the candidate Dialog  */}
-     <CreateCandidateModal
+      {/*Open the candidate Dialog  */}
+      <CreateCandidateModal
         isOpen={open}
         onClose={() => setOpen(false)}
         onCandidateCreated={() => {
@@ -333,6 +338,14 @@ export default function CandidatesPage() {
           refetch();
         }}
       />
-   </div>
+      <ExportDialog
+        isOpen={openExportDialog}
+        onClose={() => setOpenExportDialog(false)}
+        title="Export Candidate Data"
+        description="Select whether to export all candidate data or filter by a specific period."
+        onExport={(params: ExportFilterParams | undefined) => exportCandidatesMutation(params)}
+        filename="candidates_export"
+      />
+    </div>
   );
 }
