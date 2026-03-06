@@ -590,3 +590,19 @@ export const convertTempCandidateToReal = async (
   }
 };
 
+export const exportCandidatesToExcel = async (pipelineId: string, stages: string[] = []): Promise<Blob> => {
+  try {
+    let queryUrl = `/api/mis-report/${pipelineId}/export/candidates/excel`;
+    if (stages && stages.length > 0) {
+      const stageQuery = stages.join(",");
+      queryUrl += `?stage=${encodeURIComponent(stageQuery)}`;
+    }
+    const response = await api.get(queryUrl, {
+      responseType: "blob",
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('Error exporting candidates:', error);
+    throw new Error(error.response?.data?.message || 'Failed to export candidates');
+  }
+};
