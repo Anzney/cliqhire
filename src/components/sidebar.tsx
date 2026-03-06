@@ -38,13 +38,13 @@ import {
 
 const menuItems = [
   { name: "Home", icon: Home, href: "/", permission: "HOME" },
-  { name: "Today's Tasks", icon: ListTodo , href: "/today-tasks", permission: "TODAY_TASKS" },
+  { name: "Today's Tasks", icon: ListTodo, href: "/today-tasks", permission: "TODAY_TASKS" },
   { name: "Clients", icon: Building2, href: "/clients", permission: "CLIENTS" },
   { name: "Jobs", icon: Briefcase, href: "/jobs", permission: "JOBS" },
   { name: "Candidates", icon: Users, href: "/candidates", permission: "CANDIDATE" },
   { name: "Recruitment Pipeline", icon: Route, href: "/reactruterpipeline", permission: "RECRUITMENT_PIPELINE" },
   { name: "Recruiter", icon: UserPlus, href: "/recruiter", permission: "RECRUITER" },
-  { name: "Head Hunter", icon:  UserRoundSearch, href: "/headhunter", permission: "HEAD_HUNTER" },
+  { name: "Head Hunter", icon: UserRoundSearch, href: "/headhunter", permission: "HEAD_HUNTER" },
   { name: "Team Members", icon: Users, href: "/teammembers", permission: "TEAM_MEMBERS" },
   { name: "User Access", icon: LockKeyhole, href: "/user-access", permission: "USER_ACCESS" },
   // { name: "Placements", icon: UserCheck, href: "/placements", permission: "PLACEMENTS" },
@@ -72,10 +72,10 @@ export function Sidebar() {
 
   // Determine which permissions to use
   // If user has custom permissions, use those; otherwise use default permissions
-  let finalPermissions = (user?.permissions && user.permissions.length > 0) 
-    ? user.permissions 
+  let finalPermissions = (user?.permissions && user.permissions.length > 0)
+    ? user.permissions
     : user?.defaultPermissions || [];
-  
+
   // Ensure TODAY_TASKS permission is available for all non-admin users (except headhunters)
   if (!isAdmin && !isHeadhunter && !finalPermissions.includes('TODAY_TASKS')) {
     finalPermissions = [...finalPermissions, 'TODAY_TASKS'];
@@ -105,7 +105,7 @@ export function Sidebar() {
       style={{ ["--sidebar-width" as any]: "13rem", ["--sidebar-width-icon" as any]: "3rem" }}
     >
       <SidebarHeader className=" group-data-[collapsible=icon]:hidden">
-          <h1 className="text-xl font-semibold">Cliqhire</h1>
+        <h1 className="text-xl font-semibold">Cliqhire</h1>
       </SidebarHeader>
       <SidebarContent >
         <SidebarGroup>
@@ -141,10 +141,11 @@ export function Sidebar() {
                         isActive={!!active}
                         tooltip={{
                           children: item.name,
-                          className: "bg-blue-100 text-blue-700 border border-blue-200"
+                          className: "bg-primary text-primary-foreground border-none font-medium shadow-md"
                         }}
                         className={cn(
-                          active && " bg-blue-100 text-blue-600 data-[active=true]:bg-blue-100 data-[active=true]:text-blue-600"
+                          "transition-all duration-200 rounded-lg hover:bg-primary/10 hover:text-primary mb-1",
+                          active ? "bg-primary/10 text-primary font-medium data-[active=true]:bg-primary/10 data-[active=true]:text-primary shadow-sm" : "text-gray-500"
                         )}
                       >
                         <Link href={item.href} className={cn(active ? "font-medium" : undefined)}>
