@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CountrySelect } from "@/components/ui/country-select";
 
 interface EditFieldModalProps {
   open: boolean;
@@ -26,6 +27,7 @@ interface EditFieldModalProps {
   onSave: (value: string) => void;
   isDate?: boolean;
   isNumber?: boolean;
+  isCountry?: boolean;
   options?: { value: string; label: string }[];
 }
 
@@ -38,6 +40,7 @@ export function EditFieldModal({
   onSave,
   isDate,
   options,
+  isCountry,
 }: EditFieldModalProps) {
   const [value, setValue] = useState(currentValue);
   const [selectedDate, setSelectedDate] = useState<Date | null>(
@@ -100,6 +103,13 @@ export function EditFieldModal({
                   ))}
                 </SelectContent>
               </Select>
+            ) : isCountry ? (
+              <CountrySelect
+                value={value}
+                onChange={setValue}
+                type="country"
+                placeholder={`Search ${fieldName.toLowerCase()}...`}
+              />
             ) : (
               <Input
                 id="value"

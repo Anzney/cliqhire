@@ -7,6 +7,7 @@ import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { CountrySelect } from "@/components/ui/country-select"
 
 interface EditFieldDialogProps {
   open: boolean
@@ -17,6 +18,8 @@ interface EditFieldDialogProps {
   isDate?: boolean
   isTextArea?: boolean
   isSelect?: boolean
+  isCountry?: boolean
+  isNationality?: boolean
   fieldType?: 'text' | 'number' | 'select' | 'date' | 'textarea'
 }
 
@@ -55,6 +58,8 @@ export function EditFieldDialog({
   isDate,
   isTextArea,
   isSelect,
+  isCountry,
+  isNationality,
   fieldType = 'text'
 }: EditFieldDialogProps) {
   const [value, setValue] = useState(currentValue)
@@ -105,6 +110,28 @@ export function EditFieldDialog({
           onChange={(e) => setValue(e.target.value)}
           className="min-h-[200px]"
           placeholder={`Enter ${fieldName.toLowerCase()}`}
+        />
+      );
+    }
+
+    if (isCountry || fieldName.toLowerCase().includes('country') || fieldName.toLowerCase().includes('location')) {
+      return (
+        <CountrySelect
+          value={value}
+          onChange={setValue}
+          type="country"
+          placeholder={`Search ${fieldName.toLowerCase()}...`}
+        />
+      );
+    }
+
+    if (isNationality || fieldName.toLowerCase().includes('national')) {
+      return (
+        <CountrySelect
+          value={value}
+          onChange={setValue}
+          type="nationality"
+          placeholder={`Search ${fieldName.toLowerCase()}...`}
         />
       );
     }

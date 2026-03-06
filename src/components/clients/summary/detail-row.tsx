@@ -173,6 +173,7 @@ export function DetailRow({
           isDate={isDate}
           isNumber={isNumber}
           options={options}
+          isCountry={label.toLowerCase().includes("country")}
         />
       )}
     </div>

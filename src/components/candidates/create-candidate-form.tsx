@@ -12,9 +12,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
-import ReactSelect, { SingleValue } from "react-select";
-import countryList, { Country } from "react-select-country-list";
-import ReactCountryFlag from "react-country-flag";
+import { CountrySelect } from "@/components/ui/country-select";
 import { Upload } from "lucide-react";
 import { subDays } from "date-fns";
 import { candidateService } from "@/services/candidateService";
@@ -82,8 +80,7 @@ export default function CreateCandidateForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const [dobOpen, setDobOpen] = useState(false);
-  const [countryOptions] = useState<Country[]>(countryList().getData());
-  const [nationalityOptions] = useState<Country[]>(countryList().getData());
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Reset form when tempCandidateData changes
@@ -116,13 +113,7 @@ export default function CreateCandidateForm({
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCountryChange = (option: SingleValue<Country>) => {
-    setForm((prev) => ({ ...prev, country: option ? option.label : "" }));
-  };
 
-  const handleNationalityChange = (option: SingleValue<Country>) => {
-    setForm((prev) => ({ ...prev, nationality: option ? option.label : "" }));
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -295,44 +286,7 @@ export default function CreateCandidateForm({
   };
 
   // Custom styles for ReactSelect to match the black border on focus
-  const customStyles = {
-    control: (provided: any, state: any) => ({
-      ...provided,
-      borderColor: state.isFocused ? '#000000' : '#d1d5db',
-      boxShadow: state.isFocused ? '0 0 0 1px #000000' : 'none',
-      borderWidth: '1px',
-      '&:hover': {
-        borderColor: state.isFocused ? '#000000' : '#9ca3af'
-      }
-    }),
-    option: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: state.isSelected ? '#f3f4f6' : state.isFocused ? '#f9fafb' : 'white',
-      color: '#374151',
-      '&:hover': {
-        backgroundColor: '#f3f4f6'
-      }
-    }),
-    menu: (provided: any) => ({
-      ...provided,
-      border: '1px solid #d1d5db',
-      borderRadius: '6px',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-    }),
-    // Override any default focus styles
-    singleValue: (provided: any) => ({
-      ...provided,
-      color: '#374151'
-    }),
-    placeholder: (provided: any) => ({
-      ...provided,
-      color: '#9ca3af'
-    }),
-    input: (provided: any) => ({
-      ...provided,
-      color: '#374151'
-    })
-  };
+
 
   const yesterday = subDays(new Date(), 1);
 
@@ -463,38 +417,28 @@ export default function CreateCandidateForm({
               {/* Country */}
               <div className="space-y-2">
                 <Label htmlFor="country">Country</Label>
-                <ReactSelect
-                  options={countryOptions}
-                  value={countryOptions.find(option => option.label === form.country) || null}
-                  onChange={handleCountryChange}
-                  formatOptionLabel={(option: Country) => (
-                    <div className="flex items-center gap-2">
-                      <ReactCountryFlag countryCode={option.value} svg style={{ width: '1.5em', height: '1.5em' }} />
-                      <span>{option.label}</span>
-                    </div>
-                  )}
-                  placeholder="Select country"
-                  isClearable
-                  styles={customStyles}
+                <CountrySelect
+                  value={form.country}
+                  onChange={(val, nationality) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      country: val,
+                      ...(nationality ? { nationality } : {})
+                    }))
+                  }
+                  type="country"
+                  placeholder="Select country..."
                 />
               </div>
 
               {/* Nationality */}
               <div className="space-y-2">
                 <Label htmlFor="nationality">Nationality</Label>
-                <ReactSelect
-                  options={nationalityOptions}
-                  value={nationalityOptions.find(option => option.label === form.nationality) || null}
-                  onChange={handleNationalityChange}
-                  formatOptionLabel={(option: Country) => (
-                    <div className="flex items-center gap-2">
-                      <ReactCountryFlag countryCode={option.value} svg style={{ width: '1.5em', height: '1.5em' }} />
-                      <span>{option.label}</span>
-                    </div>
-                  )}
-                  placeholder="Select nationality"
-                  isClearable
-                  styles={customStyles}
+                <CountrySelect
+                  value={form.nationality}
+                  onChange={(val) => setForm((prev) => ({ ...prev, nationality: val }))}
+                  type="nationality"
+                  placeholder="Select nationality..."
                 />
               </div>
 

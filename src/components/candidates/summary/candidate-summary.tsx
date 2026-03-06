@@ -22,10 +22,10 @@ const detailsFields = [
   { key: "name", label: "Candidate Name" },
   { key: "location", label: "Location" },
   { key: "experience", label: "Experience" },
-   { key: "referredBy", label: "Referred By" },
+  { key: "referredBy", label: "Referred By" },
   { key: "totalRelevantExperience", label: "Total Relevant Years of Experience" },
   { key: "noticePeriod", label: "Notice Period" },
-  
+
   {
     key: "resume",
     label: "Resume",
@@ -148,7 +148,7 @@ const CandidateSummary = ({
 
   const handleReferredBySelect = useCallback((user: any) => {
     if (!user) return;
-    
+
     // Set the pending user and show confirmation dialog
     setPendingUser(user);
     setPendingReferrerName(user.name || user.email || '');
@@ -496,6 +496,8 @@ const CandidateSummary = ({
                         : ""
                   }
                   onSave={(val: string) => handleSave(field.key, val)}
+                  isCountry={field.key === "country" || field.key === "location"}
+                  isNationality={field.key === "nationality"}
                 />
               </>
             )}
@@ -546,9 +548,9 @@ const CandidateSummary = ({
               // Convert comma-separated string back to array
               const arrayValue = val.trim()
                 ? val
-                    .split(",")
-                    .map((item) => item.trim())
-                    .filter((item) => item)
+                  .split(",")
+                  .map((item) => item.trim())
+                  .filter((item) => item)
                 : [];
               handleSave(field.key, arrayValue);
             }}
