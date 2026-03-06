@@ -52,7 +52,7 @@ body::-webkit-scrollbar {
 @layer base {
   :root {
     /* Light: slightly off-white background and softer foreground to reduce eye strain */
-    --background: 0 0% 99%;
+    --background: 240 15% 97%;
     --foreground: 240 5% 20%;
     --card: 0 0% 100%;
     --card-foreground: 240 5% 20%;
