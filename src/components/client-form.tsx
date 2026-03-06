@@ -14,6 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import type { ClientFormData } from '../types/client';
+import { CountrySelect } from "@/components/ui/country-select";
 
 const industries = [
   'Healthcare',
@@ -99,7 +100,7 @@ export function ClientForm() {
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
       <Card className="p-6">
         <h2 className="text-2xl font-bold mb-6">Client Information</h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label htmlFor="companyName">Company Name</Label>
@@ -121,10 +122,11 @@ export function ClientForm() {
 
           <div className="space-y-2">
             <Label htmlFor="country">Country</Label>
-            <Input
-              id="country"
-              {...form.register('location.country')}
-              placeholder="e.g. KSA"
+            <CountrySelect
+              value={form.watch('location.country')}
+              onChange={(val) => form.setValue('location.country', val)}
+              type="country"
+              placeholder="Search country..."
             />
           </div>
 
@@ -218,11 +220,11 @@ export function ClientForm() {
 
         <div className="mt-8">
           <h3 className="text-lg font-semibold mb-4">Client Origin Information</h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="source">Client Source</Label>
-              <Select 
+              <Select
                 onValueChange={(value) => form.setValue('origin.source', value as any)}
                 defaultValue={form.getValues('origin.source')}
               >

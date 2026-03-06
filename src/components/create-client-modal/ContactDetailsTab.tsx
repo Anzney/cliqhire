@@ -6,6 +6,7 @@ import { UseFormReturn } from "react-hook-form";
 import { CreateClientFormData } from "./schema";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { PrimaryContact } from "./type";
+import { CountrySelect } from "@/components/ui/country-select";
 
 interface ContactDetailsTabProps {
   form: UseFormReturn<CreateClientFormData>;
@@ -179,11 +180,11 @@ export function ContactDetailsTab({ form, setIsContactModalOpen }: ContactDetail
             <FormItem className="space-y-1">
               <FormLabel>Country of Business</FormLabel>
               <FormControl>
-                <Input
-                  {...field}
+                <CountrySelect
                   value={field.value || ""}
-                  placeholder="Enter country of business"
-                  className="w-full"
+                  onChange={(val) => field.onChange(val)}
+                  type="country"
+                  placeholder="Select country of business..."
                 />
               </FormControl>
               <FormMessage />

@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge"
 import { X, Upload, FileText } from "lucide-react"
 import { getClients } from "@/services/clientService"
 import { cn } from "@/lib/utils"
+import { CountrySelect } from "@/components/ui/country-select"
 
 // Define type for client data
 interface ClientData {
@@ -32,19 +33,12 @@ interface LocationSuggestion {
   lon: string;
 }
 
-interface CountrySuggestion {
-  name: {
-    common: string;
-  };
-  flags: {
-    svg: string;
-  };
-}
+
 
 const jobTypes = ["Full time", "Part time", "Project based", "Outsourcing"]
 
 const jobStages: JobStage[] = [
- "Open",
+  "Open",
   "Active",
   "Onboarding",
   "Hired",
@@ -116,10 +110,7 @@ interface CreateJobModalProps {
 export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
   const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([])
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false)
-  const [countrySuggestions, setCountrySuggestions] = useState<CountrySuggestion[]>([])
-  const [showCountrySuggestions, setShowCountrySuggestions] = useState(false)
   const [selectedNationalities, setSelectedNationalities] = useState<string[]>([])
-  const [searchNationality, setSearchNationality] = useState("")
   const [nationalityMode, setNationalityMode] = useState<'all' | 'specific'>('specific')
   const [clients, setClients] = useState<ClientData[]>([])
   const [isLoadingClients, setIsLoadingClients] = useState(false)
@@ -175,7 +166,7 @@ export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
     setClientError(null);
     try {
       const { clients: clientsFromApi } = await getClients({ search: searchTerm, limit: 50 });
-      
+
       if (Array.isArray(clientsFromApi)) {
         const clientData: ClientData[] = clientsFromApi.map(client => ({
           _id: client._id,
@@ -204,31 +195,7 @@ export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
     }
   };
 
-  useEffect(() => {
-    const fetchCountrySuggestions = async () => {
-      if (searchNationality.length < 2) {
-        setCountrySuggestions([])
-        return
-      }
 
-      try {
-        const response = await axios.get(
-          `https://restcountries.com/v3.1/name/${encodeURIComponent(searchNationality)}?fields=name,flags`
-        )
-        setCountrySuggestions(response.data)
-        setShowCountrySuggestions(true)
-      } catch (error) {
-        if (axios.isAxiosError(error) && error.response?.status === 404) {
-          setCountrySuggestions([])
-        } else {
-          console.error("Error fetching country suggestions:", error)
-        }
-      }
-    }
-
-    const debounceTimer = setTimeout(fetchCountrySuggestions, 300)
-    return () => clearTimeout(debounceTimer)
-  }, [searchNationality])
 
   useEffect(() => {
     const fetchLocationSuggestions = async () => {
@@ -301,18 +268,7 @@ export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
     }))
   }
 
-  const handleNationalitySelect = (country: CountrySuggestion) => {
-    const nationality = country.name.common
-    if (!selectedNationalities.includes(nationality)) {
-      setSelectedNationalities(prev => [...prev, nationality])
-      setFormData(prev => ({
-        ...prev,
-        nationalities: [...prev.nationalities, nationality]
-      }))
-    }
-    setSearchNationality("")
-    setShowCountrySuggestions(false)
-  }
+
 
   const addNationality = (nationality: string) => {
     if (!selectedNationalities.includes(nationality)) {
@@ -342,7 +298,6 @@ export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
         ...prev,
         nationalities: ['Open For All Nationals']
       }))
-      setSearchNationality("")
     } else {
       setSelectedNationalities([])
       setFormData(prev => ({
@@ -547,10 +502,10 @@ export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
                                   return true;
                                 }
                                 // Otherwise, filter by name
-                                return client.name && 
+                                return client.name &&
                                   client.name.toLowerCase().includes(searchClient.toLowerCase().trim());
                               });
-                              
+
                               if (filteredClients.length === 0 && searchClient.trim()) {
                                 return (
                                   <div className="px-4 py-2 text-gray-500">
@@ -558,13 +513,12 @@ export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
                                   </div>
                                 );
                               }
-                              
+
                               return filteredClients.map((client) => (
                                 <div
                                   key={client._id}
-                                  className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${
-                                    formData.client === client._id ? 'bg-blue-100' : ''
-                                  }`}
+                                  className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${formData.client === client._id ? 'bg-blue-100' : ''
+                                    }`}
                                   onMouseDown={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -864,37 +818,14 @@ export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
                   </div>
 
                   {nationalityMode === 'specific' && (
-                    <div className="relative">
-                      <Input
-                        value={searchNationality}
-                        onChange={(e) => setSearchNationality(e.target.value)}
-                        placeholder="Search and select nationalities"
-                        onFocus={() => setShowCountrySuggestions(true)}
-                      />
-                      {showCountrySuggestions && countrySuggestions.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
-                          {countrySuggestions.map((country, index) => (
-                            <div
-                              key={index}
-                              className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
-                              onClick={() => {
-                                handleNationalitySelect(country)
-                                setShowCountrySuggestions(false)
-                              }}
-                            >
-                              <Image
-                                src={country.flags.svg}
-                                alt={`${country.name.common} flag`}
-                                width={24}
-                                height={16}
-                                className="object-cover"
-                              />
-                              <span>{country.name.common}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    <CountrySelect
+                      value={""} // Pass empty to reset search after selection
+                      onChange={(val) => {
+                        addNationality(val)
+                      }}
+                      type="nationality"
+                      placeholder="Search and select nationalities..."
+                    />
                   )}
                 </div>
               </div>
@@ -941,41 +872,41 @@ export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
                   placeholder="e.g., 5 years"
                 />
               </div>
-              
 
-<div className="grid grid-cols-2 gap-4">
-  <div>
-    <Label htmlFor="educationQualification">Education Qualification</Label>
-    <Select>
-      <SelectTrigger>
-        <SelectValue placeholder="Select Qualification" />
-      </SelectTrigger>
-      <SelectContent>
-        {educationQualifications.map((qualification) => (
-          <SelectItem key={qualification} value={qualification}>
-            {qualification}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  </div>
 
-  <div>
-    <Label htmlFor="specialization">Specialization</Label>
-    <Select>
-      <SelectTrigger>
-        <SelectValue placeholder="Select Specialization" />
-      </SelectTrigger>
-      <SelectContent>
-        {specialization.map((spec) => (
-          <SelectItem key={spec} value={spec}>
-            {spec}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  </div>
-</div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="educationQualification">Education Qualification</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Qualification" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {educationQualifications.map((qualification) => (
+                        <SelectItem key={qualification} value={qualification}>
+                          {qualification}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="specialization">Specialization</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Specialization" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {specialization.map((spec) => (
+                        <SelectItem key={spec} value={spec}>
+                          {spec}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
 
               <div className="grid gap-2">

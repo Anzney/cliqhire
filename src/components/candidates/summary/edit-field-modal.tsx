@@ -10,6 +10,7 @@ import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import CurrencyFlag from "react-currency-flags";
+import { CountrySelect } from "@/components/ui/country-select";
 
 interface EditFieldModalProps {
   open: boolean;
@@ -21,6 +22,8 @@ interface EditFieldModalProps {
   isNumber?: boolean;
   isCurrency?: boolean;
   isTextarea?: boolean;
+  isCountry?: boolean;
+  isNationality?: boolean;
   options?: { value: string; label: string }[];
   currencyOptions?: Array<{ code: string; symbol: string; name: string; countryCode?: string }>;
 }
@@ -35,6 +38,8 @@ export function EditFieldModal({
   isDate,
   isCurrency,
   isTextarea,
+  isCountry,
+  isNationality,
   options,
   currencyOptions
 }: EditFieldModalProps) {
@@ -114,6 +119,20 @@ export function EditFieldModal({
                   </option>
                 ))}
               </select>
+            ) : isCountry ? (
+              <CountrySelect
+                value={value}
+                onChange={setValue}
+                type="country"
+                placeholder={`Search ${fieldName.toLowerCase()}...`}
+              />
+            ) : isNationality ? (
+              <CountrySelect
+                value={value}
+                onChange={setValue}
+                type="nationality"
+                placeholder={`Search ${fieldName.toLowerCase()}...`}
+              />
             ) : isTextarea ? (
               <Textarea
                 id="value"

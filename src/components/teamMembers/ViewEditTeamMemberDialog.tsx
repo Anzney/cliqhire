@@ -16,6 +16,7 @@ import { ConfirmFieldUpdateDialog } from "@/components/ui/ConfirmFieldUpdateDial
 import { EditResumeDialog } from "@/components/teamMembers/EditResumeDialog";
 import { EditSpecializationDialog } from "@/components/teamMembers/EditSpecializationDialog";
 import { EditSkillsDialog } from "@/components/teamMembers/EditSkillsDialog";
+import { CountrySelect } from "@/components/ui/country-select";
 import { toast } from "sonner";
 
 
@@ -97,15 +98,15 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
 
   const toggleEdit = (key: keyof EditableForm, toState?: boolean) => {
     const newState = typeof toState === 'boolean' ? toState : !editing[key];
-    
+
     if (editing[key] && !newState) {
       // User is clicking the check mark to save changes
       const oldValue = initialForm?.[key] ?? (Array.isArray(form[key]) ? [] : "");
       const newValue = form[key] as string | string[];
-      
+
       // Check if there are actual changes
       const hasChanges = JSON.stringify(oldValue) !== JSON.stringify(newValue);
-      
+
       if (hasChanges) {
         setConfirmDialog({
           open: true,
@@ -117,7 +118,7 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
         return;
       }
     }
-    
+
     setEditing(prev => ({ ...prev, [key]: newState }));
   };
 
@@ -144,43 +145,43 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
 
   const handleConfirmUpdate = async () => {
     if (!teamMember?._id) return;
-    
+
     try {
       setSaving(true);
-      
+
       let updated: TeamMember;
-      
+
       // Prepare the payload with only the field being updated
       const payload = {
         _id: teamMember._id,
         [confirmDialog.fieldKey]: confirmDialog.newValue,
       };
-      
+
       updated = await updateTeamMember(payload);
-      
+
       // Update the form and initial form with the new value
       setForm(prev => ({ ...prev, [confirmDialog.fieldKey]: confirmDialog.newValue }));
       setInitialForm(prev => prev ? { ...prev, [confirmDialog.fieldKey]: confirmDialog.newValue } : null);
-      
+
       // Call the onUpdated callback
       onUpdated?.(updated);
-      
+
       // Show success toast immediately
       toast.success(`${confirmDialog.fieldName} updated successfully`);
-      
+
       // Close the confirmation dialog and stop editing
       setConfirmDialog(prev => ({ ...prev, open: false }));
       setEditing(prev => ({ ...prev, [confirmDialog.fieldKey]: false }));
     } catch (error: any) {
       console.error('Error updating team member:', error);
-      
+
       // Show error toast with specific message
       const errorMessage = error instanceof Error ? error.message : 'Failed to update team member';
       toast.error(errorMessage);
-      
+
       // Reset the form value to the original value on error
       setForm(prev => ({ ...prev, [confirmDialog.fieldKey]: confirmDialog.oldValue }));
-      
+
       // Close the confirmation dialog on error as well
       setConfirmDialog(prev => ({ ...prev, open: false }));
       setEditing(prev => ({ ...prev, [confirmDialog.fieldKey]: false }));
@@ -192,7 +193,7 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
   const handleCancelUpdate = () => {
     // Reset the form value to the original value
     setForm(prev => ({ ...prev, [confirmDialog.fieldKey]: confirmDialog.oldValue }));
-    
+
     // Close the confirmation dialog and stop editing
     setConfirmDialog(prev => ({ ...prev, open: false }));
     setEditing(prev => ({ ...prev, [confirmDialog.fieldKey]: false }));
@@ -200,7 +201,7 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
 
   const renderField = (key: keyof EditableForm, label: string, value: any, type: 'text' | 'select' = 'text', options?: { value: string; label: string }[]) => {
     const isEditing = editing[key];
-    
+
     return (
       <div className="flex items-center justify-between py-2">
         <div className="flex items-center gap-2 flex-1">
@@ -208,11 +209,20 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
           {isEditing ? (
             <div className="flex-1">
               {type === 'text' && (
-                <Input 
-                  value={value || ""} 
-                  onChange={e => handleChange(key, e.target.value)}
-                  className="h-8"
-                />
+                key === 'location' ? (
+                  <CountrySelect
+                    value={value || ""}
+                    onChange={(val: string) => handleChange(key, val)}
+                    type="country"
+                    placeholder="Search location..."
+                  />
+                ) : (
+                  <Input
+                    value={value || ""}
+                    onChange={e => handleChange(key, e.target.value)}
+                    className="h-8"
+                  />
+                )
               )}
               {type === 'select' && options && (
                 <Select value={value || ""} onValueChange={value => handleChange(key, value)}>
@@ -237,9 +247,9 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
             </div>
           )}
         </div>
-        <Button 
-          variant="ghost" 
-          size="sm" 
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => toggleEdit(key)}
           className="ml-2 h-8 w-8 p-0"
         >
@@ -259,7 +269,7 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
             <div className="flex items-center gap-3">
               <Avatar className="h-12 w-12">
                 <AvatarImage src={teamMember?.avatar || ""} alt={teamMember?.firstName + " " + teamMember?.lastName || "User"} />
-                <AvatarFallback>{(teamMember?.firstName || "").substring(0,2).toUpperCase()}</AvatarFallback>
+                <AvatarFallback>{(teamMember?.firstName || "").substring(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>
                 <DialogTitle className="flex items-center gap-2">
@@ -328,22 +338,22 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
                 <div className="flex-1 border-b border-gray-300 pb-1">
                   <span className="text-sm text-black">
                     {teamMember?.resume ? (
-                      <a 
-                        href={teamMember.resume} 
-                        target="_blank" 
-                        rel="noreferrer" 
+                      <a
+                        href={teamMember.resume}
+                        target="_blank"
+                        rel="noreferrer"
                         className="inline-flex items-center gap-1 text-blue-600 hover:underline"
                       >
-                        <LinkIcon className="h-4 w-4" /> 
+                        <LinkIcon className="h-4 w-4" />
                         View Resume
                       </a>
                     ) : "—"}
                   </span>
                 </div>
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setEditResumeDialogOpen(true)}
                 className="ml-2 h-8 w-8 p-0"
               >
@@ -363,9 +373,9 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
                   </span>
                 </div>
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setEditSpecializationDialogOpen(true)}
                 className="ml-2 h-8 w-8 p-0"
               >
@@ -393,9 +403,9 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
                   </span>
                 </div>
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setEditSkillsDialogOpen(true)}
                 className="ml-2 h-8 w-8 p-0"
               >
