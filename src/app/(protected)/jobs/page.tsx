@@ -366,7 +366,7 @@ export default function JobsPage() {
           <div className="flex-1 overflow-auto" style={{ maxHeight: "calc(100vh - 30px)" }}>
             <Table>
               <TableHeader>
-                <TableRow className="sticky top-0 z-20 bg-brand/5 hover:bg-brand/5">
+                <TableRow className="sticky top-0 z-40 bg-white dark:bg-card border-b shadow-sm hover:bg-white dark:hover:bg-card">
                   <TableHead className="w-12 px-4">
                     <div className="flex items-center justify-center">
                       <Checkbox
@@ -432,7 +432,7 @@ export default function JobsPage() {
               </TableBody>
             </Table>
           </div>
-          <div className="sticky bottom-0 bg-brand/5 z-10 border-t">
+          <div className="sticky bottom-0 bg-white dark:bg-card z-40 border-t shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
             <JobPaginationControls
               currentPage={currentPage}
               totalPages={totalPages}
