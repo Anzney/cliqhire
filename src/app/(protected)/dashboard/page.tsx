@@ -20,7 +20,7 @@ export default function DashboardPage() {
     return (
         <>
             <div className="flex flex-col max-w-7xl mx-auto py-4 px-2  space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="relative overflow-hidden rounded-[2rem] bg-brand text-white p-8 md:p-12 shadow-xl shadow-brand/20">
+                <div className="relative overflow-hidden rounded-[2rem] bg-brand text-white p-6 shadow-xl shadow-brand/20">
                     <div className="absolute top-0 right-0 -mr-16 -mt-16 opacity-20 pointer-events-none">
                         <svg width="300" height="300" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
                             <path d="M100 0C44.7715 0 0 44.7715 0 100C0 155.228 44.7715 200 100 200C155.228 200 200 155.228 200 100C200 44.7715 155.228 0 100 0ZM100 190C50.2944 190 10 149.706 10 100C10 50.2944 50.2944 10 100 10C149.706 10 190 50.2944 190 100C190 149.706 149.706 190 100 190Z" fill="currentColor" />
