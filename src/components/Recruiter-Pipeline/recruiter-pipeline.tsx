@@ -179,23 +179,34 @@ export function RecruiterPipeline() {
 
   // Filter and sort jobs
   const getFilteredAndSortedJobs = () => {
-    let filteredJobs = [...jobs];
+    let sourceJobs = [...jobs];
+    let isClientSearch = false;
 
-    // Search filter is now handled by API
-    // Local fallback for properties that might not be covered by API search
+    // If searching, we fetch from the full dataset because API search support might be spotty
+    // and we already load the full dataset for KPIs.
+    if (debouncedSearchTerm.trim() && allPipelinesResponse?.data?.pipelines) {
+      sourceJobs = allPipelinesResponse.data.pipelines.map(p => convertPipelineListDataToJob(p, false));
+      isClientSearch = true;
+    }
+
+    let filteredJobs = [...sourceJobs];
+
+    // Search filter
     if (debouncedSearchTerm.trim()) {
       const searchLower = debouncedSearchTerm.toLowerCase();
       filteredJobs = filteredJobs.filter(job => {
+        // Search in job title
         if (job.title.toLowerCase().includes(searchLower)) return true;
+        // Search in client name
         if (job.clientName.toLowerCase().includes(searchLower)) return true;
+        // Search in candidate names
         if (job.candidates.some(candidate =>
           candidate.name.toLowerCase().includes(searchLower)
         )) return true;
+        // Search in notes
         if (job.notes?.toLowerCase().includes(searchLower)) return true;
 
-        // Also include if the job was returned by API despite local mismatch
-        // since we are fetching with debate
-        return true;
+        return false;
       });
     }
 
@@ -206,7 +217,6 @@ export function RecruiterPipeline() {
       filteredJobs = filteredJobs.filter(job => {
         const jobMatch = jobLower ? job.title.toLowerCase().includes(jobLower) : true;
         const clientMatch = clientLower ? job.clientName.toLowerCase().includes(clientLower) : true;
-        // If both filters provided, require both; if only one provided, require that one
         return jobMatch && clientMatch;
       });
     }
@@ -242,12 +252,24 @@ export function RecruiterPipeline() {
           return a.clientName.localeCompare(b.clientName);
         case "date":
         default:
-          // Assuming jobs are already sorted by creation date (newest first)
           return 0;
       }
     });
 
-    return filteredJobs;
+    const fullFilteredCount = filteredJobs.length;
+    let paginatedJobs = filteredJobs;
+
+    // Apply client-side pagination only when doing client search
+    if (isClientSearch) {
+      const startIndex = (currentPage - 1) * pageSize;
+      paginatedJobs = filteredJobs.slice(startIndex, startIndex + pageSize);
+    }
+
+    return {
+      renderJobs: paginatedJobs,
+      totalItems: fullFilteredCount,
+      isClientSearch
+    };
   };
 
   const toggleJobExpansion = async (jobId: string) => {
@@ -385,7 +407,12 @@ export function RecruiterPipeline() {
   };
 
   const kpiData = calculateKPIData();
-  const filteredJobs = getFilteredAndSortedJobs();
+  const { renderJobs, totalItems, isClientSearch } = getFilteredAndSortedJobs();
+
+  const actualTotalPages = isClientSearch ? Math.max(1, Math.ceil(totalItems / pageSize)) : (listResponse?.data?.pagination?.totalPages || 0);
+  const actualCurrentPage = isClientSearch ? currentPage : (listResponse?.data?.pagination?.currentPage || 0);
+  const hasNextPage = isClientSearch ? currentPage < actualTotalPages : listResponse?.data?.pagination?.hasNextPage;
+  const hasPrevPage = isClientSearch ? currentPage > 1 : listResponse?.data?.pagination?.hasPrevPage;
 
   if (!canViewPipeline) {
     return (
@@ -475,9 +502,9 @@ export function RecruiterPipeline() {
           <div className="text-center py-8 text-gray-500">
             Loading pipeline jobs...
           </div>
-        ) : filteredJobs.length > 0 ? (
+        ) : renderJobs.length > 0 ? (
           <div className="space-y-4">
-            {filteredJobs.map((job) => (
+            {renderJobs.map((job) => (
               <PipelineJobCard
                 key={job.id}
                 job={job}
@@ -499,17 +526,17 @@ export function RecruiterPipeline() {
 
       {/* Pagination - Fixed to bottom */}
       <div className="flex-none bg-white rounded-lg shadow-sm border p-4">
-        {listResponse?.data?.pagination && listResponse.data.pagination.totalPages > 1 ? (
+        {actualTotalPages > 1 ? (
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-500 font-medium">
-              Showing page {listResponse.data.pagination.currentPage} of {listResponse.data.pagination.totalPages}
+              Showing page {actualCurrentPage} of {actualTotalPages}
             </div>
             <div className="flex items-center space-x-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={!listResponse.data.pagination.hasPrevPage}
+                disabled={!hasPrevPage}
               >
                 <ChevronLeft className="h-4 w-4 mr-1" />
                 Previous
@@ -517,8 +544,8 @@ export function RecruiterPipeline() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(listResponse.data.pagination.totalPages, prev + 1))}
-                disabled={!listResponse.data.pagination.hasNextPage}
+                onClick={() => setCurrentPage(prev => Math.min(actualTotalPages, prev + 1))}
+                disabled={!hasNextPage}
               >
                 Next
                 <ChevronRight className="h-4 w-4 ml-1" />
@@ -527,7 +554,7 @@ export function RecruiterPipeline() {
           </div>
         ) : (
           <div className="text-sm text-gray-500 font-medium">
-            Showing all {filteredJobs.length} result(s)
+            Showing all {totalItems} result(s)
           </div>
         )}
       </div>

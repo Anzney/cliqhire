@@ -347,12 +347,9 @@ export const getPipelineEntry = async (pipelineId: string): Promise<GetPipelineE
  */
 export const getAllPipelineEntries = async (page: number = 1, limit: number = 10, search?: string): Promise<GetAllPipelineEntriesResponse> => {
   try {
-    const queryParams = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-      ...(search ? { search } : {})
-    });
-    const response = await api.get(`/api/recruiter-pipeline/my?${queryParams.toString()}`);
+    const params: any = { page, limit };
+    if (search) params.search = search;
+    const response = await api.get('/api/recruiter-pipeline/my', { params });
     return response.data;
   } catch (error: any) {
     console.error('Error fetching all pipeline entries:', error);
