@@ -2,19 +2,17 @@
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Lock, User } from "lucide-react";
 import { useState } from "react";
 import * as z from "zod";
 import { toast } from "sonner";
@@ -29,6 +27,7 @@ const loginSchema = z.object({
   password: z.string().min(6, {
     message: "Password must be at least 6 characters.",
   }),
+  remember: z.boolean().optional(),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -43,18 +42,19 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
     defaultValues: {
       email: "",
       password: "",
+      remember: false,
     },
   });
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
       const success = await login(values.email, values.password);
-      
+
       if (success) {
         toast.success("Login successful!");
-         // Reset form after successful login
+        // Reset form after successful login
         form.reset();
-        
+
         // Add a small delay to ensure state is updated
         setTimeout(() => {
           const profile = authService.getUserData();
@@ -79,100 +79,110 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl text-center">Welcome Back</CardTitle>
-          <CardDescription className="text-center">
-            Login to your AEMS account to continue
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        autoComplete="email"
-                        placeholder="Enter your email"
-                        className="w-80"
-                        data-form-type="other"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center">
-                      <FormLabel>Password</FormLabel>
-                      {/* <a
-                        href="/forgot-password"
-                        className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                      >
-                        Forgot your password?
-                      </a> */}
-                    </div>
-                    <FormControl>
-                      <div className="relative">
-                        <Input 
-                          type={showPassword ? "text" : "password"} 
-                          className="w-80" 
-                          {...field} 
-                          placeholder="Enter your password"
-                          autoComplete="current-password"
-                          data-form-type="other"
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
-                          {showPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isLoginLoading}
-              >
-                {isLoginLoading ? "Logging in..." : "Login"}
-              </Button>
-              <Button variant="outline" className="w-full" type="button">
-                Login with Google
-              </Button>
-              <div className="mt-4 text-center text-sm">
-                Don&apos;t have an account?{" "}
-                <a href="/register" className="underline underline-offset-4">
-                  Sign up
-                </a>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+    <div className={cn("flex w-full flex-col gap-8", className)} {...props}>
+      <h2 className="text-3xl font-bold tracking-tight text-[#2B3674] mb-2">Sign In</h2>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <div className="relative">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input
+                      type="email"
+                      autoComplete="email"
+                      placeholder="Username or email"
+                      className="w-full pl-12 h-12 rounded-full border-gray-200 focus-visible:ring-brand focus-visible:ring-offset-0 bg-white"
+                      data-form-type="other"
+                      {...field}
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      className="w-full pl-12 pr-12 h-12 rounded-full border-gray-200 focus-visible:ring-brand focus-visible:ring-offset-0 bg-white"
+                      {...field}
+                      placeholder="Password"
+                      autoComplete="current-password"
+                      data-form-type="other"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 rounded-full hover:bg-transparent text-gray-400"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
+                    </Button>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="flex items-center justify-between mt-4">
+            <FormField
+              control={form.control}
+              name="remember"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                  <FormControl>
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-gray-300 text-brand focus:ring-brand"
+                      checked={field.value}
+                      onChange={field.onChange}
+                    />
+                  </FormControl>
+                  <label className="text-sm text-gray-500 font-medium cursor-pointer" onClick={() => field.onChange(!field.value)}>
+                    Remember me
+                  </label>
+                </FormItem>
+              )}
+            />
+            <a href="/forgot-password" className="text-sm text-gray-500 hover:text-brand">
+              Forgot password?
+            </a>
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full h-12 rounded-full bg-brand hover:bg-brand/90 text-white font-medium text-base mt-4 shadow-md transition-all shadow-brand/20"
+            disabled={isLoginLoading}
+          >
+            {isLoginLoading ? "Signing in..." : "Sign In"}
+          </Button>
+
+          <div className="text-center text-sm text-gray-500 mt-6">
+            New here?{" "}
+            <a href="/register" className="text-brand hover:underline font-medium">
+              Create an Account
+            </a>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 }
