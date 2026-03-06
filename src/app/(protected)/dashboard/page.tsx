@@ -69,7 +69,7 @@ export default function DashboardPage() {
                         </div>
                         <h2 className="text-xl font-bold text-[#2B3674] mb-3">Create a Client</h2>
                         <p className="text-gray-500 text-sm leading-relaxed mb-8 flex-1">
-                            Clients host the different jobs under your agency's account. Setup a new client workspace.
+                            Clients host the different jobs under your agency&apos;s account. Setup a new client workspace.
                         </p>
                         <div className="flex items-center text-sm font-semibold text-brand mt-auto">
                             Get started <ArrowRight className="w-4 h-4 ml-1.5 group-hover:translate-x-1.5 transition-transform" />
