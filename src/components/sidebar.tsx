@@ -136,7 +136,7 @@ export function Sidebar() {
                   return finalPermissions.includes(item.permission);
                 })
                 .map((item, index) => {
-                  const active = (item.href === "/" ? pathname === "/" : pathname?.startsWith(item.href));
+                  const active = (item.href === "/" ? (pathname === "/" || pathname === "/dashboard") : pathname?.startsWith(item.href));
                   const Icon = item.icon;
                   return (
                     <SidebarMenuItem key={index}>
