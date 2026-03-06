@@ -30,6 +30,7 @@ export function RecruiterPipeline() {
   const queryClient = useQueryClient();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date");
   const [loadingJobId, setLoadingJobId] = useState<string | null>(null);
@@ -45,10 +46,20 @@ export function RecruiterPipeline() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
 
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1); // Reset to page 1 on new search
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   // React Query: load pipeline jobs list
   const { data: listResponse, isLoading: listLoading, error: listError, refetch: refetchPipelines } = useQuery({
-    queryKey: ["pipelineEntries", user?._id, currentPage, pageSize],
-    queryFn: async () => await getAllPipelineEntries(currentPage, pageSize),
+    queryKey: ["pipelineEntries", user?._id, currentPage, pageSize, debouncedSearchTerm],
+    queryFn: async () => await getAllPipelineEntries(currentPage, pageSize, debouncedSearchTerm),
     enabled: !!user,
   });
 
@@ -170,25 +181,21 @@ export function RecruiterPipeline() {
   const getFilteredAndSortedJobs = () => {
     let filteredJobs = [...jobs];
 
-    // Search filter
-    if (searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase();
+    // Search filter is now handled by API
+    // Local fallback for properties that might not be covered by API search
+    if (debouncedSearchTerm.trim()) {
+      const searchLower = debouncedSearchTerm.toLowerCase();
       filteredJobs = filteredJobs.filter(job => {
-        // Search in job title
         if (job.title.toLowerCase().includes(searchLower)) return true;
-
-        // Search in client name
         if (job.clientName.toLowerCase().includes(searchLower)) return true;
-
-        // Search in candidate names
         if (job.candidates.some(candidate =>
           candidate.name.toLowerCase().includes(searchLower)
         )) return true;
-
-        // Search in notes
         if (job.notes?.toLowerCase().includes(searchLower)) return true;
 
-        return false;
+        // Also include if the job was returned by API despite local mismatch
+        // since we are fetching with debate
+        return true;
       });
     }
 
@@ -387,11 +394,13 @@ export function RecruiterPipeline() {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col h-full h-full overflow-hidden">
       {/* KPI Section */}
-      <KPISection data={kpiData} />
+      <div className="flex-none mb-4">
+        <KPISection data={kpiData} />
+      </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex-none flex flex-wrap items-center justify-between mb-4 gap-4">
         {/* <div className="flex items-center gap-2">
           {canModifyPipeline && (
             <CreatePipelineDialog 
@@ -461,59 +470,67 @@ export function RecruiterPipeline() {
       </div>
 
       {/* Jobs Section */}
-      {listLoading ? (
-        <div className="text-center py-8 text-gray-500">
-          Loading pipeline jobs...
-        </div>
-      ) : filteredJobs.length > 0 ? (
-        <>
-          {filteredJobs.map((job) => (
-            <PipelineJobCard
-              key={job.id}
-              job={job}
-              loadingJobId={loadingJobId}
-              isHighlighted={highlightedJobId === job.id}
-              onToggleExpansion={toggleJobExpansion}
-              onUpdateCandidateStage={updateCandidateStage}
-              onCandidateUpdate={handleCandidateUpdate}
-              canModify={canModifyPipeline}
-            />
-          ))}
+      <div className="flex-1 overflow-y-auto mb-4 pr-2 custom-scrollbar">
+        {listLoading ? (
+          <div className="text-center py-8 text-gray-500">
+            Loading pipeline jobs...
+          </div>
+        ) : filteredJobs.length > 0 ? (
+          <div className="space-y-4">
+            {filteredJobs.map((job) => (
+              <PipelineJobCard
+                key={job.id}
+                job={job}
+                loadingJobId={loadingJobId}
+                isHighlighted={highlightedJobId === job.id}
+                onToggleExpansion={toggleJobExpansion}
+                onUpdateCandidateStage={updateCandidateStage}
+                onCandidateUpdate={handleCandidateUpdate}
+                canModify={canModifyPipeline}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            {searchTerm ? "No jobs found matching your search criteria" : "No jobs available"}
+          </div>
+        )}
+      </div>
 
-          {/* Pagination */}
-          {listResponse?.data?.pagination && listResponse.data.pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between py-4 mt-6">
-              <div className="text-sm text-gray-500">
-                Showing page {listResponse.data.pagination.currentPage} of {listResponse.data.pagination.totalPages}
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={!listResponse.data.pagination.hasPrevPage}
-                >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.min(listResponse.data.pagination.totalPages, prev + 1))}
-                  disabled={!listResponse.data.pagination.hasNextPage}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
+      {/* Pagination - Fixed to bottom */}
+      <div className="flex-none bg-white rounded-lg shadow-sm border p-4">
+        {listResponse?.data?.pagination && listResponse.data.pagination.totalPages > 1 ? (
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-500 font-medium">
+              Showing page {listResponse.data.pagination.currentPage} of {listResponse.data.pagination.totalPages}
             </div>
-          )}
-        </>
-      ) : (
-        <div className="text-center py-8 text-gray-500">
-          {searchTerm ? "No jobs found matching your search criteria" : "No jobs available"}
-        </div>
-      )}
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={!listResponse.data.pagination.hasPrevPage}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(listResponse.data.pagination.totalPages, prev + 1))}
+                disabled={!listResponse.data.pagination.hasNextPage}
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="text-sm text-gray-500 font-medium">
+            Showing all {filteredJobs.length} result(s)
+          </div>
+        )}
+      </div>
     </div>
   );
 }
