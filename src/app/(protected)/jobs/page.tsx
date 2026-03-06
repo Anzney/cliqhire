@@ -366,13 +366,13 @@ export default function JobsPage() {
           <div className="flex-1 overflow-auto" style={{ maxHeight: "calc(100vh - 30px)" }}>
             <Table>
               <TableHeader>
-                <TableRow className="sticky top-0 z-20 bg-white">
+                <TableRow className="sticky top-0 z-20 bg-brand/5 hover:bg-brand/5">
                   <TableHead className="w-12 px-4">
                     <div className="flex items-center justify-center">
                       <Checkbox
                         checked={selectedRows.size > 0 && selectedRows.size === jobs.length}
                         onCheckedChange={() => toggleSelectAll()}
-                        className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
+                        className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-brand/10 data-[state=checked]:text-brand data-[state=checked]:border-brand focus-visible:ring-brand/50"
                         disabled={!canDeleteJobs}
                       />
                     </div>
@@ -387,7 +387,7 @@ export default function JobsPage() {
                   jobs.map((job: any) => (
                     <TableRow
                       key={job._id}
-                      className={`${selectedRows.has(job._id) ? 'bg-blue-50' : ''} hover:bg-muted/50 cursor-pointer`}
+                      className={`${selectedRows.has(job._id) ? 'bg-brand/5' : ''} hover:bg-muted/50 cursor-pointer`}
                       onClick={() => router.push(`/jobs/${job._id}`)}
                     >
                       <TableCell className="w-12 px-4" onClick={(e) => e.stopPropagation()}>
@@ -395,7 +395,7 @@ export default function JobsPage() {
                           <Checkbox
                             checked={selectedRows.has(job._id)}
                             onCheckedChange={() => toggleRowSelection(job._id)}
-                            className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
+                            className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-brand/10 data-[state=checked]:text-brand data-[state=checked]:border-brand focus-visible:ring-brand/50"
                             disabled={!canDeleteJobs}
                             onClick={(e) => e.stopPropagation()}
                           />
@@ -432,7 +432,7 @@ export default function JobsPage() {
               </TableBody>
             </Table>
           </div>
-          <div className="sticky bottom-0 bg-white z-10 border-t">
+          <div className="sticky bottom-0 bg-brand/5 z-10 border-t">
             <JobPaginationControls
               currentPage={currentPage}
               totalPages={totalPages}
