@@ -1,13 +1,13 @@
 "use client";
-import { Button } from "@/components/ui/button"
-import "lucide-react"
-import { Users, Building2, Briefcase, UserPlus, ArrowRight } from 'lucide-react'
+
+import { Building2, Briefcase, UserPlus, ArrowRight, TrendingUp, Calendar, Clock, CheckCircle2, TrendingDown, Users } from 'lucide-react'
 import { useRouter } from "next/navigation"
 import { CreateCandidateButton } from "@/components/candidates/create-candidate-button"
 import { useState } from "react"
 import { CreateClientModal } from "@/components/create-client-modal/create-client-modal"
 import { CreateJobRequirementForm } from "@/components/new-jobs/create-jobs-form";
 import { useAuth } from "@/contexts/AuthContext"
+import { DashboardKpiCards } from "@/components/dashboard/dashboard-kpi-cards";
 
 export default function DashboardPage() {
     const router = useRouter();
@@ -15,13 +15,11 @@ export default function DashboardPage() {
     const [open, setOpen] = useState(false);
     const [openJobModal, setJobModal] = useState(false);
 
-    // Get user's first name for greeting
     const firstName = user?.name ? user.name.split(' ')[0] : 'there';
 
     return (
         <>
-            <div className="flex flex-col max-w-7xl mx-auto py-8 px-4 md:px-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {/* Modern Header Banner */}
+            <div className="flex flex-col max-w-7xl mx-auto py-4 px-2  space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="relative overflow-hidden rounded-[2rem] bg-brand text-white p-8 md:p-12 shadow-xl shadow-brand/20">
                     <div className="absolute top-0 right-0 -mr-16 -mt-16 opacity-20 pointer-events-none">
                         <svg width="300" height="300" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
@@ -44,8 +42,11 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-6 pt-4">
-                    {/* Create Client Card */}
+                {/* Dashboard KPI Metrics */}
+                <DashboardKpiCards />
+
+                {/* Quick Actions */}
+                <div className="grid md:grid-cols-3 gap-6">
                     <button
                         onClick={() => setOpen(true)}
                         className="group flex flex-col items-start p-8 rounded-[1.5rem] bg-white border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-brand/5 hover:border-brand/20 transition-all duration-300 text-left h-full"
@@ -62,7 +63,6 @@ export default function DashboardPage() {
                         </div>
                     </button>
 
-                    {/* Create Job Requirement Card */}
                     <button
                         onClick={() => setJobModal(true)}
                         className="group flex flex-col items-start p-8 rounded-[1.5rem] bg-white border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-brand/5 hover:border-brand/20 transition-all duration-300 text-left h-full"
@@ -79,7 +79,6 @@ export default function DashboardPage() {
                         </div>
                     </button>
 
-                    {/* Create Candidate Card */}
                     <div className="group flex flex-col items-start p-8 rounded-[1.5rem] bg-white border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-brand/5 hover:border-brand/20 transition-all duration-300 text-left relative overflow-hidden h-full">
                         <div className="p-4 bg-brand/10 rounded-2xl text-brand group-hover:scale-110 group-hover:bg-brand group-hover:text-white transition-all duration-300 mb-6">
                             <UserPlus className="w-6 h-6" />
@@ -96,64 +95,7 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Enhanced Todo List Section */}
-                {/* <Card className="w-full mt-12">
-                    <CardHeader>
-                        <div className="flex items-center gap-2">
-                            <Calendar className="w-6 h-6 text-primary" />
-                            <div>
-                                <CardTitle>Today&apos;s To-Do List</CardTitle>
-                                <CardDescription>
-                                    {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                                </CardDescription>
-                            </div>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-4">
-                            {todoItems.map((item) => (
-                                <div
-                                    key={item.id}
-                                    className="group flex items-center gap-4 p-4 rounded-lg transition-all bg-white hover:shadow-md border relative overflow-hidden cursor-pointer"
-                                    onClick={() => completeTask(item.id)}
-                                >
-                                    <div className="absolute inset-0 bg-green-500/0 group-hover:bg-green-500/5 transition-colors duration-200" />
-                                    <div className="absolute right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                        <div className="flex items-center gap-2 text-green-600">
-                                            <Check className="w-5 h-5" />
-                                            <span className="text-sm font-medium">Mark Complete</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-medium truncate">{item.task}</span>
-                                            <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(item.priority)}`}>
-                                                {item.priority}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <div className="flex items-center gap-1 text-gray-500">
-                                                {getTypeIcon(item.type)}
-                                                <span className="text-sm capitalize">{item.type}</span>
-                                            </div>
-                                            <span className="text-sm text-gray-400">•</span>
-                                            <span className="text-sm text-gray-500">{item.time}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                            {todoItems.length === 0 && (
-                                <div className="text-center py-8 text-gray-500">
-                                    <CheckCircle className="w-12 h-12 mx-auto mb-3 text-green-500" />
-                                    <p className="text-lg font-medium">All tasks completed!</p>
-                                    <p className="text-sm">Great job! You&apos;re all caught up for today.</p>
-                                </div>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>*/}
             </div>
-
 
             <CreateClientModal
                 open={open}
