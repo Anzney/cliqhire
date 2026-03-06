@@ -345,9 +345,9 @@ export const getPipelineEntry = async (pipelineId: string): Promise<GetPipelineE
 /**
  * Get all pipeline entries
  */
-export const getAllPipelineEntries = async (): Promise<GetAllPipelineEntriesResponse> => {
+export const getAllPipelineEntries = async (page: number = 1, limit: number = 10): Promise<GetAllPipelineEntriesResponse> => {
   try {
-    const response = await api.get('/api/recruiter-pipeline/my');
+    const response = await api.get(`/api/recruiter-pipeline/my?page=${page}&limit=${limit}`);
     return response.data;
   } catch (error: any) {
     console.error('Error fetching all pipeline entries:', error);
@@ -579,7 +579,7 @@ export const convertTempCandidateToReal = async (
       data: error.response?.data,
       message: error.message
     });
-    
+
     return {
       success: false,
       message: 'Failed to convert temp candidate',
