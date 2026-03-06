@@ -19,8 +19,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { PlusIcon, MinusIcon } from "lucide-react";
+import { PlusIcon, MinusIcon, Check, ChevronsUpDown, Search, Loader2 } from "lucide-react";
 import { fetchClients } from "./clientApi";
+import { useDebounce } from "@/hooks/use-debounce";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import { createJob } from "@/services/jobService";
 import { currencies } from "country-data-list";
 import CurrencyFlag from "react-currency-flags";
@@ -68,6 +71,12 @@ export function CreateJobRequirementForm({
   });
   const [clientOptions, setClientOptions] = useState<{ _id: string; name: string }[]>([]);
   const [clientSearch, setClientSearch] = useState("");
+  const [clientPage, setClientPage] = useState(1);
+  const [hasMoreClients, setHasMoreClients] = useState(true);
+  const [loadingClients, setLoadingClients] = useState(false);
+  const [clientDropdownOpen, setClientDropdownOpen] = useState(false);
+  const debouncedSearch = useDebounce(clientSearch, 500);
+
   const [showAdditional, setShowAdditional] = useState(false);
   const [errors, setErrors] = useState<{ clientName?: string; positionName?: string; clientId?: string }>({});
   const router = useRouter();
@@ -75,16 +84,53 @@ export function CreateJobRequirementForm({
   // Helper to find client by id
   const getClientById = (id: string) => clientOptions.find((c) => c._id === id);
 
-  // If lockedClientId is provided, only show that client in the dropdown
+  // Reset page when search changes or dropdown toggles
+  useEffect(() => {
+    if (!lockedClientId) {
+      setClientPage(1);
+      setClientOptions([]);
+      setHasMoreClients(true);
+    }
+  }, [debouncedSearch, clientDropdownOpen, lockedClientId]);
+
+  // Fetch clients when search, page or modal state changes
   useEffect(() => {
     if (lockedClientId && lockedClientName) {
       setClientOptions([{ _id: lockedClientId, name: lockedClientName }]);
-    } else {
-      fetchClients(clientSearch).then((clients) => {
-        setClientOptions(clients);
-      });
+      return;
     }
-  }, [clientSearch, lockedClientId, lockedClientName]);
+
+    if (open && (clientDropdownOpen || clientPage > 1)) {
+      const loadClients = async () => {
+        setLoadingClients(true);
+        try {
+          const result = await fetchClients(debouncedSearch, clientPage);
+          setClientOptions((prev) => {
+            const newOptions = clientPage === 1 ? result.clients : [...prev, ...result.clients];
+            // Filter duplicates by _id
+            return newOptions.filter((v, i, a) => a.findIndex(t => t._id === v._id) === i);
+          });
+          setHasMoreClients(result.hasMore);
+        } catch (error) {
+          console.error("Error loading clients:", error);
+        } finally {
+          setLoadingClients(false);
+        }
+      };
+      loadClients();
+    }
+  }, [debouncedSearch, clientPage, open, clientDropdownOpen, lockedClientId, lockedClientName]);
+
+  const handleClientScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    if (
+      target.scrollHeight - target.scrollTop <= target.clientHeight + 100 &&
+      hasMoreClients &&
+      !loadingClients
+    ) {
+      setClientPage((prev) => prev + 1);
+    }
+  };
 
   // Keep form state in sync when a locked client is provided (or changes)
   useEffect(() => {
@@ -237,24 +283,82 @@ export function CreateJobRequirementForm({
                 //   inputPlaceholder="Search client name"
                 //   className={errors.clientName ? "border-red-500" : ""}
                 // />
-                <Select
-                  value={form.clientId}
-                  onValueChange={(val) => {
-                    const client = clientOptions.find((c) => c._id === val);
-                    setForm((prev) => ({ ...prev, clientId: val, clientName: client ? client.name : "" }));
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select client" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {clientOptions.map((client) => (
-                      <SelectItem key={client._id} value={client._id}>
-                        {client.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={clientDropdownOpen} onOpenChange={setClientDropdownOpen} modal={true}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={clientDropdownOpen}
+                      className={cn(
+                        "w-full justify-between font-normal",
+                        !form.clientId && "text-muted-foreground",
+                        errors.clientName ? "border-red-500" : ""
+                      )}
+                    >
+                      {form.clientId
+                        ? clientOptions.find((c) => c._id === form.clientId)?.name || form.clientName || "Select client"
+                        : "Select client"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 z-[100]" align="start">
+                    <div className="flex flex-col rounded-md border bg-popover text-popover-foreground shadow-md">
+                      <div className="flex items-center border-b px-3">
+                        <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                        <input
+                          className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                          placeholder="Search client..."
+                          value={clientSearch}
+                          onChange={(e) => setClientSearch(e.target.value)}
+                        />
+                      </div>
+                      <div
+                        className="max-h-[300px] overflow-y-auto p-1 overflow-x-hidden"
+                        onScroll={handleClientScroll}
+                      >
+                        {clientOptions.length === 0 && !loadingClients && (
+                          <div className="py-6 text-center text-sm text-muted-foreground">
+                            {clientSearch ? "No client found." : "Loading clients..."}
+                          </div>
+                        )}
+                        <div className="overflow-hidden p-1 text-foreground">
+                          {clientOptions.map((client) => (
+                            <div
+                              key={client._id}
+                              className={cn(
+                                "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+                                form.clientId === client._id && "bg-accent text-accent-foreground"
+                              )}
+                              onMouseDown={(e) => {
+                                // use onMouseDown for immediate firing before focus changes
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setForm((prev) => ({ ...prev, clientId: client._id, clientName: client.name }));
+                                setClientDropdownOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  form.clientId === client._id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {client.name}
+                            </div>
+                          ))}
+                        </div>
+                        {loadingClients && (
+                          <div className="flex items-center justify-center p-4 border-t bg-muted/20">
+                            <Loader2 className="h-4 w-4 animate-spin text-primary mr-2" />
+                            <span className="text-sm font-medium text-muted-foreground animate-pulse">
+                              Loading more clients...
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               )}
               {errors.clientName && !lockedClientId && (
                 <div className="text-xs text-red-500 mt-1">{errors.clientName}</div>

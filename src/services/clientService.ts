@@ -110,28 +110,28 @@ interface ApiResponse<T> {
 }
 
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ;
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 /**
  * Deep clones an object and removes circular references
  */
 const deepCloneAndSanitize = (obj: any): any => {
   const seen = new WeakSet();
-  
+
   const clone = (item: any): any => {
     if (item === null || typeof item !== "object") return item;
     if (item instanceof Date) return item.toISOString();
     if (item instanceof File) return item; // Keep File objects as-is for now
-    
+
     if (seen.has(item)) {
       return {}; // Remove circular reference
     }
     seen.add(item);
-    
+
     if (Array.isArray(item)) {
       return item.map(clone);
     }
-    
+
     const cloned: any = {};
     for (const key in item) {
       if (item.hasOwnProperty(key)) {
@@ -140,7 +140,7 @@ const deepCloneAndSanitize = (obj: any): any => {
     }
     return cloned;
   };
-  
+
   return clone(obj);
 };
 
@@ -151,37 +151,37 @@ const validateAndSanitizeClientData = (data: any) => {
   try {
     // First, deep clone and remove circular references
     const sanitized = deepCloneAndSanitize(data);
-    
+
     // Ensure required fields exist and are valid
     if (!sanitized.name || sanitized.name.trim() === '') {
       throw new Error('Client name is required');
     }
-    
+
     // Initialize arrays if they don't exist
     sanitized.emails = Array.isArray(sanitized.emails) ? sanitized.emails : [];
     sanitized.lineOfBusiness = Array.isArray(sanitized.lineOfBusiness) ? sanitized.lineOfBusiness : [];
     sanitized.primaryContacts = Array.isArray(sanitized.primaryContacts) ? sanitized.primaryContacts : [];
-    
+
     // Convert string numbers to actual numbers where expected
     const numericFields = [
       'clientAge', 'contractValue', 'cLevelPercentage', 'belowCLevelPercentage',
       'seniorLevelPercentage', 'executivesPercentage', 'nonExecutivesPercentage', 'otherPercentage'
     ];
-    
+
     numericFields.forEach(field => {
       if (sanitized[field] !== null && sanitized[field] !== undefined) {
         const num = Number(sanitized[field]);
         sanitized[field] = isNaN(num) ? 0 : num;
       }
     });
-    
+
     // Clean up undefined values
     Object.keys(sanitized).forEach(key => {
       if (sanitized[key] === undefined) {
         delete sanitized[key];
       }
     });
-    
+
     // Ensure dates are strings or null
     if (sanitized.contractStartDate && !(typeof sanitized.contractStartDate === 'string')) {
       sanitized.contractStartDate = new Date(sanitized.contractStartDate).toISOString();
@@ -192,7 +192,7 @@ const validateAndSanitizeClientData = (data: any) => {
     // if (sanitized.incorporationDate && !(typeof sanitized.incorporationDate === 'string')) {
     //   sanitized.incorporationDate = new Date(sanitized.incorporationDate).toISOString();
     // }
-    
+
     // Validate primary contacts
     if (sanitized.primaryContacts && Array.isArray(sanitized.primaryContacts)) {
       sanitized.primaryContacts = sanitized.primaryContacts.map((contact: any) => {
@@ -216,7 +216,7 @@ const validateAndSanitizeClientData = (data: any) => {
         return contact;
       });
     }
-    
+
     // Validate labelType
     if (sanitized.labelType && typeof sanitized.labelType === 'object') {
       sanitized.labelType = {
@@ -233,7 +233,7 @@ const validateAndSanitizeClientData = (data: any) => {
         other: '',
       };
     }
-    
+
     return sanitized;
   } catch (error: unknown) {
     console.error('Data validation error:', error);
@@ -262,7 +262,7 @@ const prepareFormData = (data: any): FormData => {
     }
 
     const value = data[key];
-    
+
     if (value === null || value === undefined) {
       return;
     }
@@ -347,10 +347,10 @@ const sendClientRequest = async (
   try {
     // First validate and sanitize the data
     const validatedData = validateAndSanitizeClientData(rawData);
-    
+
     if (hasFileUploads(validatedData)) {
       const formData = prepareFormData(validatedData);
-      
+
       return await axios({
         method,
         url,
@@ -361,7 +361,7 @@ const sendClientRequest = async (
       });
     } else {
       const jsonData = prepareJsonData(validatedData);
-      
+
       // Test JSON serialization before sending
       try {
         const testSerialization = JSON.stringify(jsonData);
@@ -369,8 +369,8 @@ const sendClientRequest = async (
         console.error('JSON serialization failed:', serializationError);
         throw new Error('Data contains non-serializable content');
       }
-      
-      
+
+
       return await axios({
         method,
         url,
@@ -401,12 +401,12 @@ const sendClientRequest = async (
  */
 const handleError = (error: AxiosError) => {
   let errorMessage = "Unknown error occurred";
-  
+
   if (error.response) {
     // Server responded with error status
     const errorData = error.response.data as any;
     errorMessage = errorData?.message || errorData?.error || `Server error: ${error.response.status}`;
-    
+
     // Log detailed error info for debugging
     console.error("API Error Details:", {
       status: error.response.status,
@@ -424,7 +424,7 @@ const handleError = (error: AxiosError) => {
     errorMessage = error.message;
     console.error("Request Setup Error:", error.message);
   }
-  
+
   return new Error(errorMessage);
 };
 
@@ -476,39 +476,43 @@ const getClients = async (queryParams: {
   clientTeam?: "Enterprise" | "SMB" | "Mid-Market";
 } = {}): Promise<{ clients: ClientResponse[]; total: number; page: number; pages: number }> => {
   try {
-    const response = await axios.get(`${API_URL}/api/clients`, { 
+    const response = await axios.get(`${API_URL}/api/clients`, {
       params: queryParams,
       timeout: 15000
     });
-    
+
     // Log the response for debugging
-    
+
     // Handle different response formats
     if (response.data.success && Array.isArray(response.data.data)) {
-      // Format is { success: true, data: [...clients] }
+      // Format is { success: true, data: [...clients], results: X }
       const clients = response.data.data;
-      const meta = response.data.meta || { total: clients.length, page: 1, pages: 1 };
-      
+      const total = response.data.results || response.data.total || clients.length;
+      const limit = queryParams.limit || 20;
+      const pages = Math.ceil(total / limit);
+
       return {
         clients: clients,
-        total: meta.total || clients.length,
-        page: meta.page || 1,
-        pages: meta.pages || 1
+        total: total,
+        page: queryParams.page || 1,
+        pages: pages || 1
       };
     } else if (response.data.data && response.data.data.clients) {
       // Format is { data: { clients: [...], total: X, page: Y, pages: Z } }
       return response.data.data;
     } else {
       // Fallback for unexpected format
-      console.error('Unexpected API response format:', response.data);
-      const clients = Array.isArray(response.data) ? response.data : 
-                    (Array.isArray(response.data.data) ? response.data.data : []);
-      
+      const clients = Array.isArray(response.data) ? response.data :
+        (Array.isArray(response.data.data) ? response.data.data : []);
+      const total = response.data.results || response.data.total || clients.length;
+      const limit = queryParams.limit || 20;
+      const pages = Math.ceil(total / limit);
+
       return {
         clients: clients,
-        total: clients.length,
-        page: 1,
-        pages: 1
+        total: total,
+        page: queryParams.page || 1,
+        pages: pages || 1
       };
     }
   } catch (error: any) {
@@ -522,7 +526,7 @@ const getClientNames = async (search?: string): Promise<string[]> => {
   try {
     const response = await axios.get<ApiResponse<string[]>>(
       `${API_URL}/api/clients/names`,
-      { 
+      {
         params: { search },
         timeout: 10000
       }
@@ -596,8 +600,8 @@ const updateClientStage = async (
 
     // Manually remove file URL fields to prevent backend errors.
     const fileFields = [
-      'profileImage', 'crCopy', 'vatCopy', 'gstTinDocument', 'fixedPercentage', 
-      'fixedPercentageAdvance', 'variablePercentageCLevel', 'variablePercentageBelowCLevel', 
+      'profileImage', 'crCopy', 'vatCopy', 'gstTinDocument', 'fixedPercentage',
+      'fixedPercentageAdvance', 'variablePercentageCLevel', 'variablePercentageBelowCLevel',
       'fixWithoutAdvance', 'seniorLevel', 'executives', 'nonExecutives', 'other'
     ];
     fileFields.forEach(field => delete (updatePayload as any)[field]);
@@ -631,8 +635,8 @@ const updateClientStageStatus = async (
 
     // Manually remove file URL fields to prevent backend errors.
     const fileFields = [
-      'profileImage', 'crCopy', 'vatCopy', 'gstTinDocument', 'fixedPercentage', 
-      'fixedPercentageAdvance', 'variablePercentageCLevel', 'variablePercentageBelowCLevel', 
+      'profileImage', 'crCopy', 'vatCopy', 'gstTinDocument', 'fixedPercentage',
+      'fixedPercentageAdvance', 'variablePercentageCLevel', 'variablePercentageBelowCLevel',
       'fixWithoutAdvance', 'seniorLevel', 'executives', 'nonExecutives', 'other'
     ];
     fileFields.forEach(field => delete (updatePayload as any)[field]);
@@ -662,11 +666,11 @@ const deleteClient = async (id: string): Promise<void> => {
 const uploadClientFile = async (
   clientId: string,
   file: File,
-  field: "profileImage" | "crCopy" | "vatCopy" | "gstTinDocument" | 
-        "fixedPercentage" | "fixedPercentageAdvance" | 
-        "variablePercentageCLevel" | "variablePercentageBelowCLevel" | 
-        "fixWithoutAdvance" | "seniorLevel" | "executives" | 
-        "nonExecutives" | "other"
+  field: "profileImage" | "crCopy" | "vatCopy" | "gstTinDocument" |
+    "fixedPercentage" | "fixedPercentageAdvance" |
+    "variablePercentageCLevel" | "variablePercentageBelowCLevel" |
+    "fixWithoutAdvance" | "seniorLevel" | "executives" |
+    "nonExecutives" | "other"
 ): Promise<string> => {
   try {
     const formData = new FormData();
@@ -676,7 +680,7 @@ const uploadClientFile = async (
     const response = await axios.post<ApiResponse<{ filePath: string }>>(
       `${API_URL}/api/clients/${clientId}/upload`,
       formData,
-      { 
+      {
         // When sending FormData, do not set Content-Type header
         // The browser will automatically set it with the correct boundary
         timeout: 30000
@@ -697,12 +701,12 @@ const addPrimaryContact = async (
     // Handle phone number - remove country code from phone if it's included
     let phoneNumber = contactData.phone;
     let countryCode = contactData.countryCode || "";
-    
+
     // If phone number starts with the country code, remove it
     if (phoneNumber && countryCode && phoneNumber.startsWith(countryCode.replace('+', ''))) {
       phoneNumber = phoneNumber.substring(countryCode.replace('+', '').length);
     }
-    
+
     const contactPayload = {
       client_id: clientId, // Backend expects this field to link the contact to the client
       name: contactData.name || `${contactData.firstName} ${contactData.lastName}`.trim(),
@@ -716,16 +720,16 @@ const addPrimaryContact = async (
       gender: contactData.gender || "",
       isPrimary: true, // Backend expects this field
     };
-    
+
     const response = await axios.post<ApiResponse<ClientResponse>>(
       `${API_URL}/api/clients/${clientId}/primarycontact`,
       contactPayload,
-      { 
+      {
         headers: { "Content-Type": "application/json" },
         timeout: 15000
       }
     );
-    
+
     // The response should always have the data property according to ApiResponse<T> interface
     return response.data.data;
   } catch (error: any) {
@@ -746,7 +750,7 @@ const updatePrimaryContact = async (
       patchData.designation = patchData.position;
       delete patchData.position;
     }
-    
+
     const response = await axios.patch<ApiResponse<PrimaryContact>>(
       `${API_URL}/api/clients/${clientId}/primarycontact/${contactId}`,
       patchData,
