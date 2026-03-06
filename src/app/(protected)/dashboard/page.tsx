@@ -17,6 +17,13 @@ export default function DashboardPage() {
 
     const firstName = user?.name ? user.name.split(' ')[0] : 'there';
 
+    const currentDate = new Date().toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
     return (
         <>
             <div className="flex flex-col w-full h-full py-2 px-2 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -38,6 +45,12 @@ export default function DashboardPage() {
                             <p className="text-white/80 max-w-lg text-lg">
                                 Here are the quick actions to get your recruitment workflow started for today.
                             </p>
+                        </div>
+                        <div className="flex-shrink-0 self-start md:self-auto">
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-sm font-medium backdrop-blur-sm shadow-sm hover:bg-white/20 transition-colors">
+                                <Calendar className="w-4 h-4" />
+                                {currentDate}
+                            </div>
                         </div>
                     </div>
                 </div>
