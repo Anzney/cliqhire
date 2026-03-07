@@ -380,7 +380,7 @@ export function TeamMembersTabs({ onTeamMemberClick, highlightId }: TeamMembersT
         <TabsList className="flex border-b border-slate-200 w-full rounded-none justify-start h-12 bg-white px-2 shrink-0 overflow-x-auto">
           <TabsTrigger
             value="all"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand text-slate-500 hover:text-slate-900 data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6 border-b-2 border-transparent transition-colors"
           >
             <Users className="h-4 w-4" />
             All
@@ -390,7 +390,7 @@ export function TeamMembersTabs({ onTeamMemberClick, highlightId }: TeamMembersT
           </TabsTrigger>
           <TabsTrigger
             value="admin"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand text-slate-500 hover:text-slate-900 data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6 border-b-2 border-transparent transition-colors"
           >
             <Shield className="h-4 w-4" />
             Admin
@@ -400,7 +400,7 @@ export function TeamMembersTabs({ onTeamMemberClick, highlightId }: TeamMembersT
           </TabsTrigger>
           <TabsTrigger
             value="hiring-manager"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand text-slate-500 hover:text-slate-900 data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6 border-b-2 border-transparent transition-colors"
           >
             <UserCheck className="h-4 w-4" />
             Hiring Manager
@@ -410,7 +410,7 @@ export function TeamMembersTabs({ onTeamMemberClick, highlightId }: TeamMembersT
           </TabsTrigger>
           <TabsTrigger
             value="team-lead"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand text-slate-500 hover:text-slate-900 data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6 border-b-2 border-transparent transition-colors"
           >
             <UserCog className="h-4 w-4" />
             Team Lead
@@ -420,7 +420,7 @@ export function TeamMembersTabs({ onTeamMemberClick, highlightId }: TeamMembersT
           </TabsTrigger>
           <TabsTrigger
             value="recruiters"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand text-slate-500 hover:text-slate-900 data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6 border-b-2 border-transparent transition-colors"
           >
             <Users className="h-4 w-4" />
             Recruiters
@@ -430,7 +430,7 @@ export function TeamMembersTabs({ onTeamMemberClick, highlightId }: TeamMembersT
           </TabsTrigger>
           <TabsTrigger
             value="sales-team"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand text-slate-500 hover:text-slate-900 data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6 border-b-2 border-transparent transition-colors"
           >
             <Users className="h-4 w-4" />
             Sales Team
@@ -440,7 +440,7 @@ export function TeamMembersTabs({ onTeamMemberClick, highlightId }: TeamMembersT
           </TabsTrigger>
           <TabsTrigger
             value="head-enter"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand text-slate-500 hover:text-slate-900 data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6 border-b-2 border-transparent transition-colors"
           >
             <Crown className="h-4 w-4" />
             Head Hunter
