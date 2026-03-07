@@ -340,33 +340,35 @@ export default function JobsPage() {
 
   return (
     <>
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full bg-slate-50/50 p-2 space-y-2">
         {/* Header */}
-        <Dashboardheader
-          setOpen={setOpen}
-          setFilterOpen={setFilterOpen}
-          initialLoading={isLoading}
-          onRefresh={() => refetch()}
-          onDelete={handleDeleteSelected}
-          heading="Jobs"
-          buttonText="Add Job"
-          selectedCount={selectedRows.size}
-          showCreateButton={canModifyJobs}
-          isFilterActive={selectedStages.length > 0 || !!filterPositionName.trim() || !!filterJobOwner.trim()}
-          filterCount={
-            (selectedStages.length > 0 ? 1 : 0) +
-            (filterPositionName.trim() ? 1 : 0) +
-            (filterPositionName.trim() ? 1 : 0) +
-            (filterJobOwner.trim() ? 1 : 0)
-          }
-          onExport={() => setOpenExportDialog(true)}
-        />
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-2">
+          <Dashboardheader
+            setOpen={setOpen}
+            setFilterOpen={setFilterOpen}
+            initialLoading={isLoading}
+            onRefresh={() => refetch()}
+            onDelete={handleDeleteSelected}
+            heading="Jobs"
+            buttonText="Add Job"
+            selectedCount={selectedRows.size}
+            showCreateButton={canModifyJobs}
+            isFilterActive={selectedStages.length > 0 || !!filterPositionName.trim() || !!filterJobOwner.trim()}
+            filterCount={
+              (selectedStages.length > 0 ? 1 : 0) +
+              (filterPositionName.trim() ? 1 : 0) +
+              (filterPositionName.trim() ? 1 : 0) +
+              (filterJobOwner.trim() ? 1 : 0)
+            }
+            onExport={() => setOpenExportDialog(true)}
+          />
+        </div>
         {/* Content */}
-        <div className="flex-1 flex flex-col min-h-0 ">
-          <div className="flex-1 overflow-auto" style={{ maxHeight: "calc(100vh - 30px)" }}>
+        <div className="flex-1 flex flex-col min-h-0 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="flex-1 overflow-auto relative">
             <Table>
               <TableHeader>
-                <TableRow className="sticky top-0 z-40 bg-white dark:bg-card border-b shadow-sm hover:bg-white dark:hover:bg-card">
+                <TableRow className="sticky top-0 z-40 bg-slate-50 border-b border-slate-200 hover:bg-slate-50 text-slate-700">
                   <TableHead className="w-12 px-4">
                     <div className="flex items-center justify-center">
                       <Checkbox
@@ -387,27 +389,30 @@ export default function JobsPage() {
                   jobs.map((job: any) => (
                     <TableRow
                       key={job._id}
-                      className={`${selectedRows.has(job._id) ? 'bg-brand/5' : ''} hover:bg-muted/50 cursor-pointer`}
-                      onClick={() => router.push(`/jobs/${job._id}`)}
+                      className={`${selectedRows.has(job._id) ? 'bg-brand/5' : ''} hover:bg-muted/50`}
                     >
-                      <TableCell className="w-12 px-4" onClick={(e) => e.stopPropagation()}>
+                      <TableCell className="w-12 px-4">
                         <div className="flex items-center justify-center">
                           <Checkbox
                             checked={selectedRows.has(job._id)}
                             onCheckedChange={() => toggleRowSelection(job._id)}
                             className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-brand/10 data-[state=checked]:text-brand data-[state=checked]:border-brand focus-visible:ring-brand/50"
                             disabled={!canDeleteJobs}
-                            onClick={(e) => e.stopPropagation()}
                           />
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm font-medium">{job.jobTitle}</TableCell>
+                      <TableCell className="text-sm font-medium w-[200px]">
+                        <span
+                          className="font-medium text-slate-900 hover:text-brand hover:underline cursor-pointer transition-colors block"
+                          onClick={() => router.push(`/jobs/${job._id}`)}
+                        >
+                          {job.jobTitle}
+                        </span>
+                      </TableCell>
                       <TableCell className="text-sm capitalize">{job.jobType}</TableCell>
                       <TableCell className="text-sm">{Array.isArray(job.location) ? job.location.join(", ") : job.location ?? ""}</TableCell>
                       <TableCell className="text-sm">{job.headcount}</TableCell>
-                      <TableCell className="text-sm"
-                        onClick={(e) => e.stopPropagation()}
-                      >
+                      <TableCell className="text-sm">
                         <JobStageBadge
                           stage={toJobStage(job.stage)}
                           onStageChange={(newStage) => handleStageChange(job._id, newStage)}
@@ -432,7 +437,7 @@ export default function JobsPage() {
               </TableBody>
             </Table>
           </div>
-          <div className="sticky bottom-0 bg-white dark:bg-card z-40 border-t shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
+          <div className="sticky bottom-0 bg-slate-50/50 z-40 border-slate-200 p-1">
             <JobPaginationControls
               currentPage={currentPage}
               totalPages={totalPages}
