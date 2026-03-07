@@ -2,15 +2,15 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
-import { 
+import {
   Briefcase,
   ChevronDown,
   ChevronRight
@@ -52,16 +52,16 @@ export function AssignedJobs({ assignedJobs, onStatusChange, loading = false }: 
   };
 
   return (
-    <Card>
+    <Card className="rounded-xl border border-slate-200 shadow-sm bg-white overflow-hidden">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
+          <CardHeader className="cursor-pointer hover:bg-slate-50 transition-colors py-4 px-6 border-b border-transparent data-[state=open]:border-slate-200">
             <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Briefcase className="w-5 h-5" />
+              <div className="flex items-center gap-2 text-slate-900 font-semibold">
+                <Briefcase className="w-5 h-5 text-brand" />
                 Assigned Jobs
               </div>
-              <div className="flex items-center gap-4 text-sm text-gray-600">
+              <div className="flex items-center gap-4 text-sm text-slate-500 font-normal">
                 <span>Total Job Count: <span className="font-semibold text-gray-900">{totalJobs}</span></span>
                 <span>Total Active Job: <span className="font-semibold text-green-600">{activeJobs}</span></span>
                 {isOpen ? (
@@ -80,9 +80,9 @@ export function AssignedJobs({ assignedJobs, onStatusChange, loading = false }: 
               <div className="border-b bg-gray-50/50">
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="border-b-0 hover:bg-transparent">
                       <TableHead className="w-12">
-                        <Checkbox 
+                        <Checkbox
                           checked={checkedJobs.size === assignedJobs.length && assignedJobs.length > 0}
                           onCheckedChange={(checked) => {
                             if (checked) {
@@ -101,7 +101,7 @@ export function AssignedJobs({ assignedJobs, onStatusChange, loading = false }: 
                   </TableHeader>
                 </Table>
               </div>
-              
+
               {/* Scrollable Body */}
               <div className="max-h-96 overflow-y-auto">
                 <Table>
@@ -110,8 +110,8 @@ export function AssignedJobs({ assignedJobs, onStatusChange, loading = false }: 
                       <TableRow>
                         <TableCell colSpan={5} className="text-center py-8">
                           <div className="flex items-center justify-center">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
-                            <span className="ml-2 text-gray-600">Loading assigned jobs...</span>
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand"></div>
+                            <span className="ml-2 text-slate-500">Loading assigned jobs...</span>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -125,7 +125,7 @@ export function AssignedJobs({ assignedJobs, onStatusChange, loading = false }: 
                       assignedJobs.map((job) => (
                         <TableRow key={job.id} className="hover:bg-gray-50">
                           <TableCell className="w-12">
-                            <Checkbox 
+                            <Checkbox
                               checked={checkedJobs.has(job.id)}
                               onCheckedChange={(checked) => handleJobCheck(job.id, checked as boolean)}
                             />

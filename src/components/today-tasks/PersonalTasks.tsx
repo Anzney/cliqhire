@@ -233,34 +233,34 @@ export function PersonalTasks({
   };
 
   return (
-    <Card>
+    <Card className="rounded-xl border border-slate-200 shadow-sm bg-white overflow-hidden mb-6">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
+          <CardHeader className="cursor-pointer hover:bg-slate-50 transition-colors py-4 px-6 border-b border-transparent data-[state=open]:border-slate-200">
             <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <User className="w-5 h-5" />
+              <div className="flex items-center gap-2 text-slate-900 font-semibold">
+                <User className="w-5 h-5 text-brand" />
                 Personal Tasks
               </div>
-              <div className="flex items-center gap-4 text-sm text-gray-600">
+              <div className="flex items-center gap-4 text-sm text-slate-500 font-normal">
                 {/* Status Filter - Only visible when open */}
                 {isOpen && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700">Filter:</span>
+                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    <span className="text-sm font-medium text-slate-700">Filter:</span>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger className="w-32 h-8">
+                      <SelectTrigger className="w-32 h-8 bg-white border-slate-200 focus:ring-brand focus:border-brand transition-colors text-slate-900">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All</SelectItem>
-                        <SelectItem value="to-do">To-do</SelectItem>
-                        <SelectItem value="inprogress">In Progress</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
+                      <SelectContent className="bg-white border-slate-200 shadow-md">
+                        <SelectItem value="all" className="focus:bg-slate-50 focus:text-slate-900 cursor-pointer">All</SelectItem>
+                        <SelectItem value="to-do" className="focus:bg-slate-50 focus:text-slate-900 cursor-pointer">To-do</SelectItem>
+                        <SelectItem value="inprogress" className="focus:bg-slate-50 focus:text-slate-900 cursor-pointer">In Progress</SelectItem>
+                        <SelectItem value="completed" className="focus:bg-slate-50 focus:text-slate-900 cursor-pointer">Completed</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 )}
-                <span>Total: <span className="font-semibold text-gray-900">{filteredPersonalTasks.length}</span></span>
+                <span>Total: <span className="font-semibold text-slate-900">{filteredPersonalTasks.length}</span></span>
                 {isOpen ? (
                   <ChevronDown className="w-4 h-4" />
                 ) : (
@@ -271,25 +271,25 @@ export function PersonalTasks({
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent className="space-y-4 max-h-96 overflow-y-auto">
+          <CardContent className="space-y-4 max-h-[500px] overflow-y-auto custom-scrollbar p-6">
 
             {loading ? (
               <div className="text-center py-8">
                 <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
-                  <span className="ml-2 text-gray-600">Loading personal tasks...</span>
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand"></div>
+                  <span className="ml-2 text-slate-500">Loading personal tasks...</span>
                 </div>
               </div>
             ) : filteredPersonalTasks.length > 0 ? (
               filteredPersonalTasks.map((task) => (
                 <div
                   key={task.id}
-                  className={`border rounded-lg p-3 hover:bg-gray-50 transition-all duration-300 ${completedTasks.has(task.id)
-                    ? 'bg-green-50 border-green-200 opacity-75'
+                  className={`border border-slate-200 rounded-xl p-4 hover:shadow-md hover:border-brand/30 hover:bg-slate-50/50 transition-all duration-300 bg-white ${completedTasks.has(task.id)
+                    ? 'bg-green-50/50 border-green-200 opacity-75 grayscale-[0.3]'
                     : ''
                     }`}
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-between gap-4 w-full">
                     {/* Checkbox */}
                     <div className="flex-shrink-0">
                       <Checkbox
