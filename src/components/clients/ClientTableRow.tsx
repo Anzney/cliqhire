@@ -34,56 +34,34 @@ const ClientTableRow: React.FC<ClientTableRowProps> = ({
   canModify = false,
 }) => {
   const router = useRouter();
-  
-  const handleRowClick = (e: React.MouseEvent) => {
-    if (!(e.target as HTMLElement).closest('.client-stage-badge') && 
-        !(e.target as HTMLElement).closest('.client-stage-status-badge')) {
-      router.push(`/clients/${client.id}`);
-    }
-  };
 
-  const handleCellClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!(e.target as HTMLElement).closest('.client-stage-badge') && 
-        !(e.target as HTMLElement).closest('.client-stage-status-badge')) {
-      router.push(`/clients/${client.id}`);
-    }
-  };
+  // Row-level clicks are now disabled, navigation only happens when clicking the name
 
   return (
     <>
-      <TableCell className="text-sm font-medium px-4 py-2 w-[200px]" onClick={handleCellClick}>
-        {client.name}
+      <TableCell className="text-sm px-4 py-2 w-[200px]">
+        <span
+          className="font-medium text-slate-900 hover:text-brand hover:underline cursor-pointer transition-colors block"
+          onClick={() => router.push(`/clients/${client.id}`)}
+        >
+          {client.name}
+        </span>
       </TableCell>
-      <TableCell className="text-sm px-4 py-2 w-[150px]" onClick={handleCellClick}>
+      <TableCell className="text-sm px-4 py-2 w-[150px]">
         {client.industry}
       </TableCell>
-      <TableCell className="text-sm px-4 py-2 w-[150px]" onClick={handleCellClick}>
+      <TableCell className="text-sm px-4 py-2 w-[150px]">
         {client.countryOfBusiness}
       </TableCell>
-      <TableCell 
-        className="text-sm px-4 py-2 w-[120px]"
-        onClick={(e) => {
-          if (!(e.target as HTMLElement).closest(".client-stage-badge")) {
-            router.push(`/clients/${client.id}`);
-          }
-        }}
-      >
-        <ClientStageBadge 
-          id={client.id} 
-          stage={client.clientStage} 
+      <TableCell className="text-sm px-4 py-2 w-[120px]">
+        <ClientStageBadge
+          id={client.id}
+          stage={client.clientStage}
           onStageChange={onStageChange}
           disabled={!canModify}
         />
       </TableCell>
-      <TableCell 
-        className="text-sm px-4 py-2 w-[150px]"
-        onClick={(e) => {
-          if (!(e.target as HTMLElement).closest(".client-stage-status-badge")) {
-            router.push(`/clients/${client.id}`);
-          }
-        }}
-      >
+      <TableCell className="text-sm px-4 py-2 w-[150px]">
         <ClientStageStatusBadge
           id={client.id}
           status={client.clientSubStage}
@@ -92,12 +70,12 @@ const ClientTableRow: React.FC<ClientTableRowProps> = ({
           disabled={!canModify}
         />
       </TableCell>
-      <TableCell className="text-sm px-4 py-2 w-[120px]" onClick={handleCellClick}>
+      <TableCell className="text-sm px-4 py-2 w-[120px]">
         {client.incorporationDate
           ? `${getYearDifference(client.incorporationDate)} years`
           : "0 years"}
       </TableCell>
-      <TableCell className="text-sm px-4 py-2 w-[100px]" onClick={handleCellClick}>
+      <TableCell className="text-sm px-4 py-2 w-[100px]">
         {client.jobCount}
       </TableCell>
     </>

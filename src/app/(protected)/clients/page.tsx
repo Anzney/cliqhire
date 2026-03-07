@@ -491,7 +491,7 @@ export default function ClientsPage() {
                   pagedClients.map((client: Client) => (
                     <TableRow
                       key={client.id ?? client._id}
-                      className={`hover:bg-muted/50 cursor-pointer ${selectedRows.has(client.id) ? 'bg-brand/5' : ''}`}
+                      className={`hover:bg-muted/50 ${selectedRows.has(client.id) ? 'bg-brand/5' : ''}`}
                     >
                       <TableCell className="px-4 py-2 w-12">
                         <div className="flex items-center justify-center">
