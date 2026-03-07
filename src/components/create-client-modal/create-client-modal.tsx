@@ -453,7 +453,6 @@ export function CreateClientModal({
             ))}
           </div>
         </div>
-
         <div className="w-full h-[400px] overflow-y-auto pb-10">
           <div className="pr-2">
             <Form {...form}>
