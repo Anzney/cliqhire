@@ -131,15 +131,15 @@ export function ContractSection({ clientId, clientData, canModify = true }: Cont
         contractEndDate: contractData?.contractEndDate
           ? new Date(contractData.contractEndDate)
           : null,
-        
+
         // Proposal notes
         technicalProposalNotes: contractData?.technicalProposalNotes || "",
         financialProposalNotes: contractData?.financialProposalNotes || "",
-        
+
         // Proposal documents
         technicalProposalDocument,
         financialProposalDocument,
-        
+
         // Preserve any additional fields that might exist in the original data
         // These will be sent back to the backend even if not edited
         ...(contractData?.contractType && { contractType: contractData.contractType }),
@@ -151,7 +151,7 @@ export function ContractSection({ clientId, clientData, canModify = true }: Cont
         ...(contractData?.createdAt && { createdAt: contractData.createdAt }),
         ...(contractData?.updatedAt && { updatedAt: contractData.updatedAt }),
         ...(contractData?.createdBy && { createdBy: contractData.createdBy }),
-      }; 
+      };
       return mappedData;
     }
 
@@ -194,7 +194,7 @@ export function ContractSection({ clientId, clientData, canModify = true }: Cont
     try {
       // Get the backend contract type (mapped value) to send to API
       const contractKey = CONTRACT_MAPPING[editDialogOpen as keyof typeof CONTRACT_MAPPING];
-  
+
       await updateContract(clientId, contractKey, updatedFormData);
       toast.success(`${editDialogOpen} contract updated successfully!`);
       setEditDialogOpen(null);
@@ -467,105 +467,105 @@ export function ContractSection({ clientId, clientData, canModify = true }: Cont
         {(contractType === "Recruitment" ||
           contractType === "IT & Technology" ||
           contractType === "HR Managed Services") && (
-          <div className="space-y-2">
-            {contractData.ContractType === "Fix with Advance" ||
-              (contractData.contractType === "Fix with Advance" && (
-                <div className="grid grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <span className="font-medium text-gray-600">Fixed Percentage:</span>
-                    <p className="text-gray-800">{contractData.fixedPercentage || 0}%</p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">Advance Amount:</span>
-                    <p className="text-gray-800">
-                      {contractData.advanceMoneyAmount || 0}{" "}
-                      {contractData.advanceMoneyCurrency || "SAR"}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">Notes:</span>
-                    <p className="text-gray-800">
-                      {contractData.fixedPercentageAdvanceNotes || "No notes"}
-                    </p>
-                  </div>
-                </div>
-              ))}
-
-            {contractData.ContractType === "Level Based (Hiring)" ||
-              (contractData.contractType === "Level Based (Hiring)" &&
-                contractData.levelBasedHiring?.levelTypes?.length > 0 && (
-                  <div>
-                    <span className="font-medium text-gray-600">Level Configuration:</span>
-                    <div className="mt-2 space-y-1">
-                      {contractData.levelBasedHiring.levelTypes.map((level: string) => {
-                        const levelKey =
-                          LEVEL_TYPE_MAPPING[level] || level.toLowerCase().replace(/[^a-z]/g, "");
-                        const levelData = contractData.levelBasedHiring[levelKey] || {};
-                        return (
-                          <div key={level} className="text-sm grid grid-cols-2 gap-4">
-                            <div>
-                              <p className="font-medium text-gray-600">Level Type:</p>
-                              <p>{level}</p>
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-600">Percentage:</p>
-                              <p>{levelData.percentage || 0}%</p>
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-600">Amount:</p>
-                              <p>{levelData.amount || 0} {levelData.currency || "SAR"}</p>
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-600">Notes:</p>
-                              <p>{levelData.notes || "No notes"}</p>
-                            </div>
-                          </div>
-                        );
-                      })}
+            <div className="space-y-2">
+              {contractData.ContractType === "Fix with Advance" ||
+                (contractData.contractType === "Fix with Advance" && (
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-600">Fixed Percentage:</span>
+                      <p className="text-gray-800">{contractData.fixedPercentage || 0}%</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Advance Amount:</span>
+                      <p className="text-gray-800">
+                        {contractData.advanceMoneyAmount || 0}{" "}
+                        {contractData.advanceMoneyCurrency || "SAR"}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Notes:</span>
+                      <p className="text-gray-800">
+                        {contractData.fixedPercentageAdvanceNotes || "No notes"}
+                      </p>
                     </div>
                   </div>
                 ))}
 
-            {contractData.ContractType === "Level Based With Advance" ||
-              (contractData.contractType === "Level Based With Advance" &&
-                contractData.levelBasedAdvanceHiring?.levelTypes?.length > 0 && (
-                  <div>
-                    <span className="font-medium text-gray-600">
-                      Level Configuration (With Advance):
-                    </span>
-                    <div className="mt-2 space-y-1">
-                      {contractData.levelBasedAdvanceHiring.levelTypes.map((level: string) => {
-                        const levelKey =
-                          LEVEL_TYPE_MAPPING[level] || level.toLowerCase().replace(/[^a-z]/g, "");
-                        const levelData = contractData.levelBasedAdvanceHiring[levelKey] || {};
-                        return (
-                          <div key={level} className="text-sm grid grid-cols-3 gap-4">
-                            <div>
-                              <p className="font-medium text-gray-600">Level Type:</p>
-                              <p>{level}</p>
+              {contractData.ContractType === "Level Based (Hiring)" ||
+                (contractData.contractType === "Level Based (Hiring)" &&
+                  contractData.levelBasedHiring?.levelTypes?.length > 0 && (
+                    <div>
+                      <span className="font-medium text-gray-600">Level Configuration:</span>
+                      <div className="mt-2 space-y-1">
+                        {contractData.levelBasedHiring.levelTypes.map((level: string) => {
+                          const levelKey =
+                            LEVEL_TYPE_MAPPING[level] || level.toLowerCase().replace(/[^a-z]/g, "");
+                          const levelData = contractData.levelBasedHiring[levelKey] || {};
+                          return (
+                            <div key={level} className="text-sm grid grid-cols-2 gap-4">
+                              <div>
+                                <p className="font-medium text-gray-600">Level Type:</p>
+                                <p>{level}</p>
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-600">Percentage:</p>
+                                <p>{levelData.percentage || 0}%</p>
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-600">Amount:</p>
+                                <p>{levelData.amount || 0} {levelData.currency || "SAR"}</p>
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-600">Notes:</p>
+                                <p>{levelData.notes || "No notes"}</p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="font-medium text-gray-600">Percentage:</p>
-                              <p>{levelData.percentage || 0}%</p>
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-600">Amount:</p>
-                              <p>
-                                {levelData.amount || 0} {levelData.currency || "SAR"}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-600">Notes:</p>
-                              <p>{levelData.notes || "No notes"}</p>
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))}
-          </div>
-        )}
+                  ))}
+
+              {contractData.ContractType === "Level Based With Advance" ||
+                (contractData.contractType === "Level Based With Advance" &&
+                  contractData.levelBasedAdvanceHiring?.levelTypes?.length > 0 && (
+                    <div>
+                      <span className="font-medium text-gray-600">
+                        Level Configuration (With Advance):
+                      </span>
+                      <div className="mt-2 space-y-1">
+                        {contractData.levelBasedAdvanceHiring.levelTypes.map((level: string) => {
+                          const levelKey =
+                            LEVEL_TYPE_MAPPING[level] || level.toLowerCase().replace(/[^a-z]/g, "");
+                          const levelData = contractData.levelBasedAdvanceHiring[levelKey] || {};
+                          return (
+                            <div key={level} className="text-sm grid grid-cols-3 gap-4">
+                              <div>
+                                <p className="font-medium text-gray-600">Level Type:</p>
+                                <p>{level}</p>
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-600">Percentage:</p>
+                                <p>{levelData.percentage || 0}%</p>
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-600">Amount:</p>
+                                <p>
+                                  {levelData.amount || 0} {levelData.currency || "SAR"}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-600">Notes:</p>
+                                <p>{levelData.notes || "No notes"}</p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+            </div>
+          )}
 
         {/* Consulting specific details */}
         {(contractType === "HR Consulting" || contractType === "Mgt Consulting") && (
@@ -733,11 +733,21 @@ export function ContractSection({ clientId, clientData, canModify = true }: Cont
   };
 
   return (
-    <div className="space-y-4">
+    <div className="bg-slate-50/50 rounded-2xl p-6 flex flex-col space-y-6">
       {/* Add Contract Button */}
-      <div className="flex justify-end">
-        <Button onClick={handleAddContract} className="flex items-center gap-2" disabled={!canModify}>
-          <Plus className="h-4 w-4" />
+      <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-brand/10 rounded-lg">
+            <FileText className="w-4 h-4 text-brand" />
+          </div>
+          <h2 className="text-base font-semibold text-slate-800">Client Contracts</h2>
+        </div>
+        <Button
+          onClick={handleAddContract}
+          className="hover:bg-brand/90 transition-colors bg-brand text-white flex items-center gap-2"
+          disabled={!canModify}
+        >
+          <Plus className="w-4 h-4" />
           Add New Contract
         </Button>
       </div>
@@ -749,8 +759,8 @@ export function ContractSection({ clientId, clientData, canModify = true }: Cont
         const isExpanded = expandedContract === businessType;
 
         return (
-          <div key={businessType} className="border rounded-lg shadow-sm bg-white">
-            <div className="p-4">
+          <div key={businessType} className="bg-white rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md overflow-hidden">
+            <div className="p-5">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3">

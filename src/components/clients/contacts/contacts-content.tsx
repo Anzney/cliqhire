@@ -43,7 +43,7 @@ interface ExtendedPrimaryContact {
   gender?: string;
 }
 
-export function ContactsContent({ clientId , clientData, canModify }: ContactsContentProps) {
+export function ContactsContent({ clientId, clientData, canModify }: ContactsContentProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [primaryContacts, setPrimaryContacts] = useState<ExtendedPrimaryContact[]>([]);
   const [clientPhoneNumber, setClientPhoneNumber] = useState<string>("");
@@ -56,7 +56,7 @@ export function ContactsContent({ clientId , clientData, canModify }: ContactsCo
   const [deleteContactIndex, setDeleteContactIndex] = useState<number | null>(null);
   const [editContactIndex, setEditContactIndex] = useState<number | null>(null);
   const [addEditModalOpen, setAddEditModalOpen] = useState(false);
-  
+
 
   useEffect(() => {
     const fetchClientData = async () => {
@@ -110,15 +110,15 @@ export function ContactsContent({ clientId , clientData, canModify }: ContactsCo
     { code: "+81", label: "+81 (Japan)" },
   ];
   const positionOptions = [
-  { value: "CEO", label: "CEO" },
-  { value: "HR Head", label: "HR Head" },
-  { value: "CHRO", label: "CHRO" },
-  { value: "HR", label: "HR" },
-  { value: "Manager", label: "Manager" },
-  { value: "HR Manager", label: "HR Manager" },
-  { value: "Director", label: "Director" },
-  { value: "Executive", label: "Executive" },
-  { value: "General Manager", label: "General Manager" },
+    { value: "CEO", label: "CEO" },
+    { value: "HR Head", label: "HR Head" },
+    { value: "CHRO", label: "CHRO" },
+    { value: "HR", label: "HR" },
+    { value: "Manager", label: "Manager" },
+    { value: "HR Manager", label: "HR Manager" },
+    { value: "Director", label: "Director" },
+    { value: "Executive", label: "Executive" },
+    { value: "General Manager", label: "General Manager" },
   ];
 
   const getCountryCodeLabel = (code: string) => {
@@ -143,12 +143,12 @@ export function ContactsContent({ clientId , clientData, canModify }: ContactsCo
       // Handle phone number - remove country code from phone if it's included
       let phoneNumber = contact.phone;
       let countryCode = contact.countryCode;
-      
+
       // If phone number starts with the country code, remove it
       if (phoneNumber && countryCode && phoneNumber.startsWith(countryCode.replace('+', ''))) {
         phoneNumber = phoneNumber.substring(countryCode.replace('+', '').length);
       }
-      
+
       const contactData = {
         client_id: clientId, // Backend expects this field to link contact to client
         name: `${contact.firstName} ${contact.lastName}`.trim(),
@@ -161,14 +161,14 @@ export function ContactsContent({ clientId , clientData, canModify }: ContactsCo
         linkedin: contact.linkedin,
         gender: contact.gender || "",
       };
-      
+
       // Use the POST API to add a new primary contact
       await addPrimaryContact(clientId, contactData as any);
-      
+
       // Fetch updated client data
       const updatedClient = await getClientById(clientId);
       setPrimaryContacts(updatedClient.primaryContacts || []);
-      
+
       toast.success("Contact added successfully!");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to add contact";
@@ -216,15 +216,15 @@ export function ContactsContent({ clientId , clientData, canModify }: ContactsCo
     try {
       const contactList = clientData.primaryContacts || [];
       const contactToDelete = contactList[index];
-      
+
       if (contactToDelete && contactToDelete._id) {
         // Use the DELETE API to remove the specific contact
         await deletePrimaryContact(clientId, contactToDelete._id);
-        
+
         // Fetch updated client data to refresh the contacts list
         const updatedClient = await getClientById(clientId);
         setPrimaryContacts(updatedClient.primaryContacts || []);
-        
+
         setDeleteContactIndex(null);
         toast.success("Contact deleted successfully!");
       } else {
@@ -244,12 +244,12 @@ export function ContactsContent({ clientId , clientData, canModify }: ContactsCo
       // Handle phone number - remove country code from phone if it's included
       let phoneNumber = contact.phone;
       let countryCode = contact.countryCode;
-      
+
       // If phone number starts with the country code, remove it
       if (phoneNumber && countryCode && phoneNumber.startsWith(countryCode.replace('+', ''))) {
         phoneNumber = phoneNumber.substring(countryCode.replace('+', '').length);
       }
-      
+
       const contactData = {
         client_id: clientId, // Backend expects this field to link contact to client
         firstName: contact.firstName,
@@ -262,7 +262,7 @@ export function ContactsContent({ clientId , clientData, canModify }: ContactsCo
         linkedin: contact.linkedin,
         gender: contact.gender, // ensure gender is included
       };
-      
+
       if (editContactIndex !== null) {
         // Edit mode - use PATCH API
         const contactList = clientData.primaryContacts || [];
@@ -292,14 +292,14 @@ export function ContactsContent({ clientId , clientData, canModify }: ContactsCo
       } else {
         // Add mode - use POST API
         await addPrimaryContact(clientId, contactData as any);
-        
+
         // Fetch updated client data
         const updatedClient = await getClientById(clientId);
         setPrimaryContacts(updatedClient.primaryContacts || []);
-        
+
         toast.success("Contact added successfully!");
       }
-      
+
       setAddEditModalOpen(false);
       setEditContactIndex(null);
     } catch (err) {
@@ -313,25 +313,25 @@ export function ContactsContent({ clientId , clientData, canModify }: ContactsCo
   const initialContactValues =
     editContactIndex !== null && primaryContacts[editContactIndex]
       ? {
-          firstName: primaryContacts[editContactIndex].firstName || "",
-          lastName: primaryContacts[editContactIndex].lastName || "",
-          gender: primaryContacts[editContactIndex].gender || "",
-          email: primaryContacts[editContactIndex].email || "",
-          phone: primaryContacts[editContactIndex].phone || "",
-          countryCode: primaryContacts[editContactIndex].countryCode || "+966",
-          position: primaryContacts[editContactIndex].position || primaryContacts[editContactIndex].designation || "",
-          linkedin: primaryContacts[editContactIndex].linkedin || "",
-        }
+        firstName: primaryContacts[editContactIndex].firstName || "",
+        lastName: primaryContacts[editContactIndex].lastName || "",
+        gender: primaryContacts[editContactIndex].gender || "",
+        email: primaryContacts[editContactIndex].email || "",
+        phone: primaryContacts[editContactIndex].phone || "",
+        countryCode: primaryContacts[editContactIndex].countryCode || "+966",
+        position: primaryContacts[editContactIndex].position || primaryContacts[editContactIndex].designation || "",
+        linkedin: primaryContacts[editContactIndex].linkedin || "",
+      }
       : {
-          firstName: "",
-          lastName: "",
-          gender: "",
-          email: "",
-          phone: "",
-          countryCode: "+966",
-          position: "",
-          linkedin: "",
-        };
+        firstName: "",
+        lastName: "",
+        gender: "",
+        email: "",
+        phone: "",
+        countryCode: "+966",
+        position: "",
+        linkedin: "",
+      };
 
   if (initialLoading) {
     return <div className="p-8 text-center">Loading contacts...</div>;
@@ -349,16 +349,18 @@ export function ContactsContent({ clientId , clientData, canModify }: ContactsCo
   // If there are primary contacts, show them
   if (primaryContacts.length > 0) {
     return (
-      <div className="p-0">
-        {/* <div className="mb-6">
-          <h2 className="text-lg font-semibold">Contacts</h2>
-        </div> */}
-        <div className="flex flex-col md:flex-row gap-8 w-full">
+      <div className="bg-slate-50/50 rounded-2xl p-6">
+        <div className="flex flex-col lg:flex-row gap-8 w-full">
           {/* Heading for contact details */}
-          <div className="w-full md:w-1/2">
-            <div className="bg-white rounded-lg border shadow-sm p-4">
-              <h2 className=" text-sm font-semibold mb-4">Client Contact Details</h2>
-              <div className="flex mb-2">
+          <div className="w-full lg:w-[40%]">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md h-full overflow-hidden">
+              <div className="flex items-center gap-3 p-5 border-b border-slate-100 bg-slate-50/50">
+                <div className="p-2 bg-brand/10 rounded-lg">
+                  <Pencil className="w-4 h-4 text-brand" />
+                </div>
+                <h2 className="text-base font-semibold text-slate-800">Client Contact Details</h2>
+              </div>
+              <div className="flex flex-col p-5">
                 <div>
                   <div>
                     <span className="text-xs font-semibold text-gray-500 mr-1">
@@ -493,10 +495,15 @@ export function ContactsContent({ clientId , clientData, canModify }: ContactsCo
             )}
           </div>
           {/* Primary Contacts on the right */}
-          <div className="w-full md:w-1/2">
-            <div className="bg-white rounded-lg border shadow-sm p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-semibold">Primary Contacts</span>
+          <div className="w-full lg:w-[60%]">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm h-full flex flex-col transition-all hover:shadow-md overflow-hidden">
+              <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-brand/10 rounded-lg">
+                    <Plus className="w-4 h-4 text-brand" />
+                  </div>
+                  <h2 className="text-base font-semibold text-slate-800">Primary Contacts</h2>
+                </div>
                 {canModify && (
                   <div className="flex gap-2">
                     <Button
@@ -513,181 +520,182 @@ export function ContactsContent({ clientId , clientData, canModify }: ContactsCo
                   </div>
                 )}
               </div>
-              {(primaryContacts || []).length === 0 ? (
-                <div className="text-sm text-muted-foreground text-center py-4">
-                  No primary contacts
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {(primaryContacts || []).map((contact, index) => (
-                    <div key={index} className="p-3 rounded-md border">
-                      {/* Name row with right-aligned buttons */}
-                      <div className="flex mb-1">
-                        <div>
-                          <span className="text-xs font-semibold text-gray-500 mr-1">Name:</span>
-                          <span className="text-sm text-muted-foreground">
-                            {contact.firstName} {contact.lastName}
-                          </span>
-                          {/* Gender */}
-                          {contact.gender && (
-                            <p className="text-sm text-muted-foreground">
-                              <span className="text-xs font-semibold text-gray-500 mr-1">
-                                Gender:
-                              </span>
-                              {contact.gender}
-                            </p>
-                          )}
-                          {/* Position */}
-                          {(contact.position || contact.designation) && (
-                            <p className="text-sm text-muted-foreground">
-                              <span className="text-xs font-semibold text-gray-500 mr-1">
-                                Position:
-                              </span>
-                              {contact.position || contact.designation}
-                            </p>
-                          )}
-                          {/* Email */}
-                          {contact.email && (
-                            <p className="text-sm text-muted-foreground">
-                              <span className="text-xs font-semibold text-gray-500 mr-1">
-                                Email:
-                              </span>
-                              {contact.email}
-                            </p>
-                          )}
-                          {/* Phone Number */}
-                          <div className="text-sm text-muted-foreground">
-                            <span className="text-xs font-semibold text-gray-500 mr-1">
-                              Phone Number:
+              <div className="p-5 flex-1">
+                {(primaryContacts || []).length === 0 ? (
+                  <div className="text-sm text-slate-500 text-center py-8">
+                    No primary contacts
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {(primaryContacts || []).map((contact, index) => (
+                      <div key={index} className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                        {/* Name row with right-aligned buttons */}
+                        <div className="flex mb-1">
+                          <div>
+                            <span className="text-xs font-semibold text-gray-500 mr-1">Name:</span>
+                            <span className="text-sm text-muted-foreground">
+                              {contact.firstName} {contact.lastName}
                             </span>
-                            {getCountryCodeLabel(contact.countryCode || "")}
-                            <span className="mx-1">-</span>
-                            {contact.phone || "No phone"}
-                          </div>
-                          {/* LinkedIn */}
-                          <div className="text-sm text-muted-foreground">
-                            <span className="text-xs font-semibold text-gray-500 mr-1">
-                              LinkedIn:
-                            </span>
-                            {contact.linkedin ? (
-                              <a
-                                href={contact.linkedin}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-gray-500 hover:underline"
-                              >
-                                {contact.linkedin}
-                              </a>
-                            ) : (
-                              "No LinkedIn"
+                            {/* Gender */}
+                            {contact.gender && (
+                              <p className="text-sm text-muted-foreground">
+                                <span className="text-xs font-semibold text-gray-500 mr-1">
+                                  Gender:
+                                </span>
+                                {contact.gender}
+                              </p>
                             )}
+                            {/* Position */}
+                            {(contact.position || contact.designation) && (
+                              <p className="text-sm text-muted-foreground">
+                                <span className="text-xs font-semibold text-gray-500 mr-1">
+                                  Position:
+                                </span>
+                                {contact.position || contact.designation}
+                              </p>
+                            )}
+                            {/* Email */}
+                            {contact.email && (
+                              <p className="text-sm text-muted-foreground">
+                                <span className="text-xs font-semibold text-gray-500 mr-1">
+                                  Email:
+                                </span>
+                                {contact.email}
+                              </p>
+                            )}
+                            {/* Phone Number */}
+                            <div className="text-sm text-muted-foreground">
+                              <span className="text-xs font-semibold text-gray-500 mr-1">
+                                Phone Number:
+                              </span>
+                              {getCountryCodeLabel(contact.countryCode || "")}
+                              <span className="mx-1">-</span>
+                              {contact.phone || "No phone"}
+                            </div>
+                            {/* LinkedIn */}
+                            <div className="text-sm text-muted-foreground">
+                              <span className="text-xs font-semibold text-gray-500 mr-1">
+                                LinkedIn:
+                              </span>
+                              {contact.linkedin ? (
+                                <a
+                                  href={contact.linkedin}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-gray-500 hover:underline"
+                                >
+                                  {contact.linkedin}
+                                </a>
+                              ) : (
+                                "No LinkedIn"
+                              )}
+                            </div>
                           </div>
+                          {canModify && (
+                            <div className="flex gap-2 ml-auto">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => {
+                                  setEditContactIndex(index);
+                                  setAddEditModalOpen(true);
+                                }}
+                              >
+                                <Pencil className="size-4" />
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="icon"
+                                onClick={() => setDeleteContactIndex(index)}
+                              >
+                                <Trash2 className="size-4" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
-                        {canModify && (
-                          <div className="flex gap-2 ml-auto">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => {
-                                setEditContactIndex(index);
-                                setAddEditModalOpen(true);
-                              }}
-                            >
-                              <Pencil className="size-4" />
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              onClick={() => setDeleteContactIndex(index)}
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
-                          </div>
-                        )}
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
+          {canModify && (
+            <AddContactModal
+              open={addEditModalOpen}
+              onOpenChange={(open) => {
+                setAddEditModalOpen(open);
+                if (!open) setEditContactIndex(null);
+              }}
+              onAdd={handleAddOrEditContact}
+              countryCodes={countryCodes}
+              positionOptions={positionOptions}
+              initialValues={initialContactValues}
+              isEdit={editContactIndex !== null}
+            />
+          )}
+          {/* Delete confirmation (now using Shadcn Dialog) */}
+          {canModify && (
+            <Dialog open={deleteContactIndex !== null} onOpenChange={() => setDeleteContactIndex(null)}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Delete Contact</DialogTitle>
+                  <DialogDescription>Are you sure you want to delete this contact?</DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="flex gap-2 justify-end">
+                  <Button variant="outline" onClick={() => setDeleteContactIndex(null)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => handleDeleteContact(deleteContactIndex!)}
+                  >
+                    Delete
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+          )}
         </div>
-        {canModify && (
-          <AddContactModal
-            open={addEditModalOpen}
-            onOpenChange={(open) => {
-              setAddEditModalOpen(open);
-              if (!open) setEditContactIndex(null);
-            }}
-            onAdd={handleAddOrEditContact}
-            countryCodes={countryCodes}
-            positionOptions={positionOptions}
-            initialValues={initialContactValues}
-            isEdit={editContactIndex !== null}
-          />
-        )}
-        {/* Delete confirmation (now using Shadcn Dialog) */}
-        {canModify && (
-          <Dialog open={deleteContactIndex !== null} onOpenChange={() => setDeleteContactIndex(null)}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Delete Contact</DialogTitle>
-                <DialogDescription>Are you sure you want to delete this contact?</DialogDescription>
-              </DialogHeader>
-              <DialogFooter className="flex gap-2 justify-end">
-                <Button variant="outline" onClick={() => setDeleteContactIndex(null)}>
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => handleDeleteContact(deleteContactIndex!)}
-                >
-                  Delete
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
       </div>
     );
   }
 
   // If no primary contacts, show the empty state
   return (
-    <div className="flex flex-col items-center justify-center py-12">
-      <div className="w-32 h-32 mb-6">
-        <svg viewBox="0 0 200 200" className="w-full h-full text-blue-500">
-          <circle cx="100" cy="100" r="40" fill="currentColor" fillOpacity="0.1" />
-          <circle cx="150" cy="70" r="25" fill="currentColor" fillOpacity="0.1" />
-          <path d="M90 90 L160 60" stroke="currentColor" strokeWidth="4" />
-          <circle cx="60" cy="130" r="20" fill="currentColor" fillOpacity="0.1" />
-          <path d="M90 110 L70 125" stroke="currentColor" strokeWidth="4" />
-        </svg>
-      </div>
-      <h3 className="text-xl font-semibold mb-2">You have not created any contacts yet</h3>
-      <p className="text-muted-foreground text-center max-w-lg mb-8">
-        Creating Contacts will allow you to associate contacts with specific clients. These contacts
-        do not have access to any information in your Manatal account, unless you invite them to
-        collaborate as guests.
-      </p>
-      {canModify && (
-        <div className="flex gap-2">
-          <Button className="gap-2" onClick={() => setIsDialogOpen(true)}>
-            <Plus className="h-4 w-4" />
-            Create contact
-          </Button>
+    <div className="bg-slate-50/50 rounded-2xl p-6 h-full flex items-center justify-center">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 flex flex-col items-center justify-center w-full min-h-[400px]">
+        <div className="w-24 h-24 mb-6 bg-slate-50 rounded-full flex items-center justify-center">
+          <svg viewBox="0 0 24 24" className="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
         </div>
-      )}
+        <h3 className="text-xl font-semibold mb-2">You have not created any contacts yet</h3>
+        <p className="text-muted-foreground text-center max-w-lg mb-8">
+          Creating Contacts will allow you to associate contacts with specific clients. These contacts
+          do not have access to any information in your Manatal account, unless you invite them to
+          collaborate as guests.
+        </p>
+        {canModify && (
+          <div className="flex gap-2">
+            <Button className="gap-2" onClick={() => setIsDialogOpen(true)}>
+              <Plus className="h-4 w-4" />
+              Create contact
+            </Button>
+          </div>
+        )}
 
-      {canModify && (
-        <AddContactModal
-          open={isDialogOpen}
-          onOpenChange={setIsDialogOpen}
-          onAdd={handleAddContact}
-          countryCodes={countryCodes}
-          positionOptions={positionOptions}
-        />
-      )}
+        {canModify && (
+          <AddContactModal
+            open={isDialogOpen}
+            onOpenChange={setIsDialogOpen}
+            onAdd={handleAddContact}
+            countryCodes={countryCodes}
+            positionOptions={positionOptions}
+          />
+        )}
+      </div>
     </div>
   );
 }
