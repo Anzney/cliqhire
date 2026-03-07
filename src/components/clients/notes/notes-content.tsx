@@ -5,8 +5,7 @@ import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AddNoteDialog } from "./add-note-dialog";
 import { NotesList } from "./notes-list";
-import axios from "axios";
-
+import { useClientNotes } from "@/hooks/use-clientNotes";
 export interface Note {
   id: string;
   content: string;
@@ -24,13 +23,19 @@ function mapNote(noteFromApi: any): Note {
   return {
     id: noteFromApi._id || noteFromApi.id,
     content: noteFromApi.content,
-    author: noteFromApi.createdBy || { name: "Unknown", avatar: "?" },
+    author: noteFromApi.addedBy
+      ? {
+        name: noteFromApi.addedBy.name || "Unknown",
+        avatar: noteFromApi.addedBy.name ? noteFromApi.addedBy.name.substring(0, 2).toUpperCase() : "U"
+      }
+      : {
+        name: "Unknown",
+        avatar: "?"
+      },
     createdAt: noteFromApi.createdAt,
-    isPrivate: false, // Adjust if you add this to backend
+    isPrivate: false,
   };
 }
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 export function NotesContent({
   clientId,
@@ -43,38 +48,21 @@ export function NotesContent({
 }) {
   // const router = useRouter();
 
-  const [notes, setNotes] = useState<Note[]>([]); // removed sample notes
+  const entityId = clientId || candidateId;
+  const entityType = clientId ? 'client' : 'candidate';
+
+  const { notes: apiNotes, createNote, updateNote, deleteNote, isLoading } = useClientNotes(entityId, entityType);
+
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editNote, setEditNote] = useState<Note | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  useEffect(() => {
-    const entityId = clientId || candidateId;
-    const entityType = clientId ? 'client' : 'candidate';
-
-    if (!entityId) return;
-    axios
-      .get(`${API_BASE}/api/notes/${entityType}/${entityId}`)
-      .then((res) => setNotes(res.data.data.map(mapNote)))
-      .catch((err) => console.error("Failed to fetch notes:", err));
-  }, [clientId, candidateId]);
+  const notes: Note[] = (apiNotes || []).map(mapNote);
 
   const handleAddNote = async (note: { content: string }) => {
-    const entityId = clientId || candidateId;
-    const entityType = clientId ? 'client' : 'candidate';
-
-    if (!entityId) {
-      alert(`${entityType.charAt(0).toUpperCase() + entityType.slice(1)} ID not found in URL. Cannot create note.`);
-      return;
-    }
-    const newNote = {
-      content: note.content,
-      createdBy: entityId,
-      // relatedTo: ... // Add if needed
-    };
     try {
-      const res = await axios.post(`${API_BASE}/api/notes`, newNote);
-      setNotes([mapNote(res.data.data), ...notes]);
+      await createNote(note.content);
+      setIsAddDialogOpen(false);
     } catch (error) {
       console.error("Failed to add note:", error);
     }
@@ -82,17 +70,8 @@ export function NotesContent({
 
   const handleUpdateNote = async (updated: { content: string }) => {
     if (!editNote) return;
-
     try {
-      const res = await axios.patch(`${API_BASE}/api/notes/${editNote.id}`, {
-        content: updated.content,
-        // relatedTo: ... // Add if needed
-      });
-      const updatedNote = mapNote(res.data.data);
-      const updatedNotes = notes.map((n) =>
-        n.id === updatedNote.id ? updatedNote : n
-      );
-      setNotes(updatedNotes);
+      await updateNote({ noteId: editNote.id, content: updated.content });
       setEditNote(null);
       setIsEditDialogOpen(false);
     } catch (error) {
@@ -102,12 +81,15 @@ export function NotesContent({
 
   const handleDeleteNote = async (noteToDelete: Note) => {
     try {
-      await axios.delete(`${API_BASE}/api/notes/${noteToDelete.id}`);
-      setNotes(notes.filter((n) => n.id !== noteToDelete.id)); // This is fine if you keep mapping _id -> id
+      await deleteNote(noteToDelete.id);
     } catch (error) {
       console.error("Failed to delete note:", error);
     }
   };
+
+  if (isLoading) {
+    return <div className="p-6 text-center text-slate-500 animate-pulse">Loading notes...</div>;
+  }
 
   return (
     <div className="bg-slate-50/50 rounded-2xl p-6 flex flex-col h-full">
