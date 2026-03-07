@@ -656,7 +656,6 @@ export function ContactsContent({ clientId, clientData, canModify }: ContactsCon
               </DialogContent>
             </Dialog>
           )}
-          )}
         </div>
       </div>
     );

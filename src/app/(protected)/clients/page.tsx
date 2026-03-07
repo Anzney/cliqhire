@@ -426,30 +426,31 @@ export default function ClientsPage() {
         confirmVariant="default"
       />
 
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full bg-slate-50/50 p-2 space-y-2">
         {/* Header */}
-        <Dashboardheader
-          setOpen={setOpen}
-          setFilterOpen={setFilterOpen}
-          initialLoading={isLoading || isRefetching}
-          heading="Clients"
-          buttonText="Create Client"
-          showCreateButton={canModifyClients}
-          onRefresh={() => refetch()}
-          selectedCount={selectedRows.size}
-          onDelete={handleDeleteSelected}
-          isFilterActive={Boolean(filterName || filterIndustry || filterLocation || filterStages.length > 0)}
-          filterCount={(filterName ? 1 : 0) + (filterIndustry ? 1 : 0) + (filterLocation ? 1 : 0) + (filterStages.length > 0 ? 1 : 0)}
-          onExport={() => setOpenExportDialog(true)}
-        />
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-2">
+          <Dashboardheader
+            setOpen={setOpen}
+            setFilterOpen={setFilterOpen}
+            initialLoading={isLoading || isRefetching}
+            heading="Clients"
+            buttonText="Create Client"
+            showCreateButton={canModifyClients}
+            onRefresh={() => refetch()}
+            selectedCount={selectedRows.size}
+            onDelete={handleDeleteSelected}
+            isFilterActive={Boolean(filterName || filterIndustry || filterLocation || filterStages.length > 0)}
+            filterCount={(filterName ? 1 : 0) + (filterIndustry ? 1 : 0) + (filterLocation ? 1 : 0) + (filterStages.length > 0 ? 1 : 0)}
+            onExport={() => setOpenExportDialog(true)}
+          />
+        </div>
 
         {/* Table */}
-
-        <div className="flex-1 flex flex-col min-h-0 border-t">
-          <div className="flex-1 overflow-auto" style={{ maxHeight: "calc(100vh - 30px)" }}>
+        <div className="flex-1 flex flex-col min-h-0 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="flex-1 overflow-auto relative">
             <Table>
               <TableHeader>
-                <TableRow className="sticky top-0 z-40 bg-white dark:bg-card border-b shadow-sm hover:bg-white dark:hover:bg-card">
+                <TableRow className="sticky top-0 z-40 bg-slate-50 border-b border-slate-200 hover:bg-slate-50 text-slate-700">
                   <TableHead className="w-12 px-4">
                     <div className="flex items-center justify-center">
                       <Checkbox
@@ -516,7 +517,7 @@ export default function ClientsPage() {
               </TableBody>
             </Table>
           </div>
-          <div className="sticky bottom-0 bg-white dark:bg-card z-40 border-t shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
+          <div className="sticky bottom-0 bg-slate-50/50 z-40 border-slate-200 p-1">
             <ClientPaginationControls
               currentPage={currentPage}
               totalPages={totalPagesCalc}
