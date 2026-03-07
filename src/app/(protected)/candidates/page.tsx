@@ -163,7 +163,7 @@ export default function CandidatesPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50/50 p-2 space-y-2">
+    <div className="flex flex-col bg-slate-50/50 p-2 space-y-2" style={{ height: 'calc(100vh - 20px)' }}>
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-2">
         <Dashboardheader
           setOpen={setOpen}
