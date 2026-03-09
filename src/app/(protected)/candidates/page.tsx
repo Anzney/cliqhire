@@ -163,8 +163,8 @@ export default function CandidatesPage() {
   }
 
   return (
-    <div className="h-full">
-      <div>
+    <div className="flex flex-col bg-slate-50/50 p-2 space-y-2" style={{ height: 'calc(100vh - 20px)' }}>
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-2">
         <Dashboardheader
           setOpen={setOpen}
           setFilterOpen={setFilterOpen}
@@ -184,109 +184,112 @@ export default function CandidatesPage() {
         />
       </div>
       {/* Table */}
-      <div className="h-[560px] overflow-y-auto">
-        <Table>
-          <TableHeader className="sticky top-0 z-40 bg-white dark:bg-card border-b shadow-sm">
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="w-12 px-4 sticky top-0 z-40 bg-transparent flex items-center justify-center h-10">
-                <Checkbox
-                  checked={selectedRows.size > 0 && selectedRows.size === candidates.length}
-                  onCheckedChange={() => toggleSelectAll()}
-                  className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-brand/10 data-[state=checked]:text-brand data-[state=checked]:border-brand focus-visible:ring-brand/50"
-                  disabled={!canDeleteCandidates}
-                />
-              </TableHead>
-              {columsArr.map((column) => (
-                <TableHead key={column} className="text-xs uppercase text-muted-foreground font-medium sticky top-0 z-40 bg-transparent">{column}</TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {initialLoading ? (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center h-[calc(100vh-300px)]">
-                  <div className="flex items-center justify-center gap-2 flex-col">
-                    <Loader className="size-6 animate-spin" />
-                    <div className="text-center">Loading candidates...</div>
-                  </div>
-                </TableCell>
+      <div className="flex-1 flex flex-col min-h-0 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="flex-1 overflow-auto relative">
+          <Table>
+            <TableHeader>
+              <TableRow className="sticky top-0 z-40 bg-slate-50 border-b border-slate-200 hover:bg-slate-50 text-slate-700">
+                <TableHead className="w-12 px-4">
+                  <Checkbox
+                    checked={selectedRows.size > 0 && selectedRows.size === candidates.length}
+                    onCheckedChange={() => toggleSelectAll()}
+                    className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-brand/10 data-[state=checked]:text-brand data-[state=checked]:border-brand focus-visible:ring-brand/50"
+                    disabled={!canDeleteCandidates}
+                  />
+                </TableHead>
+                {columsArr.map((column) => (
+                  <TableHead key={column}>{column}</TableHead>
+                ))}
               </TableRow>
-            ) : candidates.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="h-[calc(100vh-300px)] text-center">
-                  <div className="py-24">
-                    <CandidatesEmptyState />
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              candidates.map((candidate) => (
-                <TableRow
-                  key={candidate._id}
-                  className={`${candidate._id && selectedRows.has(candidate._id) ? 'bg-brand/5' : ''} cursor-pointer hover:bg-muted/50`}
-                  onClick={(e) => {
-                    // Don't navigate if clicking on the status badge
-                    if (!(e.target as HTMLElement).closest(".candidate-status-badge")) {
-                      router.push(`/candidates/${candidate._id}`);
-                    }
-                  }}
-                >
-                  <TableCell className="w-12 px-4" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center justify-center">
-                      <Checkbox
-                        checked={candidate._id ? selectedRows.has(candidate._id) : false}
-                        onCheckedChange={() => candidate._id && toggleRowSelection(candidate._id)}
-                        className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-brand/10 data-[state=checked]:text-brand data-[state=checked]:border-brand focus-visible:ring-brand/50"
-                        disabled={!canDeleteCandidates}
-                        onClick={(e) => e.stopPropagation()}
-                      />
+            </TableHeader>
+            <TableBody>
+              {initialLoading ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center h-[calc(100vh-300px)]">
+                    <div className="flex items-center justify-center gap-2 flex-col">
+                      <Loader className="size-6 animate-spin" />
+                      <div className="text-center">Loading candidates...</div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm font-medium">{candidate.name || "N/A"}</TableCell>
-                  <TableCell className="text-sm">{candidate.email || "N/A"}</TableCell>
-                  <TableCell className="text-sm">{candidate.phone || "N/A"}</TableCell>
-                  <TableCell className="text-sm">{candidate.location || "N/A"}</TableCell>
-                  <TableCell className="text-sm">
-                    <CandidateStatusBadge
-                      id={candidate._id}
-                      status={(candidate.status as any) || "Active"}
-                      onStatusChange={handleStatusChange}
-                    />
-                  </TableCell>
-                  <TableCell className="text-sm">{candidate.experience || "N/A"}</TableCell>
-                  <TableCell className="text-sm">
-                    {candidate.resume ? (
-                      <a
-                        href={candidate.resume.startsWith('http') ? candidate.resume : `${process.env.NEXT_PUBLIC_API_URL || ''}${candidate.resume.startsWith('/') ? '' : '/'}${candidate.resume}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-brand hover:underline font-medium"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        View Resume
-                      </a>
-                    ) : (
-                      "N/A"
-                    )}
+                </TableRow>
+              ) : candidates.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="h-[calc(100vh-300px)] text-center">
+                    <div className="py-24">
+                      <CandidatesEmptyState />
+                    </div>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="sticky bottom-0 bg-white dark:bg-card z-40 border-t shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
-        <CandidatePaginationControls
-          currentPage={currentPage}
-          totalPages={data?.totalPages || 1}
-          totalCandidates={data?.total || 0}
-          pageSize={pageSize}
-          setPageSize={setPageSize}
-          handlePageChange={(page) => {
-            if (page >= 1 && page <= (data?.totalPages || 1)) setCurrentPage(page);
-          }}
-          candidatesLength={candidates.length}
-        />
+              ) : (
+                candidates.map((candidate) => (
+                  <TableRow
+                    key={candidate._id}
+                    className={`${candidate._id && selectedRows.has(candidate._id) ? 'bg-brand/5' : ''} hover:bg-muted/50`}
+                  >
+                    <TableCell className="w-12 px-4">
+                      <div className="flex items-center justify-center">
+                        <Checkbox
+                          checked={candidate._id ? selectedRows.has(candidate._id) : false}
+                          onCheckedChange={() => candidate._id && toggleRowSelection(candidate._id)}
+                          className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-brand/10 data-[state=checked]:text-brand data-[state=checked]:border-brand focus-visible:ring-brand/50"
+                          disabled={!canDeleteCandidates}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm font-medium w-[200px]">
+                      <span
+                        className="font-medium text-slate-900 hover:text-brand hover:underline cursor-pointer transition-colors block"
+                        onClick={() => candidate._id && router.push(`/candidates/${candidate._id}`)}
+                      >
+                        {candidate.name || "N/A"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-sm">{candidate.email || "N/A"}</TableCell>
+                    <TableCell className="text-sm">{candidate.phone || "N/A"}</TableCell>
+                    <TableCell className="text-sm">{candidate.location || "N/A"}</TableCell>
+                    <TableCell className="text-sm">
+                      <CandidateStatusBadge
+                        id={candidate._id}
+                        status={(candidate.status as any) || "Active"}
+                        onStatusChange={handleStatusChange}
+                      />
+                    </TableCell>
+                    <TableCell className="text-sm">{candidate.experience || "N/A"}</TableCell>
+                    <TableCell className="text-sm">
+                      {candidate.resume ? (
+                        <a
+                          href={candidate.resume.startsWith('http') ? candidate.resume : `${process.env.NEXT_PUBLIC_API_URL || ''}${candidate.resume.startsWith('/') ? '' : '/'}${candidate.resume}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-brand hover:underline font-medium"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          View Resume
+                        </a>
+                      ) : (
+                        "N/A"
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        <div className="sticky bottom-0 bg-slate-50/50 z-40 border-slate-200 p-1">
+          <CandidatePaginationControls
+            currentPage={currentPage}
+            totalPages={data?.totalPages || 1}
+            totalCandidates={data?.total || 0}
+            pageSize={pageSize}
+            setPageSize={setPageSize}
+            handlePageChange={(page) => {
+              if (page >= 1 && page <= (data?.totalPages || 1)) setCurrentPage(page);
+            }}
+            candidatesLength={candidates.length}
+          />
+        </div>
       </div>
 
       <DeleteConfirmationDialog

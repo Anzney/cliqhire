@@ -36,7 +36,7 @@ export function PipelineJobHeader({ job, onAddCandidate }: Props) {
   };
 
   return (
-    <div className="bg-white  border-b border-gray-200 p-6">
+    <div className="bg-brand-primary p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div className="flex-1">

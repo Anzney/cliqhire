@@ -32,24 +32,28 @@ export default function TeamMembersPage() {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <Dashboardheader
-        setOpen={setOpen}
-        setFilterOpen={setFilterOpen}
-        initialLoading={initialLoading}
-        showFilterButton={false}
-        rightContent={undefined}
-        heading="Team Members"
-        buttonText="Add Team Member"
-        onExport={() => setOpenExportDialog(true)}
-      />
+    <div className="flex flex-col bg-slate-50/50 p-2 space-y-2" style={{ height: 'calc(100vh - 20px)' }}>
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-2">
+        <Dashboardheader
+          setOpen={setOpen}
+          setFilterOpen={setFilterOpen}
+          initialLoading={initialLoading}
+          showFilterButton={false}
+          rightContent={undefined}
+          heading="Team Members"
+          buttonText="Add Team Member"
+          onExport={() => setOpenExportDialog(true)}
+        />
+      </div>
 
       {/* Tabbed Interface */}
-      <div className="flex-1">
-        <TeamMembersTabs
-          onTeamMemberClick={handleTeamMemberClick}
-          highlightId={highlightId}
-        />
+      <div className="flex-1 flex flex-col min-h-0 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="flex-1 overflow-auto relative rounded-xl">
+          <TeamMembersTabs
+            onTeamMemberClick={handleTeamMemberClick}
+            highlightId={highlightId}
+          />
+        </div>
       </div>
 
       <CreateTeamMemberModal open={open} onOpenChange={setOpen} onSuccess={handleCreateSuccess} />

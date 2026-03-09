@@ -40,8 +40,8 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div className="space-y-3">
-                            <h1 className="text-3xl md:text-5xl font-bold tracking-tight">Welcome back, {firstName}!</h1>
+                        <div className="space-y-2">
+                            <h3 className="text-xl font-bold tracking-tight">Welcome back, {firstName}!</h3>
                             <p className="text-white/80 max-w-lg text-lg">
                                 Here are the quick actions to get your recruitment workflow started for today.
                             </p>

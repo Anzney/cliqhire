@@ -122,11 +122,11 @@ Best regards,
   }
 ];
 
-export function EmailTemplatesContent({ 
-  clientId, 
+export function EmailTemplatesContent({
+  clientId,
   clientData,
   canModify = true
-}: { 
+}: {
   clientId: string;
   clientData?: any;
   canModify?: boolean;
@@ -148,12 +148,12 @@ export function EmailTemplatesContent({
     }, 500); // Simulate network delay
   }, [clientId]);
 
-  const handleAddTemplate = async (template: { 
-    name: string; 
-    subject: string; 
-    content: string; 
-    category: string; 
-    isDefault: boolean; 
+  const handleAddTemplate = async (template: {
+    name: string;
+    subject: string;
+    content: string;
+    category: string;
+    isDefault: boolean;
   }) => {
     if (!canModify) return;
     // Create new template with dummy data
@@ -164,17 +164,17 @@ export function EmailTemplatesContent({
       updatedAt: new Date().toISOString(),
       author: { name: "Current User", avatar: "CU" },
     };
-    
+
     // Add to the beginning of the templates array
     setTemplates([newTemplate, ...templates]);
   };
 
-  const handleUpdateTemplate = async (updated: { 
-    name: string; 
-    subject: string; 
-    content: string; 
-    category: string; 
-    isDefault: boolean; 
+  const handleUpdateTemplate = async (updated: {
+    name: string;
+    subject: string;
+    content: string;
+    category: string;
+    isDefault: boolean;
   }) => {
     if (!canModify) return;
     if (!editTemplate) return;
@@ -185,11 +185,11 @@ export function EmailTemplatesContent({
       ...updated,
       updatedAt: new Date().toISOString(),
     };
-    
+
     const updatedTemplates = templates.map((t) =>
       t.id === editTemplate.id ? updatedTemplate : t
     );
-    
+
     setTemplates(updatedTemplates);
     setEditTemplate(null);
     setIsEditDialogOpen(false);
@@ -227,100 +227,80 @@ export function EmailTemplatesContent({
   }
 
   return (
-    <div className="flex-1">
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h2 className="text-lg font-semibold">Email Templates</h2>
-          <p className="text-sm text-muted-foreground">
-            Manage email templates for {clientData?.name || "this client"}
-          </p>
+    <div className="bg-slate-50/50 rounded-2xl p-6 flex flex-col h-full">
+      <div className="mb-6 flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-brand/10 rounded-lg">
+            <Mail className="w-4 h-4 text-brand" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-slate-800">Email Templates</h2>
+            <p className="text-xs text-slate-500">
+              Manage email templates for {clientData?.name || "this client"}
+            </p>
+          </div>
         </div>
-        <Button onClick={() => canModify && setIsAddDialogOpen(true)} disabled={!canModify}>
+        <Button onClick={() => canModify && setIsAddDialogOpen(true)} disabled={!canModify} className="hover:bg-brand/90 transition-colors bg-brand text-white">
           <Plus className="h-4 w-4 mr-2" /> Create Template
         </Button>
       </div>
 
-      {templates.length > 0 ? (
-        <TemplatesList
-          templates={templates}
-          onEdit={(template: EmailTemplate) => {
-            if (!canModify) return;
-            setEditTemplate(template);
-            setTimeout(() => {
-              setIsEditDialogOpen(true);
-            }, 0);
-          }}
-          onDelete={handleDeleteTemplate}
-          // onDuplicate={handleDuplicateTemplate}
-          onPreview={handlePreviewTemplate}
-        />
-      ) : (
-        <div className="flex flex-col items-center justify-center text-center py-4 px-4 min-h-[300px]">
-          {/* Illustration */}
-          <div className="relative mb-4">
-            <div className="w-32 h-32 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full flex items-center justify-center">
-              <div className="relative">
-                {/* Email template mockup */}
-                <div className="bg-white rounded-lg shadow-lg p-2 w-24 h-16 border">
-                  {/* Header bar */}
-                  <div className="flex items-center gap-1 mb-1">
-                    <div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div>
-                    <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full"></div>
-                    <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
-                    <div className="flex-1 bg-blue-500 h-0.5 rounded ml-1"></div>
-                  </div>
-                  {/* Content lines */}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1">
-                      <Mail className="w-2 h-2 text-blue-500" />
-                      <div className="h-0.5 bg-gray-300 rounded flex-1"></div>
-                    </div>
-                    <div className="h-0.5 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-0.5 bg-gray-200 rounded w-1/2"></div>
-                  </div>
-                </div>
-                {/* Person illustration */}
-                <div className="absolute -right-2 -bottom-1">
-                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                    <Plus className="w-3 h-3 text-white" />
-                  </div>
-                </div>
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm transition-all p-5 flex-1">
+
+        {templates.length > 0 ? (
+          <TemplatesList
+            templates={templates}
+            onEdit={(template: EmailTemplate) => {
+              if (!canModify) return;
+              setEditTemplate(template);
+              setTimeout(() => {
+                setIsEditDialogOpen(true);
+              }, 0);
+            }}
+            onDelete={handleDeleteTemplate}
+            // onDuplicate={handleDuplicateTemplate}
+            onPreview={handlePreviewTemplate}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center text-center py-12 px-4 min-h-[300px]">
+            {/* Illustration */}
+            <div className="relative mb-6">
+              <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center">
+                <Mail className="w-12 h-12 text-slate-300" />
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="max-w-sm">
+              <h3 className="text-lg font-semibold text-slate-800 mb-2">
+                No email templates created yet
+              </h3>
+              <p className="text-slate-500 text-sm leading-relaxed mb-6">
+                Create professional email templates to streamline your communication with {clientData?.name || "this client"}.
+              </p>
+
+              {/* Action buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button
+                  onClick={() => canModify && setIsAddDialogOpen(true)}
+                  className="bg-brand hover:bg-brand/90 text-white"
+                  disabled={!canModify}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Template
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => canModify && setTemplates(DUMMY_TEMPLATES)}
+                  disabled={!canModify}
+                >
+                  Load Samples
+                </Button>
               </div>
             </div>
           </div>
-
-          {/* Content */}
-          <div className="max-w-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">
-              No email templates created yet
-            </h3>
-            <p className="text-gray-600 text-xs leading-relaxed mb-4">
-              Create professional email templates to streamline your communication with {clientData?.name || "this client"}.
-            </p>
-            
-            {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row gap-2 justify-center">
-              <Button 
-                onClick={() => canModify && setIsAddDialogOpen(true)} 
-                size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-                disabled={!canModify}
-              >
-                <Plus className="w-3 h-3 mr-1" /> 
-                Create Template
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => canModify && setTemplates(DUMMY_TEMPLATES)}
-                disabled={!canModify}
-              >
-                Load Samples
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <AddTemplateDialog
         open={isAddDialogOpen}

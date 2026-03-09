@@ -82,8 +82,10 @@ export interface JobResponse {
   message?: string;
   count?: number;
   total?: number;
+  totalCount?: number;
   page?: number;
   pages?: number;
+  limit?: number;
 }
 
 export interface PaginatedJobResponse extends JobResponse {
@@ -91,6 +93,15 @@ export interface PaginatedJobResponse extends JobResponse {
   total: number;
   page: number;
   pages: number;
+}
+
+export interface JobsPage {
+  jobs: Job[];
+  totalCount: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  count: number;
 }
 
 export interface JobCountByClient {
@@ -163,7 +174,7 @@ const getJobs = async (params?: {
   jobType?: string;
   location?: string;
   client?: string;
-  clientId?: string; // some endpoints may expect clientId instead of client
+  clientId?: string;
   minSalary?: number;
   maxSalary?: number;
   currency?: string;
@@ -172,17 +183,59 @@ const getJobs = async (params?: {
   page?: number;
   limit?: number;
   sort?: string;
-}): Promise<PaginatedJobResponse> => {
+}): Promise<JobsPage> => {
+  const page = params?.page ?? 1;
+  const limit = params?.limit ?? 10;
+
   try {
     const processedParams = {
       ...params,
+      page,
+      limit,
       ...(params?.jobType && { jobType: params.jobType.toLowerCase() }),
       ...(params?.gender && { gender: params.gender.toLowerCase() }),
     };
-    const response = await api.get<PaginatedJobResponse>(`/api/jobs`, {
-      params: processedParams,
-    });
-    return response.data;
+    const response = await api.get(`/api/jobs`, { params: processedParams });
+    const resData = response.data;
+
+    // New API format: { success, totalCount, page, limit, count, data: [...] }
+    if (resData.success && Array.isArray(resData.data)) {
+      const totalCount = resData.totalCount ?? resData.total ?? resData.data.length;
+      return {
+        jobs: resData.data,
+        totalCount,
+        page: resData.page ?? page,
+        limit: resData.limit ?? limit,
+        totalPages: Math.ceil(totalCount / limit) || 1,
+        count: resData.count ?? resData.data.length,
+      };
+    }
+
+    // Legacy format: { jobs: [...], total, page, pages }
+    if (Array.isArray(resData.jobs)) {
+      const totalCount = resData.total ?? resData.totalCount ?? resData.jobs.length;
+      return {
+        jobs: resData.jobs,
+        totalCount,
+        page: resData.page ?? page,
+        limit,
+        totalPages: (resData.pages ?? Math.ceil(totalCount / limit)) || 1,
+        count: resData.count ?? resData.jobs.length,
+      };
+    }
+
+    // Fallback
+    const jobs = Array.isArray(resData.data) ? resData.data
+      : Array.isArray(resData) ? resData : [];
+    const totalCount = resData.totalCount ?? resData.total ?? jobs.length;
+    return {
+      jobs,
+      totalCount,
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit) || 1,
+      count: jobs.length,
+    };
   } catch (error) {
     handleApiError(error, "jobs fetching");
     throw error;

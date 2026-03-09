@@ -423,78 +423,21 @@ export function RecruiterPipeline() {
   }
 
   return (
-    <div className="flex flex-col h-full h-full overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden space-y-2">
       {/* KPI Section */}
-      <div className="flex-none mb-4">
+      <div className="flex-none">
         <KPISection data={kpiData} />
       </div>
 
-      <div className="flex-none flex flex-wrap items-center justify-between mb-4 gap-4">
-        {/* <div className="flex items-center gap-2">
-          {canModifyPipeline && (
-            <CreatePipelineDialog 
-              trigger={
-                <Button className="flex items-center gap-2" disabled={listLoading}>
-                  <Plus className="h-4 w-4" />
-                  Add Recruitment
-                </Button>
-              }
-              onPipelineCreated={handlePipelineCreated}
-            />
-          )}
-        </div> */}
-
-        <div className="flex items-center gap-3">
-          {/* Search Input */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search jobs, candidates, or clients..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-[300px]"
-            />
-          </div>
-
-          {/* Job Name Filter */}
+      <div className="flex-none bg-white rounded-xl border border-slate-200 p-2 shadow-sm">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
-            placeholder="Job name"
-            value={jobNameFilter}
-            onChange={(e) => setJobNameFilter(e.target.value)}
-            className="w-[200px]"
+            placeholder="Search jobs, candidates, or clients..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 w-full bg-slate-50/50 border-transparent hover:border-slate-200 focus:border-brand shadow-none transition-colors"
           />
-
-          {/* Client Name Filter */}
-          <Input
-            placeholder="Client name"
-            value={clientNameFilter}
-            onChange={(e) => setClientNameFilter(e.target.value)}
-            className="w-[200px]"
-          />
-
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Jobs</SelectItem>
-              <SelectItem value="active">Active Jobs</SelectItem>
-              <SelectItem value="completed">Completed Jobs</SelectItem>
-              <SelectItem value="paused">Paused Jobs</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="date">Date Created</SelectItem>
-              <SelectItem value="title">Job Title</SelectItem>
-              <SelectItem value="candidates">Candidates</SelectItem>
-              <SelectItem value="client">Client Name</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </div>
 
@@ -527,10 +470,10 @@ export function RecruiterPipeline() {
       </div>
 
       {/* Pagination - Fixed to bottom */}
-      <div className="flex-none bg-white rounded-lg shadow-sm border p-4">
+      <div className="flex-none bg-slate-50/50 rounded-lg border border-slate-200 p-2 mt-auto">
         {actualTotalPages > 1 ? (
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-500 font-medium">
+          <div className="flex items-center justify-between px-2">
+            <div className="text-sm text-slate-500 font-medium">
               Showing page {actualCurrentPage} of {actualTotalPages}
             </div>
             <div className="flex items-center space-x-2">
@@ -555,7 +498,7 @@ export function RecruiterPipeline() {
             </div>
           </div>
         ) : (
-          <div className="text-sm text-gray-500 font-medium">
+          <div className="text-sm text-slate-500 font-medium px-2 py-1">
             Showing all {totalItems} result(s)
           </div>
         )}

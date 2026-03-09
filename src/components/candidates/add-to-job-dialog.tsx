@@ -94,10 +94,8 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
       const response = await getJobs();
       
       let jobsData: Job[] = [];
-      if (response.jobs) {
+      if (response?.jobs) {
         jobsData = response.jobs;
-      } else if (response.data && Array.isArray(response.data)) {
-        jobsData = response.data;
       } else {
         jobsData = [];
       }

@@ -1,5 +1,5 @@
 "use client";
-import {useState , useMemo} from "react";
+import { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Loader2, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -49,14 +49,14 @@ const Page = () => {
     },
     enabled: !!id,
   });
-  const [selectedCandidate, setSelectedCandidate] =useState<Candidate | null>(null);
+  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
+
   // Dialog states
   const [isAddCandidateOpen, setIsAddCandidateOpen] = useState(false);
   const [isCreateCandidateOpen, setIsCreateCandidateOpen] = useState(false);
-  const [isAddExistingOpen, setIsAddExistingOpen] =useState(false);
-  
+  const [isAddExistingOpen, setIsAddExistingOpen] = useState(false);
+
   // Delete candidate confirmation dialog state
   const [deleteCandidateDialog, setDeleteCandidateDialog] = useState<{
     isOpen: boolean;
@@ -67,7 +67,7 @@ const Page = () => {
   });
 
   // Status change confirmation dialog state
-  const [statusChangeDialog, setStatusChangeDialog] =useState<{
+  const [statusChangeDialog, setStatusChangeDialog] = useState<{
     isOpen: boolean;
     candidate: Candidate | null;
     newStatus: string | null;
@@ -78,7 +78,7 @@ const Page = () => {
   });
 
   // Stage change confirmation dialog state
-  const [stageChangeDialog, setStageChangeDialog] =useState<{
+  const [stageChangeDialog, setStageChangeDialog] = useState<{
     isOpen: boolean;
     candidate: Candidate | null;
     currentStage: string;
@@ -91,7 +91,7 @@ const Page = () => {
   });
 
   // Interview details dialog state
-  const [interviewDialog, setInterviewDialog] =useState<{
+  const [interviewDialog, setInterviewDialog] = useState<{
     isOpen: boolean;
     candidate: Candidate | null;
   }>({
@@ -100,7 +100,7 @@ const Page = () => {
   });
 
   // PDF viewer state
-  const [pdfViewer, setPdfViewer] =useState<{
+  const [pdfViewer, setPdfViewer] = useState<{
     isOpen: boolean;
     pdfUrl: string | null;
     candidateName: string | null;
@@ -142,7 +142,7 @@ const Page = () => {
   });
 
   // Filter state for stage filtering
-  const [selectedStageFilter, setSelectedStageFilter] =useState<string | null>(null);
+  const [selectedStageFilter, setSelectedStageFilter] = useState<string | null>(null);
 
   // Data loading is handled by React Query
 
@@ -173,7 +173,7 @@ const Page = () => {
     }
     // Validate if candidate can change stage (check for temp candidate)
     const validation = validateTempCandidateStageChange(candidate);
-    
+
     if (!validation.canChangeStage) {
       // Show temp candidate alert instead of stage change dialog
       setTempCandidateAlert({
@@ -211,7 +211,7 @@ const Page = () => {
         });
         // Refresh the job data
         await queryClient.invalidateQueries({ queryKey: ["pipeline", id] });
-        
+
         setStageChangeDialog({ isOpen: false, candidate: null, currentStage: '', newStage: '' });
       } catch (error) {
         console.error('Error updating candidate stage:', error);
@@ -267,7 +267,7 @@ const Page = () => {
         await deleteCandidateFromPipeline(id, deleteCandidateDialog.candidate.id);
         // Refresh the job data
         await queryClient.invalidateQueries({ queryKey: ["pipeline", id] });
-        
+
         setDeleteCandidateDialog({ isOpen: false, candidate: null });
       } catch (error) {
         console.error('Error deleting candidate:', error);
@@ -317,7 +317,7 @@ const Page = () => {
     }
     // Validate if candidate can change status (check for temp candidate)
     const validation = validateTempCandidateStatusChange(candidate, newStatus);
-    
+
     if (!validation.canChangeStage) {
       // Show temp candidate alert instead of status change dialog
       setTempCandidateAlert({
@@ -456,7 +456,7 @@ const Page = () => {
   };
 
   // Function to get filtered candidates based on selected stage
-  const getFilteredCandidates =useMemo(() => {
+  const getFilteredCandidates = useMemo(() => {
     if (!selectedStageFilter) return job?.candidates || [];
     return (job?.candidates || []).filter((candidate) => candidate.currentStage === selectedStageFilter);
   }, [job, selectedStageFilter]);
@@ -490,33 +490,41 @@ const Page = () => {
 
   return (
     <>
-      <div className=" space-y-4">
-        <PipelineJobHeader job={job} onAddCandidate={handleAddCandidate} />
+      <div className="flex flex-col bg-background p-2 space-y-2" style={{ height: 'calc(100vh - 20px)' }}>
+        <div className="bg-card rounded-xl  shadow-sm overflow-hidden p-2">
+          <PipelineJobHeader job={job} onAddCandidate={handleAddCandidate} />
+        </div>
 
-        <PipelineStageFilters
-          job={job}
-          selectedStage={selectedStageFilter}
-          onSelectStage={setSelectedStageFilter}
-        />
+        <div className="bg-card rounded-xl shadow-sm p-2">
+          <PipelineStageFilters
+            job={job}
+            selectedStage={selectedStageFilter}
+            onSelectStage={setSelectedStageFilter}
+          />
+        </div>
 
         {/* Candidates Table */}
-        {selectedStageFilter && (
-          <div className="px-4 py-2 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-700 mb-4 ml-6 mr-6">
-            Showing candidates in: <span className="font-semibold">{selectedStageFilter}</span>
-            <span className="ml-2 text-blue-500">({getFilteredCandidates.length} candidates)</span>
+        <div className="flex-1 flex flex-col min-h-0 bg-card rounded-xl  shadow-sm overflow-hidden">
+          {selectedStageFilter && (
+            <div className="px-4 py-3 bg-muted border-b border-border text-sm text-muted-foreground">
+              Showing candidates in: <span className="font-semibold text-foreground">{selectedStageFilter}</span>
+              <span className="ml-2">({getFilteredCandidates.length} candidates)</span>
+            </div>
+          )}
+          <div className="flex-1 overflow-auto relative">
+            <PipelineCandidatesTable
+              job={job}
+              candidates={getFilteredCandidates}
+              onStageChange={handleStageChange}
+              onStatusChange={handleStatusChange}
+              onViewCandidate={handleViewCandidate}
+              onViewResume={handleViewResume}
+              onDeleteCandidate={handleDeleteCandidate}
+            />
           </div>
-        )}
-        <PipelineCandidatesTable
-          job={job}
-          candidates={getFilteredCandidates}
-          onStageChange={handleStageChange}
-          onStatusChange={handleStatusChange}
-          onViewCandidate={handleViewCandidate}
-          onViewResume={handleViewResume}
-          onDeleteCandidate={handleDeleteCandidate}
-        />
+        </div>
       </div>
-      
+
       {/* Candidate Details Dialog */}
       <CandidateDetailsDialog
         candidate={selectedCandidate}
@@ -525,7 +533,7 @@ const Page = () => {
         pipelineId={job.id}
         onCandidateUpdate={handleCandidateUpdate}
       />
-      
+
       {/* Status Change Confirmation Dialog */}
       <StatusChangeConfirmationDialog
         isOpen={stageChangeDialog.isOpen}
@@ -578,8 +586,8 @@ const Page = () => {
             <Button variant="outline" onClick={handleCancelDeleteCandidate}>
               Cancel
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={handleConfirmDeleteCandidate}
             >
               Delete Candidate
@@ -601,7 +609,7 @@ const Page = () => {
             <Button variant="outline" onClick={handleCancelStatusChange}>
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleConfirmStatusChange}
             >
               Update Status

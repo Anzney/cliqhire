@@ -54,10 +54,10 @@ interface UserAccessTabsProps {
 
 
 
-export function UserAccessTabs({ 
-  addTeamDialogOpen, 
-  setAddTeamDialogOpen, 
-  onTeamCreated 
+export function UserAccessTabs({
+  addTeamDialogOpen,
+  setAddTeamDialogOpen,
+  onTeamCreated
 }: UserAccessTabsProps) {
   const [activeTab, setActiveTab] = useState("user-permission");
   const [internalDialogOpen, setInternalDialogOpen] = useState(false);
@@ -79,7 +79,7 @@ export function UserAccessTabs({
   });
   const teamMembersQuery = useQuery({
     queryKey: ["teamMembers"],
-    queryFn:() => getTeamMembers(),
+    queryFn: () => getTeamMembers(),
     staleTime: 30_000,
     refetchOnWindowFocus: false,
   });
@@ -216,12 +216,12 @@ export function UserAccessTabs({
               <div className="text-center">
                 <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                 <div className="p-4">
-                    <Button 
-                      className="mb-4"
-                      onClick={() => setDialogOpen(true)}
-                    >
-                      Create Team
-                    </Button>
+                  <Button
+                    className="mb-4"
+                    onClick={() => setDialogOpen(true)}
+                  >
+                    Create Team
+                  </Button>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Teams Management</h3>
                 <p className="text-gray-500">Manage team structures and assignments here.</p>
@@ -252,11 +252,11 @@ export function UserAccessTabs({
                   <MoreVertical className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                align="end" 
-                side="bottom" 
-                // className="z-[9999] min-w-[120px] bg-white border border-gray-200 shadow-lg"
-                // style={{ position: 'absolute', zIndex: 9999 }}
+              <DropdownMenuContent
+                align="end"
+                side="bottom"
+              // className="z-[9999] min-w-[120px] bg-white border border-gray-200 shadow-lg"
+              // style={{ position: 'absolute', zIndex: 9999 }}
               >
                 <DropdownMenuItem onClick={() => handleViewTeam(team)}>
                   <Eye className="mr-2 h-4 w-4" />
@@ -282,9 +282,9 @@ export function UserAccessTabs({
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="flex border-b w-full rounded-none justify-start h-12 bg-transparent p-0">
+    <div className="flex flex-col h-full overflow-hidden space-y-2">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1  flex flex-col min-h-0 bg-white">
+        <TabsList className="flex border-b border-slate-200 w-full rounded-none justify-start h-12 bg-white px-2 shrink-0 overflow-x-auto">
           {/* <TabsTrigger
             value="teams"
             className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
@@ -297,7 +297,7 @@ export function UserAccessTabs({
           </TabsTrigger> */}
           <TabsTrigger
             value="user-permission"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand text-slate-500 hover:text-slate-900 data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6 border-b-2 border-transparent transition-colors"
           >
             <Shield className="h-4 w-4" />
             User Permission
@@ -326,9 +326,9 @@ export function UserAccessTabs({
           </div>
         </TabsContent> */}
 
-        <TabsContent value="user-permission" className="p-0 mt-0">
+        <TabsContent value="user-permission" className="p-0 mt-0 flex-1 overflow-auto relative">
           <div className="flex-1">
-            <UserPermissionTab 
+            <UserPermissionTab
               teamMembers={teamMembers}
               loading={teamMembersQuery.isLoading}
               onRefresh={teamMembersQuery.refetch}

@@ -341,7 +341,7 @@ export default function ClientPage({ params }: PageProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Header Section */}
-      <div className="border-b bg-white py-4 px-6">
+      <div className="border-b bg-brand/6 py-4 px-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">{client.name || "Unnamed Client"}</h1>

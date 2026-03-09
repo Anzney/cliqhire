@@ -39,13 +39,14 @@ import Tableheader from "@/components/table-header";
 import { CreateJobRequirementForm } from "@/components/new-jobs/create-jobs-form";
 import { JobPaginationControls } from "@/components/jobs/JobPaginationControls";
 import { getJobs, updateJobStage, deleteJobById } from "@/services/jobService";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { DeleteConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Input } from "@/components/ui/input";
 import JobsFilter from "@/components/jobs/JobsFilter";
 import { ExportDialog, ExportFilterParams } from "@/components/common/export-dialog";
 import { useExportJobs } from "@/hooks/useExportJobs";
+import { useJobs } from "@/hooks/useJobs";
 
 const columsArr = [
   "Position Name",
@@ -106,7 +107,7 @@ export default function JobsPage() {
     newStage: JobStage;
   } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(13);
+  const [pageSize, setPageSize] = useState(10);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -116,48 +117,38 @@ export default function JobsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const { data: jobsData, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ["jobs"],
-    queryFn: () => getJobs(),
-    placeholderData: (prev) => prev, // keep previous page data while fetching
+  const { data: jobsData, isLoading, isFetching, refetch } = useJobs({
+    page: currentPage,
+    limit: pageSize,
+    ...(filterPositionName.trim() && { search: filterPositionName.trim() }),
   });
 
-  // Get all jobs and handle different response formats
-  let allJobs = Array.isArray(jobsData?.data) ? jobsData.data :
-    (jobsData as any)?.jobs ??
-    (Array.isArray(jobsData) ? jobsData : []);
+  // Normalize response — jobs come directly from the hook
+  let allJobs = jobsData?.jobs ?? [];
 
-  console.log('All Jobs:', allJobs); // Debug log
-  console.log('Selected Stages:', selectedStages); // Debug log
-
-  // Build owner options from unfiltered jobs
+  // Build owner options from current page
   const allOwnerOptions: string[] = Array.from(
-    new Set((Array.isArray(allJobs) ? allJobs : []).map((j: any) => j.client).filter(Boolean))
+    new Set(allJobs.map((j: any) =>
+      typeof j.client === "object" ? j.client?.name : j.client
+    ).filter(Boolean))
   );
 
-  // Apply filters
-  if (selectedStages.length > 0 || filterPositionName || filterJobOwner) {
-    const position = filterPositionName.trim().toLowerCase();
+  // Apply client-side filters (stage + jobOwner — not supported as API params)
+  if (selectedStages.length > 0 || filterJobOwner) {
     const owner = filterJobOwner.trim().toLowerCase();
     allJobs = allJobs.filter((job: any) => {
       const jobStage = (job.stage || job.jobStatus) as JobStage | undefined;
       const matchesStage = selectedStages.length === 0 || (jobStage ? selectedStages.includes(jobStage) : false);
-      const title = (job.jobTitle || "").toLowerCase();
-      const matchesTitle = position === "" || title.includes(position);
-      const jobOwnerVal = (job.client || "").toLowerCase();
-      const matchesOwner = owner === "" || jobOwnerVal.includes(owner);
-      return matchesStage && matchesTitle && matchesOwner;
+      const clientLabel = typeof job.client === "object" ? (job.client?.name ?? "") : (job.client ?? "");
+      const matchesOwner = owner === "" || clientLabel.toLowerCase().includes(owner);
+      return matchesStage && matchesOwner;
     });
   }
 
-  // Calculate pagination
-  const totalJobs = allJobs.length;
-  const totalPages = Math.max(1, Math.ceil(totalJobs / pageSize));
-
-  // Get current page jobs
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const jobs = allJobs.slice(startIndex, endIndex);
+  // Totals come from the server — client-side filters may reduce visible rows
+  const totalJobs = jobsData?.totalCount ?? 0;
+  const totalPages = jobsData?.totalPages ?? 1;
+  const jobs = allJobs;
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -340,33 +331,35 @@ export default function JobsPage() {
 
   return (
     <>
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col bg-slate-50/50 p-2 space-y-2" style={{ height: 'calc(100vh - 20px)' }}>
         {/* Header */}
-        <Dashboardheader
-          setOpen={setOpen}
-          setFilterOpen={setFilterOpen}
-          initialLoading={isLoading}
-          onRefresh={() => refetch()}
-          onDelete={handleDeleteSelected}
-          heading="Jobs"
-          buttonText="Add Job"
-          selectedCount={selectedRows.size}
-          showCreateButton={canModifyJobs}
-          isFilterActive={selectedStages.length > 0 || !!filterPositionName.trim() || !!filterJobOwner.trim()}
-          filterCount={
-            (selectedStages.length > 0 ? 1 : 0) +
-            (filterPositionName.trim() ? 1 : 0) +
-            (filterPositionName.trim() ? 1 : 0) +
-            (filterJobOwner.trim() ? 1 : 0)
-          }
-          onExport={() => setOpenExportDialog(true)}
-        />
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-2">
+          <Dashboardheader
+            setOpen={setOpen}
+            setFilterOpen={setFilterOpen}
+            initialLoading={isLoading}
+            onRefresh={() => refetch()}
+            onDelete={handleDeleteSelected}
+            heading="Jobs"
+            buttonText="Add Job"
+            selectedCount={selectedRows.size}
+            showCreateButton={canModifyJobs}
+            isFilterActive={selectedStages.length > 0 || !!filterPositionName.trim() || !!filterJobOwner.trim()}
+            filterCount={
+              (selectedStages.length > 0 ? 1 : 0) +
+              (filterPositionName.trim() ? 1 : 0) +
+              (filterPositionName.trim() ? 1 : 0) +
+              (filterJobOwner.trim() ? 1 : 0)
+            }
+            onExport={() => setOpenExportDialog(true)}
+          />
+        </div>
         {/* Content */}
-        <div className="flex-1 flex flex-col min-h-0 ">
-          <div className="flex-1 overflow-auto" style={{ maxHeight: "calc(100vh - 30px)" }}>
+        <div className="flex-1 flex flex-col min-h-0 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="flex-1 overflow-auto relative">
             <Table>
               <TableHeader>
-                <TableRow className="sticky top-0 z-40 bg-white dark:bg-card border-b shadow-sm hover:bg-white dark:hover:bg-card">
+                <TableRow className="sticky top-0 z-40 bg-slate-50 border-b border-slate-200 hover:bg-slate-50 text-slate-700">
                   <TableHead className="w-12 px-4">
                     <div className="flex items-center justify-center">
                       <Checkbox
@@ -387,27 +380,30 @@ export default function JobsPage() {
                   jobs.map((job: any) => (
                     <TableRow
                       key={job._id}
-                      className={`${selectedRows.has(job._id) ? 'bg-brand/5' : ''} hover:bg-muted/50 cursor-pointer`}
-                      onClick={() => router.push(`/jobs/${job._id}`)}
+                      className={`${selectedRows.has(job._id) ? 'bg-brand/5' : ''} hover:bg-muted/50`}
                     >
-                      <TableCell className="w-12 px-4" onClick={(e) => e.stopPropagation()}>
+                      <TableCell className="w-12 px-4">
                         <div className="flex items-center justify-center">
                           <Checkbox
                             checked={selectedRows.has(job._id)}
                             onCheckedChange={() => toggleRowSelection(job._id)}
                             className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-brand/10 data-[state=checked]:text-brand data-[state=checked]:border-brand focus-visible:ring-brand/50"
                             disabled={!canDeleteJobs}
-                            onClick={(e) => e.stopPropagation()}
                           />
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm font-medium">{job.jobTitle}</TableCell>
+                      <TableCell className="text-sm font-medium w-[200px]">
+                        <span
+                          className="font-medium text-slate-900 hover:text-brand hover:underline cursor-pointer transition-colors block"
+                          onClick={() => router.push(`/jobs/${job._id}`)}
+                        >
+                          {job.jobTitle}
+                        </span>
+                      </TableCell>
                       <TableCell className="text-sm capitalize">{job.jobType}</TableCell>
                       <TableCell className="text-sm">{Array.isArray(job.location) ? job.location.join(", ") : job.location ?? ""}</TableCell>
                       <TableCell className="text-sm">{job.headcount}</TableCell>
-                      <TableCell className="text-sm"
-                        onClick={(e) => e.stopPropagation()}
-                      >
+                      <TableCell className="text-sm">
                         <JobStageBadge
                           stage={toJobStage(job.stage)}
                           onStageChange={(newStage) => handleStageChange(job._id, newStage)}
@@ -432,13 +428,13 @@ export default function JobsPage() {
               </TableBody>
             </Table>
           </div>
-          <div className="sticky bottom-0 bg-white dark:bg-card z-40 border-t shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
+          <div className="sticky bottom-0 bg-slate-50/50 z-40 border-slate-200 p-1">
             <JobPaginationControls
               currentPage={currentPage}
               totalPages={totalPages}
               totalJobs={totalJobs}
               pageSize={pageSize}
-              setPageSize={setPageSize}
+              setPageSize={(s) => { setPageSize(s); setCurrentPage(1); }}
               handlePageChange={handlePageChange}
               jobsLength={jobs.length}
             />
@@ -470,7 +466,7 @@ export default function JobsPage() {
         open={filterOpen}
         onOpenChange={setFilterOpen}
         positionName={filterPositionName}
-        onPositionNameChange={setFilterPositionName}
+        onPositionNameChange={(v) => { setFilterPositionName(v); setCurrentPage(1); }}
         jobOwner={filterJobOwner}
         onJobOwnerChange={setFilterJobOwner}
         selectedStages={selectedStages}

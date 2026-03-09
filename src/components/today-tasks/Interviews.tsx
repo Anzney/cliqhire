@@ -74,17 +74,17 @@ export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsPr
   };
 
   return (
-    <Card>
+    <Card className="rounded-xl border border-slate-200 shadow-sm bg-white overflow-hidden">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
+          <CardHeader className="cursor-pointer hover:bg-slate-50 transition-colors py-4 px-6 border-b border-transparent data-[state=open]:border-slate-200">
             <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
+              <div className="flex items-center gap-2 text-slate-900 font-semibold">
+                <Calendar className="w-5 h-5 text-brand" />
                 Reminder Task
               </div>
-              <div className="flex items-center gap-4 text-sm text-gray-600">
-                <span>Total: <span className="font-semibold text-gray-900">{todaysInterviews.length}</span></span>
+              <div className="flex items-center gap-4 text-sm text-slate-500 font-normal">
+                <span>Total: <span className="font-semibold text-slate-900">{todaysInterviews.length}</span></span>
                 {isOpen ? (
                   <ChevronDown className="w-4 h-4" />
                 ) : (
@@ -95,13 +95,13 @@ export function Interviews({ interviews, onUpdateInterviewStatus }: InterviewsPr
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent>
+          <CardContent className="pt-4">
             {todaysInterviews.length > 0 ? (
-              <div className="rounded-md border">
-                <div className="max-h-96 overflow-y-auto">
+              <div className="rounded-md border border-slate-200">
+                <div className="max-h-96 overflow-y-auto custom-scrollbar pr-2">
                   <Table>
-                    <TableHeader className="sticky top-0 bg-white z-10">
-                      <TableRow>
+                    <TableHeader className="sticky top-0 bg-slate-50 border-b border-slate-200 hover:bg-slate-50 text-slate-700 z-10">
+                      <TableRow className="border-b-0 hover:bg-transparent">
                         <TableHead>Candidate</TableHead>
                         <TableHead>Job & Client</TableHead>
                         <TableHead>Date</TableHead>

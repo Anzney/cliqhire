@@ -207,84 +207,89 @@ export default function TodayTasksPage() {
   // if (isLoading) return <div>Loading...</div>; // Optional, layout handles it often
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="flex flex-col bg-slate-50/50 p-2 space-y-2" style={{ height: 'calc(100vh - 20px)' }}>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Today&apos;s Tasks</h1>
-          <p className="text-gray-600 mt-1">
-            Manage your assigned jobs, interviews, and personal tasks
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Search tasks..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-64"
-            />
+      <div className="flex-none bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Today&apos;s Tasks</h1>
+            <p className="text-gray-600 mt-1">
+              Manage your assigned jobs, interviews, and personal tasks
+            </p>
           </div>
-          <Dialog open={newTaskOpen} onOpenChange={setNewTaskOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <Plus className="w-4 h-4" />
-                Add Task
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Add Personal Task</DialogTitle>
-              </DialogHeader>
-              <AddTaskForm
-                onClose={() => setNewTaskOpen(false)}
-                onSubmit={handleAddTask}
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Search tasks..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 w-64"
               />
-            </DialogContent>
-          </Dialog>
+            </div>
+            <Dialog open={newTaskOpen} onOpenChange={setNewTaskOpen}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add Task
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>Add Personal Task</DialogTitle>
+                </DialogHeader>
+                <AddTaskForm
+                  onClose={() => setNewTaskOpen(false)}
+                  onSubmit={handleAddTask}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </div>
 
-      {/* Stats Overview */}
-      <StatsOverview
-        assignedJobs={assignedJobs}
-        todayInterviews={allInterviews}
-        personalTasks={personalTasks}
-      />
+      {/* Main Content Scrollable Area */}
+      <div className="flex-1 overflow-y-auto min-h-0 space-y-6 pr-2 custom-scrollbar">
 
-      {/* Assigned Jobs - Full Width */}
-      <AssignedJobs
-        assignedJobs={assignedJobs}
-        onStatusChange={handleJobStatusChange}
-        loading={isLoading}
-      />
+        {/* Stats Overview */}
+        <StatsOverview
+          assignedJobs={assignedJobs}
+          todayInterviews={allInterviews}
+          personalTasks={personalTasks}
+        />
 
-      {/* Today's Interviews */}
-      <Interviews
-        interviews={allInterviews}
-        onUpdateInterviewStatus={updateInterviewStatus}
-      />
+        {/* Assigned Jobs - Full Width */}
+        <AssignedJobs
+          assignedJobs={assignedJobs}
+          onStatusChange={handleJobStatusChange}
+          loading={isLoading}
+        />
 
-      {/* Personal Tasks */}
-      <PersonalTasks
-        personalTasks={filteredPersonalTasks}
-        completedTasks={completedTasks}
-        searchQuery={searchQuery}
-        loading={isLoading}
-        onCompleteTask={handleCompleteTask}
-        onUpdateFollowUpStatus={handleUpdateFollowUpStatus}
-        onUpdateStatus={async (taskId: string, status: JobStatus) => {
-          const apiStatus = status === 'To-do' ? 'to-do' :
-            status === 'In Progress' ? 'inprogress' :
-              'completed';
+        {/* Today's Interviews */}
+        <Interviews
+          interviews={allInterviews}
+          onUpdateInterviewStatus={updateInterviewStatus}
+        />
 
-          updatePersonalTaskStatus.mutate({ taskId, status: apiStatus });
-        }}
-        onDeleteTask={handleDeleteTask}
-        onEditTask={handleEditTask}
-      />
+        {/* Personal Tasks */}
+        <PersonalTasks
+          personalTasks={filteredPersonalTasks}
+          completedTasks={completedTasks}
+          searchQuery={searchQuery}
+          loading={isLoading}
+          onCompleteTask={handleCompleteTask}
+          onUpdateFollowUpStatus={handleUpdateFollowUpStatus}
+          onUpdateStatus={async (taskId: string, status: JobStatus) => {
+            const apiStatus = status === 'To-do' ? 'to-do' :
+              status === 'In Progress' ? 'inprogress' :
+                'completed';
 
+            updatePersonalTaskStatus.mutate({ taskId, status: apiStatus });
+          }}
+          onDeleteTask={handleDeleteTask}
+          onEditTask={handleEditTask}
+        />
+      </div>
     </div>
   );
 }

@@ -89,50 +89,54 @@ export function AttachmentsContent({ clientId, canModify = true }: AttachmentsCo
   }, [clientId]);
 
   return (
-    <div className="">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-800">Upload File</h3>
+    <div className="bg-slate-50/50 rounded-2xl p-6 flex flex-col h-full">
+      <div className="mb-6 flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-brand/10 rounded-lg">
+            <Plus className="w-4 h-4 text-brand" />
+          </div>
+          <h3 className="text-base font-semibold text-slate-800">Client Attachments</h3>
+        </div>
         <Button
           onClick={() => setShowUploadBox(true)}
           disabled={showUploadBox || !canModify}
-          className="flex items-center gap-2 bg-black text-white hover:bg-gray-800"
+          className="hover:bg-brand/90 transition-colors bg-brand text-white flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           Upload File
         </Button>
       </div>
 
-      <UploadAttachment
-        show={showUploadBox}
-        setShow={setShowUploadBox}
-        onUpload={handleUpload}
-        attachments={attachments}
-      />
-
-      {loading ? (
-        <div className="text-center py-8 text-gray-500">Loading attachments...</div>
-      ) : attachments.length === 0 ? (
-        <div className="flex flex-col items-center justify-center text-center">
-          <div className="w-48 h-48 mb-6">
-            <svg viewBox="0 0 200 200" className="w-full h-full text-blue-500">
-              <rect x="50" y="80" width="100" height="60" rx="10" fill="currentColor" opacity="0.1" />
-              <rect x="70" y="100" width="60" height="20" rx="4" fill="currentColor" opacity="0.2" />
-              <circle cx="100" cy="120" r="8" fill="currentColor" opacity="0.2" />
-              <rect x="120" y="90" width="20" height="8" rx="2" fill="currentColor" opacity="0.3" />
-            </svg>
-          </div>
-          <h2 className="text-xl font-semibold mb-2">No attachments yet</h2>
-          <p className="text-gray-500 mb-4">
-            Add your first attachment to share files with your team.
-          </p>
-        </div>
-      ) : (
-        <AttachmentList
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex-1">
+        <UploadAttachment
+          show={showUploadBox}
+          setShow={setShowUploadBox}
+          onUpload={handleUpload}
           attachments={attachments}
-          onDelete={handleDelete}
-          onDeleteSelected={handleBulkDelete}
         />
-      )}
+
+        {loading ? (
+          <div className="text-center py-12 text-slate-500 animate-pulse">Loading attachments...</div>
+        ) : attachments.length === 0 ? (
+          <div className="flex flex-col items-center justify-center text-center py-12">
+            <div className="w-24 h-24 mb-6 bg-slate-50 rounded-full flex items-center justify-center">
+              <svg viewBox="0 0 24 24" className="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-semibold text-slate-800 mb-2">No attachments yet</h2>
+            <p className="text-slate-500 max-w-sm">
+              Add your first attachment to share files with your team.
+            </p>
+          </div>
+        ) : (
+          <AttachmentList
+            attachments={attachments}
+            onDelete={handleDelete}
+            onDeleteSelected={handleBulkDelete}
+          />
+        )}
+      </div>
     </div>
   );
 }

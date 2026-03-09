@@ -26,7 +26,7 @@ import { toast } from "sonner";
 // Team role color classes for custom styling - matching status badge style
 const getTeamRoleColorClass = (role: string): string => {
   const normalizedRole = role?.toLowerCase() || "";
-  
+
   switch (normalizedRole) {
     case "admin":
     case "administrator":
@@ -66,9 +66,9 @@ interface UserPermissionTabProps {
   onRefresh?: () => void;
 }
 
-export function UserPermissionTab({ 
-  refreshTrigger, 
-  teamMembers = [], 
+export function UserPermissionTab({
+  refreshTrigger,
+  teamMembers = [],
   loading = false,
   onRefresh
 }: UserPermissionTabProps) {
@@ -77,7 +77,7 @@ export function UserPermissionTab({
 
   const userPermissionHeaderArr = [
     "Name",
-    "Email", 
+    "Email",
     "Phone",
     "Role",
     "Action",
@@ -128,17 +128,17 @@ export function UserPermissionTab({
         <TableCell className="text-sm font-medium">{user.firstName + " " + user.lastName}</TableCell>
         <TableCell className="text-sm">{user.email}</TableCell>
         <TableCell className="text-sm">{user.phone}</TableCell>
-                 <TableCell className="text-sm">
-           <span 
-             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getTeamRoleColorClass(user.teamRole || "")}`}
-             style={{ 
-               transition: 'none',
-               pointerEvents: 'none'
-             }}
-           >
-             {formatTeamRoleDisplay(user.teamRole || "")}
-           </span>
-         </TableCell>
+        <TableCell className="text-sm">
+          <span
+            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getTeamRoleColorClass(user.teamRole || "")}`}
+            style={{
+              transition: 'none',
+              pointerEvents: 'none'
+            }}
+          >
+            {formatTeamRoleDisplay(user.teamRole || "")}
+          </span>
+        </TableCell>
         <TableCell className="text-sm">
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
@@ -162,9 +162,9 @@ export function UserPermissionTab({
     <div className="flex-1">
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="sticky top-0 z-40 bg-slate-50 border-b border-slate-200 hover:bg-slate-50 text-slate-700">
             {userPermissionHeaderArr.map((header, index) => (
-              <TableHead key={index} className="text-sm font-medium">
+              <TableHead key={index}>
                 {header}
               </TableHead>
             ))}
@@ -174,7 +174,7 @@ export function UserPermissionTab({
           {renderUserPermissionTable()}
         </TableBody>
       </Table>
-      
+
       <UserPermissionDialog
         open={permissionDialogOpen}
         onOpenChange={setPermissionDialogOpen}

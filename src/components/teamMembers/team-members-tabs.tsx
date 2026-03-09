@@ -295,10 +295,17 @@ export function TeamMembersTabs({ onTeamMemberClick, highlightId }: TeamMembersT
       return (
         <TableRow
           key={teamMember._id}
-          className={`hover:bg-muted/50 cursor-default transition-colors ${isHighlighted ? 'bg-blue-100 hover:bg-blue-200' : ''
+          className={`hover:bg-muted/50 transition-colors ${isHighlighted ? 'bg-brand/5' : ''
             }`}
         >
-          <TableCell className="text-sm font-medium">{teamMember.firstName}</TableCell>
+          <TableCell className="text-sm font-medium">
+            <span
+              className="font-medium text-slate-900 hover:text-brand hover:underline cursor-pointer transition-colors block"
+              onClick={() => onTeamMemberClick?.(teamMember._id)}
+            >
+              {teamMember.firstName}
+            </span>
+          </TableCell>
           <TableCell className="text-sm">{teamMember.lastName}</TableCell>
           <TableCell className="text-sm">{teamMember.email}</TableCell>
           <TableCell className="text-sm">{teamMember.phone}</TableCell>
@@ -369,11 +376,11 @@ export function TeamMembersTabs({ onTeamMemberClick, highlightId }: TeamMembersT
 
   return (
     <div className="flex flex-col h-full">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="flex border-b w-full rounded-none justify-start h-12 bg-transparent p-0">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col min-h-0">
+        <TabsList className="flex border-b border-slate-200 w-full rounded-none justify-start h-12 bg-white px-2 shrink-0 overflow-x-auto">
           <TabsTrigger
             value="all"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand text-slate-500 hover:text-slate-900 data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6 border-b-2 border-transparent transition-colors"
           >
             <Users className="h-4 w-4" />
             All
@@ -383,7 +390,7 @@ export function TeamMembersTabs({ onTeamMemberClick, highlightId }: TeamMembersT
           </TabsTrigger>
           <TabsTrigger
             value="admin"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand text-slate-500 hover:text-slate-900 data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6 border-b-2 border-transparent transition-colors"
           >
             <Shield className="h-4 w-4" />
             Admin
@@ -393,7 +400,7 @@ export function TeamMembersTabs({ onTeamMemberClick, highlightId }: TeamMembersT
           </TabsTrigger>
           <TabsTrigger
             value="hiring-manager"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand text-slate-500 hover:text-slate-900 data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6 border-b-2 border-transparent transition-colors"
           >
             <UserCheck className="h-4 w-4" />
             Hiring Manager
@@ -403,7 +410,7 @@ export function TeamMembersTabs({ onTeamMemberClick, highlightId }: TeamMembersT
           </TabsTrigger>
           <TabsTrigger
             value="team-lead"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand text-slate-500 hover:text-slate-900 data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6 border-b-2 border-transparent transition-colors"
           >
             <UserCog className="h-4 w-4" />
             Team Lead
@@ -413,7 +420,7 @@ export function TeamMembersTabs({ onTeamMemberClick, highlightId }: TeamMembersT
           </TabsTrigger>
           <TabsTrigger
             value="recruiters"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand text-slate-500 hover:text-slate-900 data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6 border-b-2 border-transparent transition-colors"
           >
             <Users className="h-4 w-4" />
             Recruiters
@@ -423,7 +430,7 @@ export function TeamMembersTabs({ onTeamMemberClick, highlightId }: TeamMembersT
           </TabsTrigger>
           <TabsTrigger
             value="sales-team"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand text-slate-500 hover:text-slate-900 data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6 border-b-2 border-transparent transition-colors"
           >
             <Users className="h-4 w-4" />
             Sales Team
@@ -433,7 +440,7 @@ export function TeamMembersTabs({ onTeamMemberClick, highlightId }: TeamMembersT
           </TabsTrigger>
           <TabsTrigger
             value="head-enter"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand text-slate-500 hover:text-slate-900 data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6 border-b-2 border-transparent transition-colors"
           >
             <Crown className="h-4 w-4" />
             Head Hunter
@@ -443,15 +450,13 @@ export function TeamMembersTabs({ onTeamMemberClick, highlightId }: TeamMembersT
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="all" className="p-0 mt-0">
-          <div className="flex-1">
+        {["all", "admin", "hiring-manager", "team-lead", "recruiters", "sales-team", "head-enter"].map((tabValue) => (
+          <TabsContent key={tabValue} value={tabValue} className="p-0 mt-0 flex-1 overflow-auto relative">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="sticky top-0 z-40 bg-slate-50 border-b border-slate-200 hover:bg-slate-50 text-slate-700">
                   {headerArr.map((header, index) => (
-                    <TableHead key={index} className="text-sm font-medium">
-                      {header}
-                    </TableHead>
+                    <TableHead key={index}>{header}</TableHead>
                   ))}
                 </TableRow>
               </TableHeader>
@@ -459,133 +464,21 @@ export function TeamMembersTabs({ onTeamMemberClick, highlightId }: TeamMembersT
                 {renderTeamMembersTable(filteredTeamMembers)}
               </TableBody>
             </Table>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="admin" className="p-0 mt-0">
-          <div className="flex-1">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {headerArr.map((header, index) => (
-                    <TableHead key={index} className="text-sm font-medium">
-                      {header}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {renderTeamMembersTable(filteredTeamMembers)}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="hiring-manager" className="p-0 mt-0">
-          <div className="flex-1">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {headerArr.map((header, index) => (
-                    <TableHead key={index} className="text-sm font-medium">
-                      {header}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {renderTeamMembersTable(filteredTeamMembers)}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="team-lead" className="p-0 mt-0">
-          <div className="flex-1">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {headerArr.map((header, index) => (
-                    <TableHead key={index} className="text-sm font-medium">
-                      {header}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {renderTeamMembersTable(filteredTeamMembers)}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="recruiters" className="p-0 mt-0">
-          <div className="flex-1">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {headerArr.map((header, index) => (
-                    <TableHead key={index} className="text-sm font-medium">
-                      {header}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {renderTeamMembersTable(filteredTeamMembers)}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="sales-team" className="p-0 mt-0">
-          <div className="flex-1">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {headerArr.map((header, index) => (
-                    <TableHead key={index} className="text-sm font-medium">
-                      {header}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {renderTeamMembersTable(filteredTeamMembers)}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="head-enter" className="p-0 mt-0">
-          <div className="flex-1">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {headerArr.map((header, index) => (
-                    <TableHead key={index} className="text-sm font-medium">
-                      {header}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {renderTeamMembersTable(filteredTeamMembers)}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
+          </TabsContent>
+        ))}
       </Tabs>
 
-      {selectedTeamMember && (
-        <RegisterUserDialog
-          isOpen={registerDialogOpen}
-          onClose={handleCloseRegisterDialog}
-          teamMemberId={selectedTeamMember._id}
-          teamMemberName={selectedTeamMember.firstName + " " + selectedTeamMember.lastName}
-          teamMemberEmail={selectedTeamMember.email}
-        />
-      )}
+      {
+        selectedTeamMember && (
+          <RegisterUserDialog
+            isOpen={registerDialogOpen}
+            onClose={handleCloseRegisterDialog}
+            teamMemberId={selectedTeamMember._id}
+            teamMemberName={selectedTeamMember.firstName + " " + selectedTeamMember.lastName}
+            teamMemberEmail={selectedTeamMember.email}
+          />
+        )
+      }
 
       <DeleteTeamMemberDialog
         open={deleteDialogOpen}

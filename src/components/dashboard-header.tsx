@@ -39,15 +39,8 @@ const Dashboardheader = ({
 
   return (
     <div>
-      {/* Header */}
-      {/* <div className="border-b">
-          <div className="flex h-16 items-center px-4">
-            <h1 className="text-2xl font-semibold">{heading}</h1>
-          </div>
-        </div> */}
-
       {/* Toolbar */}
-      <div className="flex items-center justify-between p-4">
+      <div className="flex items-center justify-between p-2">
         {showCreateButton ? (
           <Button size="sm" onClick={() => setOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
