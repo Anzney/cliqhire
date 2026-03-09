@@ -91,41 +91,41 @@ body::-webkit-scrollbar {
   }
 
   .dark {
-    /* Dark: raise background slightly and avoid overly bright foreground */
-    --background: 240 5% 16%;
-    --foreground: 0 0% 80%;
-    --card: 240 5% 19%;
-    --card-foreground: 0 0% 82%;
-    --popover: 240 5% 19%;
-    --popover-foreground: 0 0% 82%;
-    --primary: 252 64% 63%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 4% 25%;
-    --secondary-foreground: 0 0% 90%;
-    --muted: 240 4% 20%;
-    --muted-foreground: 240 5% 65%;
-    --accent: 240 4% 25%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 42%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 4% 26%;
-    --input: 240 4% 26%;
-    --ring: 240 4.9% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 252 64% 63%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 252 64% 63%;
-    --brand-primary: 252 64% 63%;
-    --brand-primary-foreground: 0 0% 100%;
+    /* Dark: mid-dark backgrounds, softened text — comfortable low-contrast palette */
+    --background: 240 5% 20%;
+    --foreground: 0 0% 72%;
+    --card: 240 5% 23%;
+    --card-foreground: 0 0% 74%;
+    --popover: 240 5% 23%;
+    --popover-foreground: 0 0% 74%;
+    --primary: 252 58% 62%;
+    --primary-foreground: 0 0% 96%;
+    --secondary: 240 4% 28%;
+    --secondary-foreground: 0 0% 78%;
+    --muted: 240 4% 24%;
+    --muted-foreground: 240 5% 55%;
+    --accent: 240 4% 28%;
+    --accent-foreground: 0 0% 82%;
+    --destructive: 0 55% 42%;
+    --destructive-foreground: 0 0% 90%;
+    --border: 240 4% 30%;
+    --input: 240 4% 30%;
+    --ring: 240 5% 68%;
+    --chart-1: 220 60% 52%;
+    --chart-2: 160 50% 44%;
+    --chart-3: 30 70% 52%;
+    --chart-4: 280 55% 56%;
+    --chart-5: 340 65% 52%;
+    --sidebar-background: 240 5% 17%;
+    --sidebar-foreground: 240 5% 72%;
+    --sidebar-primary: 252 58% 62%;
+    --sidebar-primary-foreground: 0 0% 96%;
+    --sidebar-accent: 240 4% 24%;
+    --sidebar-accent-foreground: 240 5% 72%;
+    --sidebar-border: 240 4% 26%;
+    --sidebar-ring: 252 58% 62%;
+    --brand-primary: 252 58% 62%;
+    --brand-primary-foreground: 0 0% 96%;
   }
 }
 
