@@ -352,7 +352,7 @@ export default function ClientPage({ params }: PageProps) {
                 <span>{client.address || client.location}</span>
               )}
               {(client.industry || client.address || client.location) && <span>•</span>}
-              <Badge variant="outline" className="bg-blue-100 text-blue-800 hover:bg-blue-100">
+              <Badge variant="outline" className="bg-brand/10 text-brand border-brand/20 hover:bg-brand/10">
                 Lead
               </Badge>
             </div>
@@ -364,7 +364,7 @@ export default function ClientPage({ params }: PageProps) {
       <div className="flex items-center justify-between p-4 border-b">
         {canModifyJobs && (
           <Button
-            className="bg-black text-white hover:bg-gray-800 rounded-md flex items-center gap-2"
+            className="bg-brand text-brand-foreground hover:bg-brand/90 rounded-md flex items-center gap-2"
             onClick={() => setIsCreateJobOpen(true)}
           >
             <Plus className="h-4 w-4" />
@@ -401,7 +401,7 @@ export default function ClientPage({ params }: PageProps) {
                 style={{ width: buttonWidth ? `${buttonWidth}px` : "auto", maxWidth: "200px" }}
               >
                 <div
-                  className="absolute left-0 top-0 h-full bg-blue-500 transition-all duration-100 ease-linear"
+                  className="absolute left-0 top-0 h-full bg-brand transition-all duration-100 ease-linear"
                   style={{ width: `${reportProgress}%` }}
                 />
                 <div className="relative z-10 flex items-center gap-2 text-xs font-medium text-gray-700 whitespace-nowrap">
@@ -412,7 +412,7 @@ export default function ClientPage({ params }: PageProps) {
             ) : (
               <Button
                 size="sm"
-                className="w-50 bg-green-600 hover:bg-green-700"
+                className="w-50 bg-brand text-brand-foreground hover:bg-brand/90"
                 onClick={handleDownloadReport}
               >
                 <Download className="h-4 w-4" />
@@ -427,7 +427,7 @@ export default function ClientPage({ params }: PageProps) {
         <TabsList className="flex border-b w-full rounded-none justify-start h-12 bg-transparent p-0">
           <TabsTrigger
             value="Summary"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
           >
             <FileIcon className="h-4 w-4" />
             Summary
@@ -435,7 +435,7 @@ export default function ClientPage({ params }: PageProps) {
 
           <TabsTrigger
             value="Contract"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
           >
             <FilePen className="h-4 w-4" />
             Contract Details
@@ -443,7 +443,7 @@ export default function ClientPage({ params }: PageProps) {
 
           <TabsTrigger
             value="Jobs"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
           >
             <FileIcon className="h-4 w-4" />
             Jobs
@@ -451,14 +451,14 @@ export default function ClientPage({ params }: PageProps) {
 
           <TabsTrigger
             value="Notes"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
           >
             <StickyNote className="h-4 w-4" />
             Notes
           </TabsTrigger>
           <TabsTrigger
             value="Attachments"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
           >
             <Paperclip className="h-4 w-4" />
             Attachments
@@ -466,21 +466,21 @@ export default function ClientPage({ params }: PageProps) {
 
           <TabsTrigger
             value="Contacts"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
           >
             <Users className="h-4 w-4" />
             Contacts
           </TabsTrigger>
           <TabsTrigger
             value="History"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
           >
             <Clock className="h-4 w-4" />
             History
           </TabsTrigger>
           <TabsTrigger
             value="EmailTemplates"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-brand data-[state=active]:shadow-none rounded-none flex items-center gap-2 h-12 px-6"
           >
             <Mail className="h-4 w-4" />
             Email Templates

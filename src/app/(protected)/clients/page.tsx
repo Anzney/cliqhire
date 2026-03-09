@@ -449,13 +449,13 @@ export default function ClientsPage() {
           <div className="flex-1 overflow-auto" style={{ maxHeight: "calc(100vh - 30px)" }}>
             <Table>
               <TableHeader>
-                <TableRow className="sticky top-0 z-20 bg-white">
+                <TableRow className="sticky top-0 z-40 bg-white dark:bg-card border-b shadow-sm hover:bg-white dark:hover:bg-card">
                   <TableHead className="w-12 px-4">
                     <div className="flex items-center justify-center">
                       <Checkbox
                         checked={selectedRows.size > 0 && selectedRows.size === pagedClients.length}
                         onCheckedChange={() => toggleSelectAll()}
-                        className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
+                        className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-brand/10 data-[state=checked]:text-brand data-[state=checked]:border-brand focus-visible:ring-brand/50"
                       />
                     </div>
                   </TableHead>
@@ -490,14 +490,14 @@ export default function ClientsPage() {
                   pagedClients.map((client: Client) => (
                     <TableRow
                       key={client.id ?? client._id}
-                      className={`hover:bg-muted/50 cursor-pointer ${selectedRows.has(client.id) ? 'bg-blue-50' : ''}`}
+                      className={`hover:bg-muted/50 cursor-pointer ${selectedRows.has(client.id) ? 'bg-brand/5' : ''}`}
                     >
                       <TableCell className="px-4 py-2 w-12">
                         <div className="flex items-center justify-center">
                           <Checkbox
                             checked={selectedRows.has(client.id)}
                             onCheckedChange={() => toggleRowSelection(client.id)}
-                            className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
+                            className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-brand/10 data-[state=checked]:text-brand data-[state=checked]:border-brand focus-visible:ring-brand/50"
                             onClick={(e) => e.stopPropagation()}
                           />
                         </div>
@@ -516,7 +516,7 @@ export default function ClientsPage() {
               </TableBody>
             </Table>
           </div>
-          <div className="sticky bottom-0 bg-white z-10 border-t">
+          <div className="sticky bottom-0 bg-white dark:bg-card z-40 border-t shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
             <ClientPaginationControls
               currentPage={currentPage}
               totalPages={totalPagesCalc}

@@ -1,10 +1,15 @@
 import { getClients } from "@/services/clientService";
 
-export async function fetchClients(search: string = ""): Promise<{ _id: string; name: string }[]> {
+export async function fetchClients(search: string = "", page: number = 1): Promise<{ clients: { _id: string; name: string }[], hasMore: boolean }> {
   try {
-    const { clients } = await getClients({ search, limit: 20 });
-    return clients.map((client: any) => ({ _id: client._id, name: client.name }));
+    const limit = 15; // Increased limit for better initial view
+    const { clients, pages } = await getClients({ search, limit, page });
+    return {
+      clients: clients.map((client: any) => ({ _id: client._id, name: client.name })),
+      // Use both metadata and length check for robust hasMore detection
+      hasMore: page < pages || clients.length === limit
+    };
   } catch (error) {
-    return [];
+    return { clients: [], hasMore: false };
   }
-} 
+}

@@ -11,12 +11,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <AuthGuard>
       <QueryProvider>
         <SidebarProvider
-          style={{ ["--sidebar-width" as any]: "13rem", ["--sidebar-width-icon" as any]: "3rem" }}
+          style={{ ["--sidebar-width" as any]: "16rem", ["--sidebar-width-icon" as any]: "4rem" }}
         >
           <Sidebar />
           <SidebarInset>
-            <main className="flex-1 min-h-screen flex flex-col overflow-auto">
-              <Header />
+            <Header />
+            <main className="flex-1 h-screen flex flex-col overflow-hidden">
               <div className="flex-1 overflow-auto">{children}</div>
             </main>
           </SidebarInset>

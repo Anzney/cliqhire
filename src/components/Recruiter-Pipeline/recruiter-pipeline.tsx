@@ -68,6 +68,8 @@ export function RecruiterPipeline() {
     queryKey: ["allPipelineEntriesForKPI", user?._id],
     queryFn: async () => await getAllPipelineEntries(1, 1000),
     enabled: !!user,
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
+    refetchOnWindowFocus: false, // Prevent refetching when switching tabs
   });
 
   useEffect(() => {

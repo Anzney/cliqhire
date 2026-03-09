@@ -186,20 +186,18 @@ export default function CandidatesPage() {
       {/* Table */}
       <div className="h-[560px] overflow-y-auto">
         <Table>
-          <TableHeader className="sticky top-0 z-20 bg-white">
-            <TableRow className="bg-white">
-              <TableHead className="w-12 px-4 sticky top-0 z-20 bg-white">
-                <div className="flex items-center justify-center">
-                  <Checkbox
-                    checked={selectedRows.size > 0 && selectedRows.size === candidates.length}
-                    onCheckedChange={() => toggleSelectAll()}
-                    className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
-                    disabled={!canDeleteCandidates}
-                  />
-                </div>
+          <TableHeader className="sticky top-0 z-40 bg-white dark:bg-card border-b shadow-sm">
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-12 px-4 sticky top-0 z-40 bg-transparent flex items-center justify-center h-10">
+                <Checkbox
+                  checked={selectedRows.size > 0 && selectedRows.size === candidates.length}
+                  onCheckedChange={() => toggleSelectAll()}
+                  className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-brand/10 data-[state=checked]:text-brand data-[state=checked]:border-brand focus-visible:ring-brand/50"
+                  disabled={!canDeleteCandidates}
+                />
               </TableHead>
               {columsArr.map((column) => (
-                <TableHead key={column} className="text-xs uppercase text-muted-foreground font-medium sticky top-0 z-20 bg-white">{column}</TableHead>
+                <TableHead key={column} className="text-xs uppercase text-muted-foreground font-medium sticky top-0 z-40 bg-transparent">{column}</TableHead>
               ))}
             </TableRow>
           </TableHeader>
@@ -225,7 +223,7 @@ export default function CandidatesPage() {
               candidates.map((candidate) => (
                 <TableRow
                   key={candidate._id}
-                  className={`${candidate._id && selectedRows.has(candidate._id) ? 'bg-blue-50' : ''} cursor-pointer hover:bg-gray-100`}
+                  className={`${candidate._id && selectedRows.has(candidate._id) ? 'bg-brand/5' : ''} cursor-pointer hover:bg-muted/50`}
                   onClick={(e) => {
                     // Don't navigate if clicking on the status badge
                     if (!(e.target as HTMLElement).closest(".candidate-status-badge")) {
@@ -238,7 +236,7 @@ export default function CandidatesPage() {
                       <Checkbox
                         checked={candidate._id ? selectedRows.has(candidate._id) : false}
                         onCheckedChange={() => candidate._id && toggleRowSelection(candidate._id)}
-                        className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-slate-100 data-[state=checked]:text-blue-600 data-[state=checked]:border-blue-600 focus-visible:ring-indigo-500"
+                        className="h-4 w-4 rounded border-gray-300 data-[state=checked]:bg-brand/10 data-[state=checked]:text-brand data-[state=checked]:border-brand focus-visible:ring-brand/50"
                         disabled={!canDeleteCandidates}
                         onClick={(e) => e.stopPropagation()}
                       />
@@ -262,7 +260,7 @@ export default function CandidatesPage() {
                         href={candidate.resume.startsWith('http') ? candidate.resume : `${process.env.NEXT_PUBLIC_API_URL || ''}${candidate.resume.startsWith('/') ? '' : '/'}${candidate.resume}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
+                        className="text-brand hover:underline font-medium"
                         onClick={(e) => e.stopPropagation()}
                       >
                         View Resume
@@ -277,7 +275,7 @@ export default function CandidatesPage() {
           </TableBody>
         </Table>
       </div>
-      <div>
+      <div className="sticky bottom-0 bg-white dark:bg-card z-40 border-t shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
         <CandidatePaginationControls
           currentPage={currentPage}
           totalPages={data?.totalPages || 1}
