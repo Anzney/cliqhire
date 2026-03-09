@@ -39,13 +39,14 @@ import Tableheader from "@/components/table-header";
 import { CreateJobRequirementForm } from "@/components/new-jobs/create-jobs-form";
 import { JobPaginationControls } from "@/components/jobs/JobPaginationControls";
 import { getJobs, updateJobStage, deleteJobById } from "@/services/jobService";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { DeleteConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Input } from "@/components/ui/input";
 import JobsFilter from "@/components/jobs/JobsFilter";
 import { ExportDialog, ExportFilterParams } from "@/components/common/export-dialog";
 import { useExportJobs } from "@/hooks/useExportJobs";
+import { useJobs } from "@/hooks/useJobs";
 
 const columsArr = [
   "Position Name",
@@ -106,7 +107,7 @@ export default function JobsPage() {
     newStage: JobStage;
   } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(13);
+  const [pageSize, setPageSize] = useState(10);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -116,48 +117,38 @@ export default function JobsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const { data: jobsData, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ["jobs"],
-    queryFn: () => getJobs(),
-    placeholderData: (prev) => prev, // keep previous page data while fetching
+  const { data: jobsData, isLoading, isFetching, refetch } = useJobs({
+    page: currentPage,
+    limit: pageSize,
+    ...(filterPositionName.trim() && { search: filterPositionName.trim() }),
   });
 
-  // Get all jobs and handle different response formats
-  let allJobs = Array.isArray(jobsData?.data) ? jobsData.data :
-    (jobsData as any)?.jobs ??
-    (Array.isArray(jobsData) ? jobsData : []);
+  // Normalize response — jobs come directly from the hook
+  let allJobs = jobsData?.jobs ?? [];
 
-  console.log('All Jobs:', allJobs); // Debug log
-  console.log('Selected Stages:', selectedStages); // Debug log
-
-  // Build owner options from unfiltered jobs
+  // Build owner options from current page
   const allOwnerOptions: string[] = Array.from(
-    new Set((Array.isArray(allJobs) ? allJobs : []).map((j: any) => j.client).filter(Boolean))
+    new Set(allJobs.map((j: any) =>
+      typeof j.client === "object" ? j.client?.name : j.client
+    ).filter(Boolean))
   );
 
-  // Apply filters
-  if (selectedStages.length > 0 || filterPositionName || filterJobOwner) {
-    const position = filterPositionName.trim().toLowerCase();
+  // Apply client-side filters (stage + jobOwner — not supported as API params)
+  if (selectedStages.length > 0 || filterJobOwner) {
     const owner = filterJobOwner.trim().toLowerCase();
     allJobs = allJobs.filter((job: any) => {
       const jobStage = (job.stage || job.jobStatus) as JobStage | undefined;
       const matchesStage = selectedStages.length === 0 || (jobStage ? selectedStages.includes(jobStage) : false);
-      const title = (job.jobTitle || "").toLowerCase();
-      const matchesTitle = position === "" || title.includes(position);
-      const jobOwnerVal = (job.client || "").toLowerCase();
-      const matchesOwner = owner === "" || jobOwnerVal.includes(owner);
-      return matchesStage && matchesTitle && matchesOwner;
+      const clientLabel = typeof job.client === "object" ? (job.client?.name ?? "") : (job.client ?? "");
+      const matchesOwner = owner === "" || clientLabel.toLowerCase().includes(owner);
+      return matchesStage && matchesOwner;
     });
   }
 
-  // Calculate pagination
-  const totalJobs = allJobs.length;
-  const totalPages = Math.max(1, Math.ceil(totalJobs / pageSize));
-
-  // Get current page jobs
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const jobs = allJobs.slice(startIndex, endIndex);
+  // Totals come from the server — client-side filters may reduce visible rows
+  const totalJobs = jobsData?.totalCount ?? 0;
+  const totalPages = jobsData?.totalPages ?? 1;
+  const jobs = allJobs;
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -443,7 +434,7 @@ export default function JobsPage() {
               totalPages={totalPages}
               totalJobs={totalJobs}
               pageSize={pageSize}
-              setPageSize={setPageSize}
+              setPageSize={(s) => { setPageSize(s); setCurrentPage(1); }}
               handlePageChange={handlePageChange}
               jobsLength={jobs.length}
             />
@@ -475,7 +466,7 @@ export default function JobsPage() {
         open={filterOpen}
         onOpenChange={setFilterOpen}
         positionName={filterPositionName}
-        onPositionNameChange={setFilterPositionName}
+        onPositionNameChange={(v) => { setFilterPositionName(v); setCurrentPage(1); }}
         jobOwner={filterJobOwner}
         onJobOwnerChange={setFilterJobOwner}
         selectedStages={selectedStages}
