@@ -104,6 +104,9 @@ interface ApiResponse<T> {
   status: string;
   success: boolean;
   results?: number;
+  totalCount?: number;
+  page?: number;
+  limit?: number;
   data: T;
   message?: string;
   error?: string;
@@ -466,7 +469,15 @@ const createClient = async (rawData: FormData | Omit<ClientResponse, "_id" | "cr
   }
 };
 
-// Get all clients
+export interface ClientsPage {
+  clients: ClientResponse[];
+  totalCount: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+// Get all clients (server-side paginated)
 const getClients = async (queryParams: {
   page?: number;
   limit?: number;
@@ -474,47 +485,53 @@ const getClients = async (queryParams: {
   industry?: string;
   clientStage?: "Lead" | "Engaged" | "Negotiation" | "Signed";
   clientTeam?: "Enterprise" | "SMB" | "Mid-Market";
-} = {}): Promise<{ clients: ClientResponse[]; total: number; page: number; pages: number }> => {
+} = {}): Promise<ClientsPage> => {
+  const limit = queryParams.limit ?? 10;
+  const page = queryParams.page ?? 1;
+
   try {
     const response = await axios.get(`${API_URL}/api/clients`, {
-      params: queryParams,
-      timeout: 15000
+      params: { ...queryParams, page, limit },
+      timeout: 15000,
     });
 
-    // Log the response for debugging
+    const resData = response.data;
 
-    // Handle different response formats
-    if (response.data.success && Array.isArray(response.data.data)) {
-      // Format is { success: true, data: [...clients], results: X }
-      const clients = response.data.data;
-      const total = response.data.results || response.data.total || clients.length;
-      const limit = queryParams.limit || 20;
-      const pages = Math.ceil(total / limit);
-
+    // New API format: { success, totalCount, page, limit, data: [...] }
+    if (resData.success && Array.isArray(resData.data)) {
+      const totalCount = resData.totalCount ?? resData.results ?? resData.data.length;
       return {
-        clients: clients,
-        total: total,
-        page: queryParams.page || 1,
-        pages: pages || 1
-      };
-    } else if (response.data.data && response.data.data.clients) {
-      // Format is { data: { clients: [...], total: X, page: Y, pages: Z } }
-      return response.data.data;
-    } else {
-      // Fallback for unexpected format
-      const clients = Array.isArray(response.data) ? response.data :
-        (Array.isArray(response.data.data) ? response.data.data : []);
-      const total = response.data.results || response.data.total || clients.length;
-      const limit = queryParams.limit || 20;
-      const pages = Math.ceil(total / limit);
-
-      return {
-        clients: clients,
-        total: total,
-        page: queryParams.page || 1,
-        pages: pages || 1
+        clients: resData.data,
+        totalCount,
+        page: resData.page ?? page,
+        limit: resData.limit ?? limit,
+        totalPages: Math.ceil(totalCount / limit) || 1,
       };
     }
+
+    // Legacy nested format: { data: { clients: [...], total, page, pages } }
+    if (resData.data?.clients) {
+      const { clients, total, page: p, pages } = resData.data;
+      return {
+        clients,
+        totalCount: total ?? clients.length,
+        page: p ?? page,
+        limit,
+        totalPages: (pages ?? Math.ceil((total ?? clients.length) / limit)) || 1,
+      };
+    }
+
+    // Fallback
+    const clients = Array.isArray(resData.data) ? resData.data :
+      Array.isArray(resData) ? resData : [];
+    const totalCount = resData.results ?? resData.total ?? resData.totalCount ?? clients.length;
+    return {
+      clients,
+      totalCount,
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit) || 1,
+    };
   } catch (error: any) {
     console.error('Error in getClients:', error);
     throw handleError(error);
