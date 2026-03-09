@@ -345,9 +345,11 @@ export const getPipelineEntry = async (pipelineId: string): Promise<GetPipelineE
 /**
  * Get all pipeline entries
  */
-export const getAllPipelineEntries = async (): Promise<GetAllPipelineEntriesResponse> => {
+export const getAllPipelineEntries = async (page: number = 1, limit: number = 10, search?: string): Promise<GetAllPipelineEntriesResponse> => {
   try {
-    const response = await api.get('/api/recruiter-pipeline/my');
+    const params: any = { page, limit };
+    if (search) params.search = search;
+    const response = await api.get('/api/recruiter-pipeline/my', { params });
     return response.data;
   } catch (error: any) {
     console.error('Error fetching all pipeline entries:', error);
@@ -579,7 +581,7 @@ export const convertTempCandidateToReal = async (
       data: error.response?.data,
       message: error.message
     });
-    
+
     return {
       success: false,
       message: 'Failed to convert temp candidate',
@@ -588,3 +590,19 @@ export const convertTempCandidateToReal = async (
   }
 };
 
+export const exportCandidatesToExcel = async (pipelineId: string, stages: string[] = []): Promise<Blob> => {
+  try {
+    let queryUrl = `/api/mis-report/${pipelineId}/export/candidates/excel`;
+    if (stages && stages.length > 0) {
+      const stageQuery = stages.join(",");
+      queryUrl += `?stage=${encodeURIComponent(stageQuery)}`;
+    }
+    const response = await api.get(queryUrl, {
+      responseType: "blob",
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('Error exporting candidates:', error);
+    throw new Error(error.response?.data?.message || 'Failed to export candidates');
+  }
+};

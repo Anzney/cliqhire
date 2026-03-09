@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { KPISection } from "./kpi-section";
@@ -30,6 +30,7 @@ export function RecruiterPipeline() {
   const queryClient = useQueryClient();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date");
   const [loadingJobId, setLoadingJobId] = useState<string | null>(null);
@@ -42,11 +43,30 @@ export function RecruiterPipeline() {
     totalCandidates: number;
     byStatus: { [key: string]: number };
   } | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1); // Reset to page 1 on new search
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // React Query: load pipeline jobs list
   const { data: listResponse, isLoading: listLoading, error: listError, refetch: refetchPipelines } = useQuery({
-    queryKey: ["pipelineEntries", user?._id],
-    queryFn: async () => await getAllPipelineEntries(),
+    queryKey: ["pipelineEntries", user?._id, currentPage, pageSize, debouncedSearchTerm],
+    queryFn: async () => await getAllPipelineEntries(currentPage, pageSize, debouncedSearchTerm),
+    enabled: !!user,
+  });
+
+  // React Query: load all pipeline jobs for KPI
+  const { data: allPipelinesResponse } = useQuery({
+    queryKey: ["allPipelineEntriesForKPI", user?._id],
+    queryFn: async () => await getAllPipelineEntries(1, 1000),
     enabled: !!user,
   });
 
@@ -115,16 +135,22 @@ export function RecruiterPipeline() {
 
   // Calculate KPI data from jobs and overall summary
   const calculateKPIData = () => {
-    const totalJobs = jobs.length;
-    const activeJobs = jobs.filter(job => job.jobId?.stage && job.jobId.stage.toLowerCase() !== "closed").length;
-    const inactiveJobs = jobs.filter(job => job.jobId?.stage && job.jobId.stage.toLowerCase() === "closed").length;
-    
+    const allJobsList = allPipelinesResponse?.data?.pipelines ? allPipelinesResponse.data.pipelines.map(p => convertPipelineListDataToJob(p, false)) : jobs;
+
+    const totalJobs = allPipelinesResponse?.data?.totalPipelines || listResponse?.data?.pagination?.totalPipelines || jobs.length;
+    const activeJobs = allJobsList.filter(job => job.jobId?.stage && job.jobId.stage.toLowerCase() !== "closed").length;
+    const inactiveJobs = allJobsList.filter(job => job.jobId?.stage && job.jobId.stage.toLowerCase() === "closed").length;
+
     // Use overall candidate summary if available, otherwise calculate from jobs
     let appliedCandidates = 0;
     let hiredCandidates = 0;
     let disqualifiedCandidates = 0;
-    
-    if (overallCandidateSummary) {
+
+    if (allPipelinesResponse?.data?.pipelines) {
+      appliedCandidates = allPipelinesResponse.data.pipelines.reduce((total, pipeline) => total + (pipeline.totalCandidates || 0), 0);
+      hiredCandidates = allPipelinesResponse.data.pipelines.reduce((total, pipeline) => total + (pipeline.completedCandidates || 0), 0);
+      disqualifiedCandidates = allPipelinesResponse.data.pipelines.reduce((total, pipeline) => total + (pipeline.droppedCandidates || 0), 0);
+    } else if (overallCandidateSummary) {
       // Use API-provided overall summary
       appliedCandidates = overallCandidateSummary.totalCandidates;
       hiredCandidates = overallCandidateSummary.byStatus["Hired"] || 0;
@@ -132,7 +158,7 @@ export function RecruiterPipeline() {
     } else {
       // Fallback to calculating from individual jobs
       appliedCandidates = jobs.reduce((total, job) => total + (job.totalCandidates || 0), 0);
-      
+
       jobs.forEach(job => {
         if (job.candidates && job.candidates.length > 0) {
           hiredCandidates += job.candidates.filter(c => c.currentStage === "Hired").length;
@@ -153,26 +179,33 @@ export function RecruiterPipeline() {
 
   // Filter and sort jobs
   const getFilteredAndSortedJobs = () => {
-    let filteredJobs = [...jobs];
+    let sourceJobs = [...jobs];
+    let isClientSearch = false;
+
+    // If searching, we fetch from the full dataset because API search support might be spotty
+    // and we already load the full dataset for KPIs.
+    if (debouncedSearchTerm.trim() && allPipelinesResponse?.data?.pipelines) {
+      sourceJobs = allPipelinesResponse.data.pipelines.map(p => convertPipelineListDataToJob(p, false));
+      isClientSearch = true;
+    }
+
+    let filteredJobs = [...sourceJobs];
 
     // Search filter
-    if (searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase();
+    if (debouncedSearchTerm.trim()) {
+      const searchLower = debouncedSearchTerm.toLowerCase();
       filteredJobs = filteredJobs.filter(job => {
         // Search in job title
         if (job.title.toLowerCase().includes(searchLower)) return true;
-        
         // Search in client name
         if (job.clientName.toLowerCase().includes(searchLower)) return true;
-        
         // Search in candidate names
-        if (job.candidates.some(candidate => 
+        if (job.candidates.some(candidate =>
           candidate.name.toLowerCase().includes(searchLower)
         )) return true;
-        
         // Search in notes
         if (job.notes?.toLowerCase().includes(searchLower)) return true;
-        
+
         return false;
       });
     }
@@ -184,7 +217,6 @@ export function RecruiterPipeline() {
       filteredJobs = filteredJobs.filter(job => {
         const jobMatch = jobLower ? job.title.toLowerCase().includes(jobLower) : true;
         const clientMatch = clientLower ? job.clientName.toLowerCase().includes(clientLower) : true;
-        // If both filters provided, require both; if only one provided, require that one
         return jobMatch && clientMatch;
       });
     }
@@ -199,7 +231,7 @@ export function RecruiterPipeline() {
             return job.jobId?.stage && job.jobId.stage.toLowerCase() === "closed";
           case "paused":
             return job.jobId?.stage && (
-              job.jobId.stage.toLowerCase().includes("hold") || 
+              job.jobId.stage.toLowerCase().includes("hold") ||
               job.jobId.stage.toLowerCase().includes("pause") ||
               job.jobId.stage.toLowerCase().includes("suspended")
             );
@@ -220,12 +252,24 @@ export function RecruiterPipeline() {
           return a.clientName.localeCompare(b.clientName);
         case "date":
         default:
-          // Assuming jobs are already sorted by creation date (newest first)
           return 0;
       }
     });
 
-    return filteredJobs;
+    const fullFilteredCount = filteredJobs.length;
+    let paginatedJobs = filteredJobs;
+
+    // Apply client-side pagination only when doing client search
+    if (isClientSearch) {
+      const startIndex = (currentPage - 1) * pageSize;
+      paginatedJobs = filteredJobs.slice(startIndex, startIndex + pageSize);
+    }
+
+    return {
+      renderJobs: paginatedJobs,
+      totalItems: fullFilteredCount,
+      isClientSearch
+    };
   };
 
   const toggleJobExpansion = async (jobId: string) => {
@@ -306,7 +350,7 @@ export function RecruiterPipeline() {
       setJobs((prev) => prev.map((j) => (j.id === jobId ? { ...j, isExpanded: true } : j)));
     } catch (error: any) {
       console.error('Error updating candidate stage:', error);
-      
+
       // Revert the optimistic update on error
       setJobs((prevJobs) =>
         prevJobs.map((job) => {
@@ -323,7 +367,7 @@ export function RecruiterPipeline() {
           return job;
         }),
       );
-      
+
       toast.error(error.message || 'Failed to update candidate stage');
     }
   };
@@ -353,7 +397,7 @@ export function RecruiterPipeline() {
 
     try {
       // Jobs have already been added to the pipeline via the create pipeline API
-      toast.success(`Successfully created pipeline with ${jobData.length} job(s)`); 
+      toast.success(`Successfully created pipeline with ${jobData.length} job(s)`);
       // Refresh the pipeline data to show the newly created entries
       await refetchPipelines();
     } catch (error) {
@@ -363,7 +407,12 @@ export function RecruiterPipeline() {
   };
 
   const kpiData = calculateKPIData();
-  const filteredJobs = getFilteredAndSortedJobs();
+  const { renderJobs, totalItems, isClientSearch } = getFilteredAndSortedJobs();
+
+  const actualTotalPages = isClientSearch ? Math.max(1, Math.ceil(totalItems / pageSize)) : (listResponse?.data?.pagination?.totalPages || 0);
+  const actualCurrentPage = isClientSearch ? currentPage : (listResponse?.data?.pagination?.currentPage || 0);
+  const hasNextPage = isClientSearch ? currentPage < actualTotalPages : listResponse?.data?.pagination?.hasNextPage;
+  const hasPrevPage = isClientSearch ? currentPage > 1 : listResponse?.data?.pagination?.hasPrevPage;
 
   if (!canViewPipeline) {
     return (
@@ -372,11 +421,13 @@ export function RecruiterPipeline() {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col h-full h-full overflow-hidden">
       {/* KPI Section */}
-      <KPISection data={kpiData} />
+      <div className="flex-none mb-4">
+        <KPISection data={kpiData} />
+      </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex-none flex flex-wrap items-center justify-between mb-4 gap-4">
         {/* <div className="flex items-center gap-2">
           {canModifyPipeline && (
             <CreatePipelineDialog 
@@ -390,7 +441,7 @@ export function RecruiterPipeline() {
             />
           )}
         </div> */}
-        
+
         <div className="flex items-center gap-3">
           {/* Search Input */}
           <div className="relative">
@@ -418,7 +469,7 @@ export function RecruiterPipeline() {
             onChange={(e) => setClientNameFilter(e.target.value)}
             className="w-[200px]"
           />
-          
+
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filter by status" />
@@ -430,7 +481,7 @@ export function RecruiterPipeline() {
               <SelectItem value="paused">Paused Jobs</SelectItem>
             </SelectContent>
           </Select>
-          
+
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Sort by" />
@@ -446,28 +497,67 @@ export function RecruiterPipeline() {
       </div>
 
       {/* Jobs Section */}
-      {listLoading ? (
-        <div className="text-center py-8 text-gray-500">
-          Loading pipeline jobs...
-        </div>
-      ) : filteredJobs.length > 0 ? (
-        filteredJobs.map((job) => (
-          <PipelineJobCard
-            key={job.id}
-            job={job}
-            loadingJobId={loadingJobId}
-            isHighlighted={highlightedJobId === job.id}
-            onToggleExpansion={toggleJobExpansion}
-            onUpdateCandidateStage={updateCandidateStage}
-            onCandidateUpdate={handleCandidateUpdate}
-            canModify={canModifyPipeline}
-          />
-        ))
-      ) : (
-        <div className="text-center py-8 text-gray-500">
-          {searchTerm ? "No jobs found matching your search criteria" : "No jobs available"}
-        </div>
-      )}
+      <div className="flex-1 overflow-y-auto mb-4 pr-2 custom-scrollbar">
+        {listLoading ? (
+          <div className="text-center py-8 text-gray-500">
+            Loading pipeline jobs...
+          </div>
+        ) : renderJobs.length > 0 ? (
+          <div className="space-y-4">
+            {renderJobs.map((job) => (
+              <PipelineJobCard
+                key={job.id}
+                job={job}
+                loadingJobId={loadingJobId}
+                isHighlighted={highlightedJobId === job.id}
+                onToggleExpansion={toggleJobExpansion}
+                onUpdateCandidateStage={updateCandidateStage}
+                onCandidateUpdate={handleCandidateUpdate}
+                canModify={canModifyPipeline}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            {searchTerm ? "No jobs found matching your search criteria" : "No jobs available"}
+          </div>
+        )}
+      </div>
+
+      {/* Pagination - Fixed to bottom */}
+      <div className="flex-none bg-white rounded-lg shadow-sm border p-4">
+        {actualTotalPages > 1 ? (
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-500 font-medium">
+              Showing page {actualCurrentPage} of {actualTotalPages}
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={!hasPrevPage}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(actualTotalPages, prev + 1))}
+                disabled={!hasNextPage}
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="text-sm text-gray-500 font-medium">
+            Showing all {totalItems} result(s)
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -2,8 +2,9 @@
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, HandCoins, MapPin, Plus, Users, Copy, Check } from "lucide-react";
+import { Building2, HandCoins, MapPin, Plus, Users, Copy, Check, Download } from "lucide-react";
 import { type Job } from "./dummy-data";
+import { ExportCandidatesDialog } from "./ExportCandidatesDialog";
 
 type Props = {
   job: Job;
@@ -12,6 +13,7 @@ type Props = {
 
 export function PipelineJobHeader({ job, onAddCandidate }: Props) {
   const [isFormLinkCopied, setIsFormLinkCopied] = useState(false);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
 
   const handleCopyCandidateFormLink = async () => {
     const path = `${window.location.origin}/candidate?job=${encodeURIComponent(job.title)}`;
@@ -74,6 +76,10 @@ export function PipelineJobHeader({ job, onAddCandidate }: Props) {
         </div>
 
         <div className="flex items-center gap-2 ml-4">
+          <Button size="sm" variant="outline" onClick={() => setIsExportDialogOpen(true)} title="Export Candidates">
+            <Download className="h-4 w-4 mr-1" />
+            Export
+          </Button>
           <Button size="sm" variant="outline" onClick={handleCopyCandidateFormLink} title="Copy candidate form URL">
             {isFormLinkCopied ? (
               <Check className="h-4 w-4 mr-1 text-green-600" />
@@ -88,6 +94,13 @@ export function PipelineJobHeader({ job, onAddCandidate }: Props) {
           </Button>
         </div>
       </div>
+
+      <ExportCandidatesDialog
+        isOpen={isExportDialogOpen}
+        onClose={() => setIsExportDialogOpen(false)}
+        pipelineId={job.id}
+        jobTitle={job.title}
+      />
     </div>
   );
 }
