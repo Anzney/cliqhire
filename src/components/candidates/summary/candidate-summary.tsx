@@ -7,6 +7,7 @@ import {
   MaritalStatusDialog,
   GenderDialog,
   StatusDialog,
+  WillingToRelocateDialog,
 } from "./personal-info-edit-dialog";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
@@ -141,6 +142,7 @@ const CandidateSummary = ({
   const [showMaritalStatusDialog, setShowMaritalStatusDialog] = useState(false);
   const [showGenderDialog, setShowGenderDialog] = useState(false);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [showWillingToRelocateDialog, setShowWillingToRelocateDialog] = useState(false);
   const [showReferredByDialog, setShowReferredByDialog] = useState(false);
   const [showConfirmReferrer, setShowConfirmReferrer] = useState(false);
   const [pendingReferrerName, setPendingReferrerName] = useState<string | null>(null);
@@ -219,6 +221,11 @@ const CandidateSummary = ({
   const handleStatusSave = (value: string) => {
     handleSave("status", value);
     setShowStatusDialog(false);
+  };
+
+  const handleWillingToRelocateSave = (value: string) => {
+    handleSave("willingToRelocate", value);
+    setShowWillingToRelocateDialog(false);
   };
 
   const renderField = (field: any, fieldArray: any[]) => {
@@ -351,6 +358,32 @@ const CandidateSummary = ({
                   size="sm"
                   className="h-8 flex items-center ml-2"
                   onClick={() => setShowStatusDialog(true)}
+                >
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (field.key === "willingToRelocate") {
+      return (
+        <div key={field.key} className="relative border-b last:border-b-0">
+          <div className="flex items-center py-2">
+            <span className="text-sm text-muted-foreground w-1/3">{field.label}</span>
+            <div className="flex items-center justify-between flex-1">
+              <span className={`text-sm ${hasValue ? "" : "text-muted-foreground"}`}>
+                {hasValue ? value : "No Details"}
+              </span>
+              {canModify && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 flex items-center ml-2"
+                  onClick={() => setShowWillingToRelocateDialog(true)}
                 >
                   <Pencil className="h-4 w-4 mr-2" />
                   Edit
@@ -720,6 +753,16 @@ const CandidateSummary = ({
           onClose={() => setShowStatusDialog(false)}
           currentValue={localCandidate?.status}
           onSave={handleStatusSave}
+        />
+      )}
+
+      {/* Willing To Relocate Dialog */}
+      {canModify && (
+        <WillingToRelocateDialog
+          open={showWillingToRelocateDialog}
+          onClose={() => setShowWillingToRelocateDialog(false)}
+          currentValue={localCandidate?.willingToRelocate}
+          onSave={handleWillingToRelocateSave}
         />
       )}
 

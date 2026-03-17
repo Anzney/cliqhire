@@ -353,3 +353,79 @@ export function StatusDialog({
     </Dialog>
   );
 }
+
+// Willing To Relocate Dialog
+interface WillingToRelocateDialogProps {
+  open: boolean;
+  onClose: () => void;
+  currentValue?: string;
+  onSave: (value: string) => void;
+}
+
+const willingToRelocateOptions = [
+  { value: "Yes", label: "Yes" },
+  { value: "No", label: "No" },
+];
+
+export function WillingToRelocateDialog({
+  open,
+  onClose,
+  currentValue,
+  onSave,
+}: WillingToRelocateDialogProps) {
+  const [willingToRelocate, setWillingToRelocate] = useState(currentValue || "");
+
+  // Reset form when dialog opens/closes or current value changes
+  useEffect(() => {
+    if (open) {
+      setWillingToRelocate(currentValue || "");
+    }
+  }, [open, currentValue]);
+
+  const handleSave = () => {
+    onSave(willingToRelocate);
+    onClose();
+  };
+
+  const handleCancel = () => {
+    setWillingToRelocate(currentValue || "");
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Edit Relocation Preference</DialogTitle>
+        </DialogHeader>
+
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="willingToRelocate">Are you willing to relocate?</Label>
+            <Select value={willingToRelocate} onValueChange={setWillingToRelocate}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select option" />
+              </SelectTrigger>
+              <SelectContent>
+                {willingToRelocateOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={handleCancel}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave}>
+            Save Changes
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
