@@ -22,7 +22,7 @@ const detailsFields = [
   { key: "name", label: "Candidate Name" },
   { key: "location", label: "Location" },
   { key: "experience", label: "Experience" },
-  { key: "referredBy", label: "Referred By" },
+  { key: "referredBy", label: "CV Referred By" },
   { key: "totalRelevantExperience", label: "Total Relevant Years of Experience" },
   { key: "noticePeriod", label: "Notice Period" },
 
