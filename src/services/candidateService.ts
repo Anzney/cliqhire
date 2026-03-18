@@ -41,6 +41,7 @@ export interface Candidate {
   recruiter?: string;
   teamLead?: string;
   cv?: File; // For file upload during creation
+  showPublic?: boolean;
   createdBy?: {
     id: string;
     name: string;
