@@ -16,6 +16,7 @@ import { CountrySelect } from "@/components/ui/country-select";
 import { Upload } from "lucide-react";
 import { subDays } from "date-fns";
 import { candidateService } from "@/services/candidateService";
+import { useCreateCandidate } from "@/hooks/useCandidate";
 import { headhunterCandidatesService } from "@/services/headhunterCandidatesService";
 import { convertTempCandidateToReal, type ConvertTempCandidateRequest } from "@/services/recruitmentPipelineService";
 import { toast } from "sonner";
@@ -79,6 +80,7 @@ export default function CreateCandidateForm({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+  const { mutateAsync: createCandidateMutation } = useCreateCandidate();
   const [dobOpen, setDobOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -218,10 +220,7 @@ export default function CreateCandidateForm({
         // Send data to backend
         const createdCandidate = isHeadhunterCreate
           ? await headhunterCandidatesService.createCandidate(formData)
-          : await candidateService.createCandidate(formData);
-
-        // Show success toast message
-        toast.success("Candidate created successfully!");
+          : await createCandidateMutation(formData);
 
         // Call the callback with the created candidate
         if (onCandidateCreated) {
