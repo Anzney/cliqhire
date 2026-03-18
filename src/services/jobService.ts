@@ -74,6 +74,10 @@ export interface Job extends JobData {
   isActive?: boolean;
   status?: string; // Add status property to match the Job type in types/job.ts
   jobDescriptionInternal?: string; // <-- Added for internal job description
+  createdBy?: {
+    id: string;
+    name: string;
+  };
 }
 
 export interface JobResponse {
