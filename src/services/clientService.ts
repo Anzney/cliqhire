@@ -88,6 +88,10 @@ export interface ClientResponse {
   other?: string | null;
   salesLead?: string;
   jobCount?: number; // Added optional jobCount property
+  createdBy?: {
+    id: string;
+    name: string;
+  };
   createdAt: string;
   updatedAt?: string;
   __v?: number;

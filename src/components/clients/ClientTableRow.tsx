@@ -19,6 +19,7 @@ export interface ClientTableRowProps {
     createdAt: string;
     jobCount: number;
     incorporationDate: string;
+    createdBy?: string;
   };
   onStageChange: (clientId: string, newStage: "Lead" | "Engaged" | "Signed") => void;
   onStatusChange: (clientId: string, newStatus: ClientStageStatus) => void;
@@ -77,6 +78,9 @@ const ClientTableRow: React.FC<ClientTableRowProps> = ({
       </TableCell>
       <TableCell className="text-sm px-4 py-2 w-[100px]">
         {client.jobCount}
+      </TableCell>
+      <TableCell className="text-sm px-4 py-2 w-[150px]">
+        {client.createdBy || "N/A"}
       </TableCell>
     </>
   );

@@ -32,6 +32,7 @@ const columnsArr = [
   "Stage Status",
   "Client Age",
   "Job Count",
+  "Created By",
 ];
 
 interface Client {
@@ -47,6 +48,7 @@ interface Client {
   createdAt: string;
   jobCount: number;
   incorporationDate: string;
+  createdBy?: string;
 }
 
 type SortField = "name" | "industry" | "countryOfBusiness" | "createdAt";
@@ -214,6 +216,7 @@ export default function ClientsPage() {
       createdAt: c.createdAt,
       jobCount: c.jobCount ?? 0,
       incorporationDate: (c as any).incorporationDate ?? "",
+      createdBy: c.createdBy?.name ?? "",
     }));
   }, [clientsPage]);
 
@@ -415,6 +418,7 @@ export default function ClientsPage() {
                   <TableHead className="min-w-[150px]">Stage Status</TableHead>
                   <TableHead className="min-w-[120px]">Client Age</TableHead>
                   <TableHead className="min-w-[100px]">Job Count</TableHead>
+                  <TableHead className="min-w-[150px]">Created By</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
