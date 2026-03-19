@@ -12,6 +12,7 @@ import { AddToJobDialog } from '@/components/candidates/add-to-job-dialog';
 import { candidateService } from '@/services/candidateService';
 import { toast } from "sonner";
 import { initializeAuth } from '@/lib/axios-config';
+import { Globe } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -30,6 +31,7 @@ interface Candidate {
   skills?: string[];
   resume?: string;
   status?: string;
+  showPublic?: boolean;
 }
 
 export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId: string, tabs: Tab[] }) {
@@ -187,7 +189,8 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
           { key: "reportingTo", label: "Reporting To" },
           { key: "totalStaffReporting", label: "Total Number of Staff Reporting to You" },
           { key: "softSkill", label: "Soft Skill" },
-          { key: "technicalSkill", label: "Technical Skill" }
+          { key: "technicalSkill", label: "Technical Skill" },
+          { key: "showPublic", label: "Public Visibility" }
         ];
         const fieldLabel = allFields.find(field => field.key === fieldKey)?.label || fieldKey || 'Field';
         toast.success(`${fieldLabel} updated successfully`);
@@ -220,6 +223,22 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
             <Button variant="outline" size="sm" className="border rounded-md px-4">
               Contact
             </Button>
+            {candidate.showPublic === false && (
+              <Button 
+                variant="default" 
+                size="sm" 
+                className="bg-brand hover:bg-brand/90 text-white border rounded-md px-4 flex items-center gap-2"
+                onClick={() => handleCandidateUpdate({ showPublic: true }, "showPublic")}
+                disabled={updateCandidateMutation.isPending}
+              >
+                {updateCandidateMutation.isPending ? (
+                  <RefreshCcw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Globe className="h-4 w-4" />
+                )}
+                Make Public
+              </Button>
+            )}
           </div>
         </div>
       </div>

@@ -78,6 +78,11 @@ const detailsFields = [
   { key: "primaryLanguage", label: "Primary Language" },
   { key: "willingToRelocate", label: "Are you willing to relocate ?" },
   { key: "iqama", label: "Iqama is transferable ?" },
+  { 
+    key: "showPublic", 
+    label: "Public Visibility", 
+    render: (val: boolean | undefined) => val ? "Public" : "Private" 
+  },
 ];
 
 // Split details fields into default visible and collapsible sections
@@ -456,6 +461,21 @@ const CandidateSummary = ({
               </DialogFooter>
             </DialogContent>
           </Dialog>
+        </div>
+      );
+    }
+
+    if (field.key === "showPublic") {
+      return (
+        <div key={field.key} className="relative border-b last:border-b-0">
+          <div className="flex items-center py-2">
+            <span className="text-sm text-muted-foreground w-1/3">{field.label}</span>
+            <div className="flex items-center justify-between flex-1">
+              <span className={`text-sm ${hasValue ? "" : "text-muted-foreground"}`}>
+                {hasValue ? value : "Private"}
+              </span>
+            </div>
+          </div>
         </div>
       );
     }

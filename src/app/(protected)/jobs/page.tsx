@@ -46,7 +46,7 @@ import { Input } from "@/components/ui/input";
 import JobsFilter from "@/components/jobs/JobsFilter";
 import { ExportDialog, ExportFilterParams } from "@/components/common/export-dialog";
 import { useExportJobs } from "@/hooks/useExportJobs";
-import { useJobs } from "@/hooks/useJobs";
+import { useJobs, useUpdateJobStage, useDeleteJob } from "@/hooks/useJobs";
 
 const columsArr = [
   "Position Name",
@@ -57,6 +57,7 @@ const columsArr = [
   "Minimum salary",
   "Maximum salary",
   "Job Owner",
+  "Created By",
 ];
 
 function ConfirmStageChangeDialog({
@@ -116,6 +117,8 @@ export default function JobsPage() {
 
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { mutateAsync: updateStageMutation } = useUpdateJobStage();
+  const { mutateAsync: deleteJobMutation } = useDeleteJob();
 
   const { data: jobsData, isLoading, isFetching, refetch } = useJobs({
     page: currentPage,
@@ -182,13 +185,7 @@ export default function JobsPage() {
     const { jobId, newStage } = pendingStageChange;
 
     try {
-      const response = await updateJobStage(jobId, newStage);
-
-      if (!response.success) {
-        throw new Error("Failed to update job stage");
-      }
-      // Refresh jobs list
-      await queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      await updateStageMutation({ id: jobId, stage: newStage });
     } catch (error) {
       console.error("Error updating job stage:", error);
     } finally {
@@ -244,10 +241,7 @@ export default function JobsPage() {
       // Delete all selected jobs in parallel
       await Promise.all(
         Array.from(selectedRows).map((jobId) =>
-          deleteJobById(jobId).catch(error => {
-            console.error(`Error deleting job ${jobId}:`, error);
-            throw error;
-          })
+          deleteJobMutation(jobId)
         )
       );
 
@@ -315,7 +309,7 @@ export default function JobsPage() {
             </TableHeader>
             <TableBody>
               <TableRow>
-                <TableCell colSpan={8} className="h-[calc(100vh-240px)] text-center">
+                <TableCell colSpan={10} className="h-[calc(100vh-240px)] text-center">
                   <div className="py-24 flex flex-col items-center gap-2">
                     <Loader className="size-6 animate-spin" />
                     <div className="text-center">Loading Jobs...</div>
@@ -414,11 +408,14 @@ export default function JobsPage() {
                       <TableCell className="text-sm">
                         {job.client}
                       </TableCell>
+                      <TableCell className="text-sm">
+                        {job.createdBy?.name || "N/A"}
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-[calc(100vh-240px)] text-center">
+                    <TableCell colSpan={10} className="h-[calc(100vh-240px)] text-center">
                       <div className="py-24">
                         <div className="text-center">No jobs found</div>
                       </div>

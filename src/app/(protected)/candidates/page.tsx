@@ -1,5 +1,6 @@
 "use client";
 import { Candidate, candidateService } from "@/services/candidateService";
+import { useCandidates, useUpdateCandidate, useDeleteCandidate } from "@/hooks/useCandidate";
 import { Table, TableHeader, TableBody, TableCell, TableRow, TableHead } from "@/components/ui/table";
 import { Loader } from "lucide-react";
 import { CandidatesEmptyState } from "../../../components/candidates/empty-states";
@@ -26,6 +27,7 @@ const columsArr = [
   "Status",
   "Experience",
   "Resume",
+  "Created By",
 ];
 
 export default function CandidatesPage() {
@@ -54,27 +56,14 @@ export default function CandidatesPage() {
   const [selectedStatuses, setSelectedStatuses] = useState<FilterStatus[]>([]);
   const [openExportDialog, setOpenExportDialog] = useState(false);
 
-  const { data, isLoading: initialLoading, isFetching, refetch } = useQuery({
-    queryKey: [
-      "candidates",
-      currentPage,
-      pageSize,
-      filterName,
-      filterEmail,
-      filterExperience,
-      filterLocation,
-      selectedStatuses.join(","),
-    ],
-    queryFn: () =>
-      candidateService.getCandidates({
-        page: currentPage,
-        limit: pageSize,
-        name: filterName || undefined,
-        email: filterEmail || undefined,
-        experience: filterExperience || undefined,
-        location: filterLocation || undefined,
-        status: selectedStatuses.join(",") || undefined,
-      }),
+  const { data, isLoading: initialLoading, isFetching, refetch } = useCandidates({
+    page: currentPage,
+    limit: pageSize,
+    name: filterName || undefined,
+    email: filterEmail || undefined,
+    experience: filterExperience || undefined,
+    location: filterLocation || undefined,
+    status: selectedStatuses.join(",") || undefined,
   });
   const candidates: Candidate[] = data?.candidates ?? [];
   const [open, setOpen] = useState(false);
@@ -118,10 +107,7 @@ export default function CandidatesPage() {
     try {
       await Promise.all(
         Array.from(selectedRows).map((candidateId) =>
-          candidateService.deleteCandidate(candidateId).catch((error) => {
-            console.error(`Error deleting candidate ${candidateId}:`, error);
-            throw error;
-          })
+          deleteCandidateMutation(candidateId)
         )
       );
       await refetch();
@@ -136,22 +122,12 @@ export default function CandidatesPage() {
     }
   };
 
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({ candidateId, newStatus }: { candidateId: string; newStatus: string }) => {
-      return candidateService.updateCandidate(candidateId, { status: newStatus });
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["candidates"] });
-      toast.success(`Candidate status updated to ${variables.newStatus}`);
-    },
-    onError: () => {
-      toast.error("Failed to update candidate status");
-    },
-  });
+  const { mutateAsync: updateCandidateMutation } = useUpdateCandidate();
+  const { mutateAsync: deleteCandidateMutation } = useDeleteCandidate();
 
   const handleStatusChange = async (candidateId: string, newStatus: string) => {
     if (!canModifyCandidates) return;
-    await updateStatusMutation.mutateAsync({ candidateId, newStatus });
+    await updateCandidateMutation({ id: candidateId, data: { status: newStatus } });
   };
 
   if (!canViewCandidates) {
@@ -205,7 +181,7 @@ export default function CandidatesPage() {
             <TableBody>
               {initialLoading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center h-[calc(100vh-300px)]">
+                  <TableCell colSpan={9} className="text-center h-[calc(100vh-300px)]">
                     <div className="flex items-center justify-center gap-2 flex-col">
                       <Loader className="size-6 animate-spin" />
                       <div className="text-center">Loading candidates...</div>
@@ -214,7 +190,7 @@ export default function CandidatesPage() {
                 </TableRow>
               ) : candidates.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-[calc(100vh-300px)] text-center">
+                  <TableCell colSpan={9} className="h-[calc(100vh-300px)] text-center">
                     <div className="py-24">
                       <CandidatesEmptyState />
                     </div>
@@ -270,6 +246,9 @@ export default function CandidatesPage() {
                       ) : (
                         "N/A"
                       )}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {candidate.createdBy?.name || "N/A"}
                     </TableCell>
                   </TableRow>
                 ))
