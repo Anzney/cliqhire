@@ -45,6 +45,7 @@ const menuItems = [
   { name: "Recruitment Pipeline", icon: Route, href: "/reactruterpipeline", permission: "RECRUITMENT_PIPELINE" },
   { name: "Recruiter", icon: UserPlus, href: "/recruiter", permission: "RECRUITER" },
   { name: "Head Hunter", icon: UserRoundSearch, href: "/headhunter", permission: "HEAD_HUNTER" },
+  { name: "TEM Candidates", icon: Users, href: "/tem-candidates", permission: "TEM_CANDIDATES" },
   { name: "Team Members", icon: Users, href: "/teammembers", permission: "TEAM_MEMBERS" },
   { name: "User Access", icon: LockKeyhole, href: "/user-access", permission: "USER_ACCESS" },
   // { name: "Placements", icon: UserCheck, href: "/placements", permission: "PLACEMENTS" },

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import type { Candidate } from "@/components/Recruiter-Pipeline/dummy-data";
 
 interface Props {
@@ -40,7 +41,14 @@ export function HeadhunterCandidateViewDialog({ candidate, open, onOpenChange, o
           <div className="grid grid-cols-2 gap-4 py-4">
           <div className="space-y-2">
             <Label>Name</Label>
-            <Input value={candidate.name || ""} disabled className="bg-gray-50" />
+            <div className="flex items-center gap-2">
+              <Input value={candidate.name || ""} disabled className="bg-gray-50 flex-1" />
+              {candidate.isTempCandidate && (
+                <Badge variant="destructive" className="text-xs px-2 py-0.5">
+                  TEMP
+                </Badge>
+              )}
+            </div>
           </div>
           <div className="space-y-2">
             <Label>Email</Label>

@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Briefcase, EllipsisVertical, Eye, Trash2 } from "lucide-react";
 import { PipelineStageBadge } from "./pipeline-stage-badge";
@@ -68,7 +69,14 @@ export function PipelineCandidatesTable({
               </Avatar>
             </TableCell>
             <TableCell className="font-medium truncate max-w-[220px]">
-              {candidate.name || "Unknown Candidate"}
+              <div className="flex items-center gap-2">
+                {candidate.name || "Unknown Candidate"}
+                {candidate.isTempCandidate && (
+                  <Badge variant="destructive" className="text-xs px-2 py-0.5">
+                    TEMP
+                  </Badge>
+                )}
+              </div>
             </TableCell>
             <TableCell className="truncate max-w-[260px] text-gray-700">
               {candidate.currentJobTitle || "Position not specified"}

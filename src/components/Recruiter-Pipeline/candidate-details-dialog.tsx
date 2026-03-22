@@ -91,9 +91,16 @@ export function CandidateDetailsDialog({
                 </div>
               </div>
               <div className="flex-1">
-                <DialogTitle className="text-2xl font-bold text-gray-900 mb-1">
-                  {localCandidate.name || 'Unknown Candidate'}
-                </DialogTitle>
+                <div className="flex items-center gap-3 mb-1">
+                  <DialogTitle className="text-2xl font-bold text-gray-900">
+                    {localCandidate.name || 'Unknown Candidate'}
+                  </DialogTitle>
+                  {localCandidate.isTempCandidate && (
+                    <Badge variant="destructive" className="text-xs px-2 py-0.5">
+                      TEMP
+                    </Badge>
+                  )}
+                </div>
                 <DialogDescription className="text-lg text-gray-600 font-medium">
                   {localCandidate.currentJobTitle || "Professional"}
                 </DialogDescription>
