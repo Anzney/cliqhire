@@ -1,15 +1,19 @@
 "use client";
 import React from "react";
 import { RecruiterPipeline } from "@/components/Recruiter-Pipeline/recruiter-pipeline";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 
 const ReactruterPipelinePage = () => {
   return (
-    <div className="flex flex-col bg-slate-50/50 p-2 space-y-2" style={{ height: 'calc(100vh - 20px)' }}>
-      {/* Content */}
-      <div className="flex-1 flex flex-col min-h-0 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 flex-1 h-full overflow-hidden">
+    <div className="flex flex-col min-h-screen bg-[#F8FAFC]">
+      <div className="flex-1 w-full mx-auto p-4 md:p-8 space-y-6">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+          <div>
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Recruitment Pipeline</h1>
+            <p className="text-slate-500 mt-1 text-sm font-medium">Manage and track your active job pipelines</p>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-2 h-[calc(100vh-160px)]">
           <RecruiterPipeline />
         </div>
       </div>
