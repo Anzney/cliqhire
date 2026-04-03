@@ -45,19 +45,11 @@ export function RecruiterPipeline() {
     enabled: !!user,
   });
 
-  const { data: allPipelinesResponse } = useQuery({
-    queryKey: ["allPipelineEntriesForKPI", user?._id],
-    queryFn: async () => await getAllPipelineEntries(1, 1000),
-    enabled: !!user,
-    staleTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
-
   const calculateKPIData = () => {
-    const rawPipelines = allPipelinesResponse?.data?.pipelines || listResponse?.data?.pipelines || [];
+    const rawPipelines = listResponse?.data?.pipelines || [];
     const allJobsList: Job[] = rawPipelines.map((p: any) => convertPipelineListDataToJob(p, false));
 
-    const totalJobs = allPipelinesResponse?.data?.totalPipelines || listResponse?.data?.pagination?.totalPipelines || allJobsList.length;
+    const totalJobs = listResponse?.data?.pagination?.totalPipelines || allJobsList.length;
     const activeJobs = allJobsList.filter(job => job.jobId?.stage && job.jobId.stage.toLowerCase() !== "closed").length;
     const inactiveJobs = allJobsList.filter(job => job.jobId?.stage && job.jobId.stage.toLowerCase() === "closed").length;
 
@@ -83,12 +75,8 @@ export function RecruiterPipeline() {
 
   const getRenderJobs = () => {
     let sourcePipelines: any[] = [];
-    let isClientSearch = false;
-
-    if (debouncedSearchTerm.trim() && allPipelinesResponse?.data?.pipelines) {
-      sourcePipelines = allPipelinesResponse.data.pipelines;
-      isClientSearch = true;
-    } else if (listResponse?.data?.pipelines) {
+    
+    if (listResponse?.data?.pipelines) {
       sourcePipelines = listResponse.data.pipelines;
     }
 
@@ -107,15 +95,10 @@ export function RecruiterPipeline() {
     const fullFilteredCount = filteredJobs.length;
     let paginatedJobs = filteredJobs;
 
-    if (isClientSearch) {
-      const startIndex = (currentPage - 1) * pageSize;
-      paginatedJobs = filteredJobs.slice(startIndex, startIndex + pageSize);
-    }
-
     return {
       renderJobs: paginatedJobs,
       totalItems: fullFilteredCount,
-      isClientSearch
+      isClientSearch: false
     };
   };
 
@@ -134,30 +117,30 @@ export function RecruiterPipeline() {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden space-y-4">
+    <div className="flex flex-col h-full overflow-hidden space-y-2">
       <div className="flex-none">
         <KPISection data={kpiData} />
       </div>
 
-      <div className="flex-none bg-white rounded-2xl border border-slate-200/60 p-2 shadow-sm transition-all focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300">
+      <div className="flex-none bg-white rounded-xl border border-slate-200/60 p-1.5 shadow-sm transition-all focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
           <Input
             placeholder="Search jobs, or clients..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 w-full bg-transparent border-transparent hover:border-transparent focus:border-transparent shadow-none transition-colors outline-none focus-visible:ring-0"
+            className="h-8 pl-8 text-sm w-full bg-transparent border-transparent hover:border-transparent focus:border-transparent shadow-none transition-colors outline-none focus-visible:ring-0"
           />
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto mb-4 pr-2 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto mb-2 pr-1 custom-scrollbar">
         {listLoading ? (
-          <div className="text-center py-8 text-slate-500 animate-pulse">
+          <div className="text-center py-8 text-slate-500 animate-pulse text-sm">
             Loading pipeline jobs...
           </div>
         ) : renderJobs.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {renderJobs.map((job: Job) => (
               <PipelineJobCard
                 key={job.id}
@@ -167,17 +150,17 @@ export function RecruiterPipeline() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 text-slate-500 bg-slate-50 rounded-2xl border border-slate-200 border-dashed">
+          <div className="text-center py-8 text-slate-500 bg-slate-50 rounded-xl border border-slate-200 border-dashed text-sm">
             {searchTerm ? "No jobs found matching your search criteria" : "No jobs available"}
           </div>
         )}
       </div>
 
-      <div className="flex-none bg-slate-50/50 rounded-xl border border-slate-200/60 p-3 mt-auto">
+      <div className="flex-none bg-slate-50/50 rounded-lg border border-slate-200/60 p-2 mt-auto">
         {actualTotalPages > 1 ? (
           <div className="flex items-center justify-between px-2">
-            <div className="text-sm text-slate-500 font-medium tracking-tight">
-              Showing page <span className="text-slate-900 font-semibold">{actualCurrentPage}</span> of {actualTotalPages}
+            <div className="text-xs text-slate-500 font-medium tracking-tight">
+              Page <span className="text-slate-900 font-semibold">{actualCurrentPage}</span> of {actualTotalPages}
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -185,25 +168,25 @@ export function RecruiterPipeline() {
                 size="sm"
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 disabled={!hasPrevPage}
-                className="rounded-lg shadow-sm"
+                className="h-7 text-xs rounded-md shadow-none"
               >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Previous
+                <ChevronLeft className="h-3 w-3 mr-1" />
+                Prev
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentPage(prev => Math.min(actualTotalPages, prev + 1))}
                 disabled={!hasNextPage}
-                className="rounded-lg shadow-sm"
+                className="h-7 text-xs rounded-md shadow-none"
               >
                 Next
-                <ChevronRight className="h-4 w-4 ml-1" />
+                <ChevronRight className="h-3 w-3 ml-1" />
               </Button>
             </div>
           </div>
         ) : (
-          <div className="text-sm text-slate-500 font-medium px-2 py-1 tracking-tight">
+          <div className="text-xs text-slate-500 font-medium px-2 tracking-tight">
             Showing all <span className="text-slate-900 font-semibold">{totalItems}</span> result(s)
           </div>
         )}
