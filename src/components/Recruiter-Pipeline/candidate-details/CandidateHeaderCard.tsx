@@ -2,8 +2,17 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { type Candidate } from "@/components/Recruiter-Pipeline/dummy-data";
+import { PipelineStageBadge } from "@/components/Recruiter-Pipeline/pipeline-stage-badge";
+import { StatusBadge } from "@/components/Recruiter-Pipeline/status-badge";
 
-export function CandidateHeaderCard({ candidate }: { candidate: Candidate }) {
+interface Props {
+  candidate: Candidate;
+  onStageChange?: (candidate: Candidate, newStage: string) => void;
+  onStatusChange?: (candidate: Candidate, newStatus: string) => void;
+  canModify?: boolean;
+}
+
+export function CandidateHeaderCard({ candidate, onStageChange, onStatusChange, canModify = true }: Props) {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 p-4">
       <div className="flex items-center space-x-4">
@@ -32,20 +41,33 @@ export function CandidateHeaderCard({ candidate }: { candidate: Candidate }) {
           <p className="text-sm text-gray-600 font-medium truncate">
             {candidate.currentJobTitle || "Professional"}
           </p>
-          <div className="flex items-center space-x-3 mt-1.5">
-            <Badge 
-              variant="outline" 
-              className={`text-xs font-medium ${
-                candidate.status === 'Disqualified'
-                  ? 'bg-red-50 text-red-700 border-red-200'
-                  : 'bg-blue-50 text-blue-700 border-blue-200'
-              }`}
-            >
-              {candidate.status === 'Disqualified' 
-                ? (candidate.disqualified?.disqualificationStage || candidate.currentStage)
-                : candidate.currentStage
+          <div className="flex items-center space-x-3 mt-2">
+            <PipelineStageBadge
+              stage={candidate.currentStage}
+              onStageChange={canModify && onStageChange ? ((newStage: string) => onStageChange(candidate, newStage)) : undefined}
+            />
+            
+            {(() => {
+              const stagesWithStatus = [
+                "Sourcing",
+                "Screening",
+                "Client Review",
+                "Interview",
+                "Verification",
+                "Onboarding",
+              ];
+              if (stagesWithStatus.includes(candidate.currentStage)) {
+                return (
+                  <StatusBadge
+                    status={candidate.status as any}
+                    stage={candidate.currentStage}
+                    onStatusChange={canModify && onStatusChange ? ((newStatus: string) => onStatusChange(candidate, newStatus)) : undefined}
+                  />
+                );
               }
-            </Badge>
+              return null;
+            })()}
+
             <span className="text-xs text-gray-400">•</span>
             <span className="text-xs text-gray-500 truncate">{candidate.source}</span>
           </div>

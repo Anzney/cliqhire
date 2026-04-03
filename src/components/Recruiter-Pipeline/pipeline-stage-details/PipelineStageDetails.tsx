@@ -69,7 +69,8 @@ export function PipelineStageDetails({
     setIsEditingStage(true);
     const initialValues: Record<string, string> = {};
     stageFields.forEach(field => {
-      initialValues[field.key] = field.value?.toString() || "";
+      const val = field.value?.toString() || "";
+      initialValues[field.key] = val === "Not set" ? "" : val;
     });
     setEditValues(initialValues);
   };
@@ -95,7 +96,14 @@ export function PipelineStageDetails({
     
     // Create an object with only the fields that were actually modified or at least present in editValues
     // We update all fields from editValues bulk.
-    const updatedFields = { ...editValues };
+    const updatedFields: Record<string, any> = {};
+    Object.entries(editValues).forEach(([key, val]) => {
+      if (val === "" || val === "Not set") {
+        updatedFields[key] = null;
+      } else {
+        updatedFields[key] = val;
+      }
+    });
 
     if (!hasApiIntegration) {
       // Update local mode
