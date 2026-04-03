@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { RecruiterPipelineService } from "@/services/recruiterPipelineService";
 import { toast } from "sonner";
-import { getStageFields, getStageColor, formatDateForDisplay, StageField } from "./stage-fields";
+import { getStageFields, getStageColor, formatDateForDisplay, formatDateTimeForDisplay, StageField } from "./stage-fields";
 import { mapUIStageToBackendStage } from "../dummy-data";
 import { renderFieldInput } from "./field-inputs";
 
@@ -253,6 +253,8 @@ export function PipelineStageDetails({
                       <p className="text-sm text-gray-600 break-words mt-1">
                         {field.type === 'date' && field.value ? (
                           formatDateForDisplay(field.value.toString())
+                        ) : field.type === 'datetime' && field.value ? (
+                          formatDateTimeForDisplay(field.value.toString())
                         ) : typeof field.value === 'string' && field.value.startsWith('http') ? (
                           <a 
                             href={field.value} 

@@ -125,7 +125,7 @@ export const DateTimePickerField = ({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
-          <div className="p-3">
+          <div className="p-3 max-h-[300px] overflow-y-auto">
             <div className="grid grid-cols-4 gap-2">
               {Array.from({ length: 24 }, (_, hour) => 
                 Array.from({ length: 4 }, (_, minute) => {
