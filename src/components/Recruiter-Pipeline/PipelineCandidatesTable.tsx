@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Briefcase, EllipsisVertical, Eye, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { PipelineStageBadge } from "./pipeline-stage-badge";
 import { StatusBadge } from "./status-badge";
 import { type Candidate, type Job } from "./dummy-data";
@@ -43,6 +44,8 @@ export function PipelineCandidatesTable({
   statusOptionsOverride,
   actionsVariant = "full",
 }: Props) {
+  const router = useRouter();
+
   return (
     <Table>
       <TableHeader>
@@ -60,16 +63,22 @@ export function PipelineCandidatesTable({
       <TableBody>
         {candidates.map((candidate) => (
           <TableRow key={candidate.id} className="hover:bg-muted/50">
-            <TableCell>
-              <Avatar className="h-8 w-8">
+            <TableCell 
+               className="cursor-pointer"
+               onClick={() => router.push(`/candidates/${candidate.id}`)}
+             >
+              <Avatar className="h-8 w-8 hover:ring-2 hover:ring-blue-400 transition-all">
                 <AvatarImage src={candidate.avatar} />
                 <AvatarFallback className="text-xs bg-gray-200">
                   {candidate.name ? candidate.name.split(" ").map((n) => n[0]).join("") : "NA"}
                 </AvatarFallback>
               </Avatar>
             </TableCell>
-            <TableCell className="font-medium truncate max-w-[220px]">
-              <div className="flex items-center gap-2">
+            <TableCell 
+               className="font-medium truncate max-w-[220px] cursor-pointer group"
+               onClick={() => router.push(`/candidates/${candidate.id}`)}
+             >
+              <div className="flex items-center gap-2 group-hover:text-blue-600 transition-colors">
                 {candidate.name || "Unknown Candidate"}
                 {candidate.isTempCandidate && (
                   <Badge variant="destructive" className="text-xs px-2 py-0.5">
