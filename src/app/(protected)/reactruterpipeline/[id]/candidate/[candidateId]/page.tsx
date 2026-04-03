@@ -97,8 +97,8 @@ export default function CandidatePipelineDetailsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-8">
-      <div className="max-w-6xl mx-auto px-4 mt-4 space-y-4">
+    <div className="min-h-[calc(100vh-64px)] bg-[#F8FAFC] pb-2 flex flex-col">
+      <div className="w-full px-2 mt-2 space-y-3">
         {/* Modern Back Button */}
         <div 
           className="flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors cursor-pointer w-fit -ml-1 py-1" 
