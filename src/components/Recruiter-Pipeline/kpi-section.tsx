@@ -74,62 +74,28 @@ export function KPISection({ data }: KPISectionProps) {
   };
 
   return (
-    <div className="mb-2">
-      <div className="grid grid-cols-4 gap-3">
-        {KPI_CARDS.map((card) => {
-          const IconComponent = card.icon;
-          const value = getCardData(card.value);
-          
-          return (
-            <Card 
-              key={card.title} 
-              className={`border ${card.borderColor} hover:shadow-md transition-shadow`}
-            >
-                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0">
-                 <CardTitle className="text-xs font-medium text-gray-600">
-                   {card.title}
-                 </CardTitle>
-                 <div className={`p-0.5 rounded-md ${card.bgColor}`}>
-                   <IconComponent className={`h-3 w-3 ${card.color}`} />
-                 </div>
-               </CardHeader>
-               <CardContent className="pt-0">
-                 <div className="text-lg font-extrabold text-gray-900">
-                   {value.toLocaleString()}
-                 </div>
-                 <p className="text-xs text-gray-500 mt-0">
-                   {card.description}
-                 </p>
-                
-                {/* Additional metrics for specific cards */}
-                {card.value === "totalJobs" && data.activeJobs > 0 && (
-                  <div className="mt-1">
-                    <Badge variant="secondary" className="text-xs">
-                      {Math.round((data.activeJobs / data.totalJobs) * 100)}% Active
-                    </Badge>
-                  </div>
-                )}
-                
-                {card.value === "appliedCandidates" && data.hiredCandidates > 0 && (
-                  <div className="mt-1">
-                    <Badge variant="secondary" className="text-xs">
-                      {Math.round((data.hiredCandidates / data.appliedCandidates) * 100)}% Success Rate
-                    </Badge>
-                  </div>
-                )}
-                
-                {card.value === "hiredCandidates" && data.appliedCandidates > 0 && (
-                  <div className="mt-1">
-                    <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-800">
-                      +{Math.round((data.hiredCandidates / data.appliedCandidates) * 100)}% Conversion
-                    </Badge>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+    <div className="grid grid-cols-4 gap-3">
+      {KPI_CARDS.map((card) => {
+        const IconComponent = card.icon;
+        const value = getCardData(card.value);
+        
+        return (
+          <div 
+            key={card.title} 
+            className={`flex items-center p-2.5 rounded-xl border ${card.borderColor} bg-white shadow-sm hover:shadow-md transition-shadow`}
+          >
+            <div className={`p-2 rounded-lg ${card.bgColor} mr-3 shrink-0`}>
+              <IconComponent className={`h-4 w-4 ${card.color}`} />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-medium text-slate-500 tracking-tight">{card.title}</span>
+              <span className="text-base font-extrabold text-slate-900 leading-tight">
+                {value.toLocaleString()}
+              </span>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

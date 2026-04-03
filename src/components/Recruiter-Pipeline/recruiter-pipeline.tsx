@@ -156,38 +156,39 @@ export function RecruiterPipeline() {
         )}
       </div>
 
-      <div className="flex-none bg-slate-50/50 rounded-lg border border-slate-200/60 p-2 mt-auto">
+      <div className="flex-none pt-2 mt-auto border-t border-slate-100">
         {actualTotalPages > 1 ? (
-          <div className="flex items-center justify-between px-2">
-            <div className="text-xs text-slate-500 font-medium tracking-tight">
+          <div className="flex items-center justify-between px-1">
+            <div className="text-sm text-slate-500 font-medium tracking-tight">
               Page <span className="text-slate-900 font-semibold">{actualCurrentPage}</span> of {actualTotalPages}
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1.5">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 disabled={!hasPrevPage}
-                className="h-7 text-xs rounded-md shadow-none"
+                className="h-8 px-3 text-sm rounded-full hover:bg-slate-100 text-slate-600 disabled:opacity-50"
               >
-                <ChevronLeft className="h-3 w-3 mr-1" />
-                Prev
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Previous
               </Button>
+              <div className="h-4 w-[1px] bg-slate-200 mx-1"></div>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => setCurrentPage(prev => Math.min(actualTotalPages, prev + 1))}
                 disabled={!hasNextPage}
-                className="h-7 text-xs rounded-md shadow-none"
+                className="h-8 px-3 text-sm rounded-full hover:bg-slate-100 text-slate-600 disabled:opacity-50"
               >
                 Next
-                <ChevronRight className="h-3 w-3 ml-1" />
+                <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
           </div>
         ) : (
-          <div className="text-xs text-slate-500 font-medium px-2 tracking-tight">
-            Showing all <span className="text-slate-900 font-semibold">{totalItems}</span> result(s)
+          <div className="flex items-center justify-center text-sm text-slate-500 font-medium px-2 py-1 tracking-tight">
+            Showing all <span className="text-slate-900 font-semibold ml-1 mr-1">{totalItems}</span> result(s)
           </div>
         )}
       </div>
