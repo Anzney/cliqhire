@@ -490,28 +490,29 @@ const Page = () => {
 
   return (
     <>
-      <div className="flex flex-col bg-background p-2 space-y-2" style={{ height: 'calc(100vh - 20px)' }}>
-        <div className="bg-card rounded-xl  shadow-sm overflow-hidden p-2">
+      <div className="flex flex-col h-[calc(100vh-64px)] bg-[#F8FAFC]">
+        <div className="flex-1 w-full mx-auto p-2 space-y-2 h-full overflow-hidden flex flex-col">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 overflow-hidden p-2 shrink-0">
           <PipelineJobHeader job={job} onAddCandidate={handleAddCandidate} />
         </div>
 
-        <div className="bg-card rounded-xl shadow-sm p-2">
-          <PipelineStageFilters
-            job={job}
-            selectedStage={selectedStageFilter}
-            onSelectStage={setSelectedStageFilter}
-          />
-        </div>
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 p-2 shrink-0">
+            <PipelineStageFilters
+              job={job}
+              selectedStage={selectedStageFilter}
+              onSelectStage={setSelectedStageFilter}
+            />
+          </div>
 
-        {/* Candidates Table */}
-        <div className="flex-1 flex flex-col min-h-0 bg-card rounded-xl  shadow-sm overflow-hidden">
-          {selectedStageFilter && (
-            <div className="px-4 py-3 bg-muted border-b border-border text-sm text-muted-foreground">
-              Showing candidates in: <span className="font-semibold text-foreground">{selectedStageFilter}</span>
-              <span className="ml-2">({getFilteredCandidates.length} candidates)</span>
-            </div>
-          )}
-          <div className="flex-1 overflow-auto relative">
+          {/* Candidates Table */}
+          <div className="flex-1 flex flex-col min-h-0 bg-white rounded-xl shadow-sm border border-slate-200/60 overflow-hidden">
+            {selectedStageFilter && (
+              <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 text-sm text-slate-500">
+                Showing candidates in: <span className="font-semibold text-slate-800">{selectedStageFilter}</span>
+                <span className="ml-2">({getFilteredCandidates.length} candidates)</span>
+              </div>
+            )}
+            <div className="flex-1 overflow-auto relative custom-scrollbar">
             <PipelineCandidatesTable
               job={job}
               candidates={getFilteredCandidates}
@@ -524,155 +525,170 @@ const Page = () => {
           </div>
         </div>
       </div>
+     </div>
 
-      {/* Candidate Details Dialog */}
-      <CandidateDetailsDialog
-        candidate={selectedCandidate}
-        isOpen={isDialogOpen}
-        onClose={handleCloseDialog}
-        pipelineId={job.id}
-        onCandidateUpdate={handleCandidateUpdate}
-      />
+      {/* Conditionally render dialogs to improve performance */}
+      {isDialogOpen && (
+        <CandidateDetailsDialog
+          candidate={selectedCandidate}
+          isOpen={isDialogOpen}
+          onClose={handleCloseDialog}
+          pipelineId={job.id}
+          onCandidateUpdate={handleCandidateUpdate}
+        />
+      )}
 
-      {/* Status Change Confirmation Dialog */}
-      <StatusChangeConfirmationDialog
-        isOpen={stageChangeDialog.isOpen}
-        onClose={handleCancelStageChange}
-        onConfirm={handleConfirmStageChange}
-        candidateName={stageChangeDialog.candidate?.name || ''}
-        currentStage={stageChangeDialog.currentStage}
-        newStage={stageChangeDialog.newStage}
-      />
+      {stageChangeDialog.isOpen && (
+        <StatusChangeConfirmationDialog
+          isOpen={stageChangeDialog.isOpen}
+          onClose={handleCancelStageChange}
+          onConfirm={handleConfirmStageChange}
+          candidateName={stageChangeDialog.candidate?.name || ''}
+          currentStage={stageChangeDialog.currentStage}
+          newStage={stageChangeDialog.newStage}
+        />
+      )}
 
-      {/* Add Candidate Dialog */}
-      <AddCandidateDialog
-        open={isAddCandidateOpen}
-        onOpenChange={setIsAddCandidateOpen}
-        onAddExisting={handleAddExistingCandidate}
-        onAddNew={handleAddNewCandidate}
-        jobTitle={job.title}
-      />
+      {isAddCandidateOpen && (
+        <AddCandidateDialog
+          open={isAddCandidateOpen}
+          onOpenChange={setIsAddCandidateOpen}
+          onAddExisting={handleAddExistingCandidate}
+          onAddNew={handleAddNewCandidate}
+          jobTitle={job.title}
+        />
+      )}
 
-      {/* Shared Existing Candidate selection dialog */}
-      <AddExistingCandidateDialog
-        jobId={job.id}
-        jobTitle={job.title}
-        open={isAddExistingOpen}
-        onOpenChange={setIsAddExistingOpen}
-        isPipeline={true}
-        pipelineId={job.id}
-        onCandidatesAdded={async () => {
-          await refetch();
-        }}
-      />
+      {isAddExistingOpen && (
+        <AddExistingCandidateDialog
+          jobId={job.id}
+          jobTitle={job.title}
+          open={isAddExistingOpen}
+          onOpenChange={setIsAddExistingOpen}
+          isPipeline={true}
+          pipelineId={job.id}
+          onCandidatesAdded={async () => {
+            await refetch();
+          }}
+        />
+      )}
 
-      <CreateCandidateDialog
-        open={isCreateCandidateOpen}
-        onOpenChange={setIsCreateCandidateOpen}
-        pipelineId={job.id}
-        onSubmit={handleCreateCandidateSubmit}
-      />
+      {isCreateCandidateOpen && (
+        <CreateCandidateDialog
+          open={isCreateCandidateOpen}
+          onOpenChange={setIsCreateCandidateOpen}
+          pipelineId={job.id}
+          onSubmit={handleCreateCandidateSubmit}
+        />
+      )}
 
-      {/* Delete Candidate Confirmation Dialog */}
-      <Dialog open={deleteCandidateDialog.isOpen} onOpenChange={(open) => setDeleteCandidateDialog(prev => ({ ...prev, isOpen: open }))}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Delete Candidate</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete <strong>{deleteCandidateDialog.candidate?.name}</strong> from this pipeline? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCancelDeleteCandidate}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleConfirmDeleteCandidate}
-            >
-              Delete Candidate
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {deleteCandidateDialog.isOpen && (
+        <Dialog open={deleteCandidateDialog.isOpen} onOpenChange={(open) => setDeleteCandidateDialog(prev => ({ ...prev, isOpen: open }))}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Delete Candidate</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete <strong className="text-foreground">{deleteCandidateDialog.candidate?.name}</strong> from this pipeline? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={handleCancelDeleteCandidate}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleConfirmDeleteCandidate}
+              >
+                Delete Candidate
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
-      {/* Status Change Confirmation Dialog */}
-      <Dialog open={statusChangeDialog.isOpen} onOpenChange={(open) => setStatusChangeDialog(prev => ({ ...prev, isOpen: open }))}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Update Status</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to update the status for <strong>{statusChangeDialog.candidate?.name}</strong> to <strong>{statusChangeDialog.newStatus}</strong>?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCancelStatusChange}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleConfirmStatusChange}
-            >
-              Update Status
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {statusChangeDialog.isOpen && (
+        <Dialog open={statusChangeDialog.isOpen} onOpenChange={(open) => setStatusChangeDialog(prev => ({ ...prev, isOpen: open }))}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Update Status</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to update the status for <strong className="text-foreground">{statusChangeDialog.candidate?.name}</strong> to <strong className="text-foreground">{statusChangeDialog.newStatus}</strong>?
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={handleCancelStatusChange}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleConfirmStatusChange}
+              >
+                Update Status
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
-      {/* PDF Viewer */}
-      <PDFViewer
-        isOpen={pdfViewer.isOpen}
-        onClose={handleClosePdfViewer}
-        pdfUrl={pdfViewer.pdfUrl || undefined}
-        candidateName={pdfViewer.candidateName || undefined}
-      />
+      {pdfViewer.isOpen && (
+        <PDFViewer
+          isOpen={pdfViewer.isOpen}
+          onClose={handleClosePdfViewer}
+          pdfUrl={pdfViewer.pdfUrl || undefined}
+          candidateName={pdfViewer.candidateName || undefined}
+        />
+      )}
 
-      {/* Interview Details Dialog */}
-      <InterviewDetailsDialog
-        isOpen={interviewDialog.isOpen}
-        onClose={handleCloseInterviewDialog}
-        onConfirm={handleConfirmInterviewDetails}
-        candidateName={interviewDialog.candidate?.name}
-      />
+      {interviewDialog.isOpen && (
+        <InterviewDetailsDialog
+          isOpen={interviewDialog.isOpen}
+          onClose={handleCloseInterviewDialog}
+          onConfirm={handleConfirmInterviewDetails}
+          candidateName={interviewDialog.candidate?.name}
+        />
+      )}
 
-      {/* Temp Candidate Alert Dialog */}
-      <TempCandidateAlertDialog
-        isOpen={tempCandidateAlert.isOpen}
-        onClose={handleCloseTempCandidateAlert}
-        candidateName={tempCandidateAlert.candidateName || undefined}
-        message={tempCandidateAlert.message || undefined}
-      />
+      {tempCandidateAlert.isOpen && (
+        <TempCandidateAlertDialog
+          isOpen={tempCandidateAlert.isOpen}
+          onClose={handleCloseTempCandidateAlert}
+          candidateName={tempCandidateAlert.candidateName || undefined}
+          message={tempCandidateAlert.message || undefined}
+        />
+      )}
 
-      {/* Auto-Create Candidate Dialog for Temp Candidates */}
-      <CreateCandidateModal
-        isOpen={autoCreateCandidateDialog.isOpen}
-        onClose={handleCloseAutoCreateDialog}
-        onCandidateCreated={handleAutoCreateCandidateSubmit}
-        tempCandidateData={autoCreateCandidateDialog.candidate ? {
-          name: autoCreateCandidateDialog.candidate.name,
-          email: autoCreateCandidateDialog.candidate.email,
-          phone: autoCreateCandidateDialog.candidate.phone,
-          location: autoCreateCandidateDialog.candidate.location,
-          description: autoCreateCandidateDialog.candidate.description,
-          gender: autoCreateCandidateDialog.candidate.gender,
-          dateOfBirth: autoCreateCandidateDialog.candidate.dateOfBirth,
-          country: autoCreateCandidateDialog.candidate.country,
-          nationality: autoCreateCandidateDialog.candidate.nationality,
-          willingToRelocate: autoCreateCandidateDialog.candidate.willingToRelocate,
-        } : undefined}
-        isTempCandidateConversion={true}
-        pipelineId={id}
-        tempCandidateId={autoCreateCandidateDialog.candidate?.id}
-      />
+      {autoCreateCandidateDialog.isOpen && (
+        <CreateCandidateModal
+          isOpen={autoCreateCandidateDialog.isOpen}
+          onClose={handleCloseAutoCreateDialog}
+          onCandidateCreated={handleAutoCreateCandidateSubmit}
+          tempCandidateData={autoCreateCandidateDialog.candidate ? {
+            name: autoCreateCandidateDialog.candidate.name,
+            email: autoCreateCandidateDialog.candidate.email,
+            phone: autoCreateCandidateDialog.candidate.phone,
+            location: autoCreateCandidateDialog.candidate.location,
+            description: autoCreateCandidateDialog.candidate.description,
+            gender: autoCreateCandidateDialog.candidate.gender,
+            dateOfBirth: autoCreateCandidateDialog.candidate.dateOfBirth,
+            country: autoCreateCandidateDialog.candidate.country,
+            nationality: autoCreateCandidateDialog.candidate.nationality,
+            willingToRelocate: autoCreateCandidateDialog.candidate.willingToRelocate,
+          } : undefined}
+          isTempCandidateConversion={true}
+          pipelineId={id}
+          tempCandidateId={autoCreateCandidateDialog.candidate?.id}
+        />
+      )}
 
-      {/* Disqualification Dialog */}
-      <DisqualificationDialog
-        isOpen={disqualificationDialog.isOpen}
-        onClose={handleCloseDisqualificationDialog}
-        onConfirm={handleConfirmDisqualification}
-        candidateName={disqualificationDialog.candidate?.name || ''}
-        currentStage={disqualificationDialog.candidate?.currentStage || ''}
-        currentStageStatus={disqualificationDialog.candidate?.status || ''}
-      />
+      {disqualificationDialog.isOpen && (
+        <DisqualificationDialog
+          isOpen={disqualificationDialog.isOpen}
+          onClose={handleCloseDisqualificationDialog}
+          onConfirm={handleConfirmDisqualification}
+          candidateName={disqualificationDialog.candidate?.name || ''}
+          currentStage={disqualificationDialog.candidate?.currentStage || ''}
+          currentStageStatus={disqualificationDialog.candidate?.status || ''}
+        />
+      )}
     </>
   );
 };
