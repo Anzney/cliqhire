@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { type Job, type Candidate, mapUIStageToBackendStage } from "@/components/Recruiter-Pipeline/dummy-data";
 import { getPipelineEntry, updateCandidateStage, deleteCandidateFromPipeline, updateCandidateStatus } from "@/services/recruitmentPipelineService";
-import { CandidateDetailsDialog } from "@/components/Recruiter-Pipeline/candidate-details-dialog";
 import { StatusChangeConfirmationDialog } from "@/components/Recruiter-Pipeline/status-change-confirmation-dialog";
 import { AddCandidateDialog } from "@/components/Recruiter-Pipeline/add-candidate-dialog";
 import { AddExistingCandidateDialog } from "@/components/common/add-existing-candidate-dialog";
@@ -49,8 +48,6 @@ const Page = () => {
     },
     enabled: !!id,
   });
-  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // Dialog states
   const [isAddCandidateOpen, setIsAddCandidateOpen] = useState(false);
@@ -147,24 +144,7 @@ const Page = () => {
   // Data loading is handled by React Query
 
   // Handler functions
-  const handleViewCandidate = (candidate: Candidate) => {
-    setSelectedCandidate(candidate);
-    setIsDialogOpen(true);
-  };
 
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false);
-    setSelectedCandidate(null);
-  };
-
-  const handleCandidateUpdate = async (updatedCandidate: Candidate) => {
-    // Refresh the job data to reflect the updated candidate
-    try {
-      await refetch();
-    } catch (error) {
-      console.error('Error refreshing job data:', error);
-    }
-  };
 
   const handleStageChange = (candidate: Candidate, newStage: string) => {
     if (!canModifyPipeline) {
@@ -518,7 +498,6 @@ const Page = () => {
               candidates={getFilteredCandidates}
               onStageChange={handleStageChange}
               onStatusChange={handleStatusChange}
-              onViewCandidate={handleViewCandidate}
               onViewResume={handleViewResume}
               onDeleteCandidate={handleDeleteCandidate}
             />
@@ -528,15 +507,6 @@ const Page = () => {
      </div>
 
       {/* Conditionally render dialogs to improve performance */}
-      {isDialogOpen && (
-        <CandidateDetailsDialog
-          candidate={selectedCandidate}
-          isOpen={isDialogOpen}
-          onClose={handleCloseDialog}
-          pipelineId={job.id}
-          onCandidateUpdate={handleCandidateUpdate}
-        />
-      )}
 
       {stageChangeDialog.isOpen && (
         <StatusChangeConfirmationDialog

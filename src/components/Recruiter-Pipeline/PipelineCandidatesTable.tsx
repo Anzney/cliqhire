@@ -22,7 +22,6 @@ type Props = {
   candidates: Candidate[];
   onStageChange: (candidate: Candidate, newStage: string) => void;
   onStatusChange: (candidate: Candidate, newStatus: string) => void;
-  onViewCandidate: (candidate: Candidate) => void;
   onViewResume: (candidate: Candidate) => void;
   onDeleteCandidate: (candidate: Candidate) => void;
   canModify?: boolean;
@@ -36,7 +35,6 @@ export function PipelineCandidatesTable({
   candidates,
   onStageChange,
   onStatusChange,
-  onViewCandidate,
   onViewResume,
   onDeleteCandidate,
   canModify = true,
@@ -62,10 +60,13 @@ export function PipelineCandidatesTable({
       </TableHeader>
       <TableBody>
         {candidates.map((candidate) => (
-          <TableRow key={candidate.id} className="hover:bg-muted/50">
+          <TableRow 
+            key={candidate.id} 
+            className="hover:bg-muted/50"
+          >
             <TableCell 
                className="cursor-pointer"
-               onClick={() => router.push(`/candidates/${candidate.id}`)}
+               onClick={() => router.push(`/reactruterpipeline/${job.id}/candidate/${candidate.id}`)}
              >
               <Avatar className="h-8 w-8 hover:ring-2 hover:ring-blue-400 transition-all">
                 <AvatarImage src={candidate.avatar} />
@@ -76,7 +77,7 @@ export function PipelineCandidatesTable({
             </TableCell>
             <TableCell 
                className="font-medium truncate max-w-[220px] cursor-pointer group"
-               onClick={() => router.push(`/candidates/${candidate.id}`)}
+               onClick={() => router.push(`/reactruterpipeline/${job.id}/candidate/${candidate.id}`)}
              >
               <div className="flex items-center gap-2 group-hover:text-blue-600 transition-colors">
                 {candidate.name || "Unknown Candidate"}
@@ -147,7 +148,7 @@ export function PipelineCandidatesTable({
                       <DropdownMenuItem
                         onClick={(e) => {
                           e.stopPropagation();
-                          onViewCandidate(candidate);
+                          router.push(`/reactruterpipeline/${job.id}/candidate/${candidate.id}`);
                         }}
                         className="cursor-pointer"
                       >
@@ -184,7 +185,7 @@ export function PipelineCandidatesTable({
                       <DropdownMenuItem
                         onClick={(e) => {
                           e.stopPropagation();
-                          onViewCandidate(candidate);
+                          router.push(`/reactruterpipeline/${job.id}/candidate/${candidate.id}`);
                         }}
                         className="cursor-pointer"
                       >
