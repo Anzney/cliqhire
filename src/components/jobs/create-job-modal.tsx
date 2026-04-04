@@ -15,7 +15,8 @@ import * as Flags from 'country-flag-icons/react/3x2'
 import React from "react"
 import { JobStage } from "@/types/job"
 import { Badge } from "@/components/ui/badge"
-import { X, Upload, FileText } from "lucide-react"
+import { X, Upload, FileText, Globe, Trash2 } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
 import { getClients } from "@/services/clientService"
 import { cn } from "@/lib/utils"
 import { CountrySelect } from "@/components/ui/country-select"
@@ -316,17 +317,15 @@ export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
   const handleNationalityModeChange = (mode: 'all' | 'specific') => {
     setNationalityMode(mode)
     if (mode === 'all') {
-      setSelectedNationalities(['Open For All Nationals'])
-      setFormData(prev => ({
-        ...prev,
-        nationalities: ['Open For All Nationals']
-      }))
+      if (!selectedNationalities.includes('Open For All Nationals')) {
+        const newList = ['Open For All Nationals', ...selectedNationalities]
+        setSelectedNationalities(newList)
+        setFormData(prev => ({ ...prev, nationalities: newList }))
+      }
     } else {
-      setSelectedNationalities([])
-      setFormData(prev => ({
-        ...prev,
-        nationalities: []
-      }))
+      const newList = selectedNationalities.filter(n => n !== 'Open For All Nationals')
+      setSelectedNationalities(newList)
+      setFormData(prev => ({ ...prev, nationalities: newList }))
     }
   }
 
@@ -797,60 +796,89 @@ export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="nationality">Nationalities</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="nationality" className="text-base font-semibold">Nationalities</Label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-muted-foreground mr-1">Open For All</span>
+                    <Switch
+                      checked={nationalityMode === 'all'}
+                      onCheckedChange={(checked: boolean) => handleNationalityModeChange(checked ? 'all' : 'specific')}
+                    />
+                  </div>
+                </div>
 
-                <div className="space-y-2">
-                  <div className="flex flex-wrap gap-2 min-h-[2.5rem] p-2 border rounded-md">
-                    {selectedNationalities.map((nationality) => (
-                      <Badge key={nationality} variant="secondary" className="flex items-center gap-1">
-                        {nationality}
-                        {nationalityMode === 'specific' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-auto p-0 hover:bg-transparent"
-                            onClick={() => removeNationality(nationality)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        )}
+                <div className="space-y-3">
+                  <div className="flex flex-wrap gap-2 min-h-[3.5rem] p-3 border rounded-lg bg-gray-50/30">
+                    {nationalityMode === 'all' && (
+                      <Badge 
+                        variant="outline" 
+                        className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1 flex items-center gap-2 text-sm font-medium shadow-sm"
+                      >
+                        <Globe className="h-4 w-4 text-blue-500" />
+                        Open For All Nationals
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto p-0 hover:bg-transparent text-blue-400 hover:text-blue-600 ml-1"
+                          onClick={() => handleNationalityModeChange('specific')}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </Badge>
+                    )}
+                    
+                    {selectedNationalities.filter(n => n !== 'Open For All Nationals').map((nationality) => (
+                      <Badge 
+                        key={nationality} 
+                        variant="secondary" 
+                        className="flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-200 shadow-sm transition-all hover:bg-gray-50"
+                      >
+                        <span className="text-sm">{nationality}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto p-0 hover:bg-transparent text-gray-400 hover:text-red-500"
+                          onClick={() => removeNationality(nationality)}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
                       </Badge>
                     ))}
+
+                    {nationalityMode !== 'all' && selectedNationalities.length === 0 && (
+                      <div className="flex flex-col items-center justify-center w-full py-2">
+                        <span className="text-sm text-muted-foreground italic">No specific nationalities selected</span>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        id="all-mode"
-                        value="all"
-                        checked={nationalityMode === 'all'}
-                        onChange={() => handleNationalityModeChange('all')}
-                      />
-                      <Label htmlFor="all-mode">Open For All Nationals</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        id="specific-mode"
-                        value="specific"
-                        checked={nationalityMode === 'specific'}
-                        onChange={() => handleNationalityModeChange('specific')}
-                      />
-                      <Label htmlFor="specific-mode">Specific Nationalities</Label>
-                    </div>
-                  </div>
-
-                  {nationalityMode === 'specific' && (
+                  <div className="space-y-2">
                     <CountrySelect
-                      value={""} // Pass empty to reset search after selection
+                      value={""}
                       onChange={(val) => {
                         addNationality(val)
                       }}
                       type="nationality"
-                      placeholder="Search and select nationalities..."
+                      placeholder="Search and add specific nationalities..."
                     />
-                  )}
+                    {selectedNationalities.filter(n => n !== 'Open For All Nationals').length > 0 && (
+                      <div className="flex justify-end">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => {
+                            const remaining = selectedNationalities.includes('Open For All Nationals') ? ['Open For All Nationals'] : [];
+                            setSelectedNationalities(remaining);
+                            setFormData(prev => ({ ...prev, nationalities: remaining }));
+                          }}
+                          className="text-xs text-muted-foreground hover:text-red-600 hover:bg-red-50 p-1.5 h-auto transition-colors rounded-full"
+                          title="Clear All Specific Nationalities"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1086,6 +1114,7 @@ export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
                     <input
                       type="file"
                       ref={fileInputRef}
+                      accept=".pdf,.doc,.docx,.rtf,.jpg,.jpeg,.png,image/*"
                       onChange={handleFileUpload}
                       className="hidden"
                     />

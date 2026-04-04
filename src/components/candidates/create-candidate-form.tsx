@@ -12,6 +12,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import { CountrySelect } from "@/components/ui/country-select";
 import { Upload } from "lucide-react";
 import { subDays } from "date-fns";
@@ -434,6 +435,17 @@ export default function CreateCandidateForm({
                   type="country"
                   placeholder="Select country..."
                 />
+                {form.country && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setForm(prev => ({ ...prev, country: "" }))}
+                    className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors rounded-full"
+                    title="Clear Country Selection"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                )}
               </div>
 
               {/* Nationality */}
@@ -445,6 +457,29 @@ export default function CreateCandidateForm({
                   type="nationality"
                   placeholder="Select nationality..."
                 />
+                <div className="flex justify-between items-center">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    type="button"
+                    onClick={() => setForm(prev => ({ ...prev, nationality: "Open" }))}
+                    className={`text-xs h-8 px-2 ${form.nationality === "Open" ? "bg-blue-50 border-blue-200 text-blue-700 font-medium" : ""}`}
+                  >
+                    Set as "Open"
+                  </Button>
+                  {form.nationality && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      type="button"
+                      onClick={() => setForm(prev => ({ ...prev, nationality: "" }))}
+                      className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors rounded-full"
+                      title="Clear Nationality Selection"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {/* Continent */}
@@ -529,7 +564,7 @@ export default function CreateCandidateForm({
                     type="file"
                     id="cv"
                     name="cv"
-                    accept=".pdf,.doc,.docx"
+                    accept=".pdf,.doc,.docx,.rtf,.jpg,.jpeg,.png,image/*"
                     onChange={handleFileChange}
                     className="hidden"
                   />
@@ -541,7 +576,7 @@ export default function CreateCandidateForm({
                       <>
                         <span className="font-medium text-gray-900">Click to upload</span>
                         <br />
-                        <span className="text-gray-500">PDF, DOC, DOCX (max 5MB)</span>
+                        <span className="text-gray-500">PDF, DOC, DOCX, RTF, JPG, PNG (max 5MB)</span>
                       </>
                     )}
                   </div>

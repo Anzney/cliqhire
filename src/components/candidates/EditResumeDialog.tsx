@@ -68,7 +68,7 @@ export default function EditResumeDialog({ open, onOpenChange, candidate, onUpda
             <input
               id="candidate-resume-file-input"
               type="file"
-              accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              accept=".pdf,.doc,.docx,.rtf,.jpg,.jpeg,.png,image/*"
               className="hidden"
               onChange={(e) => {
                 const file = e.target.files?.[0];
@@ -84,7 +84,7 @@ export default function EditResumeDialog({ open, onOpenChange, candidate, onUpda
                 Drag & drop your resume here, or <span className="text-blue-600 underline">browse</span>
                 
               </div>
-              <span className="text-gray-400 text-sm"> (PDF, DOC, DOCX, RTF)</span>
+              <span className="text-gray-400 text-sm"> (PDF, DOC, DOCX, RTF, JPG, PNG)</span>
               <div className="text-xs text-gray-400 mt-1">5MB max</div>
               {resumeFile && (
                 <div className="text-xs text-green-600 mt-2">File selected: {resumeFile.name}</div>

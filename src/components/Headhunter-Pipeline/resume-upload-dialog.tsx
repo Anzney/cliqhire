@@ -50,7 +50,7 @@ export function ResumeUploadDialog({ open, onClose, onSelect, candidateName }: R
           <label className="flex items-center gap-2 px-3 py-2 border rounded cursor-pointer hover:bg-gray-50">
             <UploadCloud className="h-4 w-4" />
             <span className="text-sm">Choose File</span>
-            <input type="file" accept="application/pdf,.pdf,.doc,.docx" className="hidden" onChange={handleFileChange} />
+            <input type="file" accept=".pdf,.doc,.docx,.rtf,.jpg,.jpeg,.png,image/*" className="hidden" onChange={handleFileChange} />
           </label>
           <div className="text-sm text-gray-600">{file ? file.name : "No file selected"}</div>
           {error && <div className="text-sm text-red-600">{error}</div>}

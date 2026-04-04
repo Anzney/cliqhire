@@ -10,6 +10,7 @@ import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import CurrencyFlag from "react-currency-flags";
+import { Trash2 } from "lucide-react";
 import { CountrySelect } from "@/components/ui/country-select";
 import { CONTINENTS } from "@/lib/constants";
 
@@ -123,19 +124,55 @@ export function EditFieldModal({
                 ))}
               </select>
             ) : isCountry ? (
-              <CountrySelect
-                value={value}
-                onChange={setValue}
-                type="country"
-                placeholder={`Search ${fieldName.toLowerCase()}...`}
-              />
+              <div className="space-y-2">
+                <CountrySelect
+                  value={value}
+                  onChange={setValue}
+                  type="country"
+                  placeholder={`Search ${fieldName.toLowerCase()}...`}
+                />
+                {value && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setValue("")}
+                    className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors rounded-full"
+                    title="Clear Selection"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
             ) : isNationality ? (
-              <CountrySelect
-                value={value}
-                onChange={setValue}
-                type="nationality"
-                placeholder={`Search ${fieldName.toLowerCase()}...`}
-              />
+              <div className="space-y-2">
+                <CountrySelect
+                  value={value}
+                  onChange={setValue}
+                  type="nationality"
+                  placeholder={`Search ${fieldName.toLowerCase()}...`}
+                />
+                <div className="flex justify-between items-center">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setValue("Open")}
+                    className={`text-xs h-8 px-2 ${value === "Open" ? "bg-blue-50 border-blue-200 text-blue-700" : ""}`}
+                  >
+                    Set as "Open"
+                  </Button>
+                  {value && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setValue("")}
+                      className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors rounded-full"
+                      title="Clear Selection"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
+              </div>
             ) : isContinent ? (
               <Select value={value} onValueChange={setValue}>
                 <SelectTrigger>
