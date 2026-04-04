@@ -11,6 +11,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import CurrencyFlag from "react-currency-flags";
 import { CountrySelect } from "@/components/ui/country-select";
+import { CONTINENTS } from "@/lib/constants";
 
 interface EditFieldModalProps {
   open: boolean;
@@ -24,6 +25,7 @@ interface EditFieldModalProps {
   isTextarea?: boolean;
   isCountry?: boolean;
   isNationality?: boolean;
+  isContinent?: boolean;
   options?: { value: string; label: string }[];
   currencyOptions?: Array<{ code: string; symbol: string; name: string; countryCode?: string }>;
 }
@@ -40,6 +42,7 @@ export function EditFieldModal({
   isTextarea,
   isCountry,
   isNationality,
+  isContinent,
   options,
   currencyOptions
 }: EditFieldModalProps) {
@@ -133,6 +136,19 @@ export function EditFieldModal({
                 type="nationality"
                 placeholder={`Search ${fieldName.toLowerCase()}...`}
               />
+            ) : isContinent ? (
+              <Select value={value} onValueChange={setValue}>
+                <SelectTrigger>
+                  <SelectValue placeholder={`Select continent...`} />
+                </SelectTrigger>
+                <SelectContent>
+                  {CONTINENTS.map((continent) => (
+                    <SelectItem key={continent} value={continent}>
+                      {continent}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             ) : isTextarea ? (
               <Textarea
                 id="value"

@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import "@/styles/phone-input-override.css";
+import { CONTINENTS } from '@/lib/constants';
 
 interface CreateCandidateFormProps {
   onCandidateCreated?: (candidate: any) => void;
@@ -43,6 +44,7 @@ interface CreateCandidateFormProps {
     educationDegree?: string;
     willingToRelocate?: string;
     linkedin?: string;
+    continent?: string;
   };
   // Props for temp candidate conversion
   isTempCandidateConversion?: boolean;
@@ -76,6 +78,7 @@ export default function CreateCandidateForm({
     educationDegree: tempCandidateData?.educationDegree || "",
     willingToRelocate: tempCandidateData?.willingToRelocate || "",
     linkedin: tempCandidateData?.linkedin || "",
+    continent: tempCandidateData?.continent || "",
     cv: null as File | null,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -101,6 +104,7 @@ export default function CreateCandidateForm({
         educationDegree: tempCandidateData.educationDegree || "",
         willingToRelocate: tempCandidateData.willingToRelocate || "",
         linkedin: tempCandidateData.linkedin || "",
+        continent: tempCandidateData.continent || "",
         cv: null,
       });
     }
@@ -183,6 +187,7 @@ export default function CreateCandidateForm({
           educationDegree: form.educationDegree,
           willingToRelocate: form.willingToRelocate,
           linkedin: form.linkedin,
+          continent: form.continent,
         };
 
         const result = await convertTempCandidateToReal(pipelineId, tempCandidateId, candidateData);
@@ -266,6 +271,7 @@ export default function CreateCandidateForm({
       educationDegree: "",
       willingToRelocate: "",
       linkedin: "",
+      continent: "",
       cv: null,
     });
 
@@ -439,6 +445,23 @@ export default function CreateCandidateForm({
                   type="nationality"
                   placeholder="Select nationality..."
                 />
+              </div>
+
+              {/* Continent */}
+              <div className="space-y-2">
+                <Label htmlFor="continent">Continent</Label>
+                <Select value={form.continent} onValueChange={(value) => handleSelectChange('continent', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select continent" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CONTINENTS.map((continent) => (
+                      <SelectItem key={continent} value={continent}>
+                        {continent}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Education Degree/Certificate */}

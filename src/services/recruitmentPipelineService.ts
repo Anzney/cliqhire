@@ -129,6 +129,7 @@ export interface Candidate {
   willingToRelocate: string;
   description: string;
   linkedin: string;
+  continent: string;
   currentSalary: number;
   currentSalaryCurrency: string;
   expectedSalary: number;
@@ -542,6 +543,7 @@ export interface ConvertTempCandidateRequest {
   expectedSalaryCurrency?: string;
   linkedin?: string;
   reportingTo?: string;
+  continent?: string;
   educationDegree?: string;
   primaryLanguage?: string;
   softSkill?: string[];

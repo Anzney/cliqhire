@@ -19,6 +19,7 @@ import { X, Upload, FileText } from "lucide-react"
 import { getClients } from "@/services/clientService"
 import { cn } from "@/lib/utils"
 import { CountrySelect } from "@/components/ui/country-select"
+import { CONTINENTS } from "@/lib/constants"
 
 // Define type for client data
 interface ClientData {
@@ -111,6 +112,7 @@ export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
   const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([])
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false)
   const [selectedNationalities, setSelectedNationalities] = useState<string[]>([])
+  const [selectedContinents, setSelectedContinents] = useState<string[]>([])
   const [nationalityMode, setNationalityMode] = useState<'all' | 'specific'>('specific')
   const [clients, setClients] = useState<ClientData[]>([])
   const [isLoadingClients, setIsLoadingClients] = useState(false)
@@ -142,6 +144,7 @@ export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
       currency: "SAR"
     },
     nationalities: [] as string[],
+    continents: [] as string[],
     location: "",
     locations: [] as string[],
     gender: "",
@@ -279,6 +282,26 @@ export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
       }))
     }
   }
+  
+  const addContinent = (continent: string) => {
+    if (!selectedContinents.includes(continent)) {
+      setSelectedContinents(prev => [...prev, continent])
+      setFormData(prev => ({
+        ...prev,
+        continents: [...prev.continents, continent]
+      }))
+    }
+  }
+
+  const removeContinent = (continentToRemove: string) => {
+    setSelectedContinents(prev =>
+      prev.filter(continent => continent !== continentToRemove)
+    )
+    setFormData(prev => ({
+      ...prev,
+      continents: prev.continents.filter(c => c !== continentToRemove)
+    }))
+  }
 
   const removeNationality = (nationalityToRemove: string) => {
     setSelectedNationalities(prev =>
@@ -363,6 +386,7 @@ export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
         experience: formData.experience,
         jobDescription: formData.jobDescription,
         nationalities: formData.nationalities,
+        continents: formData.continents,
         salaryRange: {
           min: parseInt(formData.salaryRange.min) || 0,
           max: parseInt(formData.salaryRange.max) || 0,
@@ -827,6 +851,39 @@ export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
                       placeholder="Search and select nationalities..."
                     />
                   )}
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="continents">Continents</Label>
+                <div className="space-y-2">
+                  <div className="flex flex-wrap gap-2 min-h-[2.5rem] p-2 border rounded-md">
+                    {selectedContinents.map((continent) => (
+                      <Badge key={continent} variant="secondary" className="flex items-center gap-1">
+                        {continent}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto p-0 hover:bg-transparent"
+                          onClick={() => removeContinent(continent)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </Badge>
+                    ))}
+                  </div>
+                  <Select onValueChange={addContinent} value="">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select continents..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CONTINENTS.map((continent) => (
+                        <SelectItem key={continent} value={continent}>
+                          {continent}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

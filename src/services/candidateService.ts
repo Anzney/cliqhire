@@ -27,6 +27,7 @@ export interface Candidate {
   email?: string;
   otherPhone?: string;
   linkedin?: string;
+  continent?: string;
   currentSalary?: string | number;
   currentSalaryCurrency?: string;
   expectedSalary?: string | number;
