@@ -8,6 +8,7 @@ import "react-datepicker/dist/react-datepicker.css"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { CountrySelect } from "@/components/ui/country-select"
+import { CONTINENTS } from "@/lib/constants"
 
 interface EditFieldDialogProps {
   open: boolean
@@ -20,6 +21,7 @@ interface EditFieldDialogProps {
   isSelect?: boolean
   isCountry?: boolean
   isNationality?: boolean
+  isContinent?: boolean
   fieldType?: 'text' | 'number' | 'select' | 'date' | 'textarea'
 }
 
@@ -60,6 +62,7 @@ export function EditFieldDialog({
   isSelect,
   isCountry,
   isNationality,
+  isContinent,
   fieldType = 'text'
 }: EditFieldDialogProps) {
   const [value, setValue] = useState(currentValue)
@@ -114,7 +117,7 @@ export function EditFieldDialog({
       );
     }
 
-    if (isCountry || fieldName.toLowerCase().includes('country') || fieldName.toLowerCase().includes('location')) {
+    if (isCountry || fieldName.toLowerCase().includes('country')) {
       return (
         <CountrySelect
           value={value}
@@ -133,6 +136,23 @@ export function EditFieldDialog({
           type="nationality"
           placeholder={`Search ${fieldName.toLowerCase()}...`}
         />
+      );
+    }
+
+    if (isContinent || fieldName.toLowerCase().includes('continent')) {
+      return (
+        <Select value={value} onValueChange={setValue}>
+          <SelectTrigger>
+            <SelectValue placeholder={`Select continent...`} />
+          </SelectTrigger>
+          <SelectContent>
+            {CONTINENTS.map((continent) => (
+              <SelectItem key={continent} value={continent}>
+                {continent}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       );
     }
 

@@ -78,6 +78,7 @@ export function AddToJobDialog({ candidateId, candidateName, trigger, onJobsAdde
     if (open) {
       fetchJobs();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // Reset search term when dialog closes

@@ -118,6 +118,7 @@ export const JobsContent = forwardRef<JobsContentRef, JobsContentProps>(
 
   useEffect(() => {
     fetchCandidateJobs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [candidateId]);
 
   useImperativeHandle(ref, () => ({

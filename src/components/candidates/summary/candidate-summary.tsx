@@ -73,15 +73,16 @@ const detailsFields = [
   { key: "maritalStatus", label: "Marital Status" },
   { key: "country", label: "Country" },
   { key: "nationality", label: "Nationality" },
+  { key: "continent", label: "Continent" },
   { key: "universityName", label: "University Name" },
   { key: "educationDegree", label: "Education Degree/Certificate", isTextarea: true },
   { key: "primaryLanguage", label: "Primary Language" },
   { key: "willingToRelocate", label: "Are you willing to relocate ?" },
   { key: "iqama", label: "Iqama is transferable ?" },
-  { 
-    key: "showPublic", 
-    label: "Public Visibility", 
-    render: (val: boolean | undefined) => val ? "Public" : "Private" 
+  {
+    key: "showPublic",
+    label: "Public Visibility",
+    render: (val: boolean | undefined) => val ? "Public" : "Private"
   },
 ];
 
@@ -551,6 +552,7 @@ const CandidateSummary = ({
                   onSave={(val: string) => handleSave(field.key, val)}
                   isCountry={field.key === "country" || field.key === "location"}
                   isNationality={field.key === "nationality"}
+                  isContinent={field.key === "continent"}
                 />
               </>
             )}
