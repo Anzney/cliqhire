@@ -54,7 +54,7 @@ const menuItems = [
   // { name: "Account & Finance", icon: DollarSign, href: "/finance", permission: "FINANCE" },
   // { name: "Reports", icon: BarChart, href: "/reports", permission: "REPORTS" },
   // { name: "Settings", icon: Settings, href: "/settings", permission: "SETTINGS" },
-  // { name: "Administration", icon: Lock, href: "/admin", permission: "ADMIN" },
+  { name: "Administration", icon: Lock, href: "/admin", permission: "ADMIN" },
 ];
 
 export function Sidebar() {
