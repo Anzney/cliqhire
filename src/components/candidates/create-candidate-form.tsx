@@ -126,9 +126,21 @@ export default function CreateCandidateForm({
     const file = e.target.files?.[0];
     if (file) {
       // Check file type
-      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-      if (!allowedTypes.includes(file.type)) {
-        alert('Please select a valid file type (PDF, DOC, or DOCX)');
+      const allowedTypes = [
+        'application/pdf', 
+        'application/msword', 
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'image/png',
+        'image/jpeg',
+        'image/jpg',
+        'text/plain'
+      ];
+      
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+      const allowedExtensions = ['pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg', 'txt'];
+
+      if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension || "")) {
+        alert('Please select a valid file type (PDF, DOC, DOCX, PNG, JPG, JPEG, TXT)');
         return;
       }
       // Check file size (5MB limit)
@@ -162,9 +174,8 @@ export default function CreateCandidateForm({
       }
 
       if (showAdvanced && !form.location) {
-        alert("Please fill in all required fields (Location)");
-        setIsSubmitting(false);
-        return;
+        // Location is no longer required as per user's request
+        // removed alert check here
       }
 
       if (isTempCandidateConversion) {
@@ -435,17 +446,6 @@ export default function CreateCandidateForm({
                   type="country"
                   placeholder="Select country..."
                 />
-                {form.country && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => setForm(prev => ({ ...prev, country: "" }))}
-                    className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors rounded-full"
-                    title="Clear Country Selection"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                )}
               </div>
 
               {/* Nationality */}
@@ -467,36 +467,18 @@ export default function CreateCandidateForm({
                   >
                     Set as &quot;Open&quot;
                   </Button>
-                  {form.nationality && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      type="button"
-                      onClick={() => setForm(prev => ({ ...prev, nationality: "" }))}
-                      className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors rounded-full"
-                      title="Clear Nationality Selection"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  )}
                 </div>
               </div>
 
               {/* Continent */}
               <div className="space-y-2">
                 <Label htmlFor="continent">Continent</Label>
-                <Select value={form.continent} onValueChange={(value) => handleSelectChange('continent', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select continent" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CONTINENTS.map((continent) => (
-                      <SelectItem key={continent} value={continent}>
-                        {continent}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <CountrySelect
+                  value={form.continent}
+                  onChange={(value) => handleSelectChange('continent', value)}
+                  type="continent"
+                  placeholder="Select continent..."
+                />
               </div>
 
               {/* Education Degree/Certificate */}
@@ -564,7 +546,7 @@ export default function CreateCandidateForm({
                     type="file"
                     id="cv"
                     name="cv"
-                    accept=".pdf,.doc,.docx,.rtf,.jpg,.jpeg,.png,image/*"
+                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
                     onChange={handleFileChange}
                     className="hidden"
                   />
@@ -576,7 +558,7 @@ export default function CreateCandidateForm({
                       <>
                         <span className="font-medium text-gray-900">Click to upload</span>
                         <br />
-                        <span className="text-gray-500">PDF, DOC, DOCX, RTF, JPG, PNG (max 5MB)</span>
+                        <span className="text-gray-500">PDF, DOC, DOCX, TXT, JPG, PNG (max 5MB)</span>
                       </>
                     )}
                   </div>
