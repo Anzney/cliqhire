@@ -465,7 +465,7 @@ export default function CreateCandidateForm({
                     onClick={() => setForm(prev => ({ ...prev, nationality: "Open" }))}
                     className={`text-xs h-8 px-2 ${form.nationality === "Open" ? "bg-blue-50 border-blue-200 text-blue-700 font-medium" : ""}`}
                   >
-                    Set as "Open"
+                    Set as &quot;Open&quot;
                   </Button>
                   {form.nationality && (
                     <Button 
