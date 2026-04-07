@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useRef } from 'react';
@@ -12,7 +11,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
 import { CountrySelect } from "@/components/ui/country-select";
 import { Upload } from "lucide-react";
 import { subDays } from "date-fns";
@@ -120,15 +118,25 @@ export default function CreateCandidateForm({
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       // Check file type
-      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-      if (!allowedTypes.includes(file.type)) {
-        alert('Please select a valid file type (PDF, DOC, or DOCX)');
+      const allowedTypes = [
+        'application/pdf', 
+        'application/msword', 
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'image/png',
+        'image/jpeg',
+        'image/jpg',
+        'text/plain'
+      ];
+      
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+      const allowedExtensions = ['pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg', 'txt'];
+
+      if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension || "")) {
+        alert('Please select a valid file type (PDF, DOC, DOCX, PNG, JPG, JPEG, TXT)');
         return;
       }
       // Check file size (5MB limit)
@@ -157,12 +165,6 @@ export default function CreateCandidateForm({
 
       if (!form.phone || !form.email) {
         alert("Please fill in all required fields (Phone, Email)");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (showAdvanced && !form.location) {
-        alert("Please fill in all required fields (Location)");
         setIsSubmitting(false);
         return;
       }
@@ -290,9 +292,6 @@ export default function CreateCandidateForm({
     // Call the original goBack function
     goBack();
   };
-
-  // Custom styles for ReactSelect to match the black border on focus
-
 
   const yesterday = subDays(new Date(), 1);
 
@@ -435,17 +434,6 @@ export default function CreateCandidateForm({
                   type="country"
                   placeholder="Select country..."
                 />
-                {form.country && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => setForm(prev => ({ ...prev, country: "" }))}
-                    className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors rounded-full"
-                    title="Clear Country Selection"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                )}
               </div>
 
               {/* Nationality */}
@@ -465,38 +453,20 @@ export default function CreateCandidateForm({
                     onClick={() => setForm(prev => ({ ...prev, nationality: "Open" }))}
                     className={`text-xs h-8 px-2 ${form.nationality === "Open" ? "bg-blue-50 border-blue-200 text-blue-700 font-medium" : ""}`}
                   >
-                    Set as "Open"
+                    Set as &quot;Open&quot;
                   </Button>
-                  {form.nationality && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      type="button"
-                      onClick={() => setForm(prev => ({ ...prev, nationality: "" }))}
-                      className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors rounded-full"
-                      title="Clear Nationality Selection"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  )}
                 </div>
               </div>
 
               {/* Continent */}
               <div className="space-y-2">
                 <Label htmlFor="continent">Continent</Label>
-                <Select value={form.continent} onValueChange={(value) => handleSelectChange('continent', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select continent" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CONTINENTS.map((continent) => (
-                      <SelectItem key={continent} value={continent}>
-                        {continent}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <CountrySelect
+                  value={form.continent}
+                  onChange={(val) => setForm((prev) => ({ ...prev, continent: val }))}
+                  type="continent"
+                  placeholder="Select continent..."
+                />
               </div>
 
               {/* Education Degree/Certificate */}
@@ -526,7 +496,7 @@ export default function CreateCandidateForm({
                 </Select>
               </div>
 
-              {/* Location - Required when advanced is shown */}
+              {/* Location - Optional */}
               <div className="space-y-2">
                 <Label htmlFor="location">Location</Label>
                 <Input
@@ -564,7 +534,7 @@ export default function CreateCandidateForm({
                     type="file"
                     id="cv"
                     name="cv"
-                    accept=".pdf,.doc,.docx,.rtf,.jpg,.jpeg,.png,image/*"
+                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
                     onChange={handleFileChange}
                     className="hidden"
                   />
@@ -576,7 +546,7 @@ export default function CreateCandidateForm({
                       <>
                         <span className="font-medium text-gray-900">Click to upload</span>
                         <br />
-                        <span className="text-gray-500">PDF, DOC, DOCX, RTF, JPG, PNG (max 5MB)</span>
+                        <span className="text-gray-500">PDF, DOC, DOCX, TXT, JPG, PNG (max 5MB)</span>
                       </>
                     )}
                   </div>
@@ -605,4 +575,3 @@ export default function CreateCandidateForm({
     </>
   );
 }
-

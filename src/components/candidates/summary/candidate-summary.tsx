@@ -45,11 +45,11 @@ const detailsFields = [
       ) : undefined,
     isUpload: true,
   },
-  {
-    key: "skills",
-    label: "Skills",
-    render: (val: string[] | undefined) => (val && val.length ? val.join(", ") : undefined),
-  },
+  /*   {
+      key: "skills",
+      label: "Skills",
+      render: (val: string[] | undefined) => (val && val.length ? val.join(", ") : undefined),
+    }, */
   { key: "status", label: "Status" },
   { key: "gender", label: "Gender" },
   {
