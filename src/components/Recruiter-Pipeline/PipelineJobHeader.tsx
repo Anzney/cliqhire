@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Building2, HandCoins, MapPin, Plus, Users, Copy, Check, Download } from "lucide-react";
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export function PipelineJobHeader({ job, onAddCandidate }: Props) {
+  const router = useRouter();
   const [isFormLinkCopied, setIsFormLinkCopied] = useState(false);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
 
@@ -42,9 +44,22 @@ export function PipelineJobHeader({ job, onAddCandidate }: Props) {
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
+                <h3 
+                  className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                  onClick={() => job.jobId?._id && router.push(`/jobs/${job.jobId._id}`)}
+                >
+                  {job.title}
+                </h3>
                 <Building2 className="h-4 w-4 text-gray-400" />
-                <span className="text-sm text-gray-600">{job.clientName}</span>
+                <span 
+                  className="text-sm text-gray-600 cursor-pointer hover:text-blue-600 transition-colors"
+                  onClick={() => {
+                    const clientId = job.jobId?.client?._id || (typeof job.jobId?.client === 'string' ? job.jobId.client : null);
+                    if (clientId) router.push(`/clients/${clientId}`);
+                  }}
+                >
+                  {job.clientName}
+                </span>
               </div>
             </div>
             <div className="flex items-center space-x-6 mt-2 text-sm text-gray-600">

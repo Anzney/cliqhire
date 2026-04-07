@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { RecruiterPipelineService, StageFieldUpdate } from '@/services/recruiterPipelineService';
 import { mapUIStageToBackendStage } from '@/components/Recruiter-Pipeline/dummy-data';
 import { toast } from 'sonner';
@@ -9,24 +9,23 @@ export interface UseRecruiterPipelineProps {
 }
 
 export const useRecruiterPipeline = ({ pipelineId, candidateId }: UseRecruiterPipelineProps) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const updateStageField = useCallback(async (
-    stageName: string,
-    fieldKey: string,
-    fieldValue: any,
-    notes?: string
-  ) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
+  const updateStageFieldMutation = useMutation({
+    mutationFn: async ({
+      stageName,
+      fieldKey,
+      fieldValue,
+      notes,
+    }: {
+      stageName: string;
+      fieldKey: string;
+      fieldValue: any;
+      notes?: string;
+    }) => {
       const updateData: StageFieldUpdate = {
         fields: {
-          [fieldKey]: fieldValue
+          [fieldKey]: fieldValue,
         },
-        notes: notes || `Updated ${fieldKey} to: ${fieldValue}`
+        notes: notes || `Updated ${fieldKey} to: ${fieldValue}`,
       };
 
       const backendStage = mapUIStageToBackendStage(stageName);
@@ -37,55 +36,57 @@ export const useRecruiterPipeline = ({ pipelineId, candidateId }: UseRecruiterPi
         updateData
       );
 
-      if (response.success) {
-        toast.success('Field updated successfully');
-        return { success: true, data: response.data };
-      } else {
-        setError(response.error || 'Failed to update field');
-        toast.error(response.error || 'Failed to update field');
-        return { success: false, error: response.error };
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to update field');
       }
-    } catch (err: any) {
-      const errorMessage = err.message || 'An error occurred while updating the field';
-      setError(errorMessage);
-      toast.error(errorMessage);
-      return { success: false, error: errorMessage };
-    } finally {
-      setIsLoading(false);
-    }
-  }, [pipelineId, candidateId]);
 
-  const getStageFields = useCallback(async (stageName: string) => {
-    setIsLoading(true);
-    setError(null);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Field updated successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to update field');
+    },
+  });
 
+  const getStageFieldsQuery = useQuery({
+    queryKey: ['stageFields', pipelineId, candidateId],
+    queryFn: async () => {
+      const response = await RecruiterPipelineService.getStageFields(
+        pipelineId,
+        candidateId,
+        ''
+      );
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch stage fields');
+      }
+      return response.data;
+    },
+    // Only fetching if we explicitly want to, since stageName is required usually, 
+    // it's better to provide a way to pass the stageName dynamically or keep as a function if we can't do it via useQuery directly.
+    enabled: false, 
+  });
+
+  // Re-implemented as a simple async function wrapping the service because stageName is dynamic
+  const getStageFields = async (stageName: string) => {
     try {
       const response = await RecruiterPipelineService.getStageFields(
         pipelineId,
         candidateId,
         stageName
       );
-
       if (response.success) {
         return { success: true, data: response.data };
-      } else {
-        setError(response.error || 'Failed to fetch stage fields');
-        return { success: false, error: response.error };
       }
+      return { success: false, error: response.error };
     } catch (err: any) {
-      const errorMessage = err.message || 'An error occurred while fetching stage fields';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
-    } finally {
-      setIsLoading(false);
+      return { success: false, error: err.message };
     }
-  }, [pipelineId, candidateId]);
+  };
 
-  const moveCandidateToStage = useCallback(async (newStage: string, notes?: string) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
+  const moveCandidateToStageMutation = useMutation({
+    mutationFn: async ({ newStage, notes }: { newStage: string; notes?: string }) => {
       const backendStage = mapUIStageToBackendStage(newStage);
       const response = await RecruiterPipelineService.moveCandidateToStage(
         pipelineId,
@@ -94,30 +95,42 @@ export const useRecruiterPipeline = ({ pipelineId, candidateId }: UseRecruiterPi
         notes
       );
 
-      if (response.success) {
-        toast.success('Candidate moved to new stage successfully');
-        return { success: true, data: response.data };
-      } else {
-        setError(response.error || 'Failed to move candidate');
-        toast.error(response.error || 'Failed to move candidate');
-        return { success: false, error: response.error };
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to move candidate');
       }
-    } catch (err: any) {
-      const errorMessage = err.message || 'An error occurred while moving candidate';
-      setError(errorMessage);
-      toast.error(errorMessage);
-      return { success: false, error: errorMessage };
-    } finally {
-      setIsLoading(false);
-    }
-  }, [pipelineId, candidateId]);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Candidate moved to new stage successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to move candidate');
+    },
+  });
 
   return {
-    isLoading,
-    error,
-    updateStageField,
+    isLoading: updateStageFieldMutation.isPending || moveCandidateToStageMutation.isPending,
+    error: updateStageFieldMutation.error?.message || moveCandidateToStageMutation.error?.message || null,
+    updateStageField: async (stageName: string, fieldKey: string, fieldValue: any, notes?: string) => {
+      try {
+        await updateStageFieldMutation.mutateAsync({ stageName, fieldKey, fieldValue, notes });
+        return { success: true };
+      } catch (e: any) {
+        return { success: false, error: e.message };
+      }
+    },
     getStageFields,
-    moveCandidateToStage,
-    clearError: () => setError(null)
+    moveCandidateToStage: async (newStage: string, notes?: string) => {
+      try {
+        await moveCandidateToStageMutation.mutateAsync({ newStage, notes });
+        return { success: true };
+      } catch (e: any) {
+        return { success: false, error: e.message };
+      }
+    },
+    clearError: () => {
+      updateStageFieldMutation.reset();
+      moveCandidateToStageMutation.reset();
+    },
   };
 };

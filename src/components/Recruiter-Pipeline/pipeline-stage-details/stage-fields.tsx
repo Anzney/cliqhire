@@ -42,6 +42,13 @@ export const formatDateForDisplay = (dateString: string): string => {
   return date ? format(date, "PPP") : "Not set";
 };
 
+// Helper function to format datetime for display
+export const formatDateTimeForDisplay = (dateTimeString: string): string => {
+  if (!dateTimeString || dateTimeString === "Not set") return "Not set";
+  const date = parseDateString(dateTimeString);
+  return date ? format(date, "PPp") : "Not set";
+};
+
 // Helper function to format datetime for input (YYYY-MM-DDTHH:mm)
 export const formatDateTimeForInput = (dateTimeString: string): string => {
   if (!dateTimeString || dateTimeString === "Not set") return "";
