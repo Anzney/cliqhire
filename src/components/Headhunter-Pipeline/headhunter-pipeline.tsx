@@ -215,18 +215,7 @@ export const HeadhunterPipeline: React.FC<{ jobs?: Job[] }> = ({ jobs: incomingJ
           <PipelineJobCard
             key={job.id}
             job={job}
-            loadingJobId={loadingJobId}
             isHighlighted={highlightedJobId === job.id}
-            onToggleExpansion={toggleJobExpansion}
-            onUpdateCandidateStage={updateCandidateStage}
-            onCandidateUpdate={(jid, c) => handleCandidateUpdate(jid, c)}
-            canModify={true}
-            hideCopyFormAndViewTableButtons={true}
-            tableOptions={{ showStageColumn: false }}
-            hideStageFilters={true}
-            hideClientName={true}
-            statusOptionsOverride={["Pending", "Accepted", "Rejected"]}
-            isHeadhunterMode={true}
           />
         ))
       ) : (

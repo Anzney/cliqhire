@@ -13,7 +13,6 @@ interface PipelineJobExpandedProps {
   resolveCurrentStage: (candidate: Candidate) => string;
   onStageChange: (candidate: Candidate, newStage: string) => void;
   onStatusChange: (candidate: Candidate, newStatus: any) => void;
-  onViewCandidate: (candidate: Candidate) => void;
   onViewResume: (candidate: Candidate) => void;
   onDeleteCandidate: (candidate: Candidate) => void;
   canModify?: boolean;
@@ -30,7 +29,6 @@ export function PipelineJobExpanded({
   resolveCurrentStage,
   onStageChange,
   onStatusChange,
-  onViewCandidate,
   onViewResume,
   onDeleteCandidate,
   canModify = true,
@@ -121,7 +119,6 @@ export function PipelineJobExpanded({
             }))}
             onStageChange={onStageChange}
             onStatusChange={onStatusChange as any}
-            onViewCandidate={onViewCandidate}
             onViewResume={onViewResume}
             onDeleteCandidate={onDeleteCandidate}
             canModify={canModify}
