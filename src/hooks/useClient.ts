@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getClients, ClientResponse } from "@/services/clientService";
+import { getClients, getClientById, ClientResponse } from "@/services/clientService";
 
 export interface ClientsQueryParams {
   page?: number;
@@ -24,5 +24,13 @@ export function useClients(params: ClientsQueryParams = {}) {
   return useQuery<ClientsPage>({
     queryKey: ["clients", { page, limit, ...rest }],
     queryFn: () => getClients({ page, limit, ...rest }),
+  });
+}
+
+export function useClientById(id: string) {
+  return useQuery<ClientResponse>({
+    queryKey: ["clientsData", id],
+    queryFn: () => getClientById(id),
+    enabled: Boolean(id),
   });
 }

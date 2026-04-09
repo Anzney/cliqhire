@@ -26,12 +26,16 @@ import TeamContent from "@/components/clients/team/team-content";
 import { ContactsContent } from "@/components/clients/contacts/contacts-content";
 import { HistoryContent } from "@/components/clients/history/history-content";
 import { JobsContent } from "@/components/clients/jobs/jobs-content";
-import { getClientById } from "@/services/clientService";
+import { getClientById, updateClientStage, updateClientStageStatus, ClientStageStatus } from "@/services/clientService";
 import { ContractSection } from "@/components/clients/contract/contract-section";
 import { CreateJobRequirementForm } from "@/components/new-jobs/create-jobs-form";
+import { useClientById } from "@/hooks/useClient";
 import { useQuery } from "@tanstack/react-query";
+import { ClientStageBadge } from "@/components/client-stage-badge";
+import { ClientStageStatusBadge } from "@/components/client-stage-status-badge";
 import { EmailTemplatesContent } from "@/components/clients/email-templates";
 import { useAuth } from "@/contexts/AuthContext";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   Dialog,
   DialogContent,
@@ -116,16 +120,24 @@ export default function ClientPage({ params }: PageProps) {
   const canDeleteClients = isAdmin || finalPermissions.includes("CLIENTS_DELETE");
   const canModifyJobs = isAdmin || finalPermissions.includes("JOBS_MODIFY");
 
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showStatusConfirmDialog, setShowStatusConfirmDialog] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pendingChange, setPendingChange] = useState<{
+    clientId: string;
+    stage: any;
+  } | null>(null);
+  const [pendingStatusChange, setPendingStatusChange] = useState<{
+    clientId: string;
+    status: ClientStageStatus;
+  } | null>(null);
+
   const {
     data: client,
     isLoading,
     isError,
     refetch,
-  } = useQuery({
-    queryKey: ["clientsData", id],
-    queryFn: () => getClientById(id),
-    enabled: Boolean(id), // Only run the query if id is available
-  });
+  } = useClientById(id);
 
   const { data: clientJobsData } = useQuery({
     queryKey: ["clientJobsForReport", id],
@@ -198,6 +210,47 @@ export default function ClientPage({ params }: PageProps) {
 
   const handleTabSwitch = (tabValue: string) => {
     setActiveTab(tabValue);
+  };
+
+  const handleStageChange = (clientId: string, newStage: any) => {
+    if (!canModifyClients) return;
+    setPendingChange({ clientId, stage: newStage });
+    setTimeout(() => setShowConfirmDialog(true), 0);
+  };
+
+  const handleStageStatusChange = (clientId: string, newStatus: ClientStageStatus) => {
+    if (!canModifyClients) return;
+    setPendingStatusChange({ clientId, status: newStatus });
+    setTimeout(() => setShowStatusConfirmDialog(true), 0);
+  };
+
+  const handleConfirmChange = async () => {
+    if (!pendingChange) return;
+    setError(null);
+    try {
+      if (pendingChange.stage) {
+        await updateClientStage(pendingChange.clientId, pendingChange.stage);
+      }
+      setShowConfirmDialog(false);
+      refetch();
+    } catch (error: any) {
+      console.error("Error updating client stage:", error);
+      setError(error.message || "Failed to update client stage. Please try again.");
+    }
+  };
+
+  const handleConfirmStatusChange = async () => {
+    if (!pendingStatusChange) return;
+    setError(null);
+    try {
+      if (pendingStatusChange.status) {
+        await updateClientStageStatus(pendingStatusChange.clientId, pendingStatusChange.status);
+      }
+      setShowStatusConfirmDialog(false);
+      refetch();
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred.");
+    }
   };
 
   // Cleanup interval on unmount
@@ -340,6 +393,33 @@ export default function ClientPage({ params }: PageProps) {
 
   return (
     <div className="flex flex-col h-full">
+      <ConfirmDialog
+        open={showConfirmDialog}
+        onOpenChange={setShowConfirmDialog}
+        onConfirm={handleConfirmChange}
+        onCancel={() => { setShowConfirmDialog(false); setError(null); }}
+        title="Confirm Stage Change"
+        description="Are you sure you want to update the client stage?"
+        confirmText="Confirm"
+        cancelText="Cancel"
+        loading={isLoading}
+        error={error}
+        confirmVariant="default"
+      />
+      <ConfirmDialog
+        open={showStatusConfirmDialog}
+        onOpenChange={setShowStatusConfirmDialog}
+        onConfirm={handleConfirmStatusChange}
+        onCancel={() => { setShowStatusConfirmDialog(false); setError(null); }}
+        title="Are you sure?"
+        description="This will update the client's stage status."
+        confirmText="Confirm"
+        cancelText="Cancel"
+        loading={isLoading}
+        error={error}
+        confirmVariant="default"
+      />
+
       {/* Header Section */}
       <div className="border-b bg-brand/6 py-4 px-6">
         <div className="flex items-center justify-between">
@@ -352,9 +432,19 @@ export default function ClientPage({ params }: PageProps) {
                 <span>{client.address || client.location}</span>
               )}
               {(client.industry || client.address || client.location) && <span>•</span>}
-              <Badge variant="outline" className="bg-brand/10 text-brand border-brand/20 hover:bg-brand/10">
-                Lead
-              </Badge>
+              <ClientStageBadge
+                id={client._id}
+                stage={client.clientStage || "Lead"}
+                onStageChange={handleStageChange}
+                disabled={!canModifyClients}
+              />
+              <ClientStageStatusBadge
+                id={client._id}
+                status={client.clientSubStage || ""}
+                stage={client.clientStage || "Lead"}
+                onStatusChange={handleStageStatusChange}
+                disabled={!canModifyClients}
+              />
             </div>
           </div>
         </div>
