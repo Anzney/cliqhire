@@ -49,7 +49,7 @@ import { useExportJobs } from "@/hooks/useExportJobs";
 import { useJobs, useUpdateJobStage, useDeleteJob } from "@/hooks/useJobs";
 
 const columsArr = [
-  "jobId",
+  "Job ID",
   "Position Name",
   "Job Type",
   "Job location",
