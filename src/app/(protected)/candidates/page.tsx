@@ -20,6 +20,7 @@ import { ExportDialog, ExportFilterParams } from "@/components/common/export-dia
 import { useExportCandidates } from "@/hooks/useExportCandidates";
 
 const columsArr = [
+  "Profile ID",
   "Candidate Name",
   "Candidate Email",
   "Candidate Phone",
@@ -213,6 +214,14 @@ export default function CandidatesPage() {
                         />
                       </div>
                     </TableCell>
+                    <TableCell>{
+                      <span
+                        className="font-medium text-slate-900 hover:text-brand hover:underline cursor-pointer transition-colors block"
+                        onClick={() => candidate._id && router.push(`/candidates/${candidate._id}`)}
+                      >
+                        {candidate.profileId || "N/A"}
+                      </span>
+                    }</TableCell>
                     <TableCell className="text-sm font-medium w-[200px]">
                       <span
                         className="font-medium text-slate-900 hover:text-brand hover:underline cursor-pointer transition-colors block"

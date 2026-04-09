@@ -23,6 +23,7 @@ interface Tab {
 
 interface Candidate {
   _id?: string;
+  profileId?: string
   name?: string;
   email?: string;
   phone?: string;
@@ -204,10 +205,15 @@ export default function ClientCandidateTabs({ candidateId, tabs }: { candidateId
   return (
     <div className="flex flex-col h-full">
       {/* Header Section */}
-      <div className="border-b bg-white py-4 px-6">
+      <div className="border-b bg-white py-2 px-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">{candidate.name || "Unknown Candidate"}</h1>
+            <span className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold">{candidate.name || "Unknown Candidate"}</h1>
+              <h2 className="text-sm text-muted-foreground">({candidate.profileId || "Unknown Profile ID"})</h2>
+            </span>
+            
+            
             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
               {candidate.experience && <><span>{candidate.experience}</span><span>•</span></>}
               {candidate.location && <><span>{candidate.location}</span><span>•</span></>}

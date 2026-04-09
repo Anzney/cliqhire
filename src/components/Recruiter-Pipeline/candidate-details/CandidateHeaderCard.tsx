@@ -12,7 +12,7 @@ interface Props {
   canModify?: boolean;
 }
 
-export function CandidateHeaderCard({ candidate, onStageChange, onStatusChange, canModify = true }: Props) {
+export function  CandidateHeaderCard({ candidate, onStageChange, onStatusChange, canModify = true }: Props) {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 p-4">
       <div className="flex items-center space-x-4">

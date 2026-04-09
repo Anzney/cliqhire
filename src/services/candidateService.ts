@@ -4,6 +4,7 @@ import axios, { AxiosError } from "axios";
 
 export interface Candidate {
   _id?: string; // MongoDB ID from API response
+  profileId?: string;
   name?: string;
   location?: string;
   experience?: string;
