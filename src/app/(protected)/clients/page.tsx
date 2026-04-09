@@ -43,7 +43,7 @@ interface Client {
   industry: string;
   countryOfBusiness: string;
   clientStage: "Lead" | "Engaged" | "Signed";
-  clientSubStage: ClientStageStatus;
+  clientSubStage?: ClientStageStatus;
   owner: string;
   team: string;
   createdAt: string;

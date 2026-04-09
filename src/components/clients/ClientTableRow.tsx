@@ -14,7 +14,7 @@ export interface ClientTableRowProps {
     industry: string;
     countryOfBusiness: string;
     clientStage: "Lead" | "Engaged" | "Signed";
-    clientSubStage: ClientStageStatus;
+    clientSubStage?: ClientStageStatus;
     owner: string;
     team: string;
     createdAt: string;
@@ -90,7 +90,7 @@ const ClientTableRow: React.FC<ClientTableRowProps> = ({
       <TableCell className="text-sm px-4 py-2 w-[150px]">
         <ClientStageStatusBadge
           id={client.id}
-          status={client.clientSubStage}
+          status={client.clientSubStage as any}
           stage={client.clientStage}
           onStatusChange={onStatusChange}
           disabled={!canModify}

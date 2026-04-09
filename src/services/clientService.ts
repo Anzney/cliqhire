@@ -48,7 +48,7 @@ export interface ClientResponse {
   linkedInPage?: string;
   countryCode?: string;
   primaryContacts?: PrimaryContact[];
-  clientStage?: "Lead" | "Engaged" | "Negotiation" | "Signed";
+  clientStage?: "Lead" | "Engaged" | "Signed";
   clientSubStage?: ClientStageStatus;
   clientTeam?: "Enterprise" | "SMB" | "Mid-Market";
   clientRm?: string;
@@ -492,7 +492,7 @@ const getClients = async (queryParams: {
   limit?: number;
   search?: string;
   industry?: string;
-  clientStage?: "Lead" | "Engaged" | "Negotiation" | "Signed";
+  clientStage?: "Lead" | "Engaged" | "Signed";
   clientTeam?: "Enterprise" | "SMB" | "Mid-Market";
 } = {}): Promise<ClientsPage> => {
   const limit = queryParams.limit ?? 10;
@@ -610,7 +610,7 @@ const updateClient = async (
 // Update client stage
 const updateClientStage = async (
   id: string,
-  stage: "Lead" | "Engaged" | "Negotiation" | "Signed"
+  stage: "Lead" | "Engaged" | "Signed"
 ): Promise<ClientResponse> => {
   try {
     // Fetch the full client data to avoid backend issues with partial updates.

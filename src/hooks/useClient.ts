@@ -6,7 +6,7 @@ export interface ClientsQueryParams {
   limit?: number;
   search?: string;
   industry?: string;
-  clientStage?: "Lead" | "Engaged" | "Negotiation" | "Signed";
+  clientStage?: "Lead" | "Engaged" | "Signed";
   clientTeam?: "Enterprise" | "SMB" | "Mid-Market";
 }
 

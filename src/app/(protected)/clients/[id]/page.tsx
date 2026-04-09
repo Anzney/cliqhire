@@ -440,7 +440,7 @@ export default function ClientPage({ params }: PageProps) {
               />
               <ClientStageStatusBadge
                 id={client._id}
-                status={client.clientSubStage || ""}
+                status={(client.clientSubStage || "") as any}
                 stage={client.clientStage || "Lead"}
                 onStatusChange={handleStageStatusChange}
                 disabled={!canModifyClients}

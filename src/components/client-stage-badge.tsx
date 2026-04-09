@@ -27,8 +27,9 @@ interface ClientStageBadgeProps {
 
 export function ClientStageBadge({ id, stage, onStageChange, disabled = false }: ClientStageBadgeProps) {
   if (!onStageChange || disabled) {
+    const currentStageColor = (stageColors as any)[stage] || "bg-gray-100 text-gray-800";
     return (
-      <Badge variant="secondary" className={`${stageColors[stage]} border-none`}>
+      <Badge variant="secondary" className={`${currentStageColor} border-none`}>
         {stage}
       </Badge>
     );
@@ -45,13 +46,14 @@ export function ClientStageBadge({ id, stage, onStageChange, disabled = false }:
     };
   };
 
+  const currentStageColor = (stageColors as any)[stage] || "bg-gray-100 text-gray-800";
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-auto p-0 hover:bg-transparent">
           <Badge
             variant="secondary"
-            className={`${stageColors[stage]} border-none flex items-center gap-1`}
+            className={`${currentStageColor} border-none flex items-center gap-1`}
           >
             {stage}
             <ChevronDown className="h-3 w-3" />

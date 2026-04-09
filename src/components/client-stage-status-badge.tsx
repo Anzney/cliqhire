@@ -33,7 +33,7 @@ const stageStatusColors: Record<ClientStageStatus, string> = {
 interface ClientStageStatusBadgeProps {
   id?: string;
   status: ClientStageStatus;
-  stage: "Lead" | "Negotiation" | "Engaged" | "Signed";
+  stage: "Lead" | "Engaged" | "Signed";
   onStatusChange?: (id: string, newStatus: ClientStageStatus) => void;
   disabled?: boolean;
 }
@@ -48,9 +48,10 @@ export function ClientStageStatusBadge({ id, status, stage, onStatusChange, disa
   }
 
   if (!onStatusChange || disabled) {
+    const currentStatusColor = (stageStatusColors as any)[status] || "bg-gray-100 text-gray-800";
     return (
-      <Badge variant="secondary" className={`${stageStatusColors[status]} border-none`}>
-        {status}
+      <Badge variant="secondary" className={`${currentStatusColor} border-none`}>
+        {status || "N/A"}
       </Badge>
     )
   }
@@ -66,6 +67,7 @@ export function ClientStageStatusBadge({ id, status, stage, onStatusChange, disa
     }
   }
 
+  const currentStatusColor = (stageStatusColors as any)[status] || "bg-gray-100 text-gray-800";
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -75,9 +77,9 @@ export function ClientStageStatusBadge({ id, status, stage, onStatusChange, disa
         >
           <Badge 
             variant="secondary" 
-            className={`${stageStatusColors[status]} border-none flex items-center gap-1`}
+            className={`${currentStatusColor} border-none flex items-center gap-1`}
           >
-            {status}
+            {status || "Select Status"}
             <ChevronDown className="h-3 w-3" />
           </Badge>
         </Button>
