@@ -13,7 +13,7 @@
 <p style="color: blue; font-size: 20px; font-weight: bold;">CliqHire is an Applicant Tracking System (ATS) built with Next.js 14, React 18, TypeScript, and Tailwind CSS. The application follows a modern, scalable architecture with a clear separation of concerns, implementing route groups, protected routes, and a comprehensive component-based UI system.</p>
 
 ### Technology Stack
-- **Framework**: Next.js 14 (App Router)
+- **Framework**: Next.js 14+ (App Router)
 - **UI Library**: React 18
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
