@@ -4,6 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { type Candidate } from "@/components/Recruiter-Pipeline/dummy-data";
 import { PipelineStageBadge } from "@/components/Recruiter-Pipeline/pipeline-stage-badge";
 import { StatusBadge } from "@/components/Recruiter-Pipeline/status-badge";
+import { useRouter } from "next/navigation";
+
 
 interface Props {
   candidate: Candidate;
@@ -11,8 +13,9 @@ interface Props {
   onStatusChange?: (candidate: Candidate, newStatus: string) => void;
   canModify?: boolean;
 }
-
 export function  CandidateHeaderCard({ candidate, onStageChange, onStatusChange, canModify = true }: Props) {
+const router=useRouter()
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 p-4">
       <div className="flex items-center space-x-4">
@@ -28,8 +31,8 @@ export function  CandidateHeaderCard({ candidate, onStageChange, onStatusChange,
           </div>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <h2 className="text-xl font-bold text-gray-900 truncate">
+          <div onClick={()=>router.push(`/candidates/${candidate.id}`)} className="flex items-center gap-2 mb-0.5 cursor-pointer ">
+            <h2 className="text-xl font-bold text-gray-900 truncate hover:underline hover:text-blue-600">
               {candidate.name || 'Unknown Candidate'}
             </h2>
             {candidate.isTempCandidate && (
