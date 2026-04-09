@@ -52,7 +52,11 @@ export interface ClientResponse {
   clientSubStage?: ClientStageStatus;
   clientTeam?: "Enterprise" | "SMB" | "Mid-Market";
   clientRm?: string;
-  clientAge?: number;
+  clientAge?: {
+    years: number;
+    months: number;
+    days: number;
+  };
   contractNumber?: string;
   contractStartDate?: string | null;
   contractEndDate?: string | null;

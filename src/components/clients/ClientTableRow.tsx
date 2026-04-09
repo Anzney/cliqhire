@@ -21,18 +21,34 @@ export interface ClientTableRowProps {
     jobCount: number;
     incorporationDate: string;
     createdBy?: string;
+    clientAge?: {
+      years: number;
+      months: number;
+      days: number;
+    };
   };
   onStageChange: (clientId: string, newStage: "Lead" | "Engaged" | "Signed") => void;
   onStatusChange: (clientId: string, newStatus: ClientStageStatus) => void;
-  getYearDifference: (createdAt: string) => number;
   canModify?: boolean;
 }
+
+const formatClientAge = (age?: { years: number; months: number; days: number }) => {
+  if (!age) return "0d";
+  const { years, months, days } = age;
+  
+  if (years > 0) {
+    return `${years}y${months > 0 ? ` ${months}m` : ''}`;
+  } else if (months > 0) {
+    return `${months}m${days > 0 ? ` ${days}d` : ''}`;
+  } else {
+    return `${days}d`;
+  }
+};
 
 const ClientTableRow: React.FC<ClientTableRowProps> = ({
   client,
   onStageChange,
   onStatusChange,
-  getYearDifference,
   canModify = false,
 }) => {
   const router = useRouter();
@@ -81,9 +97,7 @@ const ClientTableRow: React.FC<ClientTableRowProps> = ({
         />
       </TableCell>
       <TableCell className="text-sm px-4 py-2 w-[120px]">
-        {client.incorporationDate
-          ? `${getYearDifference(client.incorporationDate)} years`
-          : "0 years"}
+        {formatClientAge(client.clientAge)}
       </TableCell>
       <TableCell className="text-sm px-4 py-2 w-[100px]">
         {client.jobCount}

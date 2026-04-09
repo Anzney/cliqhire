@@ -8,7 +8,7 @@ import {
   ClientStageStatus,
   deleteClient,
 } from "@/services/clientService";
-import { differenceInYears } from "date-fns";
+
 import Dashboardheader from "@/components/dashboard-header";
 import ClientTableRow from "@/components/clients/ClientTableRow";
 import ClientPaginationControls from "@/components/clients/ClientPaginationControls";
@@ -50,6 +50,11 @@ interface Client {
   jobCount: number;
   incorporationDate: string;
   createdBy?: string;
+  clientAge?: {
+    years: number;
+    months: number;
+    days: number;
+  };
 }
 
 
@@ -192,6 +197,7 @@ export default function ClientsPage() {
       jobCount: c.jobCount ?? 0,
       incorporationDate: (c as any).incorporationDate ?? "",
       createdBy: c.createdBy?.name ?? "",
+      clientAge: (c as any).clientAge,
     }));
   }, [clientsPage]);
 
@@ -201,19 +207,7 @@ export default function ClientsPage() {
 
 
 
-  function getYearDifference(createdAt: string) {
-    const createdDate = new Date(createdAt);
-    const today = new Date();
-    return differenceInYears(today, createdDate);
-  }
 
-  const calculateAge = (createdAt: string) => {
-    const created = new Date(createdAt);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - created.getTime());
-    const diffMonths = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 30.44));
-    return diffMonths;
-  };
 
   const handleStageChange = (clientId: string, newStage: Client["clientStage"]) => {
     if (!canModifyClients) return;
@@ -247,7 +241,11 @@ export default function ClientsPage() {
     if (filters.maxAge) {
       const maxAgeMonths = parseInt(filters.maxAge);
       if (!isNaN(maxAgeMonths)) {
-        result = result.filter((c) => calculateAge(c.createdAt) <= maxAgeMonths);
+        result = result.filter((c) => {
+          if (!c.clientAge) return false;
+          const totalMonths = (c.clientAge.years * 12) + c.clientAge.months;
+          return totalMonths <= maxAgeMonths;
+        });
       }
     }
 
@@ -426,7 +424,6 @@ export default function ClientsPage() {
                         client={client}
                         onStageChange={handleStageChange}
                         onStatusChange={handleStageStatusChange}
-                        getYearDifference={getYearDifference}
                         canModify={canModifyClients}
                       />
                     </TableRow>
