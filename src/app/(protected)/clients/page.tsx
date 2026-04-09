@@ -52,13 +52,7 @@ interface Client {
   createdBy?: string;
 }
 
-type SortField = "name" | "industry" | "countryOfBusiness" | "createdAt";
-type SortOrder = "asc" | "desc";
 
-interface SortConfig {
-  field: SortField;
-  order: SortOrder;
-}
 
 interface Filters {
   name: string;
@@ -82,7 +76,6 @@ export default function ClientsPage() {
   const [filterIndustry, setFilterIndustry] = useState("");
   const [filterLocation, setFilterLocation] = useState("");
   const [filterStages, setFilterStages] = useState<Client["clientStage"][]>([]);
-  const [sortConfig, setSortConfig] = useState<SortConfig>({ field: "name", order: "asc" });
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [openExportDialog, setOpenExportDialog] = useState(false);
   const { mutateAsync: exportClientsMutation } = useExportClients();
@@ -155,26 +148,6 @@ export default function ClientsPage() {
     }
   };
 
-  const handleSort = (field: string) => {
-    if (field !== 'name') return; // Only allow sorting by name
-
-    setSortConfig(prevConfig => {
-      // If clicking the same column, toggle the order
-      if (prevConfig.field === field) {
-        return {
-          field,
-          order: prevConfig.order === 'asc' ? 'desc' : 'asc'
-        };
-      }
-      // If clicking a different column, set to ascending by default
-      return {
-        field,
-        order: 'asc'
-      };
-    });
-
-    setCurrentPage(1); // Reset to first page when sorting changes
-  };
   const [filters, setFilters] = useState<Filters>({
     name: "",
     industry: "",
@@ -278,18 +251,8 @@ export default function ClientsPage() {
       }
     }
 
-    if (sortConfig.field === "name") {
-      result = [...result].sort((a, b) => {
-        const av = (a.name || "").toLowerCase();
-        const bv = (b.name || "").toLowerCase();
-        if (av < bv) return sortConfig.order === "asc" ? -1 : 1;
-        if (av > bv) return sortConfig.order === "asc" ? 1 : -1;
-        return 0;
-      });
-    }
-
     return result;
-  }, [allClients, filterLocation, filterStages, filters.maxAge, sortConfig]);
+  }, [allClients, filterLocation, filterStages, filters.maxAge]);
 
   const totalClientsCalc = clientsPage?.totalCount ?? 0;
   const totalPagesCalc = clientsPage?.totalPages ?? 1;

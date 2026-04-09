@@ -24,8 +24,5 @@ export function useClients(params: ClientsQueryParams = {}) {
   return useQuery<ClientsPage>({
     queryKey: ["clients", { page, limit, ...rest }],
     queryFn: () => getClients({ page, limit, ...rest }),
-    placeholderData: (prev) => prev, // keeps previous data visible while fetching next page
-    staleTime: 60 * 1000, // 1 minute
-    refetchOnWindowFocus: false, // avoid redundant requests on focus
   });
 }
