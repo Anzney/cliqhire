@@ -110,4 +110,5 @@ export interface JobData {
     };
   };
   _id: string;
+  jobId?: string
 }

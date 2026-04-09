@@ -49,6 +49,7 @@ import { useExportJobs } from "@/hooks/useExportJobs";
 import { useJobs, useUpdateJobStage, useDeleteJob } from "@/hooks/useJobs";
 
 const columsArr = [
+  "jobId",
   "Position Name",
   "Job Type",
   "Job location",
@@ -385,6 +386,14 @@ export default function JobsPage() {
                             disabled={!canDeleteJobs}
                           />
                         </div>
+                      </TableCell>
+                      <TableCell className="text-sm font-medium w-[200px]">
+                        <span
+                          className="font-medium text-slate-900 hover:text-brand hover:underline cursor-pointer transition-colors block"
+                          onClick={() => router.push(`/jobs/${job._id}`)}
+                        >
+                          {job.jobId || "N/A"}
+                        </span>
                       </TableCell>
                       <TableCell className="text-sm font-medium w-[200px]">
                         <span

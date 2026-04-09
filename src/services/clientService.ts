@@ -29,6 +29,7 @@ export const clientStageStatuses = [
 export type ClientStageStatus = (typeof clientStageStatuses)[number];
 
 export interface ClientResponse {
+  clientId?:string;
   _id: string;
   name: string;
   emails?: string[];

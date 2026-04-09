@@ -36,6 +36,7 @@ const columnsArr = [
 ];
 
 interface Client {
+  clientId?: string;
   _id?: string;
   id: string;
   name: string;
@@ -204,6 +205,7 @@ export default function ClientsPage() {
   // Map API shape to local Client type
   const allClients: Client[] = useMemo(() => {
     return (clientsPage?.clients ?? []).map((c) => ({
+      clientId:c.clientId,
       _id: c._id,
       id: c._id,
       name: c.name,
@@ -411,6 +413,7 @@ export default function ClientsPage() {
                       />
                     </div>
                   </TableHead>
+                  <TableHead className="min-w-[100px]">Client Id</TableHead>
                   <TableHead className="min-w-[200px]">Name</TableHead>
                   <TableHead className="min-w-[150px]">Industry</TableHead>
                   <TableHead className="min-w-[150px]">Location</TableHead>

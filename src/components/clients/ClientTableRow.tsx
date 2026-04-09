@@ -8,6 +8,7 @@ import React from "react";
 
 export interface ClientTableRowProps {
   client: {
+    clientId?: string;
     id: string;
     name: string;
     industry: string;
@@ -40,6 +41,14 @@ const ClientTableRow: React.FC<ClientTableRowProps> = ({
 
   return (
     <>
+    <TableCell className="text-sm px-4 py-2 w-[200px]">
+        <span
+          className="font-medium text-slate-900 hover:text-brand hover:underline cursor-pointer transition-colors block"
+          onClick={() => router.push(`/clients/${client.id}`)}
+        >
+          {client.clientId}
+        </span>
+      </TableCell>
       <TableCell className="text-sm px-4 py-2 w-[200px]">
         <span
           className="font-medium text-slate-900 hover:text-brand hover:underline cursor-pointer transition-colors block"
