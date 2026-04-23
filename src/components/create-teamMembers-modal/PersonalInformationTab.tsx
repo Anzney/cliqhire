@@ -7,6 +7,7 @@ import { CreateTeamMemberData, TeamMemberStatus } from '@/types/teamMember';
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import "@/styles/phone-input-override.css";
+import { LocationInput } from "@/components/location/LocationInput";
 
 interface PersonalInformationTabProps {
   formData: CreateTeamMemberData;
@@ -134,10 +135,9 @@ export function PersonalInformationTab({ formData, setFormData, errors }: Person
 
         <div className='mr-2'>
           <Label htmlFor="location">Location</Label>
-          <Input
-            id="location"
-            value={formData.location}
-            onChange={(e) => handleInputChange('location', e.target.value)}
+          <LocationInput
+            value={formData.location || ""}
+            onChange={(val) => handleInputChange('location', val as string)}
             placeholder="Enter location"
           />
         </div>

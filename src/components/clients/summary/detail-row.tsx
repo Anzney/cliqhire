@@ -25,6 +25,7 @@ interface DetailRowProps {
   disableInternalEdit?: boolean; // NEW PROP
   customEdit?: () => void; // NEW PROP for custom edit handlers
   customInput?: React.ReactNode; // NEW PROP for custom input component
+  isLocation?: boolean;
 }
 
 export function DetailRow({
@@ -43,6 +44,7 @@ export function DetailRow({
   disableInternalEdit,
   customEdit,
   customInput,
+  isLocation,
 }: DetailRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -174,6 +176,7 @@ export function DetailRow({
           isNumber={isNumber}
           options={options}
           isCountry={label.toLowerCase().includes("country")}
+          isLocation={isLocation || label.toLowerCase().includes("location") || label.toLowerCase().includes("city")}
         />
       )}
     </div>
