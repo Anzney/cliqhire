@@ -20,6 +20,7 @@ import { Switch } from "@/components/ui/switch"
 import { getClients } from "@/services/clientService"
 import { cn } from "@/lib/utils"
 import { CountrySelect } from "@/components/ui/country-select"
+import { LocationInput } from "@/components/location/LocationInput"
 import { CONTINENTS } from "@/lib/constants"
 
 // Define type for client data
@@ -110,8 +111,6 @@ interface CreateJobModalProps {
 }
 
 export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
-  const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([])
-  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false)
   const [selectedNationalities, setSelectedNationalities] = useState<string[]>([])
   const [selectedContinents, setSelectedContinents] = useState<string[]>([])
   const [nationalityMode, setNationalityMode] = useState<'all' | 'specific'>('specific')
@@ -122,7 +121,6 @@ export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
   const [showClientDropdown, setShowClientDropdown] = useState(false)
   const [currentTab, setCurrentTab] = useState(0)
   const [selectedLocations, setSelectedLocations] = useState<string[]>([])
-  const [locationInput, setLocationInput] = useState("")
   const [certificationInput, setCertificationInput] = useState("")
   const [selectedCertifications, setSelectedCertifications] = useState<string[]>([])
 
@@ -201,75 +199,22 @@ export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
 
 
 
-  useEffect(() => {
-    const fetchLocationSuggestions = async () => {
-      if (locationInput.length < 3) {
-        setLocationSuggestions([])
-        return
-      }
-
-      try {
-        const response = await axios.get(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationInput)}`
-        )
-        setLocationSuggestions(response.data)
-        setShowLocationSuggestions(true)
-      } catch (error) {
-        console.error("Error fetching location suggestions:", error)
-      }
-    }
-
-    const debounceTimer = setTimeout(fetchLocationSuggestions, 300)
-    return () => clearTimeout(debounceTimer)
-  }, [locationInput])
-
-  const handleLocationSelect = (suggestion: LocationSuggestion) => {
-    const location = suggestion.display_name
+  const handleLocationChange = (val: string | string[]) => {
     const numberOfPositions = parseInt(formData.numberOfPositions) || 1
     if (numberOfPositions > 1) {
-      if (!selectedLocations.includes(location)) {
-        setSelectedLocations(prev => [...prev, location])
-        setFormData(prev => ({
-          ...prev,
-          locations: [...prev.locations, location]
-        }))
-      }
-      setLocationInput("")
-    } else {
+      const locations = Array.isArray(val) ? val : [val]
+      setSelectedLocations(locations)
       setFormData(prev => ({
         ...prev,
-        location: suggestion.display_name
-      }));
-      setLocationInput(suggestion.display_name); // Update input field to show selected location
-    }
-    setShowLocationSuggestions(false);
-  }
-
-  const addLocation = () => {
-    if (locationInput.trim() && !selectedLocations.includes(locationInput.trim())) {
-      setSelectedLocations(prev => [...prev, locationInput.trim()])
-      setFormData(prev => ({
-        ...prev,
-        locations: [...prev.locations, locationInput.trim()]
+        locations: locations
       }))
-      setLocationInput("")
-      setShowLocationSuggestions(false)
+    } else {
+      const location = Array.isArray(val) ? val[0] : val
+      setFormData(prev => ({
+        ...prev,
+        location: location
+      }))
     }
-  }
-
-  const handleLocationKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault()
-      addLocation()
-    }
-  }
-
-  const removeLocation = (locationToRemove: string) => {
-    setSelectedLocations(prev => prev.filter(location => location !== locationToRemove))
-    setFormData(prev => ({
-      ...prev,
-      locations: prev.locations.filter(location => location !== locationToRemove)
-    }))
   }
 
 
@@ -596,98 +541,12 @@ export function CreateJobModal({ open, onOpenChange }: CreateJobModalProps) {
 
               <div className="grid gap-2">
                 <Label htmlFor="location">Job Location *</Label>
-                {parseInt(formData.numberOfPositions) > 1 ? (
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap gap-2 min-h-[2.5rem] p-2 border rounded-md">
-                      {selectedLocations.map((location) => (
-                        <Badge key={location} variant="secondary" className="flex items-center gap-1">
-                          {location}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-auto p-0 hover:bg-transparent"
-                            onClick={() => removeLocation(location)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="relative flex gap-2">
-                      <Input
-                        id="location"
-                        value={locationInput}
-                        onChange={(e) => setLocationInput(e.target.value)}
-                        onFocus={() => setShowLocationSuggestions(true)}
-                        onKeyDown={handleLocationKeyDown}
-                        placeholder="Type location and press Enter"
-                        required={selectedLocations.length === 0}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={addLocation}
-                        disabled={!locationInput.trim()}
-                      >
-                        Add
-                      </Button>
-                      {showLocationSuggestions && locationSuggestions.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto top-full">
-                          {locationSuggestions.map((suggestion, index) => (
-                            <div
-                              key={index}
-                              className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                              onMouseDown={() => handleLocationSelect(suggestion)}
-                            >
-                              {suggestion.display_name}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <Input
-                      id="location"
-                      value={locationInput} // Bind to locationInput for live search
-                      onChange={(e) => {
-                        setLocationInput(e.target.value);
-                        // If user types, clear the official formData.location until a new suggestion is selected.
-                        if (formData.location && e.target.value !== formData.location) {
-                          setFormData(prev => ({ ...prev, location: "" }));
-                        }
-                      }}
-                      onFocus={() => {
-                        // If focusing and input is empty but a location was previously selected, populate input for editing.
-                        if (!locationInput && formData.location) {
-                          setLocationInput(formData.location);
-                        }
-                        setShowLocationSuggestions(true);
-                      }}
-                      onBlur={() => {
-                        // Hide suggestions after a delay to allow click.
-                        setTimeout(() => setShowLocationSuggestions(false), 200);
-                      }}
-                      placeholder="Type to search location"
-                      required
-                    />
-                    {showLocationSuggestions && locationSuggestions.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
-                        {locationSuggestions.map((suggestion, index) => (
-                          <div
-                            key={index}
-                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                            onMouseDown={() => handleLocationSelect(suggestion)}
-                          >
-                            {suggestion.display_name}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+                <LocationInput
+                  value={parseInt(formData.numberOfPositions) > 1 ? selectedLocations : formData.location}
+                  onChange={handleLocationChange}
+                  multiSelect={parseInt(formData.numberOfPositions) > 1}
+                  placeholder="Search and select location"
+                />
               </div>
 
               <div className="grid gap-2">

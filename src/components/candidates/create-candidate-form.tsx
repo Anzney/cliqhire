@@ -12,6 +12,7 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { CountrySelect } from "@/components/ui/country-select";
+import { LocationInput } from "@/components/location/LocationInput";
 import { Upload } from "lucide-react";
 import { subDays } from "date-fns";
 import { candidateService } from "@/services/candidateService";
@@ -499,11 +500,9 @@ export default function CreateCandidateForm({
               {/* Location - Optional */}
               <div className="space-y-2">
                 <Label htmlFor="location">Location</Label>
-                <Input
-                  id="location"
-                  name="location"
+                <LocationInput
                   value={form.location}
-                  onChange={handleChange}
+                  onChange={(val) => setForm(prev => ({ ...prev, location: val as string }))}
                   placeholder="Enter location"
                 />
               </div>

@@ -8,6 +8,7 @@ import "react-datepicker/dist/react-datepicker.css"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { CountrySelect } from "@/components/ui/country-select"
+import { LocationInput } from "@/components/location/LocationInput"
 import { CONTINENTS } from "@/lib/constants"
 
 interface EditFieldDialogProps {
@@ -22,6 +23,7 @@ interface EditFieldDialogProps {
   isCountry?: boolean
   isNationality?: boolean
   isContinent?: boolean
+  isLocation?: boolean
   fieldType?: 'text' | 'number' | 'select' | 'date' | 'textarea'
 }
 
@@ -63,6 +65,7 @@ export function EditFieldDialog({
   isCountry,
   isNationality,
   isContinent,
+  isLocation,
   fieldType = 'text'
 }: EditFieldDialogProps) {
   const [value, setValue] = useState(currentValue)
@@ -153,6 +156,16 @@ export function EditFieldDialog({
             ))}
           </SelectContent>
         </Select>
+      );
+    }
+
+    if (isLocation || fieldName.toLowerCase().includes('location')) {
+      return (
+        <LocationInput
+          value={value}
+          onChange={(val) => setValue(val as string)}
+          placeholder={`Search ${fieldName.toLowerCase()}...`}
+        />
       );
     }
 
