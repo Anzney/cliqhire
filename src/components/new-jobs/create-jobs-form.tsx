@@ -29,6 +29,7 @@ import { currencies } from "country-data-list";
 import CurrencyFlag from "react-currency-flags";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { LocationInput } from "@/components/location/LocationInput";
 
 // Inteface
 interface Props {
@@ -423,10 +424,9 @@ export function CreateJobRequirementForm({
                   <Label htmlFor="location" className="block text-sm font-medium mb-1">
                     Location
                   </Label>
-                  <Input
-                    name="location"
+                  <LocationInput
                     value={form.location}
-                    onChange={handleChange}
+                    onChange={(val) => setForm((prev) => ({ ...prev, location: val as string }))}
                     placeholder="Enter job location"
                   />
                 </div>

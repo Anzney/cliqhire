@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CountrySelect } from "@/components/ui/country-select";
+import { LocationInput } from "@/components/location/LocationInput";
 
 interface EditFieldModalProps {
   open: boolean;
@@ -28,6 +29,7 @@ interface EditFieldModalProps {
   isDate?: boolean;
   isNumber?: boolean;
   isCountry?: boolean;
+  isLocation?: boolean;
   options?: { value: string; label: string }[];
 }
 
@@ -41,6 +43,7 @@ export function EditFieldModal({
   isDate,
   options,
   isCountry,
+  isLocation,
 }: EditFieldModalProps) {
   const [value, setValue] = useState(currentValue);
   const [selectedDate, setSelectedDate] = useState<Date | null>(
@@ -108,6 +111,12 @@ export function EditFieldModal({
                 value={value}
                 onChange={setValue}
                 type="country"
+                placeholder={`Search ${fieldName.toLowerCase()}...`}
+              />
+            ) : isLocation ? (
+              <LocationInput
+                value={value}
+                onChange={(val) => setValue(val as string)}
                 placeholder={`Search ${fieldName.toLowerCase()}...`}
               />
             ) : (

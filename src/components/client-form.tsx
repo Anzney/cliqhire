@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import type { ClientFormData } from '../types/client';
 import { CountrySelect } from "@/components/ui/country-select";
+import { LocationInput } from "@/components/location/LocationInput";
 
 const industries = [
   'Healthcare',
@@ -120,22 +121,20 @@ export function ClientForm() {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="country">Country</Label>
-            <CountrySelect
-              value={form.watch('location.country')}
-              onChange={(val) => form.setValue('location.country', val)}
-              type="country"
-              placeholder="Search country..."
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="city">City</Label>
-            <Input
-              id="city"
-              {...form.register('location.city')}
-              placeholder="e.g. Riyadh"
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="location">Location</Label>
+            <LocationInput
+              value={form.watch('location.city') ? `${form.watch('location.city')}, ${form.watch('location.country')}` : form.watch('location.country')}
+              onChange={(val) => {
+                const parts = (val as string).split(', ');
+                if (parts.length >= 2) {
+                  form.setValue('location.city', parts[0]);
+                  form.setValue('location.country', parts[parts.length - 1]);
+                } else {
+                  form.setValue('location.country', val as string);
+                }
+              }}
+              placeholder="Search city..."
             />
           </div>
 

@@ -17,6 +17,7 @@ import { EditResumeDialog } from "@/components/teamMembers/EditResumeDialog";
 import { EditSpecializationDialog } from "@/components/teamMembers/EditSpecializationDialog";
 import { EditSkillsDialog } from "@/components/teamMembers/EditSkillsDialog";
 import { CountrySelect } from "@/components/ui/country-select";
+import { LocationInput } from "@/components/location/LocationInput";
 import { toast } from "sonner";
 
 
@@ -210,10 +211,9 @@ export function ViewEditTeamMemberDialog({ open, onOpenChange, teamMember, onUpd
             <div className="flex-1">
               {type === 'text' && (
                 key === 'location' ? (
-                  <CountrySelect
+                  <LocationInput
                     value={value || ""}
-                    onChange={(val: string) => handleChange(key, val)}
-                    type="country"
+                    onChange={(val) => handleChange(key, val as string)}
                     placeholder="Search location..."
                   />
                 ) : (

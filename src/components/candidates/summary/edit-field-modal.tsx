@@ -11,6 +11,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import CurrencyFlag from "react-currency-flags";
 import { CountrySelect } from "@/components/ui/country-select";
+import { LocationInput } from "@/components/location/LocationInput";
 
 interface EditFieldModalProps {
   open: boolean;
@@ -25,6 +26,7 @@ interface EditFieldModalProps {
   isCountry?: boolean;
   isNationality?: boolean;
   isContinent?: boolean;
+  isLocation?: boolean;
   options?: { value: string; label: string }[];
   currencyOptions?: Array<{ code: string; symbol: string; name: string; countryCode?: string }>;
 }
@@ -42,6 +44,7 @@ export function EditFieldModal({
   isCountry,
   isNationality,
   isContinent,
+  isLocation,
   options,
   currencyOptions
 }: EditFieldModalProps) {
@@ -155,6 +158,14 @@ export function EditFieldModal({
                   value={value}
                   onChange={setValue}
                   type="continent"
+                  placeholder={`Search ${fieldName.toLowerCase()}...`}
+                />
+              </div>
+            ) : isLocation ? (
+              <div className="space-y-2">
+                <LocationInput
+                  value={value}
+                  onChange={(val) => setValue(val as string)}
                   placeholder={`Search ${fieldName.toLowerCase()}...`}
                 />
               </div>
